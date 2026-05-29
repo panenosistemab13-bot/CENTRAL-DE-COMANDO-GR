@@ -1,0 +1,8 @@
+{
+  "name": "Sistema PGR",
+  "description": "Sistema PGR - Controle de Pátio, Pré-Alerta e Gerenciamento de Risco Operacional.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

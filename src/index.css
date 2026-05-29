@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-heading: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: #a855f7; /* Purple 500 */
+  --color-primary-dark: #7e22ce; /* Purple 700 */
+  --color-canvas: #09090b; /* Zinc 950 */
+  --color-card: #18181b; /* Zinc 900 */
+  --color-border-dark: rgba(255, 255, 255, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-zinc-300 antialiased selection:bg-purple-500/30 selection:text-purple-300;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  html {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100%;
+  }
+}
+
+@layer components {
+  .logo-text {
+    @apply text-sm font-black text-white tracking-[0.2em] uppercase leading-tight text-nowrap;
+  }
+
+  .report-card {
+    @apply bg-zinc-900/80 border border-white/5 rounded-2xl shadow-xl backdrop-blur-md transition-all duration-300 hover:border-purple-500/20 hover:shadow-purple-500/10;
+  }
+  
+  .toolbar-button {
+    @apply flex items-center gap-2 px-3 py-2 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-transparent hover:border-white/10;
+  }
+
+  .toolbar-button-active {
+    @apply text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)];
+  }
+  
+  .canvas-grid {
+    background-color: #09090b;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(168, 85, 247, 0.08), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    background-attachment: fixed;
+  }
+
+  /* Keyboard Navigation Focus Indicator */
+  :focus-visible {
+    outline: none !important;
+    border-color: #5856d6 !important;
+    box-shadow: 0 0 0 2px rgba(88, 86, 214, 0.2), 0 0 15px rgba(88, 86, 214, 0.5) !important;
+    transition: all 0.2s ease;
+  }
+}
