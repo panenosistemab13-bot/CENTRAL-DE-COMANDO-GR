@@ -50,11 +50,11 @@ const backgroundImages: Record<Tab, string> = {
 
 const tabs = [
   { id: 'menu', label: 'Início', icon: LayoutGrid },
-  { id: 'patio', label: 'Pátio', icon: Container },
+  { id: 'patio', label: 'Controle de pátio', icon: Container },
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
-  { id: 'sm_creator', label: 'SM Creator', icon: CalendarDays },
-  { id: 'rotas', label: 'Rotas', icon: Route },
+  { id: 'sm_creator', label: 'Sistema de monitoramento', icon: CalendarDays },
+  { id: 'rotas', label: 'Sistema de rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
 ];
 

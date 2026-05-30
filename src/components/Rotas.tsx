@@ -120,7 +120,7 @@ export default function Rotas() {
             <div>
               <h1 className="text-3xl font-black text-white tracking-tighter uppercase">ROTAS</h1>
               <div className="flex items-center gap-4 mt-1.5">
-                <p className="text-indigo-400/70 font-mono text-xs font-bold uppercase tracking-widest">Base de Dados Logística • Operacional</p>
+                <p className="text-indigo-400/70 font-mono text-xs font-bold uppercase tracking-widest">Sistema de rotas</p>
                 <div className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
                    <span className="text-[10px] font-black text-emerald-400 tracking-tighter uppercase">Sincronizado</span>
                 </div>

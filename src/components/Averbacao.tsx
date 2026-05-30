@@ -230,37 +230,56 @@ export default function Averbacao({ view = 'generator' }: AverbacaoProps) {
 
       textContent = `${greeting}!\n\nSegue averbação realizada via sistema.\n\nROTA: ${getRoute()}\n${protocolsStrText}\nValor da Carga: ${getTotalValue()}\n\nSegue dados e NF's em anexo.\n\nAtt,`;
     } else {
-      // Esporadica layout
+      // Esporadica layout (identical to normal + extra fields)
       htmlContent = `
         <div style="font-family: sans-serif; color: #333;">
-          <p>${greeting}</p>
-          <p>Segue solicitação de averbação esporádica e com <span style="color: #c97f7f;">isenção de escolta e com o valor de <span style="background-color: #d9827c; padding: 2px 4px; color: black; font-weight: bold;">${getTotalValue()}</span></span></p>
-          
+          <p>${greeting}!</p>
+          <p>Segue <span style="background-color: #fce783; padding: 0 4px;">averbação</span> realizada via sistema.</p>
           <div style="margin: 20px 0;">
-            <p style="margin: 0;">ROTA: ${getRoute()}</p>
+            <p style="margin: 0; font-weight: bold;">ROTA: ${getRoute()}</p>
+            ${protocolsStrHtml}
+            <p style="margin: 0; font-weight: bold;">Valor da Carga: <span style="color: #ff0000;">${getTotalValue()}</span></p>
           </div>
-
-          <div style="margin: 20px 0;">
-            <p style="margin: 0;">Valor da Carga: ${getTotalValue()}</p>
-          </div>
-
           <div style="margin: 20px 0;">
             <p style="margin: 0;">${esporadicaData.cadastro}</p>
             <p style="margin: 0;">${esporadicaData.rastreador}</p>
             <p style="margin: 0;">${esporadicaData.iscas}</p>
             <p style="margin: 0;">${esporadicaData.motoristaFrota}</p>
-            <p style="margin: 0;">Segue dados e NF's em anexo.</p>
           </div>
-
-          <div style="margin: 20px 0;">
-            ${protocolsStrHtml.replace(/color: #00008b;/g, 'color: #333; font-weight: normal;')}
-          </div>
-
           <p>Segue dados e NF's em anexo.</p>
+          <table border="1" style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 10px; text-align: center; text-transform: uppercase; font-weight: bold;">
+            <thead>
+              <tr style="background-color: black; color: white;">
+                <th style="padding: 8px; border: 1px solid #000;">ORIGEM</th>
+                <th style="padding: 8px; border: 1px solid #000;">DESTINO</th>
+                <th style="padding: 8px; border: 1px solid #000;">TRANSPORTADORA</th>
+                <th style="padding: 8px; border: 1px solid #000;">PLACA CAVALO</th>
+                <th style="padding: 8px; border: 1px solid #000;">PLACAS CARRETAS</th>
+                <th style="padding: 8px; border: 1px solid #000;">TECNOLOGIA</th>
+                <th style="padding: 8px; border: 1px solid #000;">NOME MOTORISTA</th>
+                <th style="padding: 8px; border: 1px solid #000;">CPF</th>
+                <th style="padding: 8px; border: 1px solid #000;">TELEFONE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background-color: #ffff00;">
+                <td style="padding: 10px; border: 1px solid #000;">${parsedRows[0]?.origem || ''}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${parsedRows[0]?.destino || ''}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${extraData.transportadora}</td>
+                <td style="padding: 10px; border: 1px solid #000; background-color: #cccccc;">${parsedRows[0]?.placaCav || ''}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${getPlacasCarretas()}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${extraData.tecnologia}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${extraData.nomeMotorista}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${extraData.cpf}</td>
+                <td style="padding: 10px; border: 1px solid #000;">${extraData.telefone}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-top: 30px;">Att,</p>
         </div>
       `;
 
-      textContent = `${greeting}\n\nSegue solicitação de averbação esporádica e com isenção de escolta e com o valor de ${getTotalValue()}\n\nROTA: ${getRoute()}\n\nValor da Carga: ${getTotalValue()}\n\n${esporadicaData.cadastro}\n${esporadicaData.rastreador}\n${esporadicaData.iscas}\n${esporadicaData.motoristaFrota}\nSegue dados e NF's em anexo.\n\n${protocolsStrText}\n\nSegue dados e NF's em anexo.`;
+      textContent = `${greeting}!\n\nSegue averbação realizada via sistema.\n\nROTA: ${getRoute()}\n${protocolsStrText}\nValor da Carga: ${getTotalValue()}\n\n${esporadicaData.cadastro}\n${esporadicaData.rastreador}\n${esporadicaData.iscas}\n${esporadicaData.motoristaFrota}\n\nSegue dados e NF's em anexo.\n\nAtt,`;
     }
 
     try {
@@ -514,15 +533,16 @@ export default function Averbacao({ view = 'generator' }: AverbacaoProps) {
                 </div>
               ) : (
                 <div className="space-y-6 font-sans">
-                  <p className="text-sm">{getGreeting()}</p>
-                  <p className="text-sm">Segue solicitação de averbação esporádica e com <span className="text-[#c97f7f] font-medium">isenção de escolta e com o valor de <strong className="bg-[#d9827c] px-1 text-black font-bold">{getTotalValue()}</strong></span></p>
+                  <p className="text-sm">{getGreeting()}!</p>
+                  
+                  <p className="text-sm">Segue <span className="bg-[#fce783] px-1 font-medium text-slate-800">averbação</span> realizada via sistema.</p>
                   
                   <div className="space-y-1 mt-6">
-                    <p className="text-sm font-medium">ROTA: {getRoute()}</p>
-                  </div>
-
-                  <div className="space-y-1 mt-6">
-                    <p className="text-sm font-medium">Valor da Carga: {getTotalValue()}</p>
+                    <p className="text-sm font-black">ROTA: {getRoute()}</p>
+                    {getProtocols().map((p, i) => (
+                      <p key={i} className="text-sm font-black">PROTOCOLO: <span className="text-[#00008b]">{p}</span></p>
+                    ))}
+                    <p className="text-sm font-black">Valor da Carga: <span className="text-red-600">{getTotalValue()}</span></p>
                   </div>
 
                   <div className="space-y-1 mt-6 text-sm font-medium text-slate-800">
@@ -530,16 +550,40 @@ export default function Averbacao({ view = 'generator' }: AverbacaoProps) {
                     <p>{esporadicaData.rastreador}</p>
                     <p>{esporadicaData.iscas}</p>
                     <p>{esporadicaData.motoristaFrota}</p>
-                    <p>Segue dados e NF's em anexo.</p>
-                  </div>
-
-                  <div className="space-y-1 mt-6 text-sm font-medium">
-                    {getProtocols().map((p, i) => (
-                      <p key={i}>PROTOCOLO: {p}</p>
-                    ))}
                   </div>
 
                   <p className="text-sm mt-6 font-medium">Segue dados e NF's em anexo.</p>
+
+                  <div className="mt-8 overflow-x-auto">
+                    <table className="w-full border-collapse text-[10px] uppercase font-bold text-center border-black">
+                      <thead>
+                        <tr className="bg-black text-white">
+                          <th className="border border-black p-2">ORIGEM</th>
+                          <th className="border border-black p-2">DESTINO</th>
+                          <th className="border border-black p-2">TRANSPORTADORA</th>
+                          <th className="border border-black p-2">PLACA CAVALO</th>
+                          <th className="border border-black p-2">PLACAS CARRETAS</th>
+                          <th className="border border-black p-2">TECNOLOGIA</th>
+                          <th className="border border-black p-2">NOME MOTORISTA</th>
+                          <th className="border border-black p-2">CPF</th>
+                          <th className="border border-black p-2">TELEFONE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-[#ffff00]">
+                          <td className="border border-black p-3">{parsedRows[0]?.origem}</td>
+                          <td className="border border-black p-3">{parsedRows[0]?.destino}</td>
+                          <td className="border border-black p-3">{extraData.transportadora}</td>
+                          <td className="border border-black p-3 bg-[#cccccc] text-slate-800">{parsedRows[0]?.placaCav}</td>
+                          <td className="border border-black p-3">{getPlacasCarretas()}</td>
+                          <td className="border border-black p-3">{extraData.tecnologia}</td>
+                          <td className="border border-black p-3">{extraData.nomeMotorista}</td>
+                          <td className="border border-black p-3">{extraData.cpf}</td>
+                          <td className="border border-black p-3">{extraData.telefone}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
 
                   <div className="mt-12 text-sm">
                     <p>Att,</p>

@@ -626,7 +626,7 @@ export default function Patio() {
             <div className="relative">
                 <div className="absolute -left-6 top-0 bottom-0 w-1 bg-purple-600 rounded-full" />
                 <h1 className="text-4xl font-black text-white tracking-[ -0.05em] flex items-center gap-4 leading-none uppercase">
-                    Unidade Pátio
+                    Controle de Pátio
                     <span className="text-purple-500/40 text-xl font-mono px-3 border-l border-white/10 ml-2">SL-MG.01</span>
                 </h1>
                 <div className="flex items-center gap-4 mt-4">

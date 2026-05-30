@@ -61,7 +61,7 @@ export default function Checklist() {
     greeting: 'Bom dia',
     cavalo: '',
     carretas: '',
-    contato: '(31) 981203930'
+    contato: '(31) 984817047'
   });
   const [genCopied, setGenCopied] = useState(false);
 
@@ -183,9 +183,24 @@ export default function Checklist() {
     return true; // TODOS
   });
 
+  const sortedCavalos = [...items].sort((a, b) => {
+    const statusA = getStatus(a).label;
+    const statusB = getStatus(b).label;
+    const aIsVencido = statusA === 'VENCIDO' || statusA === 'NEGATIVADO' || statusA === 'REPROVADO';
+    const bIsVencido = statusB === 'VENCIDO' || statusB === 'NEGATIVADO' || statusB === 'REPROVADO';
+    
+    if (aIsVencido && !bIsVencido) return -1;
+    if (!aIsVencido && bIsVencido) return 1;
+    return a.cavalo.localeCompare(b.cavalo);
+  });
+
   const handleCopyGenerator = () => {
+    const defaultCavalo = genData.cavalo || '[PLACA DO CAVALO]';
+    const emailSubject = `SOLICITAÇÃO DE CHECKLIST DEDICADO SANTA LUZIA / ${defaultCavalo}`;
+    
     const htmlContent = `
       <div style="font-family: sans-serif; color: #333; font-size: 14px;">
+        <p style="font-weight: bold; margin-bottom: 20px;">Assunto: ${emailSubject}</p>
         <p>${genData.greeting},</p>
         <p>Solicito o <span style="background-color: #d1cbcb; padding: 2px 4px;">checklist</span> para o conjunto abaixo:</p>
         
@@ -210,7 +225,7 @@ export default function Checklist() {
       </div>
     `;
 
-    const textContent = `${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,`;
+    const textContent = `Assunto: ${emailSubject}\n\n${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,`;
 
     try {
       const typeHtml = "text/html";
@@ -273,7 +288,7 @@ export default function Checklist() {
                   activeView === 'generator' ? "bg-emerald-500 text-white shadow-sm" : "text-slate-400 hover:text-white"
                 )}
               >
-                Gerador de Solicitação
+                Solicitação
               </button>
             </div>
           </div>
@@ -324,13 +339,26 @@ export default function Checklist() {
 
                 <div>
                   <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Placa do Cavalo</label>
-                  <input
-                    type="text"
+                  <select
                     value={genData.cavalo}
-                    onChange={(e) => setGenData(prev => ({ ...prev, cavalo: e.target.value.toUpperCase() }))}
-                    placeholder="Ex: ABC-1234"
-                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white font-bold focus:border-emerald-500/50 outline-none transition-all uppercase"
-                  />
+                    onChange={(e) => {
+                      const cavalo = e.target.value;
+                      const relatedItem = items.find(i => i.cavalo === cavalo);
+                      setGenData(prev => ({ 
+                        ...prev, 
+                        cavalo,
+                        carretas: relatedItem ? relatedItem.carretas : prev.carretas 
+                      }));
+                    }}
+                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white font-bold focus:border-emerald-500/50 outline-none transition-all uppercase appearance-none"
+                  >
+                    <option value="" className="bg-zinc-900">Selecione um Cavalo</option>
+                    {sortedCavalos.map(item => (
+                      <option key={item.id} value={item.cavalo} className="bg-zinc-900">
+                        {item.cavalo} {getStatus(item).label === 'VENCIDO' || getStatus(item).label === 'NEGATIVADO' || getStatus(item).label === 'REPROVADO' ? `(⚠️ VENCIDO)` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -374,6 +402,11 @@ export default function Checklist() {
           <div className="lg:col-span-2">
              <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl text-slate-800 min-h-full">
                 <div className="max-w-2xl mx-auto space-y-6 font-sans text-sm">
+                  <div className="border-b border-slate-200 pb-4 mb-4">
+                    <p className="font-bold text-slate-800">
+                      Assunto: SOLICITAÇÃO DE CHECKLIST DEDICADO SANTA LUZIA / {genData.cavalo || '[PLACA DO CAVALO]'}
+                    </p>
+                  </div>
                   <p>{genData.greeting},</p>
                   <p>Solicito o <span className="bg-[#d1cbcb] px-1 font-medium">checklist</span> para o conjunto abaixo:</p>
                   
