@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ClipboardCheck, 
   Trash2, 
@@ -14,7 +14,9 @@ import {
   ChevronRight,
   MoreVertical,
   Filter,
-  Edit2
+  Edit2,
+  Copy,
+  Check
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
@@ -36,6 +38,9 @@ interface ChecklistItem {
 }
 
 export default function Checklist() {
+  const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
+  
+  // Monitoring State
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'TODOS' | 'EM DIA' | 'VENCIDO' | 'NEGATIVADOS'>('TODOS');
@@ -50,6 +55,15 @@ export default function Checklist() {
     periferico: '',
     observacao: ''
   });
+
+  // Generator State
+  const [genData, setGenData] = useState({
+    greeting: 'Bom dia',
+    cavalo: '',
+    carretas: '',
+    contato: '(31) 981203930'
+  });
+  const [genCopied, setGenCopied] = useState(false);
 
   useEffect(() => {
     const checklistRef = ref(rtdb, 'checklist_veiculos');
@@ -169,6 +183,64 @@ export default function Checklist() {
     return true; // TODOS
   });
 
+  const handleCopyGenerator = () => {
+    const htmlContent = `
+      <div style="font-family: sans-serif; color: #333; font-size: 14px;">
+        <p>${genData.greeting},</p>
+        <p>Solicito o <span style="background-color: #d1cbcb; padding: 2px 4px;">checklist</span> para o conjunto abaixo:</p>
+        
+        <table border="1" style="border-collapse: collapse; min-width: 400px; font-family: sans-serif; font-size: 14px; text-align: center; font-weight: bold; margin-top: 15px; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #485c96; color: white;">
+              <th style="padding: 10px; border: 1px solid #1c274c;">CAVALO</th>
+              <th style="padding: 10px; border: 1px solid #1c274c;">CARRETAS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background-color: #e8ebf5;">
+              <td style="padding: 10px; border: 1px solid #1c274c;">${genData.cavalo}</td>
+              <td style="padding: 10px; border: 1px solid #1c274c;">${genData.carretas}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p style="margin-top: 20px; font-weight: bold; color: #555;">Contato: ${genData.contato}</p>
+        
+        <p style="margin-top: 20px; color: #555;">Att,</p>
+      </div>
+    `;
+
+    const textContent = `${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,`;
+
+    try {
+      const typeHtml = "text/html";
+      const typeText = "text/plain";
+      const blobHtml = new Blob([htmlContent], { type: typeHtml });
+      const blobText = new Blob([textContent], { type: typeText });
+      const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
+      
+      navigator.clipboard.write(data).then(() => {
+        setGenCopied(true);
+        setTimeout(() => setGenCopied(false), 2000);
+      });
+    } catch (err) {
+      console.warn("Clipboard API fallback", err);
+      // Fallback
+      const textArea = document.createElement("textarea");
+      textArea.value = textContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setGenCopied(true);
+        setTimeout(() => setGenCopied(false), 2000);
+      } catch (e) {
+        console.error('Fallback copy failed', e);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-20">
       {/* Dynamic Header */}
@@ -176,39 +248,163 @@ export default function Checklist() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-lg shadow-primary/20">
                 <ClipboardCheck size={26} />
               </div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tight">Checklist Frota</h1>
             </div>
-            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] ml-1">Monitoramento de Validade e Testes de Periféricos</p>
+            
+            <div className="flex bg-white/5 rounded-xl p-1 w-fit">
+              <button
+                onClick={() => setActiveView('monitoring')}
+                className={cn(
+                  "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
+                  activeView === 'monitoring' ? "bg-primary text-white shadow-sm" : "text-slate-400 hover:text-white"
+                )}
+              >
+                Monitoramento
+              </button>
+              <button
+                onClick={() => setActiveView('generator')}
+                className={cn(
+                  "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
+                  activeView === 'generator' ? "bg-emerald-500 text-white shadow-sm" : "text-slate-400 hover:text-white"
+                )}
+              >
+                Gerador de Solicitação
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-              <input 
-                type="text" 
-                placeholder="Buscar por placa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 transition-all"
-              />
+          {activeView === 'monitoring' && (
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Buscar por placa..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 transition-all"
+                />
+              </div>
+              <button 
+                onClick={() => setIsAdding(true)}
+                className="w-full sm:w-auto px-6 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-all flex items-center justify-center gap-2"
+              >
+                <Plus size={18} /> Novo Registro
+              </button>
             </div>
-            <button 
-              onClick={() => setIsAdding(true)}
-              className="w-full sm:w-auto px-6 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-all flex items-center justify-center gap-2"
-            >
-              <Plus size={18} /> Novo Registro
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-3">
+      {activeView === 'generator' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Editor Form */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-[#0b0d19]/80 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-3xl shadow-2xl">
+              <h3 className="text-sm font-bold text-white uppercase tracking-tight border-b border-white/5 pb-4 mb-6">Preencher Dados</h3>
+              
+              <div className="space-y-5">
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Saudação</label>
+                  <select
+                    value={genData.greeting}
+                    onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white focus:border-emerald-500/50 outline-none transition-all appearance-none"
+                  >
+                    <option value="Bom dia" className="bg-zinc-900">Bom dia</option>
+                    <option value="Boa tarde" className="bg-zinc-900">Boa tarde</option>
+                    <option value="Boa noite" className="bg-zinc-900">Boa noite</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Placa do Cavalo</label>
+                  <input
+                    type="text"
+                    value={genData.cavalo}
+                    onChange={(e) => setGenData(prev => ({ ...prev, cavalo: e.target.value.toUpperCase() }))}
+                    placeholder="Ex: ABC-1234"
+                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white font-bold focus:border-emerald-500/50 outline-none transition-all uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Placas das Carretas</label>
+                  <input
+                    type="text"
+                    value={genData.carretas}
+                    onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
+                    placeholder="Ex: XYZ-9876 / LMN-4567"
+                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white font-bold focus:border-emerald-500/50 outline-none transition-all uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Contato</label>
+                  <input
+                    type="text"
+                    value={genData.contato}
+                    onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white focus:border-emerald-500/50 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-white/5">
+                <button 
+                  onClick={handleCopyGenerator}
+                  className={cn(
+                    "w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all",
+                    genCopied ? "bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]" : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                  )}
+                >
+                  {genCopied ? <Check size={18} /> : <Copy size={18} />}
+                  {genCopied ? 'Copiado para o Clipboard!' : 'Copiar Solicitação'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Preview Box */}
+          <div className="lg:col-span-2">
+             <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl text-slate-800 min-h-full">
+                <div className="max-w-2xl mx-auto space-y-6 font-sans text-sm">
+                  <p>{genData.greeting},</p>
+                  <p>Solicito o <span className="bg-[#d1cbcb] px-1 font-medium">checklist</span> para o conjunto abaixo:</p>
+                  
+                  <div className="mt-6 mb-8 overflow-hidden rounded-md border border-[#1c274c]">
+                    <table className="w-full border-collapse text-center uppercase">
+                      <thead>
+                        <tr className="bg-[#485c96] text-white">
+                          <th className="p-3 border-r border-[#1c274c] w-1/2">CAVALO</th>
+                          <th className="p-3 w-1/2">CARRETAS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-[#e8ebf5] font-bold text-slate-700 text-base">
+                          <td className="p-4 border-r border-t border-[#1c274c]">{genData.cavalo || "-"}</td>
+                          <td className="p-4 border-t border-[#1c274c]">{genData.carretas || "-"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <p className="font-bold text-slate-600 mt-8 text-base">Contato: {genData.contato}</p>
+                  
+                  <p className="text-slate-600 mt-12">Att,</p>
+                </div>
+             </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-3">
         {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
           <button
             key={f}
@@ -511,6 +707,8 @@ export default function Checklist() {
           </div>
         )}
       </AnimatePresence>
+      </>
+      )}
     </div>
   );
 }

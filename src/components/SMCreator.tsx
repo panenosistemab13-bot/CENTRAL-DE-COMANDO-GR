@@ -296,17 +296,17 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
         <p>Segue relatórios de SM - Ida e Volta.</p>
         
         <div style="margin-top: 20px;">
-          <h3 style="color: #2e7d32; margin-bottom: 5px;">--- ROTA IDA ---</h3>
+          <h3 style="color: #8b5cf6; margin-bottom: 5px;">--- ROTA IDA ---</h3>
           <p style="font-size: 13px;">${greeting},</p>
           <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: <strong>${getJourneyDate(idaRows)}</strong>!</p>
-          \${formatRowsHtml(idaRows, '', '#2e7d32')}
+          \${formatRowsHtml(idaRows, '', '#8b5cf6')}
         </div>
 
         <div style="margin-top: 30px;">
-          <h3 style="color: #c62828; margin-bottom: 5px;">--- ROTA VOLTA ---</h3>
+          <h3 style="color: #38bdf8; margin-bottom: 5px;">--- ROTA VOLTA ---</h3>
           <p style="font-size: 13px;">${greeting},</p>
           <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: <strong>${getJourneyDate(voltaRows)}</strong>!</p>
-          \${formatRowsHtml(voltaRows, '', '#c62828')}
+          \${formatRowsHtml(voltaRows, '', '#38bdf8')}
         </div>
 
         <p style="margin-top: 20px;"><strong>Total Calculado: \${calculateTotal()}</strong></p>
@@ -335,7 +335,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
   const copySection = async (rows: SMRow[], title: string, setCopiedStatus: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (rows.length === 0) return;
     
-    const color = title.includes('IDA') ? '#2e7d32' : '#c62828';
+    const color = title.includes('IDA') ? '#8b5cf6' : '#38bdf8';
     const isIda = title.includes('IDA');
     const greeting = getGreeting();
     const date = getJourneyDate(rows);
@@ -437,16 +437,16 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
             {/* Main Work Area */}
             <div className="xl:col-span-3 space-y-8">
               
-              {/* ROTA IDA (Green Theme) */}
+              {/* ROTA IDA (Purple Theme) */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-green-500 uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-sm font-black text-purple-500 uppercase tracking-widest flex items-center gap-2">
                     <TrendingUp size={16} /> Rota Ida
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('ida')}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-green-500/20 text-green-400 hover:bg-green-500/30 font-bold uppercase tracking-wider transition-all"
+                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 font-bold uppercase tracking-wider transition-all"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -455,33 +455,33 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                         onClick={() => copySection(idaRows, 'ROTA IDA', setIdaCopied)}
                         className={cn(
                           "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                          idaCopied ? "bg-green-500 text-white" : "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                          idaCopied ? "bg-purple-500 text-white" : "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20"
                         )}
                       >
                         {idaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {idaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setIdaRows([])} className="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-tighter">Limpar Tudo</button>
+                    <button onClick={() => setIdaRows([])} className="text-[10px] font-bold text-slate-500 hover:text-sky-400 uppercase tracking-tighter">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="report-card overflow-hidden bg-[#d9ead3]/10 border-green-500/20">
+                <div className="report-card overflow-hidden bg-[#e9d5ff]/10 border-purple-500/20">
                   {idaRows.length === 0 ? (
                     <div className="p-12 flex flex-col items-center justify-center text-center">
-                      <div className="p-4 bg-green-500/10 rounded-full mb-4">
-                        <Clipboard className="text-green-500 w-8 h-8" />
+                      <div className="p-4 bg-purple-500/10 rounded-full mb-4">
+                        <Clipboard className="text-purple-500 w-8 h-8" />
                       </div>
                       <p className="text-sm text-slate-400 mb-4">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
                       <div className="flex flex-col gap-3 w-full max-w-md">
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'ida')}
                           placeholder="Ctrl+V aqui..."
-                          className="w-full h-24 bg-white/5 border border-border-dark rounded-xl p-4 text-xs font-mono text-slate-200 outline-none focus:border-green-500/50 resize-none"
+                          className="w-full h-24 bg-white/5 border border-border-dark rounded-xl p-4 text-xs font-mono text-slate-200 outline-none focus:border-purple-500/50 resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('ida')}
-                          className="w-full py-3 border border-dashed border-green-500/30 rounded-xl text-green-500 hover:text-green-400 flex items-center justify-center gap-2 text-xs font-bold uppercase"
+                          className="w-full py-3 border border-dashed border-purple-500/30 rounded-xl text-purple-500 hover:text-purple-400 flex items-center justify-center gap-2 text-xs font-bold uppercase"
                         >
                           <Plus size={16} /> Adicionar manualmente
                         </button>
@@ -491,7 +491,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-green-600/20 text-green-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-green-500/20">
+                          <tr className="bg-purple-600/20 text-purple-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-purple-500/20">
                             <th className="p-4">Data</th>
                             <th className="p-4">Motorista</th>
                             <th className="p-4 text-center">Placa</th>
@@ -502,15 +502,15 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                             <th className="p-4 w-12 text-center">Ações</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-green-500/10">
+                        <tbody className="divide-y divide-purple-500/10">
                           {idaRows.map((row, i) => (
-                            <tr key={i} className="text-xs text-slate-200 hover:bg-green-500/[0.05] transition-all group/row">
+                            <tr key={i} className="text-xs text-slate-200 hover:bg-purple-500/[0.05] transition-all group/row">
                               <td className="p-3">
                                 <input 
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 font-bold group/cell">
@@ -519,11 +519,11 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'ida')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all uppercase"
+                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-green-500/10 hover:bg-green-500/30 rounded-lg text-green-500 transition-all shrink-0"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-purple-500/10 hover:bg-purple-500/30 rounded-lg text-purple-500 transition-all shrink-0"
                                     title="Copiar Motorista"
                                   >
                                     <Copy size={12} />
@@ -535,7 +535,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.placa}
                                   onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-black tracking-widest uppercase"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all font-black tracking-widest uppercase"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -543,7 +543,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -551,7 +551,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3">
@@ -559,14 +559,14 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.trecho}
                                   onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all uppercase"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all uppercase"
                                 />
                               </td>
-                              <td className="p-3 text-right font-black text-green-500 group/cell">
+                              <td className="p-3 text-right font-black text-purple-500 group/cell">
                                 <div className="flex items-center justify-end gap-2">
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.valorNf)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-green-500/10 hover:bg-green-500/30 rounded-lg text-green-500 transition-all shrink-0"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-purple-500/10 hover:bg-purple-500/30 rounded-lg text-purple-500 transition-all shrink-0"
                                     title="Copiar Valor"
                                   >
                                     <Copy size={12} />
@@ -575,7 +575,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'ida')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-right focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-right focus:bg-purple-500/10 focus:border-purple-500/30 outline-none transition-all font-mono"
                                   />
                                 </div>
                               </td>
@@ -596,16 +596,16 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                 </div>
               </section>
 
-              {/* ROTA VOLTA (Red Theme) */}
+              {/* ROTA VOLTA (Sky Theme) */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-sm font-black text-sky-500 uppercase tracking-widest flex items-center gap-2">
                     <Download size={16} className="rotate-180" /> Rota Volta
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('volta')}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-red-500/20 text-red-400 hover:bg-red-500/30 font-bold uppercase tracking-wider transition-all"
+                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 font-bold uppercase tracking-wider transition-all"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -614,33 +614,33 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                         onClick={() => copySection(voltaRows, 'ROTA VOLTA', setVoltaCopied)}
                         className={cn(
                           "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                          voltaCopied ? "bg-red-500 text-white" : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                          voltaCopied ? "bg-sky-500 text-white" : "bg-sky-500/10 text-sky-500 hover:bg-sky-500/20"
                         )}
                       >
                         {voltaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {voltaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-tighter">Limpar Tudo</button>
+                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-bold text-slate-500 hover:text-sky-400 uppercase tracking-tighter">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="report-card overflow-hidden bg-[#f4cccc]/10 border-red-500/20">
+                <div className="report-card overflow-hidden bg-[#bae6fd]/10 border-sky-500/20">
                   {voltaRows.length === 0 ? (
                     <div className="p-12 flex flex-col items-center justify-center text-center">
-                      <div className="p-4 bg-red-500/10 rounded-full mb-4">
-                        <Clipboard className="text-red-500 w-8 h-8" />
+                      <div className="p-4 bg-sky-500/10 rounded-full mb-4">
+                        <Clipboard className="text-sky-500 w-8 h-8" />
                       </div>
                       <p className="text-sm text-slate-400 mb-4">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
                       <div className="flex flex-col gap-3 w-full max-w-md">
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'volta')}
                           placeholder="Ctrl+V aqui..."
-                          className="w-full h-24 bg-white/5 border border-border-dark rounded-xl p-4 text-xs font-mono text-slate-200 outline-none focus:border-red-500/50 resize-none"
+                          className="w-full h-24 bg-white/5 border border-border-dark rounded-xl p-4 text-xs font-mono text-slate-200 outline-none focus:border-sky-500/50 resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('volta')}
-                          className="w-full py-3 border border-dashed border-red-500/30 rounded-xl text-red-500 hover:text-red-400 flex items-center justify-center gap-2 text-xs font-bold uppercase"
+                          className="w-full py-3 border border-dashed border-sky-500/30 rounded-xl text-sky-500 hover:text-sky-400 flex items-center justify-center gap-2 text-xs font-bold uppercase"
                         >
                           <Plus size={16} /> Adicionar manualmente
                         </button>
@@ -650,7 +650,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-red-600/20 text-red-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-red-500/20">
+                          <tr className="bg-sky-600/20 text-sky-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-sky-500/20">
                             <th className="p-4">Data</th>
                             <th className="p-4">Motorista</th>
                             <th className="p-4 text-center">Placa</th>
@@ -661,15 +661,15 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                             <th className="p-4 w-12 text-center">Ações</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-red-500/10">
+                        <tbody className="divide-y divide-sky-500/10">
                           {voltaRows.map((row, i) => (
-                            <tr key={i} className="text-xs text-slate-200 hover:bg-red-500/[0.05] transition-all group/row">
+                            <tr key={i} className="text-xs text-slate-200 hover:bg-sky-500/[0.05] transition-all group/row">
                               <td className="p-3">
                                 <input 
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 font-bold group/cell">
@@ -678,11 +678,11 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'volta')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-red-500/10 hover:bg-red-500/30 rounded-lg text-red-500 transition-all shrink-0"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-sky-500/10 hover:bg-sky-500/30 rounded-lg text-sky-500 transition-all shrink-0"
                                     title="Copiar Motorista"
                                   >
                                     <Copy size={12} />
@@ -694,7 +694,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.placa}
                                   onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-black tracking-widest uppercase"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all font-black tracking-widest uppercase"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -702,7 +702,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -710,7 +710,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3">
@@ -719,25 +719,25 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.trecho}
                                     onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'volta')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => {
                                       const inverted = invertRoute(row.trecho);
                                       updateRowValue(i, 'trecho', inverted, 'volta');
                                     }}
-                                    className="opacity-0 group-hover/trecho:opacity-100 p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shrink-0 shadow-lg"
+                                    className="opacity-0 group-hover/trecho:opacity-100 p-2 bg-sky-500/10 text-sky-500 rounded-lg hover:bg-sky-500 hover:text-white transition-all shrink-0 shadow-lg"
                                     title="Inverter Rota"
                                   >
                                     <RefreshCw size={12} />
                                   </button>
                                 </div>
                               </td>
-                              <td className="p-3 text-right font-black text-red-500 group/cell">
+                              <td className="p-3 text-right font-black text-sky-500 group/cell">
                                 <div className="flex items-center justify-end gap-2">
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.valorNf)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-red-500/10 hover:bg-red-500/30 rounded-lg text-red-500 transition-all shrink-0"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-sky-500/10 hover:bg-sky-500/30 rounded-lg text-sky-500 transition-all shrink-0"
                                     title="Copiar Valor"
                                   >
                                     <Copy size={12} />
@@ -746,7 +746,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'volta')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-right focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-right focus:bg-sky-500/10 focus:border-sky-500/30 outline-none transition-all font-mono"
                                   />
                                 </div>
                               </td>
