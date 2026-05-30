@@ -24,10 +24,10 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { id: 'patio', label: 'Controle de pátio', buttonLabel: 'Logística', icon: Container, color: 'from-purple-500 to-indigo-600', description: 'Portaria e Pátio' },
+  { id: 'patio', label: 'Pátio', buttonLabel: 'Logística', icon: Container, color: 'from-purple-500 to-indigo-600', description: 'Portaria e Pátio' },
   { id: 'presence', label: 'Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'from-orange-400 to-red-600', description: 'Lista de presença' },
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'from-blue-500 to-blue-800', description: 'Gestão de seguros' },
-  { id: 'sm_creator', label: 'Sistema de monitoramento', buttonLabel: 'Eventos', icon: CalendarDays, color: 'from-rose-500 to-pink-700', description: 'Criar solicitações' },
+  { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'from-rose-500 to-pink-700', description: 'Criar solicitações' },
   { id: 'rotas', label: 'Sistema de rotas', buttonLabel: 'Logística', icon: Route, color: 'from-amber-400 to-yellow-600', description: 'Códigos de rotas' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'from-indigo-500 to-blue-700', description: 'Vistorias frota' },
 ];

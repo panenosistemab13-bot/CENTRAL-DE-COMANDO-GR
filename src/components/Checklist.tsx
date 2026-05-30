@@ -195,12 +195,8 @@ export default function Checklist() {
   });
 
   const handleCopyGenerator = () => {
-    const defaultCavalo = genData.cavalo || '[PLACA DO CAVALO]';
-    const emailSubject = `SOLICITAÇÃO DE CHECKLIST DEDICADO SANTA LUZIA / ${defaultCavalo}`;
-    
     const htmlContent = `
       <div style="font-family: sans-serif; color: #333; font-size: 14px;">
-        <p style="font-weight: bold; margin-bottom: 20px;">Assunto: ${emailSubject}</p>
         <p>${genData.greeting},</p>
         <p>Solicito o <span style="background-color: #d1cbcb; padding: 2px 4px;">checklist</span> para o conjunto abaixo:</p>
         
@@ -225,7 +221,7 @@ export default function Checklist() {
       </div>
     `;
 
-    const textContent = `Assunto: ${emailSubject}\n\n${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,`;
+    const textContent = `${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,`;
 
     try {
       const typeHtml = "text/html";
@@ -268,7 +264,7 @@ export default function Checklist() {
               <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-lg shadow-primary/20">
                 <ClipboardCheck size={26} />
               </div>
-              <h1 className="text-3xl font-black text-white uppercase tracking-tight">Checklist Frota</h1>
+              <h1 className="text-3xl font-black text-white uppercase tracking-tight">Checklist</h1>
             </div>
             
             <div className="flex bg-white/5 rounded-xl p-1 w-fit">
@@ -402,11 +398,6 @@ export default function Checklist() {
           <div className="lg:col-span-2">
              <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl text-slate-800 min-h-full">
                 <div className="max-w-2xl mx-auto space-y-6 font-sans text-sm">
-                  <div className="border-b border-slate-200 pb-4 mb-4">
-                    <p className="font-bold text-slate-800">
-                      Assunto: SOLICITAÇÃO DE CHECKLIST DEDICADO SANTA LUZIA / {genData.cavalo || '[PLACA DO CAVALO]'}
-                    </p>
-                  </div>
                   <p>{genData.greeting},</p>
                   <p>Solicito o <span className="bg-[#d1cbcb] px-1 font-medium">checklist</span> para o conjunto abaixo:</p>
                   
