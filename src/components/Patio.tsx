@@ -638,7 +638,7 @@ export default function Patio() {
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="hidden lg:flex flex-wrap gap-4">
                 {[
                   { label: 'Em Permanência', value: safeData.filter(i => i.estaNoPatio === 'Sim').length, icon: Truck, color: 'text-emerald-400' },
                   { label: 'Fluxo Pendente', value: safeData.length, icon: Activity, color: 'text-purple-400' }
@@ -663,7 +663,7 @@ export default function Patio() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
             {/* Left: Tactical Console */}
-            <div className="lg:col-span-4 space-y-10">
+            <div className="hidden lg:block lg:col-span-4 space-y-10">
                 {/* Console de Ingestão */}
                 <div className="bg-[#080a12] border border-white/10 p-8 relative overflow-hidden backdrop-blur-sm">
                     {/* Decorative pattern */}
