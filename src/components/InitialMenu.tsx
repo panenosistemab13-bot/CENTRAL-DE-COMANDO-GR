@@ -29,7 +29,7 @@ const menuItems: MenuItem[] = [
   { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'from-orange-400 to-red-600', description: 'Controle de escala e presença dos colaboradores.' },
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'from-blue-500 to-blue-800', description: 'Gestão de apólices e seguros integrados.' },
   { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'from-rose-500 to-pink-700', description: 'Criação e agendamento de solicitações de monitoramento.' },
-  { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'from-amber-400 to-yellow-600', description: 'Otimização e códigos de rotas operacionais.' },
+  { id: 'rotas', label: 'Sistema de rotas', buttonLabel: 'Logística', icon: Route, color: 'from-amber-400 to-yellow-600', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'from-indigo-500 to-blue-700', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
 ];
 
