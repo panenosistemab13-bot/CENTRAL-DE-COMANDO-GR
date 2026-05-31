@@ -55,7 +55,7 @@ const tabs = [
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
-  { id: 'rotas', label: 'Sistema de rotas', icon: Route },
+  { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
 ];
 
@@ -184,6 +184,8 @@ export default function App() {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Senha de Acesso</label>
               <input 
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 autoFocus
                 value={passwordInput}
                 onChange={(e) => {
