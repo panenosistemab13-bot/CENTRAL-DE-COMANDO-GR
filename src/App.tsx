@@ -22,7 +22,8 @@ import {
   ChevronRight,
   AlertOctagon,
   Clock,
-  ClipboardCheck
+  ClipboardCheck,
+  Lock
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import PresenceList from './components/PresenceList';
@@ -59,6 +60,10 @@ const tabs = [
 ];
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+
   const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
@@ -144,6 +149,71 @@ export default function App() {
   };
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === '36356918') {
+      setIsAuthenticated(true);
+      setAuthError('');
+    } else {
+      setAuthError('Senha incorreta');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-6 relative overflow-hidden font-sans">
+        {/* Background Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 bg-zinc-900/60 backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl w-full max-w-md text-center"
+        >
+          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+            <Lock className="w-8 h-8 text-primary" />
+          </div>
+          
+          <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Acesso Restrito</h2>
+          <p className="text-slate-400 font-medium mb-8 text-sm">Insira a senha para acessar o painel</p>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2 text-left">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Senha de Acesso</label>
+              <input 
+                type="password"
+                autoFocus
+                value={passwordInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPasswordInput(val);
+                  if (val === '36356918') {
+                    setIsAuthenticated(true);
+                    setAuthError('');
+                  }
+                }}
+                className="w-full bg-black/40 border border-white/10 focus:border-primary/50 rounded-xl px-4 py-3 text-white outline-none transition-all shadow-inner focus:shadow-[0_0_15px_rgba(99,102,241,0.2)] text-center text-xl tracking-[0.5em] font-mono"
+                placeholder="••••••••"
+              />
+            </div>
+            {authError && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-rose-400 text-xs font-bold uppercase tracking-wider bg-rose-950/40 p-2 rounded-lg">
+                {authError}
+              </motion.p>
+            )}
+            <button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-indigo-500 text-white font-bold uppercase tracking-widest py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] flex items-center justify-center gap-2"
+            >
+              Entrar
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex bg-zinc-950 text-zinc-300 overflow-hidden font-sans relative">
