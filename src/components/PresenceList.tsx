@@ -89,51 +89,7 @@ const EMPLOYEES = [
     defaultEntrance: '18:00', 
     defaultExit: '06:00',
     avatar: 'https://i.postimg.cc/vHdJXHnf/1000613930.png'
-  },
-  { 
-    id: 'douglas', 
-    name: 'Douglas Medeiros', 
-    role: 'ANALISTA DE RISCO', 
-    shift: '06:00 AS 18:00',
-    scheduleType: '12x36',
-    startShiftDate: new Date(2026, 4, 2), 
-    defaultEntrance: '06:00', 
-    defaultExit: '18:00',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Douglas'
-  },
-  { 
-    id: 'alef', 
-    name: 'Alef Junior', 
-    role: 'ANALISTA DE RISCO', 
-    shift: '08:00 AS 17:00',
-    scheduleType: 'mon-fri',
-    startShiftDate: new Date(2026, 4, 1), 
-    defaultEntrance: '08:00', 
-    defaultExit: '17:00',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alef'
-  },
-  { 
-    id: 'vinicius', 
-    name: 'Vinicius Holanda', 
-    role: 'ANALISTA DE RISCO', 
-    shift: '06:00 AS 18:00',
-    scheduleType: '12x36',
-    startShiftDate: new Date(2026, 4, 1), 
-    defaultEntrance: '06:00', 
-    defaultExit: '18:00',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vinicius'
-  },
-  { 
-    id: 'ulisses', 
-    name: 'Ulisses Lima', 
-    role: 'ANALISTA DE RISCO', 
-    shift: '18:00 AS 06:00',
-    scheduleType: '12x36',
-    startShiftDate: new Date(2026, 4, 2), 
-    defaultEntrance: '18:00', 
-    defaultExit: '06:00',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ulisses'
-  },
+  }
 ];
 
 const BRAZILIAN_HOLIDAYS: Record<string, string> = {
