@@ -674,7 +674,7 @@ export default function PresenceList() {
           {/* The Image Canvas containing the main photographic scene */}
           <div className="relative w-full aspect-[16/10] sm:aspect-[16/9.5] rounded-[2rem] overflow-hidden bg-black shadow-inner border border-white/5">
             <img 
-              src="/src/assets/images/coffee_rustic_bg_1780760486326.png" 
+              src="/assets/images/coffee_rustic_bg_1780760486326.png" 
               alt="Café 3corações Edição Rústica Sofisticada" 
               className="w-full h-full object-cover transition-all duration-1000 scale-[1.01] group-hover:scale-105"
               referrerPolicy="no-referrer"

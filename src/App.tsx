@@ -40,7 +40,7 @@ type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' |
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
-  presence: '/src/assets/images/coffee_rustic_bg_1780760486326.png',
+  presence: '/assets/images/coffee_rustic_bg_1780760486326.png',
   risk: 'https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&q=80&w=2070',
   averbacao: 'https://i.postimg.cc/cL3qKW3Q/Gemini-Generated-Image-6o7yg46o7yg46o7y.png',
   sm_creator: 'https://i.postimg.cc/dtpPt3hC/Gemini-Generated-Image-fmye4sfmye4sfmye.png',
