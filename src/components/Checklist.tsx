@@ -16,7 +16,8 @@ import {
   Filter,
   Edit2,
   Copy,
-  Check
+  Check,
+  Heart
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
@@ -35,6 +36,8 @@ interface ChecklistItem {
   periferico: string;
   observacao: string;
   statusOverride?: 'APROVADO' | 'VENCIDO' | 'NEGATIVADO' | 'REPROVADO';
+  estaNoPatio?: 'SIM' | 'NÃO';
+  assinou?: 'SIM' | 'NÃO';
 }
 
 export default function Checklist() {
@@ -196,28 +199,39 @@ export default function Checklist() {
 
   const handleCopyGenerator = () => {
     const htmlContent = `
-      <div style="font-family: sans-serif; color: #333; font-size: 14px;">
-        <p>${genData.greeting},</p>
-        <p>Solicito o <span style="background-color: #d1cbcb; padding: 2px 4px;">checklist</span> para o conjunto abaixo:</p>
+      <div style="font-family: Georgia, serif; color: #4a3623; font-size: 15px; max-width: 600px; background-color: #fdfaf5; padding: 30px; border: 2px solid #d0a782; border-radius: 12px; box-shadow: inset 0 0 20px rgba(208, 167, 130, 0.2);">
+        <div style="display: flex; align-items: center; margin-bottom: 24px; gap: 12px;">
+           <img src="https://i.postimg.cc/Lsw0vpDT/Gemini-Generated-Image-ju3ympju3ympju3y.png" alt="3 Corações" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(153, 27, 27, 0.3);" />
+           <strong style="color: #b48554; font-size: 16px; letter-spacing: 1px; text-transform: uppercase;">Grupo 3 Corações</strong>
+        </div>
+        <p style="margin-bottom: 16px;">${genData.greeting},</p>
+        <p style="margin-bottom: 24px;">Solicito o <strong>checklist</strong> para o conjunto abaixo:</p>
         
-        <table border="1" style="border-collapse: collapse; min-width: 400px; font-family: sans-serif; font-size: 14px; text-align: center; font-weight: bold; margin-top: 15px; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-family: Georgia, serif; font-size: 15px; text-align: center; border: 1px solid #1e3a8a; border-radius: 4px; overflow: hidden; margin-bottom: 32px; color: #4a3623;">
           <thead>
-            <tr style="background-color: #485c96; color: white;">
-              <th style="padding: 10px; border: 1px solid #1c274c;">CAVALO</th>
-              <th style="padding: 10px; border: 1px solid #1c274c;">CARRETAS</th>
+            <tr style="background-color: #0f2a4a; color: #e2e8f0;">
+              <th style="padding: 12px 16px; border-right: 1px solid #1e3a8a; border-bottom: 1px solid #1e3a8a; font-weight: bold; width: 50%; text-transform: uppercase;">CAVALO</th>
+              <th style="padding: 12px 16px; border-bottom: 1px solid #1e3a8a; font-weight: bold; width: 50%; text-transform: uppercase;">CARRETAS</th>
             </tr>
           </thead>
           <tbody>
-            <tr style="background-color: #e8ebf5;">
-              <td style="padding: 10px; border: 1px solid #1c274c;">${genData.cavalo}</td>
-              <td style="padding: 10px; border: 1px solid #1c274c;">${genData.carretas}</td>
+            <tr style="background-color: #d2c2b2; color: #4a3623; font-size: 16px;">
+              <td style="padding: 16px 20px; text-shadow: 0 1px 0 rgba(255,255,255,0.3); border-right: 1px solid #c0a892; font-weight: bold;">${genData.cavalo}</td>
+              <td style="padding: 16px 20px; text-shadow: 0 1px 0 rgba(255,255,255,0.3); font-weight: bold;">${genData.carretas}</td>
             </tr>
           </tbody>
         </table>
         
-        <p style="margin-top: 20px; font-weight: bold; color: #555;">Contato: ${genData.contato}</p>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+           <p style="font-size: 15px; color: #4a3623;"><strong style="font-weight: bold;">Contato:</strong> ${genData.contato}</p>
+        </div>
         
-        <p style="margin-top: 20px; color: #555;">Att,</p>
+        <div style="margin-top: 40px; text-align: right;">
+           <p style="color: #4a3623; margin-bottom: 4px;">Att,</p>
+           <p style="font-style: italic; font-size: 24px; font-family: 'Brush Script MT', cursive; color: #292524; margin: 0;">Jefferson</p>
+           <div style="border-top: 1px solid #4a3623; width: 180px; margin-left: auto; margin-top: 4px;"></div>
+           <p style="font-size: 12px; margin-top: 4px;">Agente de risco (Jefferson)</p>
+        </div>
       </div>
     `;
 
@@ -313,114 +327,155 @@ export default function Checklist() {
       </div>
 
       {activeView === 'generator' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 sm:p-8 lg:p-12 rounded-[2.5rem] bg-cover bg-center shadow-[inset_0_10px_30px_rgba(0,0,0,0.5)] border-4 border-[#2b180d] relative overflow-hidden" style={{backgroundImage: "url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=2600&auto=format&fit=crop')"}}>
+          {/* Overlay to darken background slightly */}
+          <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+
           {/* Editor Form */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-[#0b0d19]/80 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-3xl shadow-2xl">
-              <h3 className="text-sm font-bold text-white uppercase tracking-tight border-b border-white/5 pb-4 mb-6">Preencher Dados</h3>
-              
-              <div className="space-y-5">
-                <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Saudação</label>
-                  <select
-                    value={genData.greeting}
-                    onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white focus:border-emerald-500/50 outline-none transition-all appearance-none"
+          <div className="lg:col-span-1 space-y-6 relative z-10">
+            <div className="bg-[#312c27] border-2 border-[#111] rounded-2xl p-2 shadow-2xl">
+              <div className="border border-dashed border-[#8c6b4a] rounded-xl p-5 sm:p-6 bg-[#312c27]">
+                <h3 className="text-[14px] font-bold text-[#c29665] font-serif uppercase tracking-widest border-b border-[#4e3b2e] pb-4 mb-6">Preencher Dados</h3>
+                
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Saudação</label>
+                    <select
+                      value={genData.greeting}
+                      onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
+                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif focus:border-[#c29665] outline-none transition-all appearance-none"
+                    >
+                      <option value="Bom dia" className="bg-[#4e311b]">Bom dia</option>
+                      <option value="Boa tarde" className="bg-[#4e311b]">Boa tarde</option>
+                      <option value="Boa noite" className="bg-[#4e311b]">Boa noite</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Placa do Cavalo</label>
+                    <select
+                      value={genData.cavalo}
+                      onChange={(e) => {
+                        const cavalo = e.target.value;
+                        const relatedItem = items.find(i => i.cavalo === cavalo);
+                        setGenData(prev => ({ 
+                          ...prev, 
+                          cavalo,
+                          carretas: relatedItem ? relatedItem.carretas : prev.carretas 
+                        }));
+                      }}
+                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif font-bold focus:border-[#c29665] outline-none transition-all uppercase appearance-none"
+                    >
+                      <option value="" className="bg-[#4e311b]">Selecione um veículo...</option>
+                      {sortedCavalos.map(item => (
+                        <option key={item.id} value={item.cavalo} className="bg-[#4e311b]">
+                          {item.cavalo} {getStatus(item).label === 'VENCIDO' || getStatus(item).label === 'NEGATIVADO' || getStatus(item).label === 'REPROVADO' ? `(⚠️ VENCIDO)` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Placas das Carretas</label>
+                    <input
+                      type="text"
+                      value={genData.carretas}
+                      onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
+                      placeholder="EX: XYZ-9876/LMN-4567"
+                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif font-bold focus:border-[#c29665] outline-none transition-all uppercase placeholder-[#5c3722]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Contato</label>
+                    <input
+                      type="text"
+                      value={genData.contato}
+                      onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
+                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif focus:border-[#c29665] outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <button 
+                    onClick={handleCopyGenerator}
+                    className={cn(
+                      "w-full py-3.5 rounded-md font-serif text-[12px] uppercase tracking-wider flex items-center justify-center gap-3 transition-all border-y-[3px]",
+                      genCopied 
+                        ? "bg-[#2d5930] text-white border-t-[#3b7540] border-b-[#1b361d] shadow-[0_2px_10px_rgba(0,0,0,0.3)]" 
+                        : "bg-[#1c3f25] text-[#81b287] hover:bg-[#234d2d] hover:text-[#a8cda8] border-t-[#2d5930] border-b-[#0f2414] shadow-[0_4px_15px_rgba(0,0,0,0.4)]"
+                    )}
                   >
-                    <option value="Bom dia" className="bg-zinc-900">Bom dia</option>
-                    <option value="Boa tarde" className="bg-zinc-900">Boa tarde</option>
-                    <option value="Boa noite" className="bg-zinc-900">Boa noite</option>
-                  </select>
+                    {genCopied ? <Check size={16} /> : <Copy size={16} />}
+                    {genCopied ? 'Copiado!' : 'Copiar Solicitação'}
+                  </button>
                 </div>
-
-                <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Placa do Cavalo</label>
-                  <select
-                    value={genData.cavalo}
-                    onChange={(e) => {
-                      const cavalo = e.target.value;
-                      const relatedItem = items.find(i => i.cavalo === cavalo);
-                      setGenData(prev => ({ 
-                        ...prev, 
-                        cavalo,
-                        carretas: relatedItem ? relatedItem.carretas : prev.carretas 
-                      }));
-                    }}
-                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white font-bold focus:border-emerald-500/50 outline-none transition-all uppercase appearance-none"
-                  >
-                    <option value="" className="bg-zinc-900">Selecione um Cavalo</option>
-                    {sortedCavalos.map(item => (
-                      <option key={item.id} value={item.cavalo} className="bg-zinc-900">
-                        {item.cavalo} {getStatus(item).label === 'VENCIDO' || getStatus(item).label === 'NEGATIVADO' || getStatus(item).label === 'REPROVADO' ? `(⚠️ VENCIDO)` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Placas das Carretas</label>
-                  <input
-                    type="text"
-                    value={genData.carretas}
-                    onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
-                    placeholder="Ex: XYZ-9876 / LMN-4567"
-                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white font-bold focus:border-emerald-500/50 outline-none transition-all uppercase"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block font-mono">Contato</label>
-                  <input
-                    type="text"
-                    value={genData.contato}
-                    onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3 text-sm text-white focus:border-emerald-500/50 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-white/5">
-                <button 
-                  onClick={handleCopyGenerator}
-                  className={cn(
-                    "w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all",
-                    genCopied ? "bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]" : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                  )}
-                >
-                  {genCopied ? <Check size={18} /> : <Copy size={18} />}
-                  {genCopied ? 'Copiado para o Clipboard!' : 'Copiar Solicitação'}
-                </button>
               </div>
             </div>
           </div>
 
-          {/* Preview Box */}
-          <div className="lg:col-span-2">
-             <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl text-slate-800 min-h-full">
-                <div className="max-w-2xl mx-auto space-y-6 font-sans text-sm">
-                  <p>{genData.greeting},</p>
-                  <p>Solicito o <span className="bg-[#d1cbcb] px-1 font-medium">checklist</span> para o conjunto abaixo:</p>
+          {/* Preview Box - The Card */}
+          <div className="lg:col-span-2 relative z-10 flex items-center h-full">
+             <div className="w-full bg-[#e6d5c3] rounded-2xl p-2 sm:p-3 border-[6px] border-[#c79165] shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative overflow-hidden ring-4 ring-[#eadfc8]/50 ring-offset-4 ring-offset-[#301a0e]">
+                <div className="border border-[#c79165] rounded-xl p-6 sm:p-10 bg-[#fdfaf5] shadow-inner min-h-[350px] relative">
                   
-                  <div className="mt-6 mb-8 overflow-hidden rounded-md border border-[#1c274c]">
-                    <table className="w-full border-collapse text-center uppercase">
-                      <thead>
-                        <tr className="bg-[#485c96] text-white">
-                          <th className="p-3 border-r border-[#1c274c] w-1/2">CAVALO</th>
-                          <th className="p-3 w-1/2">CARRETAS</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="bg-[#e8ebf5] font-bold text-slate-700 text-base">
-                          <td className="p-4 border-r border-t border-[#1c274c]">{genData.cavalo || "-"}</td>
-                          <td className="p-4 border-t border-[#1c274c]">{genData.carretas || "-"}</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  {/* Decorative Elements */}
+                  <div className="absolute top-8 right-8 text-[#d0a782]/20">
+                     <Heart size={120} strokeWidth={1} style={{ fill: 'currentColor' }} />
                   </div>
 
-                  <p className="font-bold text-slate-600 mt-8 text-base">Contato: {genData.contato}</p>
-                  
-                  <p className="text-slate-600 mt-12">Att,</p>
+                  <div className="relative z-10 max-w-2xl mx-auto space-y-6 font-serif text-[15px] sm:text-base text-[#4a3623]">
+                    
+                    {/* Header with Logo */}
+                    <div className="flex items-center gap-4 mb-8">
+                      <img src="https://i.postimg.cc/Lsw0vpDT/Gemini-Generated-Image-ju3ympju3ympju3y.png" alt="3 Corações" className="w-14 h-14 rounded-full object-cover shadow-md border border-[#991b1b]/30" />
+                      <h2 className="text-[#b48554] text-lg sm:text-xl font-bold uppercase tracking-widest drop-shadow-sm">Grupo 3 Corações</h2>
+                    </div>
+
+                    <p>{genData.greeting},</p>
+                    <p>Solicito o <strong className="font-bold underline decoration-[#d0a782] decoration-2 underline-offset-4">checklist</strong> para o conjunto abaixo:</p>
+                    
+                    {/* Rustic Table */}
+                    <div className="mt-8 mb-8 overflow-hidden rounded-md border-2 border-[#5c3722] shadow-md bg-[#fdfaf5]">
+                      <table className="w-full border-collapse text-center tracking-wide">
+                        <thead>
+                          <tr className="bg-gradient-to-b from-[#7a4b31] to-[#5c3722] text-[#fdfaf5]">
+                            <th className="p-4 border-r border-[#4e311b] w-1/2 font-bold font-serif text-sm sm:text-[15px] uppercase tracking-widest drop-shadow-sm">CAVALO</th>
+                            <th className="p-4 w-1/2 font-bold font-serif text-sm sm:text-[15px] uppercase tracking-widest drop-shadow-sm">CARRETAS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] text-[#4a3623] font-bold font-mono sm:text-lg">
+                            <td className="p-5 sm:p-6 border-r border-t border-[#c0a892] shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] uppercase">{genData.cavalo || "-"}</td>
+                            <td className="p-5 sm:p-6 border-t border-[#c0a892] shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] uppercase">{genData.carretas || "-"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-2">
+                      <p className="text-[#4a3623] sm:text-lg">
+                        <strong className="font-bold text-[#292524]">Contato:</strong> {genData.contato}
+                      </p>
+                      <div className="flex items-center gap-2 animate-pulse text-[#b48554]">
+                        <Heart size={16} style={{ fill: 'currentColor' }} className="-rotate-12" />
+                        <Heart size={20} style={{ fill: 'currentColor' }} className="rotate-6" />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-8 flex justify-between items-end">
+                      <p className="text-[#4a3623]">Att,</p>
+                      
+                      {/* Signature */}
+                      <div className="text-center mr-4 sm:mr-8">
+                        <p className="font-serif italic text-3xl sm:text-4xl text-[#292524] opacity-90 pb-1" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson</p>
+                        <div className="w-40 h-[1px] bg-[#4a3623] mx-auto opacity-50"></div>
+                        <p className="text-[10px] uppercase tracking-widest text-[#4a3623] mt-2 font-bold select-none">Agente de risco (Jefferson)</p>
+                      </div>
+                    </div>
+
+                  </div>
                 </div>
              </div>
           </div>
@@ -446,119 +501,144 @@ export default function Checklist() {
       </div>
 
       {/* Main Table Grid */}
-      <div className="bg-[#0b0d19]/60 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-md shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-white/[0.02] border-b border-white/5">
-                <th className="px-8 py-6 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Cavalo / Carretas</th>
-                <th className="px-8 py-6 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-                <th className="px-8 py-6 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Realização</th>
-                <th className="px-8 py-6 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Vencimento</th>
-                <th className="px-8 py-6 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">Dias</th>
-                <th className="px-8 py-6 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Manutenção / OS</th>
-                <th className="px-8 py-6 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              <AnimatePresence mode="popLayout">
-                {filteredItems.map((item) => {
-                  const status = getStatus(item);
-                  const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
-                  
-                  return (
-                    <motion.tr 
-                      key={item.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="group hover:bg-white/[0.02] transition-colors"
+      <div className="bg-[#0b0c10]/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md shadow-2xl">
+        <div className="flex flex-col">
+          <AnimatePresence mode="popLayout">
+            {filteredItems.map((item) => {
+              const status = getStatus(item);
+              const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
+
+              return (
+              <motion.div 
+                key={item.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col xl:flex-row xl:items-center justify-between p-5 md:px-8 border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors gap-6 xl:gap-8 group"
+              >
+                {/* IDENTIFICADOR / PLACA MERCOSUL */}
+                <div className="flex flex-col w-full xl:w-[200px] shrink-0">
+                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 ml-1">Identificador</span>
+                  <div className="flex flex-col w-[130px] rounded-[6px] overflow-hidden shadow-lg border border-white/10 shrink-0">
+                    <div className="bg-[#003399] h-[16px] flex items-center justify-between px-2">
+                      <span className="text-[8px] font-black text-white uppercase leading-none mt-[1px] tracking-tight">Brasil</span>
+                      <div className="w-[6px] h-[6px] rounded-full bg-[#ffcc00]"></div>
+                    </div>
+                    <div className="bg-white text-black font-black text-[20px] text-center leading-none py-2 tracking-wide uppercase">
+                      {item.cavalo}
+                    </div>
+                  </div>
+                </div>
+
+                {/* INFORMAÇÕES DO CHECKLIST (Validade, Status, etc) */}
+                <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-3 w-full">
+                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
+                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> STATUS</span>
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-[0.15em] border shadow-sm w-fit mt-1",
+                      status.color, status.bg, status.border,
+                      (status.label === 'VENCIDO' || status.label === 'NEGATIVADO' || status.label === 'REPROVADO') ? "animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.3)]" : ""
+                    )}>
+                      {status.label}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
+                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> VALIDADE</span>
+                    <div className={cn(
+                      "flex items-center gap-1.5 text-[13px] font-mono font-black mt-1",
+                      diasParaVencer < 0 ? "text-rose-400" : "text-emerald-400"
+                    )}>
+                      <Clock size={14} strokeWidth={2.5} />
+                      {format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
+                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> CARRETAS</span>
+                    <span className="text-[12px] font-mono text-zinc-300 font-bold truncate mt-1">
+                      {item.carretas || 'Nenhuma'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
+                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> PERIFÉRICO</span>
+                    <span className="text-[12px] font-mono text-zinc-300 font-bold truncate flex items-center gap-1.5 mt-1">
+                      <Wrench size={14} className="text-zinc-500" strokeWidth={2.5} /> {item.periferico || 'Padrão'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between cursor-help relative group/tooltip">
+                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> RESTANTES</span>
+                    <span className={cn(
+                      "text-[12px] font-mono font-black truncate flex items-center gap-1.5 mt-1",
+                      diasParaVencer < 0 ? "text-rose-500" : diasParaVencer <= 7 ? "text-amber-500" : "text-emerald-500"
+                    )}>
+                      {diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ESTÁ NO PÁTIO? & ASSINOU? */}
+                <div className="hidden flex-col sm:flex-row items-center gap-4 xl:gap-8 w-full xl:w-auto shrink-0">
+                  <div className="flex flex-row items-center gap-3 w-full sm:w-auto justify-between">
+                    <span className="text-xs font-black text-zinc-600 uppercase tracking-widest leading-tight">Está no<br/>pátio?</span>
+                    <select 
+                      value={item.estaNoPatio || 'NÃO'}
+                      onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { estaNoPatio: e.target.value })}
+                      className="bg-[#0b0c10] border border-white/10 text-white text-xl sm:text-[22px] font-black font-mono px-4 py-2 rounded-lg outline-none focus:border-primary/50 cursor-pointer appearance-none w-[110px] sm:w-[130px] text-center"
                     >
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 text-zinc-400 group-hover:text-primary group-hover:bg-primary/10 transition-all")}>
-                            <Truck size={20} />
-                          </div>
-                          <div>
-                            <div className="text-sm font-black text-white uppercase tracking-wider">{item.cavalo}</div>
-                            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate max-w-[120px]">{item.carretas || 'Nenhuma'}</div>
-                          </div>
-                        </div>
-                      </td>
-                    <td className="px-8 py-6 text-center">
-                        <span className={cn(
-                          "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm",
-                          status.color, status.bg, status.border,
-                          (status.label === 'VENCIDO' || status.label === 'NEGATIVADO' || status.label === 'REPROVADO') ? "animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.3)]" : ""
-                        )}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono font-bold">
-                          <Calendar size={12} className="text-zinc-600" />
-                          {format(parseISO(item.dataTeste), 'dd/MM/yyyy')}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className={cn(
-                          "flex items-center gap-2 text-xs font-mono font-black",
-                          diasParaVencer < 0 ? "text-rose-400" : "text-zinc-300"
-                        )}>
-                          <Clock size={12} />
-                          {format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-center">
-                        <div className={cn(
-                          "text-sm font-black font-mono",
-                          diasParaVencer < 0 ? "text-rose-500" : diasParaVencer <= 7 ? "text-amber-500" : "text-emerald-500"
-                        )}>
-                          {diasParaVencer}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs font-bold text-zinc-400 truncate max-w-[150px]">{item.manutencaoOs || '---'}</span>
-                          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1">
-                            <Wrench size={8} /> {item.periferico || 'Padrão'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button 
-                            className="p-2 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"
-                            onClick={() => setEditingItem(item)}
-                            title="Editar informações"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            className="p-2 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"
-                            onClick={() => {
-                              const note = prompt("Atualizar observação:", item.observacao);
-                              if (note !== null) {
-                                update(ref(rtdb, `checklist_veiculos/${item.id}`), { observacao: note });
-                              }
-                            }}
-                          >
-                            <MessageSquare size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(item.id)}
-                            className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl transition-all"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </AnimatePresence>
-            </tbody>
-          </table>
+                      <option value="NÃO" className="bg-[#0b0c10]">NÃO</option>
+                      <option value="SIM" className="bg-[#0b0c10]">SIM</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-row items-center gap-3 w-full sm:w-auto justify-between">
+                    <span className="text-xs font-black text-zinc-600 uppercase tracking-widest">Assinou?</span>
+                    <select 
+                      value={item.assinou || 'NÃO'}
+                      onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { assinou: e.target.value })}
+                      className="bg-[#0b0c10] border border-white/10 text-white text-xl sm:text-[22px] font-black font-mono px-4 py-2 rounded-lg outline-none focus:border-primary/50 cursor-pointer appearance-none w-[110px] sm:w-[130px] text-center"
+                    >
+                      <option value="NÃO" className="bg-[#0b0c10]">NÃO</option>
+                      <option value="SIM" className="bg-[#0b0c10]">SIM</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* AÇÕES */}
+                <div className="flex items-center justify-end w-full xl:w-auto gap-1 border-t border-white/5 xl:border-0 pt-4 xl:pt-0 mt-2 xl:mt-0 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-all">
+                  <button 
+                    className="p-2 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"
+                    onClick={() => setEditingItem(item)}
+                    title="Editar informações"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button 
+                    className="p-2 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"
+                    onClick={() => {
+                      const note = prompt("Atualizar observação:", item.observacao);
+                      if (note !== null) {
+                        update(ref(rtdb, `checklist_veiculos/${item.id}`), { observacao: note });
+                      }
+                    }}
+                    title="Observações"
+                  >
+                    <MessageSquare size={16} />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                    title="Excluir"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </motion.div>
+              );
+            })}
+          </AnimatePresence>
 
           {filteredItems.length === 0 && (
             <div className="py-24 flex flex-col items-center justify-center text-center">

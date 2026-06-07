@@ -59,6 +59,62 @@ interface SMCreatorProps {
   view?: 'generator' | 'codes';
 }
 
+const generateStyledTableHtml = (rows: SMRow[], isIda: boolean) => {
+  if (rows.length === 0) return '';
+  const color = isIda ? '#14325c' : '#7f1d1d';
+  const gradientStart = isIda ? '#14325c' : '#7f1d1d';
+  const gradientEnd = isIda ? '#0f2a4a' : '#991b1b';
+  const textColor = isIda ? '#e2e8f0' : '#fdfaf5';
+  
+  let rowsHtml = '';
+  rows.forEach(r => {
+    rowsHtml += `
+      <tr style="height: 42px;">
+        <td style="width: 11%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.dataSaida || '-'}</div>
+        </td>
+        <td style="width: 25%; padding: 4px 2px; text-align: left; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 8px; color: #4a3623; font-weight: bold; font-family: Arial, sans-serif; font-size: 11px; display: block; text-transform: uppercase; text-align: left; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.motorista || '-'}</div>
+        </td>
+        <td style="width: 12%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.placa || '-'}</div>
+        </td>
+        <td style="width: 11%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.bau1 || '-'}</div>
+        </td>
+        <td style="width: 11%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.bau2 || '-'}</div>
+        </td>
+        <td style="width: 18%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 4px; color: #4a3623; font-weight: bold; font-family: Arial, sans-serif; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.trecho || '-'}</div>
+        </td>
+        <td style="width: 12%; padding: 4px 2px; text-align: right; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 8px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-align: right; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.valorNf || '0,00'}</div>
+        </td>
+      </tr>`;
+  });
+
+  return `
+    <div style="width: 100%; max-width: 1000px; box-sizing: border-box; background-color: #e6d5c3; background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'); border: 6px solid #c79165; border-radius: 12px; padding: 4px; display: block; text-align: left; margin: 10px 0;">
+      <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; background-color: rgba(253, 250, 245, 0.95); border-radius: 6px; overflow: hidden; font-family: 'Georgia', serif; font-size: 12px;">
+        <thead>
+          <tr style="background-color: ${color}; background-image: linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%); color: ${textColor}; height: 42px;">
+            <th style="width: 11%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">DATA</th>
+            <th style="width: 25%; text-align: left; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 12px; border-bottom: 2px solid #c0a892;">MOTORISTA</th>
+            <th style="width: 12%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">PLACA</th>
+            <th style="width: 11%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">BAÚ 1</th>
+            <th style="width: 11%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">BAÚ 2</th>
+            <th style="width: 18%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">TRECHO</th>
+            <th style="width: 12%; text-align: right; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 12px; border-bottom: 2px solid #c0a892;">VALOR NF</th>
+          </tr>
+        </thead>
+        <tbody style="background-color: rgba(253, 250, 245, 0.95);">
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>`;
+};
+
 export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
   const [idaRows, setIdaRows] = useState<SMRow[]>([]);
   const [voltaRows, setVoltaRows] = useState<SMRow[]>([]);
@@ -248,37 +304,6 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
 
   const copyToEmail = async () => {
     const greeting = getGreeting();
-    const formatRowsHtml = (rows: SMRow[], title: string, color: string) => {
-      if (rows.length === 0) return '';
-      let html = `<h3 style="color: ${color}; font-family: sans-serif; margin-bottom: 5px;">--- ${title} ---</h3>`;
-      html += `<table border="1" style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 12px; text-align: left;">
-        <thead>
-          <tr style="background-color: ${color}; color: white; text-transform: uppercase;">
-            <th style="padding: 8px; border: 1px solid #ccc;">DATA</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">MOTORISTA</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">PLACA</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">BAÚ 1</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">BAÚ 2</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">TRECHO</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">VALOR NF</th>
-          </tr>
-        </thead>
-        <tbody>`;
-      
-      rows.forEach(r => {
-        html += `<tr>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.dataSaida}</td>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.motorista}</td>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.placa}</td>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.bau1}</td>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.bau2}</td>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.trecho}</td>
-          <td style="padding: 8px; border: 1px solid #ccc;">${r.valorNf}</td>
-        </tr>`;
-      });
-      html += `</tbody></table><br/>`;
-      return html;
-    };
 
     const formatRowsText = (rows: SMRow[], title: string) => {
       if (rows.length === 0) return '';
@@ -296,17 +321,17 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
         <p>Segue relatórios de SM - Ida e Volta.</p>
         
         <div style="margin-top: 20px;">
-          <h3 style="color: #22c55e; margin-bottom: 5px;">--- ROTA IDA ---</h3>
+          <h3 style="color: #14325c; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA IDA ---</h3>
           <p style="font-size: 13px;">${greeting},</p>
           <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: <strong>${getJourneyDate(idaRows)}</strong>!</p>
-          ${formatRowsHtml(idaRows, '', '#22c55e')}
+          ${generateStyledTableHtml(idaRows, true)}
         </div>
 
         <div style="margin-top: 30px;">
-          <h3 style="color: #c62828; margin-bottom: 5px;">--- ROTA VOLTA ---</h3>
+          <h3 style="color: #7f1d1d; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA VOLTA ---</h3>
           <p style="font-size: 13px;">${greeting},</p>
           <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: <strong>${getJourneyDate(voltaRows)}</strong>!</p>
-          ${formatRowsHtml(voltaRows, '', '#c62828')}
+          ${generateStyledTableHtml(voltaRows, false)}
         </div>
 
         <p style="margin-top: 20px;"><strong>Total Calculado: ${calculateTotal()}</strong></p>
@@ -335,7 +360,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
   const copySection = async (rows: SMRow[], title: string, setCopiedStatus: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (rows.length === 0) return;
     
-    const color = title.includes('IDA') ? '#22c55e' : '#c62828';
+    const color = title.includes('IDA') ? '#14325c' : '#7f1d1d';
     const isIda = title.includes('IDA');
     const greeting = getGreeting();
     const date = getJourneyDate(rows);
@@ -345,36 +370,11 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
       : `Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${date}!`;
 
     let html = `<div style="font-family: sans-serif; color: #333;">
-      <h3 style="color: ${color}; margin-bottom: 5px;">--- ${title} ---</h3>
+      <h3 style="color: ${color}; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ${title} ---</h3>
       <p style="font-size: 13px;">${greeting},</p>
-      <p style="font-size: 13px;">${phrase}</p>`;
-    
-    html += `<table border="1" style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 12px; text-align: left;">
-      <thead>
-        <tr style="background-color: ${color}; color: white; text-transform: uppercase;">
-          <th style="padding: 8px; border: 1px solid #ccc;">DATA</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">MOTORISTA</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">PLACA</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">BAÚ 1</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">BAÚ 2</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">TRECHO</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">VALOR NF</th>
-        </tr>
-      </thead>
-      <tbody>`;
-    
-    rows.forEach(r => {
-      html += `<tr>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.dataSaida}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.motorista}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.placa}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.bau1}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.bau2}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.trecho}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${r.valorNf}</td>
-      </tr>`;
-    });
-    html += `</tbody></table></div>`;
+      <p style="font-size: 13px;">${phrase}</p>
+      ${generateStyledTableHtml(rows, isIda)}
+    </div>`;
 
     let text = `--- ${title} ---\n${greeting},\n${phrase}\n\n`;
     text += `| DATA | MOTORISTA | PLACA | BAÚ 1 | BAÚ 2 | TRECHO | VALOR NF |\n`;
@@ -399,23 +399,24 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6 sm:p-8 lg:p-12 rounded-[2.5rem] bg-cover bg-center shadow-[inset_0_10px_30px_rgba(0,0,0,0.5)] border-4 border-[#2b180d] relative overflow-hidden" style={{backgroundImage: "url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=2600&auto=format&fit=crop')"}}>
+      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
       {view === 'codes' ? (
-        renderCodesTable()
+        <div className="relative z-10 bg-[#fdfaf5] p-6 rounded-xl border-4 border-[#c79165] shadow-2xl">{renderCodesTable()}</div>
       ) : (
-        <>
-          <div className="report-card p-8 border-l-8 border-l-primary bg-[#0b0f1a] flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none group-hover:bg-primary/20 transition-all duration-1000" />
+        <div className="relative z-10 space-y-8">
+          <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] p-2 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative overflow-hidden ring-4 ring-[#eadfc8]/50 ring-offset-4 ring-offset-[#301a0e]">
+            <div className="border border-[#c79165] bg-[#fdfaf5] rounded-xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative shadow-inner">
             
             <div className="flex items-center gap-6 relative z-10">
-              <div className="p-4 bg-primary/10 rounded-2xl text-primary shadow-inner border border-primary/20">
-                <Calculator size={32} />
+              <div className="bg-[#b91c1c] w-14 h-14 rounded-full flex items-center justify-center shadow-md border border-[#991b1b]/30 self-center">
+                <Calculator size={24} className="text-[#fbbf24] shadow-sm ml-1" />
               </div>
               <div>
-                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">SM</h2>
+                <h2 className="text-2xl font-black text-[#4a3623] tracking-tighter uppercase font-serif drop-shadow-sm flex items-center gap-2">SM <img src="https://i.postimg.cc/Lsw0vpDT/Gemini-Generated-Image-ju3ympju3ympju3y.png" alt="3 Corações" className="w-8 h-8 rounded-full border border-[#991b1b]/30 shadow-sm" /></h2>
                 <div className="flex items-center gap-2 mt-1">
-                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                   <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Relatórios & Cálculos Operacionais</p>
+                   <span className="w-2 h-2 rounded-full bg-[#1e3a8a] animate-pulse" />
+                   <p className="text-[10px] text-[#4a3623] font-black uppercase tracking-[0.3em] font-serif tracking-widest pl-1">Relatórios & Cálculos Operacionais</p>
                 </div>
               </div>
             </div>
@@ -424,13 +425,16 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
               whileTap={{ scale: 0.98 }}
               onClick={copyToEmail}
               className={cn(
-                "px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3 transition-all relative z-10 shadow-xl",
-                copied ? "bg-green-500 text-white shadow-green-500/20" : "bg-primary text-white"
+                "px-8 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3 transition-all relative z-10 shadow-xl border-y-[3px] font-serif",
+                copied 
+                  ? "bg-[#2d5930] text-white border-t-[#3b7540] border-b-[#1b361d] shadow-[0_2px_10px_rgba(0,0,0,0.3)]" 
+                  : "bg-[#14325c] text-[#e2e8f0] hover:bg-[#1e3a8a] border-t-[#274b75] border-b-[#0f2a4a] hover:text-white"
               )}
             >
               {copied ? <Check size={18} /> : <Mail size={18} />}
               {copied ? 'CONTEÚDO COPIADO' : 'GERAR RELATÓRIO P/ EMAIL'}
             </motion.button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
@@ -440,13 +444,13 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
               {/* ROTA IDA (Green Theme) */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-green-500 uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-sm font-black text-[#c29665] font-serif uppercase tracking-widest drop-shadow-md flex items-center gap-2">
                     <TrendingUp size={16} /> Rota Ida
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('ida')}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-green-500/20 text-green-400 hover:bg-green-500/30 font-bold uppercase tracking-wider transition-all"
+                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-[#312c27] border border-[#111] text-[#fed7aa] font-serif shadow-md hover:bg-[#4e311b] font-bold uppercase tracking-wider transition-all"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -454,34 +458,34 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       <button 
                         onClick={() => copySection(idaRows, 'ROTA IDA', setIdaCopied)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                          idaCopied ? "bg-green-500 text-white" : "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                          "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all font-serif",
+                          idaCopied ? "bg-[#2d5930] text-white border border-[#111]" : "bg-[#312c27] text-[#fed7aa] border border-[#111] hover:bg-[#14325c] hover:text-white"
                         )}
                       >
                         {idaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {idaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setIdaRows([])} className="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-tighter">Limpar Tudo</button>
+                    <button onClick={() => setIdaRows([])} className="text-[10px] font-bold text-[#c29665] hover:text-rose-400 text-shadow-sm font-serif ml-2 uppercase tracking-tighter">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="report-card overflow-hidden bg-[#e9d5ff]/10 border-green-500/20">
+                <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] overflow-hidden relative ring-4 ring-[#eadfc8]/50"><div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50 mix-blend-multiply pointer-events-none"></div><div className="relative z-10 w-full overflow-hidden p-1">
                   {idaRows.length === 0 ? (
-                    <div className="p-12 flex flex-col items-center justify-center text-center">
-                      <div className="p-4 bg-green-500/10 rounded-full mb-4">
-                        <Clipboard className="text-green-500 w-8 h-8" />
+                    <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fdfaf5] h-full border border-[#c0a892]/50 shadow-inner">
+                      <div className="p-4 bg-[#7a4b31]/10 rounded-full mb-4 border border-[#7a4b31]/20">
+                        <Clipboard className="text-[#a57045] w-8 h-8" />
                       </div>
-                      <p className="text-sm text-slate-400 mb-4">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
+                      <p className="text-sm text-[#4a3623] mb-4 font-serif">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
                       <div className="flex flex-col gap-3 w-full max-w-md">
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'ida')}
                           placeholder="Ctrl+V aqui..."
-                          className="w-full h-24 bg-white/5 border border-border-dark rounded-xl p-4 text-xs font-mono text-slate-200 outline-none focus:border-green-500/50 resize-none"
+                          className="w-full h-24 bg-white/5 border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-green-500/50 resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('ida')}
-                          className="w-full py-3 border border-dashed border-green-500/30 rounded-xl text-green-500 hover:text-green-400 flex items-center justify-center gap-2 text-xs font-bold uppercase"
+                          className="w-full py-3 border border-dashed border-[#14325c]/50 rounded-xl text-[#14325c] hover:text-[#1e3a8a] flex items-center justify-center gap-2 text-xs font-bold uppercase"
                         >
                           <Plus size={16} /> Adicionar manualmente
                         </button>
@@ -491,7 +495,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-green-600/20 text-green-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-green-500/20">
+                          <tr className="bg-gradient-to-b from-[#14325c] to-[#0f2a4a] text-[#e2e8f0] text-[10px] uppercase font-bold tracking-[0.2em] border-b border-[#1e3a8a] shadow-sm">
                             <th className="p-4">Data</th>
                             <th className="p-4">Motorista</th>
                             <th className="p-4 text-center">Placa</th>
@@ -502,15 +506,15 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                             <th className="p-4 w-12 text-center">Ações</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-green-500/10">
+                        <tbody className="divide-y divide-[#c0a892]/50 bg-[#fdfaf5]/90 font-serif backdrop-blur-sm">
                           {idaRows.map((row, i) => (
-                            <tr key={i} className="text-xs text-slate-200 hover:bg-green-500/[0.05] transition-all group/row">
+                            <tr key={i} className="text-xs text-[#4a3623] hover:bg-[#d0a782]/10 transition-all group/row font-bold relative">
                               <td className="p-3">
                                 <input 
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 font-bold group/cell">
@@ -519,7 +523,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'ida')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all uppercase"
+                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
@@ -535,7 +539,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.placa}
                                   onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-black tracking-widest uppercase"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-black tracking-widest uppercase"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -543,7 +547,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -551,7 +555,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3">
@@ -559,7 +563,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.trecho}
                                   onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'ida')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all uppercase"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
                                 />
                               </td>
                               <td className="p-3 text-right font-black text-green-500 group/cell">
@@ -575,7 +579,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'ida')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-right focus:bg-green-500/10 focus:border-green-500/30 outline-none transition-all font-mono"
+                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                   />
                                 </div>
                               </td>
@@ -593,19 +597,18 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       </table>
                     </div>
                   )}
-                </div>
-              </section>
+                </div></div></section>
 
               {/* ROTA VOLTA (Sky Theme) */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-sm font-black text-[#c29665] font-serif uppercase tracking-widest flex items-center gap-2 drop-shadow-md">
                     <Download size={16} className="rotate-180" /> Rota Volta
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('volta')}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-red-500/20 text-red-400 hover:bg-red-500/30 font-bold uppercase tracking-wider transition-all"
+                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-[#312c27] border border-[#111] text-[#fed7aa] font-serif shadow-md hover:bg-[#4e311b] font-bold uppercase tracking-wider transition-all"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -613,34 +616,34 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       <button 
                         onClick={() => copySection(voltaRows, 'ROTA VOLTA', setVoltaCopied)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                          voltaCopied ? "bg-red-500 text-white" : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                          "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all font-serif",
+                          voltaCopied ? "bg-[#991b1b] text-white border border-[#111]" : "bg-[#312c27] text-[#fed7aa] border border-[#111] hover:bg-[#14325c] hover:text-white"
                         )}
                       >
                         {voltaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {voltaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-tighter">Limpar Tudo</button>
+                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-bold text-[#c29665] hover:text-rose-400 text-shadow-sm font-serif ml-2 uppercase tracking-tighter">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="report-card overflow-hidden bg-[#f4cccc]/10 border-red-500/20">
+                <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] overflow-hidden relative ring-4 ring-[#eadfc8]/50"><div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50 mix-blend-multiply pointer-events-none"></div><div className="relative z-10 w-full overflow-hidden p-1">
                   {voltaRows.length === 0 ? (
-                    <div className="p-12 flex flex-col items-center justify-center text-center">
-                      <div className="p-4 bg-red-500/10 rounded-full mb-4">
-                        <Clipboard className="text-red-500 w-8 h-8" />
+                    <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fdfaf5] h-full border border-[#c0a892]/50 shadow-inner">
+                      <div className="p-4 bg-[#b91c1c]/10 rounded-full mb-4 border border-[#b91c1c]/20">
+                        <Clipboard className="text-[#b91c1c] w-8 h-8" />
                       </div>
-                      <p className="text-sm text-slate-400 mb-4">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
+                      <p className="text-sm text-[#4a3623] mb-4 font-serif">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
                       <div className="flex flex-col gap-3 w-full max-w-md">
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'volta')}
                           placeholder="Ctrl+V aqui..."
-                          className="w-full h-24 bg-white/5 border border-border-dark rounded-xl p-4 text-xs font-mono text-slate-200 outline-none focus:border-red-500/50 resize-none"
+                          className="w-full h-24 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-[#b91c1c] resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('volta')}
-                          className="w-full py-3 border border-dashed border-red-500/30 rounded-xl text-red-500 hover:text-red-400 flex items-center justify-center gap-2 text-xs font-bold uppercase"
+                          className="w-full py-3 border border-dashed border-[#991b1b]/50 rounded-xl text-[#991b1b] hover:text-[#b91c1c] flex items-center justify-center gap-2 text-xs font-bold uppercase"
                         >
                           <Plus size={16} /> Adicionar manualmente
                         </button>
@@ -650,7 +653,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-red-600/20 text-red-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-red-500/20">
+                          <tr className="bg-gradient-to-b from-[#7f1d1d] to-[#991b1b] text-[#fdfaf5] text-[10px] uppercase font-bold tracking-[0.2em] border-b border-[#450a0a] shadow-sm">
                             <th className="p-4">Data</th>
                             <th className="p-4">Motorista</th>
                             <th className="p-4 text-center">Placa</th>
@@ -661,15 +664,15 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                             <th className="p-4 w-12 text-center">Ações</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-red-500/10">
+                        <tbody className="divide-y divide-[#c0a892]/50 bg-[#fdfaf5]/90 font-serif backdrop-blur-sm">
                           {voltaRows.map((row, i) => (
-                            <tr key={i} className="text-xs text-slate-200 hover:bg-red-500/[0.05] transition-all group/row">
+                            <tr key={i} className="text-xs text-[#4a3623] hover:bg-[#d0a782]/10 transition-all group/row font-bold relative">
                               <td className="p-3">
                                 <input 
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 font-bold group/cell">
@@ -678,7 +681,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'volta')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
@@ -694,7 +697,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.placa}
                                   onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-black tracking-widest uppercase"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-black tracking-widest uppercase"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -702,7 +705,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -710,7 +713,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'volta')}
-                                  className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3">
@@ -719,7 +722,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.trecho}
                                     onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'volta')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => {
@@ -746,7 +749,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'volta')}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-1.5 px-3 text-right focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                   />
                                 </div>
                               </td>
@@ -764,32 +767,32 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       </table>
                     </div>
                   )}
-                </div>
-              </section>
+                </div></div></section>
             </div>
 
             {/* Calculator Sidebar */}
             <div className="space-y-6">
-              <div className="report-card p-6 flex flex-col h-full border-primary/20 bg-primary/5">
+              <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] p-2 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative overflow-hidden ring-4 ring-[#eadfc8]/50 ring-offset-4 ring-offset-[#301a0e] h-full flex flex-col">
+       <div className="border border-[#c79165] bg-[#fdfaf5] rounded-xl p-6 flex flex-col flex-1 relative shadow-inner">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Calculator size={16} className="text-primary" />
+                  <h3 className="text-sm font-bold text-[#c29665] font-serif flex items-center gap-2 drop-shadow-sm uppercase">
+                    <Calculator size={16} className="text-[#a57045]" />
                     Soma de Valores
                   </h3>
                   <button 
                     onClick={() => setCalcValues([''])}
-                    className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"
+                    className="p-1.5 text-[#c29665] hover:text-rose-400 text-shadow-sm font-serif ml-2 transition-colors"
                     title="Resetar calculadora"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
 
-                <div className="bg-[#0b0f1a] rounded-2xl p-6 mb-6 border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-center relative group/total overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Total Consolidado</p>
-                  <h4 className="text-3xl font-black text-white tracking-tighter">
-                    <span className="text-primary mr-2 text-xl font-medium">R$</span>
+                <div className="bg-[#312c27] rounded-xl p-6 mb-6 border border-[#111] shadow-[inset_0_4px_10px_rgba(0,0,0,0.8)] text-center relative group/total overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#c29665]/50 to-transparent" />
+                  <p className="text-[11px] font-black text-[#c29665] font-serif uppercase tracking-[0.2em] mb-2">Total Consolidado</p>
+                  <h4 className="text-3xl font-black text-[#fed7aa] tracking-tighter font-serif drop-shadow-md">
+                    <span className="text-[#a57045] mr-2 text-xl font-medium">R$</span>
                     {calculateTotal()}
                   </h4>
                   <div className="absolute top-3 right-3 opacity-0 group-hover/total:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
@@ -815,7 +818,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                         value={val}
                         onChange={(e) => updateCalcValue(i, e.target.value)}
                         placeholder="0,00"
-                        className="w-full bg-white/5 border border-white/5 rounded-xl pl-9 pr-10 py-3 text-sm text-white font-mono focus:bg-primary/[0.05] focus:border-primary/30 outline-none transition-all placeholder:text-slate-700 shadow-inner"
+                        className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-xl pl-9 pr-10 py-3 text-sm text-[#4a3623] font-mono focus:bg-primary/[0.05] focus:border-primary/30 outline-none transition-all placeholder:text-slate-700 shadow-inner"
                       />
                       {calcValues.length > 1 && (
                         <button 
@@ -832,37 +835,39 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                     whileHover={{ scale: 1.02, backgroundColor: "rgba(99, 102, 241, 0.1)" }}
                     whileTap={{ scale: 0.98 }}
                     onClick={addCalcLine}
-                    className="w-full py-5 border-2 border-dashed border-white/5 hover:border-primary/30 rounded-2xl text-slate-500 hover:text-primary flex items-center justify-center gap-4 transition-all text-[11px] font-black uppercase tracking-[0.25em] bg-white/[0.02]"
+                    className="w-full py-5 border-2 border-dashed border-white/5 hover:border-primary/30 rounded-2xl text-[#4a3623] hover:text-[#b91c1c] border-[#a57045] hover:bg-[#a57045]/10 flex items-center justify-center gap-4 transition-all text-[11px] font-bold font-serif uppercase tracking-[0.25em] bg-transparent"
                   >
                     <Plus size={20} /> Adicionar Linha
                   </motion.button>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-border-dark">
+                <div className="mt-8 pt-6 border-t border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] p-4 rounded-xl">
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="p-2 bg-primary/10 rounded-lg text-primary mt-1">
+                      <div className="p-2 bg-[#7a4b31]/10 rounded-lg text-[#a57045] mt-1 border border-[#7a4b31]/20">
                         <Info size={14} />
                       </div>
-                      <p className="text-[10px] text-slate-500 leading-relaxed">
+                      <p className="text-[10px] text-[#4a3623] leading-relaxed font-serif">
                         A calculadora aceita valores com pontos e vírgulas. A soma é atualizada em tempo real.
                       </p>
                     </div>
                 </div>
               </div>
+            </div>
               
-              <div className="report-card p-4 flex items-center justify-between group cursor-pointer hover:border-primary/40 transition-all">
+              <div className="bg-[#fdfaf5] border border-[#c0a892] p-4 flex items-center justify-between group cursor-pointer hover:border-[#a57045] transition-all rounded-xl shadow-sm mt-4">
                 <div className="flex items-center gap-3">
-                  <CalendarIcon size={18} className="text-primary group-hover:scale-110 transition-transform" />
+                  <CalendarIcon size={18} className="text-[#a57045] group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-mono">Última Atualização</p>
-                    <p className="text-xs font-bold text-white">Agora mesmo</p>
+                    <p className="text-[10px] font-black text-[#c29665] uppercase tracking-widest font-serif drop-shadow-sm">Última Atualização</p>
+                    <p className="text-xs font-bold text-[#4a3623] font-serif">Agora mesmo</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-slate-600 group-hover:text-primary transition-colors" />
+                <ChevronRight size={16} className="text-[#c29665] group-hover:text-[#a57045] transition-colors" />
               </div>
             </div>
+            
           </div>
-        </>
+        </div>
       )}
     </div>
   );

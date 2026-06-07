@@ -240,6 +240,7 @@ export default function Patio() {
         let colDestino = -1;
         let colOrigem = -1;
         let colTermo = -1;
+        let colTransportador = -1;
         let headerRowIdx = -1;
 
         for (let r = 0; r < Math.min(rows.length, 5); r++) {
@@ -247,7 +248,8 @@ export default function Patio() {
           const hasCavaloHeader = cells.some(c => c.includes('CAVALO') || c === 'PLACA' || c.includes('VEICULO') || c.includes('VEÍCULO') || c.includes('PLACA_CV') || c === 'TRUCK');
           const hasDestinoHeader = cells.some(c => c.includes('DESTINO') || c.includes('CIDADE') || c.includes('FILIAL') || c === 'DEST');
           const hasOrigemHeader = cells.some(c => c.includes('ORIGEM'));
-          if (hasCavaloHeader || hasDestinoHeader || hasOrigemHeader) {
+          const hasTransportadorHeader = cells.some(c => c.includes('TRANSPORTADOR') || c === 'TRANSP');
+          if (hasCavaloHeader || hasDestinoHeader || hasOrigemHeader || hasTransportadorHeader) {
             headerRowIdx = r;
             break;
           }
@@ -295,6 +297,10 @@ export default function Patio() {
           colTermo = findColumn(
             ['TERMO'],
             ['CONTATO', 'CARREGOU', 'FEZ']
+          );
+          colTransportador = findColumn(
+            ['TRANSPORTADOR', 'TRANSP', 'TRANSPORTADORA', 'NM_TRANS'],
+            []
           );
         }
 
@@ -408,6 +414,18 @@ export default function Patio() {
         for (let r = dataStartIdx; r < rows.length; r++) {
           const row = rows[r];
           if (row.length === 0 || row.every(c => !c.trim())) continue;
+
+          // Exclude rows where transportador has "3c"
+          let isExcludedTransportador = false;
+          if (colTransportador !== -1 && colTransportador < row.length) {
+            const transpVal = (row[colTransportador] || '').trim().toLowerCase();
+            if (transpVal.includes("3c")) {
+              isExcludedTransportador = true;
+            }
+          }
+          if (isExcludedTransportador) {
+            continue;
+          }
 
           // Skip rows where the "Termo" column is "SIM"
           let isTermoSim = false;
@@ -547,6 +565,14 @@ export default function Patio() {
           }
 
           destinoVal = destinoVal.toUpperCase();
+
+          // Deduplicate by cavalo
+          if (placa && placa !== 'DESCONHECIDO') {
+            const alreadyExists = novosRegistros.some(r => r.cavalo === placa);
+            if (alreadyExists) {
+              continue;
+            }
+          }
 
           const registro = {
             cavalo: placa,

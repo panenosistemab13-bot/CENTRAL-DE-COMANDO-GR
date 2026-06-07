@@ -22,7 +22,8 @@ import {
   ChevronRight,
   AlertOctagon,
   Clock,
-  ClipboardCheck
+  ClipboardCheck,
+  Package
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import PresenceList from './components/PresenceList';
@@ -38,14 +39,14 @@ import Iscas from './components/Iscas';
 type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist';
 
 const backgroundImages: Record<Tab, string> = {
-  menu: 'https://i.postimg.cc/G2DbBnz9/774375.jpg',
-  presence: 'https://i.postimg.cc/CKXFLxCY/light-purple-light-reflecting-on-puddle-4pyniztjrjxrf42e.jpg',
-  risk: 'https://i.postimg.cc/NMXQyvbh/neon-purple-4k-bt68lnajmpy3t8f8.jpg',
-  averbacao: 'https://i.postimg.cc/cJ2s4LRz/neon-purple-4k-dl5i83z2j7nzkkth.jpg',
-  sm_creator: 'https://i.postimg.cc/sXW3BCmb/neon-purple-4k-gfiyd4u9c96jn5lp.jpg',
-  rotas: 'https://i.postimg.cc/1tFyg1MZ/papel-de-parede-adesivo-roxo-dark-12001-1-8efdb8f5551b52eaef2304f71b37ecb3.webp',
-  patio: 'https://i.postimg.cc/G2DbBnz9/774375.jpg',
-  checklist: 'https://i.postimg.cc/1tFyg1MZ/papel-de-parede-adesivo-roxo-dark-12001-1-8efdb8f5551b52eaef2304f71b37ecb3.webp'
+  menu: '', // Empty for pure dark background
+  presence: '/src/assets/images/coffee_rustic_bg_1780760486326.png',
+  risk: 'https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&q=80&w=2070',
+  averbacao: 'https://i.postimg.cc/cL3qKW3Q/Gemini-Generated-Image-6o7yg46o7yg46o7y.png',
+  sm_creator: 'https://i.postimg.cc/dtpPt3hC/Gemini-Generated-Image-fmye4sfmye4sfmye.png',
+  rotas: 'https://i.postimg.cc/6QSYC4NW/2.jpg',
+  patio: 'https://i.postimg.cc/BvyM2PGn/1.jpg',
+  checklist: 'https://i.postimg.cc/0N3c7Kq5/3.jpg'
 };
 
 const tabs = [
@@ -54,7 +55,7 @@ const tabs = [
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
-  { id: 'rotas', label: 'Sistema de rotas', icon: Route },
+  { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
 ];
 
@@ -97,9 +98,12 @@ export default function App() {
   }, []);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) + 
-           ' • ' + 
-           date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const day = date.getDate();
+    const month = date.toLocaleDateString('pt-BR', { month: 'long' });
+    const year = date.getFullYear();
+    const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    return `${day} de ${month}. de ${year} • ${time}`;
   };
 
   const renderContent = () => {
@@ -146,45 +150,54 @@ export default function App() {
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
   return (
-    <div className="h-screen flex bg-zinc-950 text-zinc-300 overflow-hidden font-sans relative">
+    <div className="h-screen flex bg-[#110e13] text-zinc-300 overflow-hidden font-sans relative">
       
-      {/* Immersive Background Image */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={activeTab}
-            src={backgroundImages[activeTab]}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 0.15, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 1.5 }}
-            className="w-full h-full object-cover mix-blend-screen"
-            referrerPolicy="no-referrer"
-          />
-        </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950 opacity-80" />
-      </div>
+      {/* Immersive Background Image / Radial glow */}
+      {activeTab === 'menu' ? (
+        <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden">
+           <div className="w-[80VW] h-[80VW] rounded-full bg-white/2 blur-[200px]" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={activeTab}
+              src={backgroundImages[activeTab]}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 0.25, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              transition={{ duration: 1.5 }}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#110e13] via-transparent to-[#110e13] opacity-80" />
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10 h-full">
         
-        {/* Top Header - Immersive Neon Style */}
-        <header className="h-20 flex items-center justify-between px-8 shrink-0 z-50 relative pointer-events-none">
+        {/* Top Header */}
+        <header className={cn(
+          "h-20 shrink-0 flex items-center justify-between px-8 z-50 relative pointer-events-none",
+          activeTab === 'menu' ? "py-10" : ""
+        )}>
           <div className="flex items-center gap-6 w-1/4 pointer-events-auto">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/logo-pgr.png" 
-                alt="Logo Sistema PGR" 
-                className="h-8 w-auto object-contain" 
-              />
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 flex items-center justify-center">
+                 <img src="https://i.postimg.cc/Y23w34cv/1www.png" alt="Logo" className="w-8 h-auto object-contain" />
+              </div>
               <div className="flex flex-col">
-                <span className="logo-text">Sistema PGR</span>
-                <span className="text-[10px] font-mono text-primary/80 uppercase tracking-widest mt-1 italic">SANTA LUZIA-MG</span>
+                <span className="text-2xl font-black tracking-widest text-white leading-none">SISTEMA PGR</span>
+                <span className="text-[10px] font-black text-[#ff3366] uppercase tracking-[0.2em] mt-1.5 leading-none">
+                  SANTA LUZIA / MG
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Centered Navigation */}
+          {/* Centered Navigation (Hidden in Menu) */}
           <div className="flex-1 hidden lg:flex justify-center pointer-events-auto">
             <AnimatePresence>
               {activeTab !== 'menu' && (
@@ -258,8 +271,9 @@ export default function App() {
                )}
              </AnimatePresence>
 
-             <div className="hidden sm:flex items-center gap-4 px-6 py-2.5 bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl text-xs font-mono text-zinc-400 shadow-2xl">
-               <Clock size={14} className="text-primary animate-pulse" />
+             {/* Clock Box - Matches the round dark box in screenshot */}
+             <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 bg-[#1a171d]/80 backdrop-blur-xl border border-white/5 rounded-full text-xs font-mono text-zinc-300 shadow-xl">
+               <Clock size={14} className="text-[#0ea5e9]" />
                {formatDate(currentDateTime)}
              </div>
           </div>
@@ -268,7 +282,7 @@ export default function App() {
         {/* Scrollable Canvas */}
         <main className={cn(
           "flex-1 relative",
-          (activeTab === 'menu' && !isMobile) ? "overflow-hidden" : "overflow-y-auto pb-48"
+          (activeTab === 'menu' && !isMobile) ? "overflow-hidden" : "overflow-y-auto pb-32"
         )}>
           <div className={cn(
             "w-full max-w-[1600px] mx-auto relative z-10 flex flex-col transition-all duration-500",
@@ -307,6 +321,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className={activeTab === 'menu' ? "h-full" : ""}
               >
                 {renderContent()}
               </motion.div>
@@ -314,13 +329,18 @@ export default function App() {
           </div>
         </main>
 
-        {/* System Footer - Credits & Launch Date */}
-        <footer className="shrink-0 py-4 px-8 border-t border-white/5 bg-zinc-950/60 backdrop-blur-md text-[10px] font-mono text-zinc-500 flex flex-col sm:flex-row justify-between items-center gap-2 relative z-50">
+        {/* System Footer */}
+        <footer className={cn(
+          "shrink-0 py-6 px-8 flex flex-col sm:flex-row justify-between items-center gap-4 relative z-50 transition-all",
+          activeTab === 'menu' 
+            ? "border-t-0 bg-transparent text-zinc-600 font-mono text-[11px]" 
+            : "border-t border-white/5 bg-[#110e13]/80 backdrop-blur-md text-[10px] font-mono text-zinc-500"
+        )}>
           <span>
             © 2026 Sistema PGR • Todos os direitos reservados.
           </span>
           <span className="text-center sm:text-right">
-            Criado e desenvolvido por <span className="text-zinc-300 font-semibold uppercase tracking-wider">Jefferson Augusto</span> • Data de lançamento: <span className="text-zinc-400">21/05/2026</span>
+            Sistema Web • Criado por <span className={cn(activeTab === 'menu' ? "text-zinc-400" : "text-zinc-300", "font-medium")}>Jefferson Augusto</span>
           </span>
         </footer>
 
@@ -328,4 +348,3 @@ export default function App() {
     </div>
   );
 }
-

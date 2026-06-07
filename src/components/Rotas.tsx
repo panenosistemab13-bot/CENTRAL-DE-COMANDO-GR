@@ -18,6 +18,7 @@ import {
   Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+const coffeeBg = "/src/assets/images/coffee_rustic_bg_1780760486326.png";
 
 interface RouteItem {
   ida: string;
@@ -107,49 +108,79 @@ export default function Rotas() {
   );
 
   return (
-    <div className="min-h-screen bg-[#02040a] p-4 md:p-8 space-y-8 pb-32">
-      {/* Header Section */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0b101c] border border-white/5 p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full translate-x-1/4 -translate-y-1/4 pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-indigo-500/10 rounded-3xl border border-indigo-500/20 shadow-inner">
-              <Navigation className="w-8 h-8 text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-white tracking-tighter uppercase">ROTAS</h1>
-              <div className="flex items-center gap-4 mt-1.5">
-                <p className="text-indigo-400/70 font-mono text-xs font-bold uppercase tracking-widest">Sistema de rotas</p>
-                <div className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                   <span className="text-[10px] font-black text-emerald-400 tracking-tighter uppercase">Sincronizado</span>
-                </div>
+    <div className="min-h-screen bg-[#170e0a] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] p-4 md:p-8 space-y-8 pb-32 text-[#e6d5c3]">
+      {/* Dynamic Earthy Hero Section */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-[#2b180d] border-4 border-[#4a2e1d] p-6 lg:p-8 shadow-2xl relative">
+        {/* Decorative corner accents */}
+        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#c79165]/30 pointer-events-none" />
+        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#c79165]/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#c79165]/30 pointer-events-none" />
+        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#c79165]/30 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center gap-6 w-full xl:w-2/3">
+            {/* Studio Composition Image Frame */}
+            <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#c79165] shadow-lg group">
+              <img 
+                src={coffeeBg} 
+                alt="Edição Rústica Sofisticada" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2b180d]/85 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#fdfaf5] uppercase">Composição Macro</span>
               </div>
+            </div>
+
+            <div className="text-center md:text-left space-y-2">
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#fdfaf5] tracking-tight leading-tight">
+                Edição Rústica Sofisticada
+              </h1>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
+                <span className="font-mono text-xs text-[#c79165] font-black uppercase tracking-widest">
+                  CAFÉ EM GRÃOS SELECIONADOS
+                </span>
+                <span className="text-zinc-500">•</span>
+                <span className="font-serif italic text-xs text-[#e6d5c3]">
+                  Composição de Estúdio "3corações"
+                </span>
+              </div>
+              <p className="text-xs text-[#e2d4c9] leading-relaxed max-w-xl font-medium">
+                Cata de texturas artesanais de café: juta, papel kraft, cobre polido, gotejador de cobre, caneca de cerâmica rústica, folhas de café frescas e o selo de cera vermelho-escura.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-black/40 p-2 rounded-2xl border border-white/5">
-                <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-xl flex flex-col items-center min-w-[100px]">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase">Trechos</span>
-                  <span className="text-xl font-black text-white">{currentData.length}</span>
-                </div>
-                <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-xl flex flex-col items-center min-w-[100px]">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase">Códigos</span>
-                  <span className="text-xl font-black text-white">
-                    {currentData.filter(r => r.idaCod).length + currentData.filter(r => r.voltaCod).length}
-                  </span>
-                </div>
+          {/* Metrics styled like paper tag tickets hanging */}
+          <div className="flex items-center gap-4 w-full xl:w-auto justify-center xl:justify-end">
+            <div className="px-5 py-4 bg-[#fdfaf5] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#7a4b31]/40 rounded-2xl shadow-md min-w-[120px] text-center relative rotate-[-1.5deg]">
+              {/* String hanging effect */}
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#c0a892] rounded" />
+              <span className="text-[9px] font-black text-[#7a4b31] uppercase tracking-widest block mb-1">TRECHOS</span>
+              <span className="text-3xl font-serif font-black text-[#3e2516]">{currentData.length}</span>
+            </div>
+            
+            <div className="px-5 py-4 bg-[#fdfaf5] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#7a4b31]/40 rounded-2xl shadow-md min-w-[120px] text-center relative rotate-[1.5deg]">
+              {/* String hanging effect */}
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#c0a892] rounded" />
+              <span className="text-[9px] font-black text-[#7a4b31] uppercase tracking-widest block mb-1">CÓDIGOS</span>
+              <span className="text-3xl font-serif font-black text-[#3e2516]">
+                {currentData.filter(r => r.idaCod).length + currentData.filter(r => r.voltaCod).length}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Card */}
-      <div className="bg-[#0b101c] border border-white/5 rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      {/* Main Content Card - Styled as a premium rustic board sheet */}
+      <div className="bg-[#fdfaf5] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-4 border-[#2b180d] rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative overflow-hidden text-[#2b180d]">
         
         {/* Actions & Filters Bar */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-grow group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-400 text-zinc-500">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#7a4b31]">
               <Search size={18} />
             </div>
             <input 
@@ -157,7 +188,7 @@ export default function Rotas() {
               placeholder="PESQUISAR ROTA, CIDADE OU CÓDIGO SM..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#02040a]/80 border border-white/10 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-white placeholder-zinc-700 transition-all outline-none uppercase tracking-widest"
+              className="w-full bg-[#fcf8f2] border-2 border-[#c0a892] focus:border-[#7a4b31] focus:ring-4 focus:ring-[#7a4b31]/10 rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-[#2b180d] placeholder-[#8c7a6b] transition-all outline-none uppercase tracking-widest font-mono"
             />
           </div>
 
@@ -165,7 +196,7 @@ export default function Rotas() {
             {!isEditing ? (
               <button 
                 onClick={handleStartEdit} 
-                className="flex items-center gap-3 px-6 py-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap active:scale-95"
+                className="flex items-center gap-3 px-6 py-4 bg-[#7a4b31] hover:bg-[#5c3722] text-[#fdfaf5] border-2 border-[#4e311b] rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap active:scale-95 shadow-md shadow-[#2b180d]/10"
               >
                 <Edit2 size={16} /> Editar Configuração
               </button>
@@ -173,19 +204,19 @@ export default function Rotas() {
               <div className="flex gap-2 w-full md:w-auto">
                 <button 
                   onClick={addRow} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-2xl text-xs font-black uppercase transition-all"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#5c3722] hover:bg-[#3e2516] text-[#fdfaf5] border-2 border-[#2b180d] rounded-2xl text-xs font-black uppercase transition-all"
                 >
                   <Plus size={16} /> Adicionar
                 </button>
                 <button 
                   onClick={handleSave} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-lg shadow-indigo-500/20"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#7a4b31] to-[#a05a35] hover:from-[#5c3722] hover:to-[#7a4b31] text-[#fdfaf5] border-2 border-[#4e311b] rounded-2xl text-xs font-black uppercase transition-all shadow-lg shadow-[#7a4b31]/20"
                 >
                   <Save size={16} /> Salvar
                 </button>
                 <button 
                   onClick={handleCancel} 
-                  className="p-4 bg-zinc-900 border border-white/10 text-white rounded-2xl hover:bg-zinc-800 transition-all"
+                  className="p-4 bg-[#e6d5c3] hover:bg-[#d8c4af] text-[#7a4b31] border-2 border-[#c0a892] rounded-2xl transition-all"
                 >
                   <X size={18} />
                 </button>
@@ -195,18 +226,18 @@ export default function Rotas() {
         </div>
 
         {/* Tactical UI View (Desktop Table) */}
-        <div className="hidden md:block overflow-hidden rounded-3xl border border-white/5 bg-black/20">
+        <div className="hidden md:block overflow-hidden rounded-3xl border-2 border-[#c0a892] bg-[#fcf8f2] shadow-inner">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-white/[0.02] border-b border-white/5">
-                <th className="p-5 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[35%]">Sentido Ida (Operação)</th>
-                <th className="p-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[10%]">Cod</th>
-                <th className="p-5 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[35%]">Sentido Volta (Retorno)</th>
-                <th className="p-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[10%]">Cod</th>
-                {isEditing && <th className="p-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[10%]">Acão</th>}
+              <tr className="bg-gradient-to-b from-[#7a4b31] to-[#5c3722] text-[#fdfaf5] border-b-2 border-[#2b180d]">
+                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[35%]">Sentido Ida (Operação)</th>
+                <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Cod</th>
+                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[35%]">Sentido Volta (Retorno)</th>
+                <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Cod</th>
+                {isEditing && <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Ação</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[#c0a892]/45">
               <AnimatePresence mode="popLayout">
                 {currentData.map((route, i) => (
                   <motion.tr 
@@ -215,25 +246,25 @@ export default function Rotas() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     key={`${route.idaCod}-${i}`} 
-                    className="group hover:bg-white/[0.02] transition-colors"
+                    className="group hover:bg-[#f3ebd3] transition-colors"
                   >
                     <td className="p-5">
                       {isEditing ? (
                         <div className="flex items-center gap-3">
-                           <MapPin size={14} className="text-emerald-500/50" />
+                           <MapPin size={14} className="text-[#7a4b31]" />
                            <input 
                              value={route.ida} 
                              onChange={(e) => updateRow(i, 'ida', e.target.value)} 
-                             className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-xs text-white font-bold focus:border-indigo-500/50 outline-none uppercase"
+                             className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-xs text-[#2b180d] font-bold focus:border-[#7a4b31] outline-none uppercase"
                              placeholder="ORIGEM X DESTINO"
                            />
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-emerald-500/10 rounded-lg">
-                            <ArrowRight size={14} className="text-emerald-500" />
+                          <div className="p-2 bg-[#7a4b31]/10 rounded-lg">
+                            <ArrowRight size={14} className="text-[#7a4b31]" />
                           </div>
-                          <span className="text-xs font-black text-zinc-100 uppercase tracking-tight">{route.ida || '---'}</span>
+                          <span className="text-xs font-black text-[#2b180d] uppercase tracking-tight font-serif">{route.ida || '---'}</span>
                         </div>
                       )}
                     </td>
@@ -242,12 +273,12 @@ export default function Rotas() {
                         <input 
                           value={route.idaCod} 
                           onChange={(e) => updateRow(i, 'idaCod', e.target.value)} 
-                          className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-[11px] text-amber-400 font-mono text-center focus:border-indigo-500/50 outline-none"
+                          className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-[11px] text-[#7a4b31] font-mono text-center focus:border-[#7a4b31] outline-none font-bold"
                           placeholder="0000"
                         />
                       ) : (
                         <div className="flex justify-center">
-                          <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black">
+                          <span className="bg-[#d2c2b2] text-[#4a3623] border-2 border-[#c0a892] px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
                             {route.idaCod || '----'}
                           </span>
                         </div>
@@ -256,20 +287,20 @@ export default function Rotas() {
                     <td className="p-5">
                       {isEditing ? (
                         <div className="flex items-center gap-3">
-                           <MapPin size={14} className="text-indigo-500/50" />
+                           <MapPin size={14} className="text-[#a05a35]" />
                            <input 
                              value={route.volta} 
                              onChange={(e) => updateRow(i, 'volta', e.target.value)} 
-                             className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-xs text-white font-bold focus:border-indigo-500/50 outline-none uppercase"
+                             className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-xs text-[#2b180d] font-bold focus:border-[#a05a35] outline-none uppercase"
                              placeholder="ORIGEM X DESTINO"
                            />
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-indigo-500/10 rounded-lg">
-                            <ArrowRight size={14} className="text-indigo-500 rotate-180" />
+                          <div className="p-2 bg-[#a05a35]/10 rounded-lg">
+                            <ArrowRight size={14} className="text-[#a05a35] rotate-180" />
                           </div>
-                          <span className="text-xs font-black text-zinc-100 uppercase tracking-tight">{route.volta || '---'}</span>
+                          <span className="text-xs font-black text-[#2b180d] uppercase tracking-tight font-serif">{route.volta || '---'}</span>
                         </div>
                       )}
                     </td>
@@ -278,12 +309,12 @@ export default function Rotas() {
                         <input 
                           value={route.voltaCod} 
                           onChange={(e) => updateRow(i, 'voltaCod', e.target.value)} 
-                          className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-[11px] text-amber-400 font-mono text-center focus:border-indigo-500/50 outline-none"
+                          className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-[11px] text-[#7a4b31] font-mono text-center focus:border-[#7a4b31] outline-none font-bold"
                           placeholder="0000"
                         />
                       ) : (
                         <div className="flex justify-center">
-                          <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black">
+                          <span className="bg-[#d2c2b2] text-[#4a3623] border-2 border-[#c0a892] px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
                             {route.voltaCod || '----'}
                           </span>
                         </div>
@@ -294,7 +325,7 @@ export default function Rotas() {
                         <div className="flex justify-center">
                           <button 
                             onClick={() => removeRow(i)} 
-                            className="p-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all"
+                            className="p-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl transition-all border border-red-200"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -308,9 +339,9 @@ export default function Rotas() {
           </table>
           
           {currentData.length === 0 && (
-            <div className="p-20 text-center bg-black/10">
-              <Database className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
-              <p className="text-xs font-black text-zinc-600 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
+            <div className="p-20 text-center bg-[#fdfaf5]">
+              <Database className="w-12 h-12 text-[#c0a892] mx-auto mb-4" />
+              <p className="text-xs font-black text-[#8c7a6b] uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
             </div>
           )}
         </div>
@@ -325,21 +356,21 @@ export default function Rotas() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 key={i} 
-                className="bg-[#02040a] border border-white/5 rounded-3xl p-5 relative overflow-hidden"
+                className="bg-[#fcf8f2] border-2 border-[#c0a892] rounded-3xl p-5 relative overflow-hidden"
               >
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/20" />
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#7a4b31]" />
                 
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-indigo-500/10 rounded-xl flex items-center justify-center">
-                      <Navigation size={14} className="text-indigo-400" />
+                    <div className="w-8 h-8 bg-[#7a4b31]/10 rounded-xl flex items-center justify-center">
+                      <Navigation size={14} className="text-[#7a4b31]" />
                     </div>
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Rota #{i+1}</span>
+                    <span className="text-[10px] font-black text-[#7a4b31] uppercase tracking-widest">Rota #{i+1}</span>
                   </div>
                   {isEditing && (
                     <button 
                       onClick={() => removeRow(i)} 
-                      className="p-3 bg-rose-500/5 text-rose-500 rounded-xl"
+                      className="p-3 bg-red-100 text-red-700 rounded-xl"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -347,51 +378,51 @@ export default function Rotas() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+                  <div className="bg-[#fdfaf5] p-4 rounded-2xl border-2 border-[#c0a892]/30">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Sentido Ida</span>
+                      <span className="text-[9px] font-black text-[#7a4b31] uppercase tracking-widest">Sentido Ida</span>
                       {isEditing ? (
                          <input 
                            value={route.idaCod} 
                            onChange={(e) => updateRow(i, 'idaCod', e.target.value)} 
-                           className="w-20 bg-black p-1 text-[10px] text-amber-400 text-center border border-white/10 rounded uppercase"
+                           className="w-20 bg-[#fdfaf5] p-1 text-[10px] text-[#7a4b31] text-center border-2 border-[#c0a892] rounded uppercase font-bold"
                          />
                       ) : (
-                         <span className="text-[10px] font-mono font-black text-amber-500">{route.idaCod || '----'}</span>
+                         <span className="text-[11px] font-mono font-black text-[#4a3623] bg-[#d2c2b2] border border-[#c0a892] px-2 py-0.5 rounded-md">{route.idaCod || '----'}</span>
                       )}
                     </div>
                     {isEditing ? (
                       <input 
                         value={route.ida} 
                         onChange={(e) => updateRow(i, 'ida', e.target.value)} 
-                        className="w-full bg-transparent text-xs text-white font-bold outline-none uppercase"
+                        className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase font-serif"
                       />
                     ) : (
-                      <p className="text-xs font-black text-white uppercase leading-tight">{route.ida || '---'}</p>
+                      <p className="text-xs font-black text-[#2b180d] uppercase leading-tight font-serif">{route.ida || '---'}</p>
                     )}
                   </div>
 
-                  <div className="bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+                  <div className="bg-[#fdfaf5] p-4 rounded-2xl border-2 border-[#c0a892]/30">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">Sentido Volta</span>
+                      <span className="text-[9px] font-black text-[#a05a35] uppercase tracking-widest">Sentido Volta</span>
                       {isEditing ? (
                          <input 
                            value={route.voltaCod} 
                            onChange={(e) => updateRow(i, 'voltaCod', e.target.value)} 
-                           className="w-20 bg-black p-1 text-[10px] text-amber-400 text-center border border-white/10 rounded uppercase"
+                           className="w-20 bg-[#fdfaf5] p-1 text-[10px] text-[#7a4b31] text-center border-2 border-[#c0a892] rounded uppercase font-bold"
                          />
                       ) : (
-                         <span className="text-[10px] font-mono font-black text-amber-500">{route.voltaCod || '----'}</span>
+                         <span className="text-[11px] font-mono font-black text-[#4a3623] bg-[#d2c2b2] border border-[#c0a892] px-2 py-0.5 rounded-md">{route.voltaCod || '----'}</span>
                       )}
                     </div>
                     {isEditing ? (
                       <input 
                         value={route.volta} 
                         onChange={(e) => updateRow(i, 'volta', e.target.value)} 
-                        className="w-full bg-transparent text-xs text-white font-bold outline-none uppercase"
+                        className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase font-serif"
                       />
                     ) : (
-                      <p className="text-xs font-black text-white uppercase leading-tight">{route.volta || '---'}</p>
+                      <p className="text-xs font-black text-[#2b180d] uppercase leading-tight font-serif">{route.volta || '---'}</p>
                     )}
                   </div>
                 </div>
@@ -402,10 +433,10 @@ export default function Rotas() {
 
         {/* Destructive Action */}
         {isEditing && (
-          <div className="mt-8 pt-8 border-t border-white/5 flex justify-center">
+          <div className="mt-8 pt-8 border-t-2 border-[#c0a892]/40 flex justify-center">
             <button 
               onClick={clearAll} 
-              className="px-6 py-3 bg-rose-500/5 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+              className="px-6 py-3 bg-red-100 text-red-800 hover:bg-red-200 border-2 border-red-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"
             >
               Resetar Base de Dados de Rotas
             </button>
@@ -413,13 +444,13 @@ export default function Rotas() {
         )}
       </div>
 
-      {/* Floating Status Indicator */}
-      <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-full shadow-2xl z-50">
+      {/* Floating Status Indicator - Styled as an extraction badge */}
+      <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-[#2b180d]/90 backdrop-blur-xl border-2 border-[#7a4b31]/40 px-6 py-3 rounded-full shadow-2xl z-50">
         <div className="relative">
-          <div className="absolute inset-0 bg-emerald-500 blur shadow-[0_0_10px_#10b981]" />
-          <div className="w-2 h-2 rounded-full bg-emerald-400 relative z-10" />
+          <div className="absolute inset-0 bg-amber-500 blur shadow-[0_0_10px_#f59e0b]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 relative z-10" />
         </div>
-        <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Sistema de Rastreio Ativo</span>
+        <span className="text-[10px] font-black text-[#fdfaf5] uppercase tracking-widest font-mono">Torra e Rastreio Ativo</span>
       </div>
     </div>
   );
