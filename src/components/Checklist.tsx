@@ -1,18 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ClipboardCheck, 
   Trash2, 
   Plus, 
-  AlertTriangle, 
-  CheckCircle2, 
   Clock, 
   Search,
-  Calendar,
   Truck,
   MessageSquare,
   Wrench,
-  ChevronRight,
-  MoreVertical,
   Filter,
   Edit2,
   Copy,
@@ -23,8 +18,7 @@ import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, remove, update } from 'firebase/database';
 import { motion, AnimatePresence } from 'motion/react';
-import { format, differenceInDays, parseISO, isAfter, isBefore, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format, differenceInDays, parseISO, addDays } from 'date-fns';
 
 interface ChecklistItem {
   id: string;
@@ -40,10 +34,31 @@ interface ChecklistItem {
   assinou?: 'SIM' | 'NÃO';
 }
 
+const CoffeeBean = ({ className = "w-6 h-6", ...props }: { className?: string; [key: string]: any }) => (
+  <svg viewBox="0 0 100 100" className={className} {...props}>
+    <path d="M 20,40 C 15,15 45,5 65,15 C 85,25 90,55 80,75 C 70,95 40,95 25,85 C 10,75 25,65 20,40 Z" fill="currentColor" />
+    <path d="M 45,8 C 48,25 28,45 68,72 C 78,81 72,92 72,92" fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="6" strokeLinecap="round" />
+  </svg>
+);
+
+const LicensePlate = ({ plate }: { plate: string }) => (
+  <div className="relative w-[130px] bg-[#f2f2f2] border-2 border-[#8c7465] rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col items-stretch select-none">
+    <div className="bg-[#003399] h-[15px] flex items-center justify-between px-1.5 text-[8px] font-sans font-black text-white uppercase tracking-tight">
+      <span>BRASIL</span>
+      <div className="w-[10px] h-[7px] bg-[#009739] relative flex items-center justify-center">
+        <div className="w-[6px] h-[4px] bg-[#FEDD00] rotate-45 relative flex items-center justify-center">
+          <div className="w-[2.5px] h-[2.5px] bg-[#002776] rounded-full"></div>
+        </div>
+      </div>
+    </div>
+    <div className="bg-[#fcf8f2] text-[#1a0f08] font-black text-[18px] text-center leading-none py-1.5 font-mono uppercase border-t border-[#d8c3a5]">
+      {plate}
+    </div>
+  </div>
+);
+
 export default function Checklist() {
   const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
-  
-  // Monitoring State
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'TODOS' | 'EM DIA' | 'VENCIDO' | 'NEGATIVADOS'>('TODOS');
@@ -59,7 +74,6 @@ export default function Checklist() {
     observacao: ''
   });
 
-  // Generator State
   const [genData, setGenData] = useState({
     greeting: 'Bom dia',
     cavalo: '',
@@ -79,7 +93,6 @@ export default function Checklist() {
         }));
         setItems(list);
       } else {
-        // Seed data if empty
         const seedData = [
           { cavalo: "POZ4431", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
           { cavalo: "POZ3241", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
@@ -89,16 +102,7 @@ export default function Checklist() {
           { cavalo: "THX5I51", carretas: "POG0685 / POG0545", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
           { cavalo: "TYT8A14", carretas: "QOX3164 / QOX3168", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
           { cavalo: "SBK4142", carretas: "POF9785 / POR5E42", dataTeste: "2026-04-13", dataVencimento: "2026-06-12", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - MIN8723 / TIC0D95" },
-          { cavalo: "PNY2215", carretas: "POF9365 / POF9175", dataTeste: "2026-04-15", dataVencimento: "2026-06-14", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-          { cavalo: "SBN4J62", carretas: "PNC8603 / PNC8873", dataTeste: "2026-04-16", dataVencimento: "2026-06-15", manutencaoOs: "", periferico: "SENSOR", observacao: "" },
-          { cavalo: "POD0345", carretas: "POF8075 / POF7875", dataTeste: "2026-04-25", dataVencimento: "2026-06-24", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - QOX3164 / QOX3168" },
-          { cavalo: "POD0645", carretas: "POF9075 / POF8375", dataTeste: "2026-04-29", dataVencimento: "2026-06-28", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "MODO SLEEP - AGUARDANDO MANUTENÇÃO VOLVO" },
-          { cavalo: "SAS2D02", carretas: "SBI8C02 / SBI0A72", dataTeste: "2026-05-07", dataVencimento: "2026-06-07", manutencaoOs: "OS #98221", periferico: "PAINEL", observacao: "PUXADA VESPASIANO - PAINEL VIOLADO" },
-          { cavalo: "PNP1452-1", carretas: "PNW4982", dataTeste: "2024-10-29", dataVencimento: "2024-10-30", manutencaoOs: "", periferico: "REPROVADO", observacao: "SENSOR BAU TRASEIRO", statusOverride: "NEGATIVADO" },
-          { cavalo: "PNP1452-2", carretas: "PNW4812", dataTeste: "2024-10-18", dataVencimento: "2024-10-19", manutencaoOs: "", periferico: "REPROVADO", observacao: "SENSOR BAU TRASEIRO", statusOverride: "NEGATIVADO" },
-          { cavalo: "PNP1452-3", carretas: "PNW5562", dataTeste: "2025-03-05", dataVencimento: "2025-03-06", manutencaoOs: "", periferico: "REPROVADO", observacao: "SENSOR BAU TRASEIRO", statusOverride: "NEGATIVADO" },
         ];
-        
         seedData.forEach((item, idx) => {
           const id = (Date.now() + idx).toString();
           set(ref(rtdb, `checklist_veiculos/${id}`), { ...item, id });
@@ -151,39 +155,27 @@ export default function Checklist() {
   const getStatus = (item: ChecklistItem) => {
     if (item.statusOverride) {
       if (item.statusOverride === 'VENCIDO' || item.statusOverride === 'REPROVADO' || item.statusOverride === 'NEGATIVADO') {
-        return { label: item.statusOverride, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' };
+        return { label: item.statusOverride, color: 'text-amber-500', bg: 'bg-[#B32025]/20', border: 'border-[#B32025]/30' };
       }
-      return { label: item.statusOverride, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
+      return { label: item.statusOverride, color: 'text-[#55a360]', bg: 'bg-[#55a360]/20', border: 'border-[#55a360]/30' };
     }
-
     const today = new Date();
     const expiry = parseISO(item.dataVencimento);
     const diff = differenceInDays(expiry, today);
-
-    if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' };
-    if (diff <= 7) return { label: 'URGENTE', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' };
-    return { label: 'APROVADO', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
+    if (diff < 0) return { label: 'VENCIDO', color: 'text-[#B32025]', bg: 'bg-[#B32025]/10', border: 'border-[#B32025]/20' };
+    if (diff <= 7) return { label: 'URGENTE', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' };
+    return { label: 'APROVADO', color: 'text-[#55a360]', bg: 'bg-[#55a360]/10', border: 'border-[#55a360]/20' };
   };
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.cavalo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.carretas.toLowerCase().includes(searchTerm.toLowerCase());
-    
+                          item.carretas.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
-
     const status = getStatus(item);
-    
-    if (filter === 'EM DIA') {
-      return status.label === 'APROVADO' || status.label === 'URGENTE';
-    }
-    if (filter === 'VENCIDO') {
-      return status.label === 'VENCIDO';
-    }
-    if (filter === 'NEGATIVADOS') {
-      return status.label === 'NEGATIVADO' || status.label === 'REPROVADO';
-    }
-    
-    return true; // TODOS
+    if (filter === 'EM DIA') return status.label === 'APROVADO' || status.label === 'URGENTE';
+    if (filter === 'VENCIDO') return status.label === 'VENCIDO';
+    if (filter === 'NEGATIVADOS') return status.label === 'NEGATIVADO' || status.label === 'REPROVADO';
+    return true;
   });
 
   const sortedCavalos = [...items].sort((a, b) => {
@@ -191,7 +183,6 @@ export default function Checklist() {
     const statusB = getStatus(b).label;
     const aIsVencido = statusA === 'VENCIDO' || statusA === 'NEGATIVADO' || statusA === 'REPROVADO';
     const bIsVencido = statusB === 'VENCIDO' || statusB === 'NEGATIVADO' || statusB === 'REPROVADO';
-    
     if (aIsVencido && !bIsVencido) return -1;
     if (!aIsVencido && bIsVencido) return 1;
     return a.cavalo.localeCompare(b.cavalo);
@@ -199,127 +190,193 @@ export default function Checklist() {
 
   const handleCopyGenerator = () => {
     const htmlContent = `
-      <div style="font-family: Georgia, serif; color: #4a3623; font-size: 15px; max-width: 600px; background-color: #fdfaf5; padding: 30px; border: 2px solid #d0a782; border-radius: 12px; box-shadow: inset 0 0 20px rgba(208, 167, 130, 0.2);">
+      <div style="font-family: Georgia, serif; color: #4a3623; font-size: 15px; max-width: 600px; background-color: #fdfaf5; padding: 30px; border: 2px solid #d0a782; border-radius: 12px;">
         <div style="display: flex; align-items: center; margin-bottom: 24px; gap: 12px;">
-           <img src="https://i.postimg.cc/Lsw0vpDT/Gemini-Generated-Image-ju3ympju3ympju3y.png" alt="3 Corações" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(153, 27, 27, 0.3);" />
+           <img src="https://i.postimg.cc/HxkVgtSZ/Gemini-Generated-Image-ji8y90ji8y90ji8y.png" alt="3 Corações" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;" />
            <strong style="color: #b48554; font-size: 16px; letter-spacing: 1px; text-transform: uppercase;">Grupo 3 Corações</strong>
         </div>
         <p style="margin-bottom: 16px;">${genData.greeting},</p>
         <p style="margin-bottom: 24px;">Solicito o <strong>checklist</strong> para o conjunto abaixo:</p>
-        
-        <table style="width: 100%; border-collapse: collapse; font-family: Georgia, serif; font-size: 15px; text-align: center; border: 1px solid #1e3a8a; border-radius: 4px; overflow: hidden; margin-bottom: 32px; color: #4a3623;">
+        <table style="width: 100%; border-collapse: collapse; font-family: Georgia, serif; font-size: 15px; text-align: center; border: 1px solid #c0a892; border-radius: 4px; overflow: hidden; margin-bottom: 32px;">
           <thead>
-            <tr style="background-color: #0f2a4a; color: #e2e8f0;">
-              <th style="padding: 12px 16px; border-right: 1px solid #1e3a8a; border-bottom: 1px solid #1e3a8a; font-weight: bold; width: 50%; text-transform: uppercase;">CAVALO</th>
-              <th style="padding: 12px 16px; border-bottom: 1px solid #1e3a8a; font-weight: bold; width: 50%; text-transform: uppercase;">CARRETAS</th>
+            <tr style="background-color: #1e0e05; color: #fcf8f2;">
+              <th style="padding: 12px 16px; border-bottom: 1px solid #c0a892; font-weight: bold; width: 50%; text-transform: uppercase;">CAVALO</th>
+              <th style="padding: 12px 16px; border-bottom: 1px solid #c0a892; font-weight: bold; width: 50%; text-transform: uppercase;">CARRETAS</th>
             </tr>
           </thead>
           <tbody>
             <tr style="background-color: #d2c2b2; color: #4a3623; font-size: 16px;">
-              <td style="padding: 16px 20px; text-shadow: 0 1px 0 rgba(255,255,255,0.3); border-right: 1px solid #c0a892; font-weight: bold;">${genData.cavalo}</td>
-              <td style="padding: 16px 20px; text-shadow: 0 1px 0 rgba(255,255,255,0.3); font-weight: bold;">${genData.carretas}</td>
+              <td style="padding: 16px; border-right: 1px solid #c0a892; font-weight: bold;">${genData.cavalo}</td>
+              <td style="padding: 16px; font-weight: bold;">${genData.carretas}</td>
             </tr>
           </tbody>
         </table>
-        
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-           <p style="font-size: 15px; color: #4a3623;"><strong style="font-weight: bold;">Contato:</strong> ${genData.contato}</p>
-        </div>
-        
+        <p style="font-size: 15px; color: #4a3623;"><strong>Contato:</strong> ${genData.contato}</p>
         <div style="margin-top: 40px; text-align: right;">
-           <p style="color: #4a3623; margin-bottom: 4px;">Att,</p>
+           <p style="color: #4a3623;">Att,</p>
            <p style="font-style: italic; font-size: 24px; font-family: 'Brush Script MT', cursive; color: #292524; margin: 0;">Jefferson</p>
-           <div style="border-top: 1px solid #4a3623; width: 180px; margin-left: auto; margin-top: 4px;"></div>
-           <p style="font-size: 12px; margin-top: 4px;">Agente de risco (Jefferson)</p>
+           <p style="font-size: 11px; color: #8c7465; margin: 0;">Agente de Risco</p>
         </div>
       </div>
     `;
-
-    const textContent = `${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,`;
-
+    const textContent = `${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,\nAgente de Risco (Jefferson)`;
     try {
       const typeHtml = "text/html";
       const typeText = "text/plain";
       const blobHtml = new Blob([htmlContent], { type: typeHtml });
       const blobText = new Blob([textContent], { type: typeText });
       const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
-      
       navigator.clipboard.write(data).then(() => {
         setGenCopied(true);
         setTimeout(() => setGenCopied(false), 2000);
       });
     } catch (err) {
-      console.warn("Clipboard API fallback", err);
-      // Fallback
-      const textArea = document.createElement("textarea");
-      textArea.value = textContent;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setGenCopied(true);
-        setTimeout(() => setGenCopied(false), 2000);
-      } catch (e) {
-        console.error('Fallback copy failed', e);
-      }
-      document.body.removeChild(textArea);
+      navigator.clipboard.writeText(textContent);
+      setGenCopied(true);
+      setTimeout(() => setGenCopied(false), 2000);
     }
   };
 
   return (
-    <div className="space-y-8 pb-20">
-      {/* Dynamic Header */}
-      <div className="bg-[#0b0d19]/80 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+    <div className="space-y-6 pb-20 font-sans text-[#D8C3A5]">
+      {/* Dynamic styles injected for real cup of coffee steam rising effect */}
+      <style>{`
+        @keyframes rise {
+          0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0; }
+          20% { opacity: 0.6; }
+          60% { opacity: 0.3; }
+          100% { transform: translateY(-40px) scale(1.5) rotate(10deg); opacity: 0; }
+        }
+        .steam-line {
+          animation: rise 5s infinite ease-in-out;
+        }
+        .steam-line-1 { animation-delay: 0.5s; }
+        .steam-line-2 { animation-delay: 2.2s; }
+        .steam-line-3 { animation-delay: 3.8s; }
+      `}</style>
+
+      {/* Decorative Scattered Coffee Beans under layer */}
+      <div className="absolute top-10 right-10 opacity-[0.03] pointer-events-none transform rotate-[45deg] z-0">
+        <CoffeeBean className="w-96 h-96 text-white" />
+      </div>
+
+      {/* ================= HEADER AREA ================= */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0 px-4">
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-lg shadow-primary/20">
-                <ClipboardCheck size={26} />
-              </div>
-              <h1 className="text-3xl font-black text-white uppercase tracking-tight">Checklist</h1>
+        {/* Left title and logo stack */}
+        <div className="flex items-center gap-5 text-left w-full md:w-auto">
+          {/* Logo stamp SVG */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 pointer-events-none hover:scale-105 transition-transform duration-500">
+            <svg className="w-full h-full filter drop-shadow-[0_4px_8px_rgba(58,36,20,0.35)]" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffd700" />
+                  <stop offset="40%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#b45309" />
+                </linearGradient>
+                <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#d92d33" />
+                  <stop offset="100%" stopColor="#7a0307" />
+                </linearGradient>
+              </defs>
+              {/* Embossed metal rim */}
+              <circle cx="60" cy="60" r="54" fill="none" stroke="url(#goldGrad)" strokeWidth="4" />
+              <circle cx="60" cy="60" r="50" fill="url(#redGrad)" />
+              <circle cx="60" cy="60" r="44" fill="none" stroke="url(#goldGrad)" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+              
+              {/* Outer heart bundle */}
+              <g transform="translate(60, 56) scale(0.72)">
+                <path d="M-12,-10 C-17,-15 -25,-12 -25,-4 C-25,4 -15,10 0,22 C15,10 25,4 25,-4 C25,-12 17,-15 12,-10 C8,-6 2,-6 0,-6 C-2,-6 -8,-6 -12,-10 Z" fill="url(#goldGrad)" />
+                {/* Embedded hearts inside */}
+                <path d="M-6,-4 C-8.5,-6.5 -12.5,-5 -12.5,-1 C-12.5,3 -7.5,6 0,12 C7.5,6 12.5,3 12.5,-1 C12.5,-5 8.5,-6.5 6,-4 C4,-2 1,-2 0,-2 C-1,-2 -3,-2 -6,-4 Z" fill="#7a0307" />
+                <path d="M-3,-1.5 C-4.2,-2.7 -6.2,-2 -6.2,0 C-6.2,2 -3.7,3.5 0,6 C3.7,3.5 6.2,2 6.2,0 C6.2,-2 4.2,-2.7 3,-1.5 C2,-0.5 0.5,-0.5 0,-0.5 C-0.5,-0.5 -1,-0.5 -3,-1.5 Z" fill="url(#goldGrad)" />
+              </g>
+
+              {/* Gold text border on top */}
+              <path id="brandPath" d="M 18,60 A 42,42 0 0,0 102,60" fill="none" />
+              <text fontFamily="Oswald" fontSize="9" fontWeight="bold" fill="url(#goldGrad)" textAnchor="middle">
+                <textPath href="#brandPath" startOffset="50%">3 CORAÇÕES</textPath>
+              </text>
+            </svg>
+          </div>
+
+          {/* Page title next to the logo */}
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-rustic-title font-black text-[#2b180d] uppercase tracking-wide leading-none drop-shadow-[1px_2px_1px_rgba(255,255,255,0.45)]">
+              CHECKLIST
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-600 border border-[#fefdfa] animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.7)]" />
+              <span className="text-xs font-mono font-black text-[#5c3c24] uppercase tracking-widest pl-0.5">
+                MÓDULO ATIVO
+              </span>
             </div>
-            
-            <div className="flex bg-white/5 rounded-xl p-1 w-fit">
+          </div>
+        </div>
+      </div>
+
+      {/* CORE CONTROL BOARD CARD - MADEIRA ENVELHECIDA */}
+      <div className="relative z-10 bg-gradient-to-br from-[#2A1408] to-[#120703] border-[6px] border-[#3D2012] rounded-[2.5rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_1px_1px_3px_rgba(255,255,255,0.08)]">
+        {/* Metal decorative corner hinges */}
+        <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_black]" />
+        <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_black]" />
+        <div className="absolute bottom-3 left-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_black]" />
+        <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_black]" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-[#160B05]/95 border border-[#3e1f0e] rounded-[1.8rem] p-5 sm:p-6 shadow-inner">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <div className="items-center gap-2 hidden">
+              <ClipboardCheck size={28} className="text-[#B58A4C]" />
+              <span className="text-xl font-bold font-serif text-white tracking-tight uppercase">CHECKLIST</span>
+            </div>
+
+            {/* View Mode Switch Tabs */}
+            <div className="flex bg-[#120702] rounded-xl p-1 border border-[#3d2011]">
               <button
                 onClick={() => setActiveView('monitoring')}
                 className={cn(
-                  "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
-                  activeView === 'monitoring' ? "bg-primary text-white shadow-sm" : "text-slate-400 hover:text-white"
+                  "px-5 py-2 text-xs font-bold font-serif uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5",
+                  activeView === 'monitoring' 
+                    ? "bg-gradient-to-b from-[#B32025] to-[#800609] text-white shadow-md border-t border-[#F93E47]/30" 
+                    : "text-[#8c7465] hover:text-[#d8c3a5]"
                 )}
               >
+                <CoffeeBean className="w-3.5 h-3.5" />
                 Monitoramento
               </button>
               <button
                 onClick={() => setActiveView('generator')}
                 className={cn(
-                  "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
-                  activeView === 'generator' ? "bg-emerald-500 text-white shadow-sm" : "text-slate-400 hover:text-white"
+                  "px-5 py-2 text-xs font-bold font-serif uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5",
+                  activeView === 'generator' 
+                    ? "bg-gradient-to-b from-[#B32025] to-[#800609] text-white shadow-md border-t border-[#F93E47]/30" 
+                    : "text-[#8c7465] hover:text-[#d8c3a5]"
                 )}
               >
+                <CoffeeBean className="w-3.5 h-3.5" />
                 Solicitação
               </button>
             </div>
           </div>
 
           {activeView === 'monitoring' && (
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8c7465]" size={16} />
                 <input 
                   type="text" 
                   placeholder="Buscar por placa..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full bg-[#140b07] border-2 border-[#2b180d] text-white placeholder-[#8c7465] rounded-xl pl-11 pr-4 py-3 text-sm focus:border-[#B58A4C] outline-none shadow-inner transition-colors"
                 />
               </div>
+              
               <button 
                 onClick={() => setIsAdding(true)}
-                className="w-full sm:w-auto px-6 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border-y border-t-[#F93E47]/20 border-b-black/40"
               >
-                <Plus size={18} /> Novo Registro
+                <Plus size={16} /> NOVO REGISTRO
               </button>
             </div>
           )}
@@ -327,332 +384,379 @@ export default function Checklist() {
       </div>
 
       {activeView === 'generator' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 sm:p-8 lg:p-12 rounded-[2.5rem] bg-cover bg-center shadow-[inset_0_10px_30px_rgba(0,0,0,0.5)] border-4 border-[#2b180d] relative overflow-hidden" style={{backgroundImage: "url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=2600&auto=format&fit=crop')"}}>
-          {/* Overlay to darken background slightly */}
-          <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+        /* SOLICITAÇÃO TAB DESIGN (PARCHMENT PAPER DASHBOARD STYLE) */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 rounded-[2.5rem] bg-gradient-to-b from-[#1c0e05] to-[#0f0702] border-4 border-[#3D2012] p-6 relative overflow-hidden shadow-2xl">
+          {/* Scatter Background design */}
+          <div className="absolute top-1/2 left-10 opacity-[0.04] pointer-events-none transform -translate-y-1/2 z-0">
+            <CoffeeBean className="w-80 h-80 text-[#B58A4C]" />
+          </div>
 
-          {/* Editor Form */}
-          <div className="lg:col-span-1 space-y-6 relative z-10">
-            <div className="bg-[#312c27] border-2 border-[#111] rounded-2xl p-2 shadow-2xl">
-              <div className="border border-dashed border-[#8c6b4a] rounded-xl p-5 sm:p-6 bg-[#312c27]">
-                <h3 className="text-[14px] font-bold text-[#c29665] font-serif uppercase tracking-widest border-b border-[#4e3b2e] pb-4 mb-6">Preencher Dados</h3>
-                
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Saudação</label>
-                    <select
-                      value={genData.greeting}
-                      onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
-                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif focus:border-[#c29665] outline-none transition-all appearance-none"
-                    >
-                      <option value="Bom dia" className="bg-[#4e311b]">Bom dia</option>
-                      <option value="Boa tarde" className="bg-[#4e311b]">Boa tarde</option>
-                      <option value="Boa noite" className="bg-[#4e311b]">Boa noite</option>
-                    </select>
-                  </div>
+          {/* Editor inputs left side */}
+          <div className="lg:col-span-1 space-y-5 relative z-10 bg-[#160B05] border border-[#2b180d] p-6 rounded-2xl shadow-inner">
+            <h3 className="text-sm font-bold font-serif text-[#B58A4C] uppercase tracking-widest border-b border-[#301a0e] pb-3 mb-4">
+              DADOS DO SOLICITANTE
+            </h3>
+            
+            <div className="space-y-4 font-serif">
+              <div>
+                <label className="text-[10px] font-black text-[#8c7465] uppercase mb-1.5 block tracking-wider">Saudação</label>
+                <select
+                  value={genData.greeting}
+                  onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
+                  className="w-full bg-[#110703] border border-[#2e180d] rounded-xl px-4 py-3 text-sm text-[#fed7aa] focus:border-[#B58A4C] outline-none transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="Bom dia">Bom dia</option>
+                  <option value="Boa tarde">Boa tarde</option>
+                  <option value="Boa noite">Boa noite</option>
+                </select>
+              </div>
 
-                  <div>
-                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Placa do Cavalo</label>
-                    <select
-                      value={genData.cavalo}
-                      onChange={(e) => {
-                        const cavalo = e.target.value;
-                        const relatedItem = items.find(i => i.cavalo === cavalo);
-                        setGenData(prev => ({ 
-                          ...prev, 
-                          cavalo,
-                          carretas: relatedItem ? relatedItem.carretas : prev.carretas 
-                        }));
-                      }}
-                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif font-bold focus:border-[#c29665] outline-none transition-all uppercase appearance-none"
-                    >
-                      <option value="" className="bg-[#4e311b]">Selecione um veículo...</option>
-                      {sortedCavalos.map(item => (
-                        <option key={item.id} value={item.cavalo} className="bg-[#4e311b]">
-                          {item.cavalo} {getStatus(item).label === 'VENCIDO' || getStatus(item).label === 'NEGATIVADO' || getStatus(item).label === 'REPROVADO' ? `(⚠️ VENCIDO)` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <div>
+                <label className="text-[10px] font-black text-[#8c7465] uppercase mb-1.5 block tracking-wider">Veículo (Cavalo)</label>
+                <select
+                  value={genData.cavalo}
+                  onChange={(e) => {
+                    const cavalo = e.target.value;
+                    const relatedItem = items.find(i => i.cavalo === cavalo);
+                    setGenData(prev => ({ 
+                      ...prev, 
+                      cavalo,
+                      carretas: relatedItem ? relatedItem.carretas : prev.carretas 
+                    }));
+                  }}
+                  className="w-full bg-[#110703] border border-[#2e180d] rounded-xl px-4 py-3 text-sm text-[#fed7aa] font-bold focus:border-[#B58A4C] outline-none transition-colors appearance-none cursor-pointer uppercase"
+                >
+                  <option value="">Selecione veículo...</option>
+                  {sortedCavalos.map(item => (
+                    <option key={item.id} value={item.cavalo}>
+                      {item.cavalo} {getStatus(item).label === 'VENCIDO' ? `(⚠️ VENCIDO)` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  <div>
-                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Placas das Carretas</label>
-                    <input
-                      type="text"
-                      value={genData.carretas}
-                      onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
-                      placeholder="EX: XYZ-9876/LMN-4567"
-                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif font-bold focus:border-[#c29665] outline-none transition-all uppercase placeholder-[#5c3722]"
-                    />
-                  </div>
+              <div>
+                <label className="text-[10px] font-black text-[#8c7465] uppercase mb-1.5 block tracking-wider">Carretas Relacionadas</label>
+                <input
+                  type="text"
+                  value={genData.carretas}
+                  onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
+                  placeholder="EX: PNE7353 / PNE7433"
+                  className="w-full bg-[#110703] border border-[#2e180d] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B58A4C] outline-none placeholder-[#4a2712] uppercase"
+                />
+              </div>
 
-                  <div>
-                    <label className="text-[10px] font-black text-[#c29665] uppercase mb-2 block font-serif tracking-wider">Contato</label>
-                    <input
-                      type="text"
-                      value={genData.contato}
-                      onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
-                      className="w-full bg-[#7a4b31] border-2 border-[#5c3722] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] rounded-md px-4 py-2.5 text-sm text-[#fed7aa] font-serif focus:border-[#c29665] outline-none transition-all"
-                    />
-                  </div>
+              <div>
+                <label className="text-[10px] font-black text-[#8c7465] uppercase mb-1.5 block tracking-wider">Celular Contato</label>
+                <input
+                  type="text"
+                  value={genData.contato}
+                  onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
+                  className="w-full bg-[#110703] border border-[#2e180d] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B58A4C] outline-none"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={handleCopyGenerator}
+              className={cn(
+                "w-full mt-6 py-3.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition-all duration-300 shadow-md",
+                genCopied 
+                  ? "bg-[#2d5930] text-white border-[#3d7a42] shadow-[0_2px_10px_rgba(45,89,48,0.4)]" 
+                  : "bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white border-[#C41C24] hover:brightness-115 active:scale-95"
+              )}
+            >
+              {genCopied ? <Check size={16} /> : <Copy size={16} />}
+              {genCopied ? 'Solicitação Copiada!' : 'Copiar para WhatsApp'}
+            </button>
+          </div>
+
+          {/* Right Preview Card Clipboard mockup */}
+          <div className="lg:col-span-2 relative z-10 flex items-center justify-center h-full">
+            <div className="w-full max-w-xl bg-[#e6d5c3] p-1.5 rounded-3xl border-[6px] border-[#c79165] shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative ring-2 ring-[#eadfc8]/40 ring-offset-4 ring-offset-[#1a0f08]">
+              <div className="border border-[#c79165] rounded-2xl p-6 sm:p-10 bg-[#fdfaf5] shadow-inner relative min-h-[350px]">
+                {/* Vintage graphic watermark watermark */}
+                <div className="absolute top-10 right-10 text-[#d0a782]/15 pointer-events-none select-none">
+                  <Heart size={150} strokeWidth={1} style={{ fill: 'currentColor' }} />
                 </div>
 
-                <div className="mt-8">
-                  <button 
-                    onClick={handleCopyGenerator}
-                    className={cn(
-                      "w-full py-3.5 rounded-md font-serif text-[12px] uppercase tracking-wider flex items-center justify-center gap-3 transition-all border-y-[3px]",
-                      genCopied 
-                        ? "bg-[#2d5930] text-white border-t-[#3b7540] border-b-[#1b361d] shadow-[0_2px_10px_rgba(0,0,0,0.3)]" 
-                        : "bg-[#1c3f25] text-[#81b287] hover:bg-[#234d2d] hover:text-[#a8cda8] border-t-[#2d5930] border-b-[#0f2414] shadow-[0_4px_15px_rgba(0,0,0,0.4)]"
-                    )}
-                  >
-                    {genCopied ? <Check size={16} /> : <Copy size={16} />}
-                    {genCopied ? 'Copiado!' : 'Copiar Solicitação'}
-                  </button>
+                <div className="relative z-10 space-y-6 font-serif text-[#4a3623] text-sm sm:text-base">
+                  <div className="flex items-center gap-3 border-b-2 border-[#d6c3a5] pb-4 mb-4">
+                    <img 
+                      src="https://i.postimg.cc/HxkVgtSZ/Gemini-Generated-Image-ji8y90ji8y90ji8y.png" 
+                      alt="3 Corações" 
+                      className="w-12 h-12 rounded-full object-cover shadow-sm border border-[#B32025]/30" 
+                    />
+                    <div>
+                      <h2 className="text-[#a47a46] text-sm font-bold uppercase tracking-widest leading-none">Grupo 3 Corações</h2>
+                      <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block mt-1">LOGÍSTICA DE ESCAPE</span>
+                    </div>
+                  </div>
+
+                  <p className="leading-relaxed">{genData.greeting},</p>
+                  <p className="leading-relaxed">Solicito o <strong className="font-bold underline decoration-[#d0a782] decoration-2 underline-offset-4">checklist</strong> de segurança para o veículo abaixo:</p>
+
+                  <div className="overflow-hidden rounded-xl border border-[#c0a892] shadow-sm my-6">
+                    <table className="w-full text-center">
+                      <thead>
+                        <tr className="bg-[#4e2d18] text-[#fdfaf5]">
+                          <th className="p-3 font-serif font-black text-xs tracking-wider uppercase border-r border-[#301a0e]">VEÍCULO CAVALO</th>
+                          <th className="p-3 font-serif font-black text-xs tracking-wider uppercase">CARRETAS DO CONJUNTO</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-[#e6d5c3]/50 text-[#301a0e] font-bold font-mono">
+                          <td className="p-4 border-r border-t border-[#c0a892] uppercase tracking-wide">{genData.cavalo || "—"}</td>
+                          <td className="p-4 border-t border-[#c0a892] uppercase tracking-wide">{genData.carretas || "—"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex justify-between items-center bg-[#e6d5c3]/30 rounded-xl p-3 border border-[#c0a892]/40 text-xs text-stone-700">
+                    <div>
+                      <p><strong>Canal de Atendimento:</strong> {genData.contato}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[#B32025]">
+                      <Heart size={14} className="fill-current" />
+                      <Heart size={10} className="fill-current rotate-12" />
+                    </div>
+                  </div>
+
+                  <div className="pt-8 flex justify-between items-end border-t border-[#d6c3a5]/50">
+                    <p className="text-stone-500 text-xs">Atenciosamente,</p>
+                    <div className="text-center mr-2">
+                      <p className="italic text-2xl font-serif text-[#292524] opacity-90 leading-none pb-1" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson</p>
+                      <div className="w-32 h-[1px] bg-stone-300 my-1 mx-auto"></div>
+                      <p className="text-[9px] uppercase tracking-widest text-[#B58A4C] font-bold">Agente de Gerenciamento de Risco</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Preview Box - The Card */}
-          <div className="lg:col-span-2 relative z-10 flex items-center h-full">
-             <div className="w-full bg-[#e6d5c3] rounded-2xl p-2 sm:p-3 border-[6px] border-[#c79165] shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative overflow-hidden ring-4 ring-[#eadfc8]/50 ring-offset-4 ring-offset-[#301a0e]">
-                <div className="border border-[#c79165] rounded-xl p-6 sm:p-10 bg-[#fdfaf5] shadow-inner min-h-[350px] relative">
-                  
-                  {/* Decorative Elements */}
-                  <div className="absolute top-8 right-8 text-[#d0a782]/20">
-                     <Heart size={120} strokeWidth={1} style={{ fill: 'currentColor' }} />
-                  </div>
-
-                  <div className="relative z-10 max-w-2xl mx-auto space-y-6 font-serif text-[15px] sm:text-base text-[#4a3623]">
-                    
-                    {/* Header with Logo */}
-                    <div className="flex items-center gap-4 mb-8">
-                      <img src="https://i.postimg.cc/Lsw0vpDT/Gemini-Generated-Image-ju3ympju3ympju3y.png" alt="3 Corações" className="w-14 h-14 rounded-full object-cover shadow-md border border-[#991b1b]/30" />
-                      <h2 className="text-[#b48554] text-lg sm:text-xl font-bold uppercase tracking-widest drop-shadow-sm">Grupo 3 Corações</h2>
-                    </div>
-
-                    <p>{genData.greeting},</p>
-                    <p>Solicito o <strong className="font-bold underline decoration-[#d0a782] decoration-2 underline-offset-4">checklist</strong> para o conjunto abaixo:</p>
-                    
-                    {/* Rustic Table */}
-                    <div className="mt-8 mb-8 overflow-hidden rounded-md border-2 border-[#5c3722] shadow-md bg-[#fdfaf5]">
-                      <table className="w-full border-collapse text-center tracking-wide">
-                        <thead>
-                          <tr className="bg-gradient-to-b from-[#7a4b31] to-[#5c3722] text-[#fdfaf5]">
-                            <th className="p-4 border-r border-[#4e311b] w-1/2 font-bold font-serif text-sm sm:text-[15px] uppercase tracking-widest drop-shadow-sm">CAVALO</th>
-                            <th className="p-4 w-1/2 font-bold font-serif text-sm sm:text-[15px] uppercase tracking-widest drop-shadow-sm">CARRETAS</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] text-[#4a3623] font-bold font-mono sm:text-lg">
-                            <td className="p-5 sm:p-6 border-r border-t border-[#c0a892] shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] uppercase">{genData.cavalo || "-"}</td>
-                            <td className="p-5 sm:p-6 border-t border-[#c0a892] shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] uppercase">{genData.carretas || "-"}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-2">
-                      <p className="text-[#4a3623] sm:text-lg">
-                        <strong className="font-bold text-[#292524]">Contato:</strong> {genData.contato}
-                      </p>
-                      <div className="flex items-center gap-2 animate-pulse text-[#b48554]">
-                        <Heart size={16} style={{ fill: 'currentColor' }} className="-rotate-12" />
-                        <Heart size={20} style={{ fill: 'currentColor' }} className="rotate-6" />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-8 flex justify-between items-end">
-                      <p className="text-[#4a3623]">Att,</p>
-                      
-                      {/* Signature */}
-                      <div className="text-center mr-4 sm:mr-8">
-                        <p className="font-serif italic text-3xl sm:text-4xl text-[#292524] opacity-90 pb-1" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson</p>
-                        <div className="w-40 h-[1px] bg-[#4a3623] mx-auto opacity-50"></div>
-                        <p className="text-[10px] uppercase tracking-widest text-[#4a3623] mt-2 font-bold select-none">Agente de risco (Jefferson)</p>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-             </div>
           </div>
         </div>
       ) : (
+        /* MONITORAMENTO LIST VIEW */
         <>
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-3">
-        {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-              filter === f 
-                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
-                : "bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300"
-            )}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Table Grid */}
-      <div className="bg-[#0b0c10]/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md shadow-2xl">
-        <div className="flex flex-col">
-          <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => {
-              const status = getStatus(item);
-              const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
-
-              return (
-              <motion.div 
-                key={item.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col xl:flex-row xl:items-center justify-between p-5 md:px-8 border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors gap-6 xl:gap-8 group"
+          {/* Active Filtering Tag row */}
+          <div className="flex flex-wrap items-center gap-2 relative z-10">
+            {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={cn(
+                  "px-4.5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold font-serif uppercase tracking-widest transition-all",
+                  filter === f 
+                    ? "bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white shadow-lg border border-[#C41C24]" 
+                    : "bg-[#180d07] text-[#8c7465] hover:text-[#d8c3a5] border border-[#2b180d]"
+                )}
               >
-                {/* IDENTIFICADOR / PLACA MERCOSUL */}
-                <div className="flex flex-col w-full xl:w-[200px] shrink-0">
-                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 ml-1">Identificador</span>
-                  <div className="flex flex-col w-[130px] rounded-[6px] overflow-hidden shadow-lg border border-white/10 shrink-0">
-                    <div className="bg-[#003399] h-[16px] flex items-center justify-between px-2">
-                      <span className="text-[8px] font-black text-white uppercase leading-none mt-[1px] tracking-tight">Brasil</span>
-                      <div className="w-[6px] h-[6px] rounded-full bg-[#ffcc00]"></div>
-                    </div>
-                    <div className="bg-white text-black font-black text-[20px] text-center leading-none py-2 tracking-wide uppercase">
-                      {item.cavalo}
-                    </div>
-                  </div>
-                </div>
+                {f}
+              </button>
+            ))}
+          </div>
 
-                {/* INFORMAÇÕES DO CHECKLIST (Validade, Status, etc) */}
-                <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> STATUS</span>
-                    <span className={cn(
-                      "px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-[0.15em] border shadow-sm w-fit mt-1",
-                      status.color, status.bg, status.border,
-                      (status.label === 'VENCIDO' || status.label === 'NEGATIVADO' || status.label === 'REPROVADO') ? "animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.3)]" : ""
-                    )}>
-                      {status.label}
-                    </span>
-                  </div>
+          {/* MAIN CHECKLIST VINTAGE WOOD CONTAINER CARDS */}
+          <div className="space-y-6 relative z-10">
+            <AnimatePresence mode="popLayout">
+              {filteredItems.map((item) => {
+                const status = getStatus(item);
+                const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
 
-                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> VALIDADE</span>
-                    <div className={cn(
-                      "flex items-center gap-1.5 text-[13px] font-mono font-black mt-1",
-                      diasParaVencer < 0 ? "text-rose-400" : "text-emerald-400"
-                    )}>
-                      <Clock size={14} strokeWidth={2.5} />
-                      {format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> CARRETAS</span>
-                    <span className="text-[12px] font-mono text-zinc-300 font-bold truncate mt-1">
-                      {item.carretas || 'Nenhuma'}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> PERIFÉRICO</span>
-                    <span className="text-[12px] font-mono text-zinc-300 font-bold truncate flex items-center gap-1.5 mt-1">
-                      <Wrench size={14} className="text-zinc-500" strokeWidth={2.5} /> {item.periferico || 'Padrão'}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col bg-[#0b0c10]/60 border border-white/5 rounded-xl px-4 py-3 h-[68px] justify-between cursor-help relative group/tooltip">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> RESTANTES</span>
-                    <span className={cn(
-                      "text-[12px] font-mono font-black truncate flex items-center gap-1.5 mt-1",
-                      diasParaVencer < 0 ? "text-rose-500" : diasParaVencer <= 7 ? "text-amber-500" : "text-emerald-500"
-                    )}>
-                      {diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias`}
-                    </span>
-                  </div>
-                </div>
-
-                {/* ESTÁ NO PÁTIO? & ASSINOU? */}
-                <div className="hidden flex-col sm:flex-row items-center gap-4 xl:gap-8 w-full xl:w-auto shrink-0">
-                  <div className="flex flex-row items-center gap-3 w-full sm:w-auto justify-between">
-                    <span className="text-xs font-black text-zinc-600 uppercase tracking-widest leading-tight">Está no<br/>pátio?</span>
-                    <select 
-                      value={item.estaNoPatio || 'NÃO'}
-                      onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { estaNoPatio: e.target.value })}
-                      className="bg-[#0b0c10] border border-white/10 text-white text-xl sm:text-[22px] font-black font-mono px-4 py-2 rounded-lg outline-none focus:border-primary/50 cursor-pointer appearance-none w-[110px] sm:w-[130px] text-center"
-                    >
-                      <option value="NÃO" className="bg-[#0b0c10]">NÃO</option>
-                      <option value="SIM" className="bg-[#0b0c10]">SIM</option>
-                    </select>
-                  </div>
-
-                  <div className="flex flex-row items-center gap-3 w-full sm:w-auto justify-between">
-                    <span className="text-xs font-black text-zinc-600 uppercase tracking-widest">Assinou?</span>
-                    <select 
-                      value={item.assinou || 'NÃO'}
-                      onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { assinou: e.target.value })}
-                      className="bg-[#0b0c10] border border-white/10 text-white text-xl sm:text-[22px] font-black font-mono px-4 py-2 rounded-lg outline-none focus:border-primary/50 cursor-pointer appearance-none w-[110px] sm:w-[130px] text-center"
-                    >
-                      <option value="NÃO" className="bg-[#0b0c10]">NÃO</option>
-                      <option value="SIM" className="bg-[#0b0c10]">SIM</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* AÇÕES */}
-                <div className="flex items-center justify-end w-full xl:w-auto gap-1 border-t border-white/5 xl:border-0 pt-4 xl:pt-0 mt-2 xl:mt-0 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-all">
-                  <button 
-                    className="p-2 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"
-                    onClick={() => setEditingItem(item)}
-                    title="Editar informações"
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[4px] border-[#3A2414] rounded-[2.2rem] p-5 shadow-[0_12px_28px_rgba(58,36,20,0.15)] relative overflow-hidden group"
                   >
-                    <Edit2 size={16} />
-                  </button>
-                  <button 
-                    className="p-2 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"
-                    onClick={() => {
-                      const note = prompt("Atualizar observação:", item.observacao);
-                      if (note !== null) {
-                        update(ref(rtdb, `checklist_veiculos/${item.id}`), { observacao: note });
-                      }
-                    }}
-                    title="Observações"
-                  >
-                    <MessageSquare size={16} />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(item.id)}
-                    className="p-2 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
-                    title="Excluir"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                    {/* Metal rivets in corners */}
+                    <div className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
+                    <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
+                    <div className="absolute bottom-2.5 left-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
+                    <div className="absolute bottom-2.5 right-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
 
-          {filteredItems.length === 0 && (
-            <div className="py-24 flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center text-zinc-700 mb-6">
-                <Filter size={40} />
+                    {/* Bento Layout Grid representing 6 information cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                      
+                      {/* IDENTIFICADOR (BRASIL LICENSE PLATE) */}
+                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3 h-28 relative shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest mb-1.5">IDENTIFICADOR</span>
+                        <LicensePlate plate={item.cavalo} />
+                      </div>
+
+                      {/* STATUS (ROTATED DISTRESSED RUBBER STAMP) */}
+                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3 h-28 relative overflow-hidden shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest mb-1">STATUS</span>
+                        <div className="flex items-center justify-center flex-1 w-full mt-1.5 select-none z-10">
+                          {status.label === 'APROVADO' && (
+                            <div className="transform -rotate-6 border-[3px] border-dashed border-[#55a360] text-[#55a360] font-serif font-black text-xs px-2.5 py-1 uppercase tracking-widest rounded bg-white/60">
+                              APROVADO
+                            </div>
+                          )}
+                          {(status.label === 'VENCIDO' || status.label === 'REPROVADO') && (
+                            <div className="transform -rotate-[8deg] border-[3px] border-dashed border-[#B32025] text-[#B32025] font-serif font-black text-xs px-2.5 py-1 uppercase tracking-widest rounded bg-white/60 animate-pulse">
+                              VENCIDO
+                            </div>
+                          )}
+                          {status.label === 'NEGATIVADO' && (
+                            <div className="transform -rotate-[10deg] border-[3px] border-dashed border-amber-500 text-amber-500 font-serif font-black text-[10px] px-2 py-1 uppercase tracking-wider rounded bg-white/60">
+                              NEGATIVADO
+                            </div>
+                          )}
+                          {status.label === 'URGENTE' && (
+                            <div className="transform -rotate-3 border-[3px] border-dashed border-amber-500 text-amber-500 font-serif font-black text-xs px-2 py-1 uppercase tracking-widest rounded bg-white/60 animate-pulse">
+                              URGENTE
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* VALIDADE (CLOCK & DATE) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">VALIDADE</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <div className={cn(
+                            "flex items-center gap-1.5 font-mono font-black text-sm",
+                            diasParaVencer < 0 ? "text-[#B32025]" : "text-[#55a360]"
+                          )}>
+                            <Clock size={15} />
+                            <span>{format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}</span>
+                          </div>
+                          <span className="text-[9px] text-[#3A2414]/70 font-serif mt-1 block tracking-wider uppercase">Teste base: {format(parseISO(item.dataTeste), 'dd/MM')}</span>
+                        </div>
+                      </div>
+
+                      {/* CARRETAS (TRUCK MODEL ICON) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">CARRETAS</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <div className="flex items-center gap-1.5 text-[#2D1A10] font-mono font-bold text-xs">
+                            <Truck size={15} className="text-[#3A2414] shrink-0" />
+                            <span className="truncate max-w-[100px] sm:max-w-none">{item.carretas || 'Nenhuma'}</span>
+                          </div>
+                          {item.manutencaoOs && (
+                            <span className="text-[9px] text-[#B32025] font-bold tracking-wider truncate block mt-1">OS: {item.manutencaoOs}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* PERIFÉRICO (WRENCH TOOL CONTROLS) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">PERIFÉRICO</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <div className="flex items-center gap-1.5 text-[#2D1A10] font-bold text-xs truncate">
+                            <Wrench size={15} className="text-[#3A2414]" />
+                            <span className="uppercase">{item.periferico || 'Padrão'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RESTANTES (CALENDAR DAYS REMAINING COUNTDOWN) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">RESTANTES</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <span className={cn(
+                            "text-[13px] font-mono font-black",
+                            diasParaVencer < 0 ? "text-[#B32025] animate-pulse" : diasParaVencer <= 7 ? "text-amber-500" : "text-[#55a360]"
+                          )}>
+                            {diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias`}
+                          </span>
+                          <span className="text-[9px] text-[#3A2414]/70 font-serif uppercase block mt-1 tracking-wider">de checklist</span>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* CONTROL SHELF: INLINE PÁTIO/ASSINADO DROPDOWNS & ACTIONS */}
+                    <div className="mt-4 pt-4 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-5">
+                        {item.observacao && (
+                          <div className="bg-[#fdfbf6] border border-[#3A2414]/15 rounded-xl px-3 py-1.5 text-xs text-[#2D1A10] max-w-xs font-serif italic truncate" title={item.observacao}>
+                            <span className="font-sans font-black text-[#B32025] not-italic mr-1.5 uppercase text-[9px] tracking-widest">Obs:</span>
+                            "{item.observacao}"
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4">
+                          {/* Inside patio custom selector */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold font-serif text-[#3A2414]/80 uppercase tracking-wide">Está no pátio?</span>
+                            <select 
+                              value={item.estaNoPatio || 'NÃO'}
+                              onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { estaNoPatio: e.target.value })}
+                              className="bg-white border border-[#3A2414]/20 text-[#2D1A10] font-mono font-bold text-xs px-2.5 py-1 rounded-lg outline-none cursor-pointer focus:border-[#B32025] shadow-sm"
+                            >
+                              <option value="NÃO">NÃO</option>
+                              <option value="SIM">SIM</option>
+                            </select>
+                          </div>
+
+                          {/* Assumed checklist selector */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold font-serif text-[#3A2414]/80 uppercase tracking-wide">Assinou?</span>
+                            <select 
+                              value={item.assinou || 'NÃO'}
+                              onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { assinou: e.target.value })}
+                              className="bg-white border border-[#3A2414]/20 text-[#2D1A10] font-mono font-bold text-xs px-2.5 py-1 rounded-lg outline-none cursor-pointer focus:border-[#B32025] shadow-sm"
+                            >
+                              <option value="NÃO">NÃO</option>
+                              <option value="SIM">SIM</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Administrative control actions buttons */}
+                      <div className="flex items-center gap-2 self-end sm:self-auto uppercase">
+                        <button 
+                          onClick={() => setEditingItem(item)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#fdfcf9] hover:bg-[#B32025]/10 border border-[#3A2414]/20 text-[#3A2414] font-serif font-black text-[10px] rounded-lg tracking-wider transition-colors shadow-sm cursor-pointer"
+                        >
+                          <Edit2 size={11} className="text-[#B32025]" />
+                          <span>Editar</span>
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const note = prompt("Atualizar observação:", item.observacao);
+                            if (note !== null) {
+                              update(ref(rtdb, `checklist_veiculos/${item.id}`), { observacao: note });
+                            }
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#fdfcf9] hover:bg-[#B32025]/10 border border-[#3A2414]/20 text-[#3A2414] font-serif font-black text-[10px] rounded-lg tracking-wider transition-colors shadow-sm cursor-pointer"
+                        >
+                          <MessageSquare size={11} className="text-[#B32025]" />
+                          <span>Obs</span>
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(item.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#B32025] hover:bg-[#8c060d] text-white border border-[#B32025] font-serif font-black text-[10px] rounded-lg tracking-wider transition-colors shadow cursor-pointer"
+                        >
+                          <Trash2 size={11} />
+                          <span>Excluir</span>
+                        </button>
+                      </div>
+                    </div>
+
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+
+            {filteredItems.length === 0 && (
+              <div className="py-20 flex flex-col items-center justify-center text-center bg-[#fdfaf5] border border-[#3A2414]/15 rounded-2xl relative overflow-hidden shadow-inner">
+                <Filter size={36} className="text-[#3A2414]/50 mb-4" />
+                <h3 className="text-[#3A2414] font-serif font-bold uppercase tracking-widest text-sm">Nenhum registro correspondente</h3>
+                <p className="text-[#3A2414]/70 text-xs mt-1 tracking-wider uppercase">Experimente ajustar o termo de pesquisa ou marque outra aba.</p>
               </div>
-              <h3 className="text-white font-black uppercase tracking-tight">Nenhum registro encontrado</h3>
-              <p className="text-zinc-600 font-mono text-xs uppercase tracking-widest mt-2">Personalize sua busca ou adicione um novo checklist.</p>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        </>
+      )}
 
-      {/* Add/Edit Modal */}
+      {/* RUSTIC PREMIUM ADD & EDIT MODAL SHEET */}
       <AnimatePresence>
         {(isAdding || editingItem) && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -660,35 +764,39 @@ export default function Checklist() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-black/85 backdrop-blur-md"
               onClick={() => {
                 setIsAdding(false);
                 setEditingItem(null);
               }}
             />
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-2xl bg-[#0b0d19] border border-white/10 rounded-[3rem] p-10 shadow-2xl space-y-8"
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              className="relative w-full max-w-xl bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[6px] border-[#3A2414] rounded-[3rem] p-8 shadow-[0_30px_70px_rgba(58,36,20,0.4)] space-y-6 text-[#3A2414]"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                  {editingItem ? <Edit2 size={24} /> : <Truck size={24} />}
-                </div>
+              {/* Corner decorative rivet screws */}
+              <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
+              <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
+              <div className="absolute bottom-3 left-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
+              <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
+
+              <div className="flex items-center gap-3 border-b border-[#3A2414]/15 pb-4 mb-2">
+                <Truck size={24} className="text-[#B32025]" />
                 <div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">
-                    {editingItem ? 'Editar Registro' : 'Novo Checkpoint'}
+                  <h3 className="text-xl font-bold font-serif text-[#3A2414] uppercase tracking-tight">
+                    {editingItem ? 'Editar Checkpoint' : 'Adicionar Checkpoint'}
                   </h3>
-                  <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mt-1">
-                    {editingItem ? `Atualizando dados de ${editingItem.cavalo}` : 'Insira os dados técnicos do conjunto'}
+                  <p className="text-[#3A2414]/70 text-[10px] uppercase tracking-widest mt-0.5 font-bold">
+                    REGISTRO DE ESCAPE CENTRAL - PGR
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Placa Cavalo</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-serif">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Placa Cavalo</label>
                   <input 
                     type="text" 
                     value={editingItem ? editingItem.cavalo : newItem.cavalo}
@@ -697,12 +805,13 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, cavalo: val }) : null);
                       else setNewItem(prev => ({ ...prev, cavalo: val }));
                     }}
-                    placeholder="AAA-0000"
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all"
+                    placeholder="POZ4431"
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-inner"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Placa Carreta(s)</label>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Placas Carretas</label>
                   <input 
                     type="text" 
                     value={editingItem ? editingItem.carretas : newItem.carretas}
@@ -711,12 +820,13 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, carretas: val }) : null);
                       else setNewItem(prev => ({ ...prev, carretas: val }));
                     }}
-                    placeholder="CAR-1234 / CAR-5678"
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all"
+                    placeholder="PNE7353 / PNE7433"
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-inner"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Data do Teste</label>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Data Efetiva Teste</label>
                   <input 
                     type="date" 
                     value={editingItem ? editingItem.dataTeste : newItem.dataTeste}
@@ -725,11 +835,12 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, dataTeste: val }) : null);
                       else setNewItem(prev => ({ ...prev, dataTeste: val }));
                     }}
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all"
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-inner"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Data Vencimento</label>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Data Efetiva Vencimento</label>
                   <input 
                     type="date" 
                     value={editingItem ? editingItem.dataVencimento : newItem.dataVencimento}
@@ -738,11 +849,12 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, dataVencimento: val }) : null);
                       else setNewItem(prev => ({ ...prev, dataVencimento: val }));
                     }}
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all"
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-inner"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Periférico</label>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Item Periférico</label>
                   <select 
                     value={editingItem ? editingItem.periferico : newItem.periferico}
                     onChange={(e) => {
@@ -750,19 +862,20 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, periferico: val }) : null);
                       else setNewItem(prev => ({ ...prev, periferico: val }));
                     }}
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all appearance-none"
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none cursor-pointer shadow-inner appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%232c1a12%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat"
                   >
-                    <option value="" className="bg-zinc-900">Selecione...</option>
-                    <option value="TECLADO" className="bg-zinc-900">TECLADO</option>
-                    <option value="TRAVA BAU" className="bg-zinc-900">TRAVA BAU</option>
-                    <option value="SENSOR" className="bg-zinc-900">SENSOR</option>
-                    <option value="BAU" className="bg-zinc-900">BAU</option>
-                    <option value="PAINEL" className="bg-zinc-900">PAINEL</option>
-                    <option value="OUTROS" className="bg-zinc-900">OUTROS</option>
+                    <option value="">Selecione...</option>
+                    <option value="TECLADO">TECLADO</option>
+                    <option value="TRAVA BAU">TRAVA BAU</option>
+                    <option value="SENSOR">SENSOR</option>
+                    <option value="BAU">BAU</option>
+                    <option value="PAINEL">PAINEL</option>
+                    <option value="OUTROS">OUTROS</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Manutenção / OS</label>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Ordem de Serviço (OS)</label>
                   <input 
                     type="text" 
                     value={editingItem ? editingItem.manutencaoOs : newItem.manutencaoOs}
@@ -771,12 +884,13 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, manutencaoOs: val }) : null);
                       else setNewItem(prev => ({ ...prev, manutencaoOs: val }));
                     }}
-                    placeholder="OS #12345"
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all"
+                    placeholder="OS #98221"
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-inner"
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Observações</label>
+
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Observações Livres</label>
                   <textarea 
                     value={editingItem ? editingItem.observacao : newItem.observacao}
                     onChange={(e) => {
@@ -784,25 +898,25 @@ export default function Checklist() {
                       if (editingItem) setEditingItem(prev => prev ? ({ ...prev, observacao: val }) : null);
                       else setNewItem(prev => ({ ...prev, observacao: val }));
                     }}
-                    placeholder="Detalhes adicionais..."
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold focus:border-primary/50 outline-none transition-all min-h-[100px] resize-none"
+                    placeholder="Mais observações do veículo..."
+                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4.5 py-3 text-sm text-[#2D1A10] focus:border-[#B32025] outline-none min-h-[75px] resize-none shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4 pt-4 border-t border-[#3A2414]/15 uppercase">
                 <button 
                   onClick={() => {
                     setIsAdding(false);
                     setEditingItem(null);
                   }} 
-                  className="flex-1 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest hover:text-white transition-all"
+                  className="flex-1 py-3.5 text-xs font-bold text-[#3A2414]/70 hover:text-[#B32025] tracking-widest transition-colors font-serif cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={editingItem ? handleUpdate : handleAdd}
-                  className="flex-2 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transition-all"
+                  className="flex-1 py-3.5 bg-[#B32025] text-white rounded-xl border border-[#B32025] font-serif font-black text-xs tracking-wider shadow-lg hover:bg-[#8c060d] active:scale-98 transition-all cursor-pointer"
                 >
                   {editingItem ? 'Salvar Alterações' : 'Validar Checklist'}
                 </button>
@@ -811,8 +925,19 @@ export default function Checklist() {
           </div>
         )}
       </AnimatePresence>
-      </>
-      )}
+
+      {/* Elegant Footer Details */}
+      <div className="relative z-10 text-center py-6 border-t border-[#311a0c] flex flex-col sm:flex-row items-center justify-between text-xs text-[#8c7465] mt-10">
+        <span className="mb-2 sm:mb-0">© 2026 Sistema PGR • Todos os direitos reservados.</span>
+        <div className="flex items-center gap-1 text-[#a47a46] font-serif font-extrabold italic">
+          <span>Feito com paixão. Feito para entregar.</span>
+          <div className="flex items-center text-[#B32025] ml-1.5 gap-1">
+            <Heart size={10} className="fill-current" />
+            <Heart size={10} className="fill-current" />
+            <Heart size={10} className="fill-current" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

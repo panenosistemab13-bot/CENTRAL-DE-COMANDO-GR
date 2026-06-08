@@ -3,33 +3,40 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-heading: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-heading: "Playfair Display", Georgia, serif;
   --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
   --font-serif-display: "Playfair Display", Georgia, serif;
   --font-handwritten: "Satisfy", "Caveat", cursive, sans-serif;
   --font-metamorphous: "Metamorphous", serif;
   
-  --color-primary: #a855f7; /* Purple 500 */
-  --color-primary-dark: #7e22ce; /* Purple 700 */
-  --color-canvas: #09090b; /* Zinc 950 */
-  --color-card: #18181b; /* Zinc 900 */
-  --color-border-dark: rgba(255, 255, 255, 0.08);
+  --color-primary: #B32025; /* 3 Corações Institutional Red */
+  --color-primary-dark: #8c060a;
+  --color-canvas: #F2E4CC; /* Premium Handmade Paper Cream Background */
+  --color-card: #E8D4B0; /* Light Wood Plate */
+  --color-border-dark: rgba(92, 60, 36, 0.2);
 }
 
 @layer base {
   body {
-    @apply bg-canvas text-zinc-300 antialiased selection:bg-purple-500/30 selection:text-purple-300;
-    height: 100%;
-    overflow: hidden;
+    @apply bg-canvas text-[#2D1A10] antialiased selection:bg-[#B32025]/20 selection:text-[#B32025];
+    min-height: 100%;
   }
   
   html {
-    height: 100%;
-    overflow: hidden;
+    min-height: 100%;
   }
 
   #root {
-    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (min-width: 768px) {
+    html, body, #root {
+      height: 100%;
+      overflow: hidden;
+    }
   }
 }
 
@@ -39,25 +46,22 @@
   }
 
   .report-card {
-    @apply bg-zinc-900/80 border border-white/5 rounded-2xl shadow-xl backdrop-blur-md transition-all duration-300 hover:border-purple-500/20 hover:shadow-purple-500/10;
+    @apply bg-[#E8D4B0] border-4 border-[#3A2414] rounded-2xl shadow-xl transition-all duration-300 hover:border-[#B32025]/60;
   }
   
   .toolbar-button {
-    @apply flex items-center gap-2 px-3 py-2 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-transparent hover:border-white/10;
+    @apply flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#6B4423] hover:text-[#2D1A10] hover:bg-[#C89A67]/20 rounded-xl transition-all border border-transparent hover:border-[#3A2414]/20;
   }
 
   .toolbar-button-active {
-    @apply text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)];
+    @apply text-white bg-[#B32025] border-[#8c060a] shadow-[0_4px_10px_rgba(179,32,37,0.25)];
   }
   
   .canvas-grid {
-    background-color: #09090b;
+    background-color: #F2E4CC;
     background-image: 
-      radial-gradient(circle at 15% 50%, rgba(168, 85, 247, 0.08), transparent 25%),
-      radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%),
-      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+      radial-gradient(circle at center, rgba(199, 162, 106, 0.1) 0%, rgba(58, 36, 20, 0.05) 100%),
+      url("https://www.transparenttextures.com/patterns/cream-paper.png");
     background-attachment: fixed;
   }
 

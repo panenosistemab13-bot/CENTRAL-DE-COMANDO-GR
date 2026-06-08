@@ -213,48 +213,40 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-full bg-zinc-950 text-white p-4 md:p-8 font-sans overflow-auto flex flex-col relative rounded-3xl gap-6">
+    <div className="min-h-full bg-[#F2E4CC] text-[#2D1A10] p-4 md:p-8 font-sans overflow-auto flex flex-col relative gap-6">
       
-      {/* Background Subtle Gradient Glow */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 blur-[150px] rounded-full pointer-events-none" />
+      {/* Decorative Artisan Background Overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")' }}></div>
 
-      {/* HEADER SECTION */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80 relative z-10 shrink-0">
+      {/* HEADER SECTION - Premium Artisan Plate Style */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b-2 border-[#6B4423]/20 relative z-10 shrink-0">
         <div>
           <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <span className="text-[10px] font-mono uppercase font-black tracking-widest text-indigo-400 bg-indigo-950/40 border border-indigo-400/20 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#B32025] bg-[#E8D4B0] border border-[#6B4423]/20 px-2 py-0.5 rounded-sm">
               SISTEMA PGR CENTRAL
             </span>
-            <span className="text-zinc-600 font-mono text-sm">/</span>
-            <div className="flex items-center gap-1.5 text-emerald-400 text-[10px] font-mono uppercase bg-emerald-950/20 px-2 py-0.5 border border-emerald-500/10 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              NÚCLEO ÁGUIA ATIVO
+            <span className="text-[#6B4423] font-mono text-sm">/</span>
+            <div className="flex items-center gap-1.5 text-emerald-800 text-[10px] font-black uppercase bg-[#E8D4B0] px-2 py-0.5 border border-[#3A2414]/10 rounded-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse" />
+              NÚCLEO ATIVO
             </div>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-none">
-            Monitoramento de Operações <span className="text-indigo-400 font-light font-mono text-sm align-middle ml-2">v2.5</span>
+          <h1 className="text-2xl sm:text-4xl font-black text-[#2D1A10] tracking-tight leading-none font-serif">
+            Monitoramento de Operações
           </h1>
-          <p className="text-xs text-zinc-400 mt-2">
-            Visão computacional, telemetria de frotas e gerenciamento de banco e faturamento em tempo real.
+          <p className="text-xs text-[#6B4423] mt-2 font-medium">
+            Visão computacional, telemetria e gestão artesanal em tempo real.
           </p>
         </div>
 
-        {/* Realtime Clock & Status Block */}
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Uplink indicator */}
-
-
-          {/* Time block */}
-          <div className="flex items-center gap-3 bg-zinc-900 border border-indigo-500/20 rounded-xl px-5 py-2.5 relative shadow-[0_4px_20px_rgba(99,102,241,0.05)]">
-            <Clock size={16} className="text-indigo-400 animate-pulse" />
-            <div className="flex flex-col">
-              <span className="text-[8px] font-mono text-indigo-400 uppercase tracking-widest font-bold">HORA OPERACIONAL (UTC)</span>
-              <span className="text-lg font-mono font-bold text-zinc-100 tracking-wider">
-                {format(currentTime, "HH:mm:ss")}
-                <span className="text-xs text-indigo-400/70 ml-1 font-semibold">.{format(currentTime, "SS")}</span>
-              </span>
-            </div>
+        {/* Time block */}
+        <div className="flex items-center gap-3 bg-[#E8D4B0] border-2 border-[#A28A67] rounded-lg px-5 py-2.5 relative shadow-inner">
+          <Clock size={16} className="text-[#B32025]" />
+          <div className="flex flex-col">
+            <span className="text-[8px] font-black text-[#6B4423] uppercase tracking-widest">HORA OPERACIONAL (UTC)</span>
+            <span className="text-lg font-mono font-bold text-[#2D1A10] tracking-wider">
+              {format(currentTime, "HH:mm:ss")}
+            </span>
           </div>
         </div>
       </div>

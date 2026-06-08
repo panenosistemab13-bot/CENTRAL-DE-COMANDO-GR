@@ -1,27 +1,91 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { PatioItem, initialPatioData } from '../data/patioData';
+import { motion, AnimatePresence } from 'motion/react';
+import { PatioItem } from '../data/patioData';
 import { cn } from '../lib/utils';
-import { MapPin, CheckCircle, Truck, FileCheck, ClipboardPaste, Upload, Trash2, Loader2, LayoutGrid, Activity, ShieldCheck, Search, Filter, Plus, Database } from 'lucide-react';
+import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from '../utils/principles';
+import { 
+  Truck, 
+  Trash2, 
+  Loader2, 
+  Activity, 
+  ShieldCheck, 
+  Search, 
+  Plus, 
+  Database,
+  Image as ImageIcon,
+  ChevronLeft
+} from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
 
+interface PatioProps {
+  onBack?: () => void;
+}
+
+// Slotted Vintage Flat-head Screw Component for authentic industrial look
+function Screw({ className }: { className?: string }) {
+  return (
+    <div 
+      className={cn(
+        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+        className
+      )}
+    >
+      {/* Screw threads flat groove */}
+      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+    </div>
+  );
+}
+
+// Custom WoodenPlaque Wrapper representing heavy industrial brass or high-contrast wood plaques
+const WoodenPlaque: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  screwSize?: string;
+}> = ({ children, className, screwSize }) => {
+  return (
+    <div 
+      className={cn(
+        "rounded-2xl bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[6px] border-[#311f14] shadow-[0_22px_45px_rgba(0,0,0,0.88),inset_1.5px_1.5px_3px_rgba(255,255,255,0.45)] relative p-6 flex flex-col justify-between ring-2 ring-[#1c1109]/30",
+        className
+      )}
+    >
+      {/* Corner screws */}
+      <Screw className={cn("absolute top-3 left-3 w-3 h-3", screwSize)} />
+      <Screw className={cn("absolute top-3 right-3 w-3 h-3", screwSize)} />
+      <Screw className={cn("absolute bottom-3 left-3 w-3 h-3", screwSize)} />
+      <Screw className={cn("absolute bottom-3 right-3 w-3 h-3", screwSize)} />
+      
+      {/* Plaque content container */}
+      <div className="relative z-10 w-full h-full flex flex-col justify-between">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// High-fidelity Mercosul Licence Plate displays
 const LicensePlate: React.FC<{ plate: string }> = ({ plate }) => {
-  if (!plate || plate === '-') return <span className="text-slate-500 font-mono">-</span>;
+  if (!plate || plate === '-') return <span className="text-[#5c3c24] font-mono font-bold">-</span>;
   
   const cleanPlate = plate.trim().toUpperCase();
   
   return (
-    <div className="inline-flex flex-col items-center justify-center bg-[#F8FAFC] border border-slate-400 rounded-md shadow-sm overflow-hidden select-none font-mono tracking-wider" style={{ width: '105px', height: '36px' }}>
-      {/* Top blue bar representing Mercosul licence plate standard */}
-      <div className="w-full bg-[#0051A2] h-[8px] flex items-center justify-between px-1.5 select-none leading-none">
-        <span className="text-[5.5px] text-white font-sans font-black tracking-widest uppercase scale-90 origin-left">BRASIL</span>
-        <div className="w-[4px] h-[3px] bg-yellow-400 rounded-xs"></div>
+    <div className="inline-flex flex-col items-center justify-center bg-[#f7f4ed] border-2 border-[#5c3c24]/80 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.35)] overflow-hidden select-none font-mono tracking-wider w-[120px] h-[40px] shrink-0 transform transition-transform hover:scale-105">
+      {/* Blue Mercosul Header */}
+      <div className="w-full bg-[#0051A2] h-[10px] flex items-center justify-between px-1.5 leading-none relative">
+        <span className="text-[5px] text-white font-sans font-bold scale-95">BR</span>
+        <span className="text-[6.5px] text-white font-sans font-black tracking-widest uppercase absolute left-1/2 -translate-x-1/2">BRASIL</span>
+        {/* Tiny Brazil Flag */}
+        <div className="w-[8px] h-[5.5px] bg-[#009b3a] border border-white/20 flex items-center justify-center relative rounded-[1px] overflow-hidden">
+          <div className="w-[4.5px] h-[3px] bg-yellow-400 rotate-45 transform flex items-center justify-center">
+            <div className="w-[1.5px] h-[1.5px] bg-blue-800 rounded-full"></div>
+          </div>
+        </div>
       </div>
-      {/* Main plate text */}
-      <div className="w-full flex-1 flex items-center justify-center bg-white">
-        <span className="text-slate-950 font-black text-sm tracking-wide leading-none select-all">
+      {/* License plate characters */}
+      <div className="w-full flex-1 flex items-center justify-center bg-gradient-to-b from-[#ffffff] to-[#e8e4db] px-2">
+        <span className="text-[#1a1c1d] font-black text-[15px] tracking-wide leading-none select-all animate-fade-in" style={{ textShadow: '0.5px 0.5px 0px rgba(255, 255, 255, 0.8)' }}>
           {cleanPlate}
         </span>
       </div>
@@ -29,13 +93,17 @@ const LicensePlate: React.FC<{ plate: string }> = ({ plate }) => {
   );
 };
 
-export default function Patio() {
+export default function Patio({ onBack }: PatioProps) {
+  const principle = useCurrentPrinciple();
   const [patioData, setPatioData] = useState<PatioItem[]>([]);
   const [pasteText, setPasteText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusMsg, setStatusMsg] = useState<{type: 'error' | 'success', text: string} | null>(null);
   const [referencias, setReferencias] = useState<{ [key: string]: any }>({});
   const [patioFilter, setPatioFilter] = useState<'Todos' | 'Sim' | 'Não'>('Todos');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
 
   useEffect(() => {
     // Escutar rtdb
@@ -77,10 +145,8 @@ export default function Patio() {
   };
 
   const updatePatioData = async (id: string, field: keyof PatioItem, value: string) => {
-    // Atualiza o estado local imediatamente para feedback visual instantâneo
     setPatioData(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
     try {
-      // Atualizar campo específico no banco
       await update(ref(db, `patio/veiculos/${id}`), { [field]: value });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `patio/veiculos/${id}`);
@@ -99,15 +165,13 @@ export default function Patio() {
     try {
       await remove(ref(db, 'patio/veiculos'));
       setPasteText('');
+      setImageFile(null);
       setStatusMsg({ type: 'success', text: 'Todos os dados foram limpos.' });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch(err) {
       handleFirestoreError(err, OperationType.DELETE, 'patio/veiculos');
     }
   };
-
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const compressImage = (base64Str: string, callback: (compressed: string) => void) => {
     const img = new Image();
@@ -143,7 +207,7 @@ export default function Patio() {
 
   const handleProcessData = async () => {
     if (!pasteText.trim() && !imageFile) {
-      setStatusMsg({ type: 'error', text: 'Por favor, cole os dados do Excel ou selecione uma imagem.' });
+      setStatusMsg({ type: 'error', text: 'Cole os dados do Excel ou carregue um arquivo/imagem.' });
       return;
     }
 
@@ -162,7 +226,6 @@ export default function Patio() {
         });
 
         const compressed = await new Promise<string>((resolve) => compressImage(base64, resolve));
-
         const cleanBase64 = compressed.replace(/^data:[^;]+;base64,/, "");
 
         const response = await fetch('/api/extract-table', {
@@ -200,7 +263,6 @@ export default function Patio() {
       } else {
         const linhas = pasteText.split(/\r?\n/).map(line => line.trim()).filter(line => line !== '');
 
-        // Detect delimiter by counting occurrences in first few lines without using slice directly
         let delimiter = '\t';
         const checkLinesCount = Math.min(linhas.length, 5);
         const delimiters = ['\t', ';', '|', ','];
@@ -222,10 +284,8 @@ export default function Patio() {
           delimiter = bestDelimiter;
         }
 
-        // Create a matrix of cells
         const rows = linhas.map(row => row.split(delimiter));
 
-        // Helper to identify a license plate pattern (both older Brazilian formats and new Mercosul format)
         const isLicensePlate = (str: string): boolean => {
           const clean = str.replace(/[\s-]/g, '').toUpperCase();
           if (clean.length !== 7) return false;
@@ -234,7 +294,6 @@ export default function Patio() {
           return firstThreeLetters && restAlphanumeric;
         };
 
-        // 1. Scan for headers to find column mappings if present
         let colCavalo = -1;
         let colCarreta = -1;
         let colDestino = -1;
@@ -259,13 +318,10 @@ export default function Patio() {
           const headers = rows[headerRowIdx].map(h => h.trim().toUpperCase());
           
           const findColumn = (keywords: string[], excludeKeywords: string[] = []): number => {
-            // 1. Prioritized exact match of keywords (highest priority first)
             for (const kw of keywords) {
               const foundIdx = headers.findIndex(h => h === kw);
               if (foundIdx !== -1) return foundIdx;
             }
-            
-            // 2. Prioritized contains match of keywords with exclusion (flexible but safe)
             for (const kw of keywords) {
               const foundIdx = headers.findIndex(h => {
                 const matchesKw = h.includes(kw);
@@ -304,15 +360,12 @@ export default function Patio() {
           );
         }
 
-        // Process rows of data
         const dataStartIdx = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
-        
         let numCols = 1;
         for (let i = dataStartIdx; i < rows.length; i++) {
             if (rows[i].length > numCols) numCols = rows[i].length;
         }
 
-        // Auto-profile columns if not found via header
         if (colCavalo === -1) {
           const plateCols: number[] = [];
           for (let colIdx = 0; colIdx < numCols; colIdx++) {
@@ -334,9 +387,7 @@ export default function Patio() {
         }
 
         if (colDestino === -1) {
-          // Provide basic fallback by looking for cells that match common city/state patterns
           const cityPatterns = ["MOC", "GUARULHOS", "VIANA", "EXTREMA", "SERRA", "BETIM", "CURITIBA", "CONTAGEM", "SANTA LUZIA", "SUMARE", "SUMARÉ", "PINHAIS", "CAMPO GRANDE", "EUSEBIO", "EUSÉBIO", "ARIQUEMES", "VESPASIANO", "RJ", "SP", "MG", "ES", "PR", "SC", "RS", "GO", "MT", "MS", "BA", "CE", "RN", "PE", "PA", "AM", "RO", "TO", "DF"];
-          
           const cityCols: { idx: number; matches: number }[] = [];
           let bestCol = -1;
           let maxMatches = 0;
@@ -354,8 +405,8 @@ export default function Patio() {
               cityCols.push({ idx: c, matches });
             }
             if (matches > maxMatches) {
-              maxMatches = matches;
-              bestCol = c;
+               maxMatches = matches;
+               bestCol = c;
             }
           }
           
@@ -368,7 +419,6 @@ export default function Patio() {
           } else if (bestCol !== -1 && maxMatches > 0) {
             colDestino = bestCol;
           } else {
-            // Last resort fallback
             for (let c = 0; c < numCols; c++) {
               if (c !== colCavalo && c !== colCarreta) {
                   colDestino = c;
@@ -378,7 +428,6 @@ export default function Patio() {
           }
 
           if (colOrigem !== -1 && colDestino === -1) {
-            // Find the best city pattern match strictly to the right of colOrigem
             let bestColRight = -1;
             let maxMatchesRight = -1;
             for (let c = colOrigem + 1; c < numCols; c++) {
@@ -400,7 +449,6 @@ export default function Patio() {
             }
           }
 
-          // Double check they never point to the same column index
           if (colDestino !== -1 && colDestino === colOrigem) {
             colDestino = -1;
           }
@@ -408,14 +456,11 @@ export default function Patio() {
 
         const numColsFinal = numCols || 1;
         if (colCavalo === -1 || colCavalo >= numColsFinal) colCavalo = 0;
-        // Do not force colDestino to colCavalo, allow it to be -1 if not found
-
 
         for (let r = dataStartIdx; r < rows.length; r++) {
           const row = rows[r];
           if (row.length === 0 || row.every(c => !c.trim())) continue;
 
-          // Exclude rows where transportador has "3c"
           let isExcludedTransportador = false;
           if (colTransportador !== -1 && colTransportador < row.length) {
             const transpVal = (row[colTransportador] || '').trim().toLowerCase();
@@ -423,11 +468,8 @@ export default function Patio() {
               isExcludedTransportador = true;
             }
           }
-          if (isExcludedTransportador) {
-            continue;
-          }
+          if (isExcludedTransportador) continue;
 
-          // Skip rows where the "Termo" column is "SIM"
           let isTermoSim = false;
           if (colTermo !== -1 && colTermo < row.length) {
             const termoVal = row[colTermo].trim().toUpperCase();
@@ -435,12 +477,8 @@ export default function Patio() {
               isTermoSim = true;
             }
           }
+          if (isTermoSim) continue;
 
-          if (isTermoSim) {
-            continue;
-          }
-
-          // Skip rows where the origin is MONTES CLAROS or VIANA (case-insensitive)
           let isExcludedOrigin = false;
           if (colOrigem !== -1 && colOrigem < row.length) {
             const origemVal = row[colOrigem].trim().toUpperCase();
@@ -448,7 +486,6 @@ export default function Patio() {
               isExcludedOrigin = true;
             }
           } else {
-            // Fallback scan: check all cells except the known dest, cavalo, carreta
             for (let c = 0; c < row.length; c++) {
               if (c === colDestino || c === colCavalo || c === colCarreta) continue;
               const cellVal = (row[c] || '').trim().toUpperCase();
@@ -458,10 +495,7 @@ export default function Patio() {
               }
             }
           }
-
-          if (isExcludedOrigin) {
-            continue;
-          }
+          if (isExcludedOrigin) continue;
 
           let placa = '';
           let matchedColIdx = -1;
@@ -491,7 +525,6 @@ export default function Patio() {
 
           const rawStr = row.join(' | ');
 
-          // If no plaque or matching plate found, create a generic entry with the raw data
           if (!placa) {
              novosRegistros.push({
                 cavalo: 'DESCONHECIDO',
@@ -501,15 +534,14 @@ export default function Patio() {
                 assinado: 'Não',
                 inseridoEm: new Date().toISOString(),
                 rawStr
-             });
-             continue;
+              });
+              continue;
           }
 
           const cleanPlaca = placa.replace(/[\s-]/g, '').toUpperCase();
           let carretaVal = '---';
-          let destinoVal = 'SANTA LUZIA/MG'; // Default fallback destination if nothing fits disambiguation
+          let destinoVal = 'SANTA LUZIA/MG';
 
-          // B. Extract Carreta and Destino manually from column patterns
           if (colCarreta !== -1 && colCarreta < row.length && colCarreta !== matchedColIdx) {
             const parsedCar = (row[colCarreta] || '').trim();
             if (parsedCar) carretaVal = parsedCar;
@@ -527,16 +559,12 @@ export default function Patio() {
 
           if (colDestino !== -1 && colDestino < row.length && colDestino !== matchedColIdx) {
             const val = (row[colDestino] || '').trim();
-            // Basic check to ensure we aren't pulling a plate as destination if we deduced colDestino via density
             if (val && !isLicensePlate(val) && val.length > 1) {
               destinoVal = val;
             }
           } 
           
-          // Only attempt heuristic fallback if the detected column produced a non-valid or empty result
           if (!destinoVal || destinoVal === '---' || destinoVal === 'SANTA LUZIA/MG' || isLicensePlate(destinoVal)) {
-            // If the value is 'SANTA LUZIA/MG' but was found specifically by colDestino, we should probably keep it
-            // So we only run heuristic if colDestino was NOT found or produced a definitely wrong value (like a plate)
             const shouldRunHeuristic = (colDestino === -1) || isLicensePlate(destinoVal) || !destinoVal || destinoVal === '---';
 
             if (shouldRunHeuristic) {
@@ -566,35 +594,29 @@ export default function Patio() {
 
           destinoVal = destinoVal.toUpperCase();
 
-          // Deduplicate by cavalo
           if (placa && placa !== 'DESCONHECIDO') {
             const alreadyExists = novosRegistros.some(r => r.cavalo === placa);
-            if (alreadyExists) {
-              continue;
-            }
+            if (alreadyExists) continue;
           }
 
-          const registro = {
+          novosRegistros.push({
             cavalo: placa,
             carreta: carretaVal,
             destino: destinoVal,
-            estaNoPatio: 'Não', // "todos têm que ficar não" as requested
+            estaNoPatio: 'Não',
             assinado: 'Não',
             inseridoEm: new Date().toISOString(),
             rawStr
-          };
-          novosRegistros.push(registro);
+          });
         }
       }
 
       if (novosRegistros.length === 0) {
-        throw new Error('Nenhum registro encontrado no texto ou imagem informada.');
+        throw new Error('Nenhum registro encontrado.');
       }
 
-      // 2. SALVAMENTO DIRETO E ISOLADO NO FIREBASE
       const patioRef = ref(db, 'patio/veiculos');
       const promises = novosRegistros.map(async (veiculo) => {
-        // Find existing match by plate if possible, otherwise just insert
         if (veiculo.cavalo !== 'DESCONHECIDO') {
            const existing = patioData.find(item => item.cavalo === veiculo.cavalo);
            if (existing) {
@@ -604,20 +626,19 @@ export default function Patio() {
              });
            }
         }
-        
         const novoVeiculoRef = push(patioRef);
         return set(novoVeiculoRef, veiculo);
       });
 
       await Promise.all(promises);
 
-      setStatusMsg({ type: 'success', text: `${novosRegistros.length} registros integrados com sucesso!` });
+      setStatusMsg({ type: 'success', text: `${novosRegistros.length} registros integrados!` });
       setPasteText('');
       setImageFile(null);
 
     } catch (error: any) {
-      console.error("Erro no Pátio o:", error);
-      setStatusMsg({ type: 'error', text: error.message || 'Falha ao processar os dados locais.' });
+      console.error("Erro no Pátio Sync:", error);
+      setStatusMsg({ type: 'error', text: error.message || 'Falha ao processar.' });
     } finally {
       setIsProcessing(false);
       setTimeout(() => setStatusMsg(null), 5000);
@@ -626,19 +647,12 @@ export default function Patio() {
 
   const safeData = Array.isArray(patioData) ? patioData : [];
 
-  const chartData = safeData.reduce((acc, curr) => {
-    const found = acc.find(a => a.destino === curr.destino);
-    if(found) found.count++;
-    else acc.push({ destino: curr.destino || 'N/A', count: 1 });
-    return acc;
-  }, [] as { destino: string, count: number }[]);
-
   const filteredData = safeData.filter(item => {
     const matchesSearch = (item?.cavalo && item.cavalo.toLowerCase().includes(searchTerm.toLowerCase())) || 
                           (item?.carreta && item.carreta.toLowerCase().includes(searchTerm.toLowerCase()));
     if (!matchesSearch) return false;
     
-    // Regra de Negócio: Se estiver assinado como "Sim" (concluído), some da lista visual imediatamente
+    // Sumir da lista visual imediatamente se estiver assinado
     if (item.assinado === 'Sim') return false;
 
     if (patioFilter === 'Todos') return true;
@@ -646,276 +660,524 @@ export default function Patio() {
   });
 
   return (
-    <div className="space-y-10 max-w-[1600px] mx-auto pb-32 pt-4">
-        {/* Superior Operational HUD */}
-        <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-8">
-            <div className="relative">
-                <div className="absolute -left-6 top-0 bottom-0 w-1 bg-purple-600 rounded-full" />
-                <h1 className="text-4xl font-black text-white tracking-[ -0.05em] flex items-center gap-4 leading-none uppercase">
-                    Pátio
-                    <span className="text-purple-500/40 text-xl font-mono px-3 border-l border-white/10 ml-2">SL-MG.01</span>
-                </h1>
-                <div className="flex items-center gap-4 mt-4">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Sistema Ativo</span>
-                    </div>
-                    <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">{new Date().toLocaleDateString('pt-BR')} • {new Date().getHours()}:{new Date().getMinutes()}</span>
-                </div>
+    <div className="w-full min-h-full text-[#2b180d] relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden select-none">
+      
+       {/* ================= HEADER AREA ================= */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
+        
+        {/* Left title and logo stack */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 text-left w-full md:w-auto">
+          <div className="flex items-center gap-5">
+            {/* Logo stamp SVG */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 pointer-events-none hover:scale-105 transition-transform duration-500">
+              <svg className="w-full h-full filter drop-shadow-[0_4px_8px_rgba(58,36,20,0.35)]" viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ffd700" />
+                    <stop offset="40%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#b45309" />
+                  </linearGradient>
+                  <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#d92d33" />
+                    <stop offset="100%" stopColor="#7a0307" />
+                  </linearGradient>
+                </defs>
+                {/* Embossed metal rim */}
+                <circle cx="60" cy="60" r="54" fill="none" stroke="url(#goldGrad)" strokeWidth="4" />
+                <circle cx="60" cy="60" r="50" fill="url(#redGrad)" />
+                <circle cx="60" cy="60" r="44" fill="none" stroke="url(#goldGrad)" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+                
+                {/* Outer heart bundle */}
+                <g transform="translate(60, 56) scale(0.72)">
+                  <path d="M-12,-10 C-17,-15 -25,-12 -25,-4 C-25,4 -15,10 0,22 C15,10 25,4 25,-4 C25,-12 17,-15 12,-10 C8,-6 2,-6 0,-6 C-2,-6 -8,-6 -12,-10 Z" fill="url(#goldGrad)" />
+                  {/* Embedded hearts inside */}
+                  <path d="M-6,-4 C-8.5,-6.5 -12.5,-5 -12.5,-1 C-12.5,3 -7.5,6 0,12 C7.5,6 12.5,3 12.5,-1 C12.5,-5 8.5,-6.5 6,-4 C4,-2 1,-2 0,-2 C-1,-2 -3,-2 -6,-4 Z" fill="#7a0307" />
+                  <path d="M-3,-1.5 C-4.2,-2.7 -6.2,-2 -6.2,0 C-6.2,2 -3.7,3.5 0,6 C3.7,3.5 6.2,2 6.2,0 C6.2,-2 4.2,-2.7 3,-1.5 C2,-0.5 0.5,-0.5 0,-0.5 C-0.5,-0.5 -1,-0.5 -3,-1.5 Z" fill="url(#goldGrad)" />
+                </g>
+
+                {/* Gold text border on top */}
+                <path id="brandPath" d="M 18,60 A 42,42 0 0,0 102,60" fill="none" />
+                <text fontFamily="Oswald" fontSize="9" fontWeight="bold" fill="url(#goldGrad)" textAnchor="middle">
+                  <textPath href="#brandPath" startOffset="50%">3 CORAÇÕES</textPath>
+                </text>
+              </svg>
             </div>
 
-            <div className="hidden lg:flex flex-wrap gap-4">
-                {[
-                  { label: 'Em Permanência', value: safeData.filter(i => i.estaNoPatio === 'Sim').length, icon: Truck, color: 'text-emerald-400' },
-                  { label: 'Fluxo Pendente', value: safeData.length, icon: Activity, color: 'text-purple-400' }
-                ].map((stat, i) => (
-                  <div key={i} className="bg-[#080a12] border border-white/5 p-5 min-w-[220px] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-white/[0.02] -rotate-45 translate-x-8 -translate-y-8" />
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className={cn("p-2 bg-white/[0.03] border border-white/5 rounded-lg", stat.color)}>
-                            <stat.icon size={18} />
-                        </div>
-                        <div>
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
-                            <p className="text-3xl font-black text-white leading-none">{stat.value}</p>
-                        </div>
-                    </div>
+            {/* Page title next to the logo */}
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-rustic-title font-black text-[#2b180d] uppercase tracking-wide leading-none drop-shadow-[1px_2px_1px_rgba(255,255,255,0.45)]">
+                PÁTIO
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-600 border border-[#fefdfa] animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.7)]" />
+                <span className="text-xs font-mono font-black text-[#5c3c24] uppercase tracking-widest pl-0.5">
+                  MÓDULO ATIVO
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button for returning / Back */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#8c060a] hover:from-[#e52229] hover:to-[#a9080d] border-2 border-[#ff3e47]/20 text-white text-xs font-black uppercase tracking-[0.2em] transition-all shadow-[0_4px_10px_rgba(140,6,10,0.3)] active:translate-y-0.5 cursor-pointer select-none"
+          >
+            <ChevronLeft size={16} className="stroke-[3]" />
+            <span>Voltar ao Menu Inicial</span>
+          </button>
+        )}
+      </div>
+      {/* ================= HERO OPERATIONAL MONITORS PLAQUE ================= */}
+      <div className="hidden md:block w-full relative z-10 max-w-[94rem] mx-auto mt-6 shrink-0">
+        <WoodenPlaque className="py-4 px-6 md:px-8 flex flex-col md:flex-row items-center justify-center gap-6" screwSize="w-2.5 h-2.5">
+          {/* Core Metrics Widgets */}
+          <div className="grid grid-cols-2 md:flex md:flex-wrap items-center justify-center gap-3 sm:gap-4 w-full md:w-auto">
+            {/* EM PERMANÊNCIA CARD */}
+            <div className="flex-1 md:flex-none md:min-w-[180px] bg-[#f0dfcc]/60 border-2 border-[#5c3c24]/30 rounded-2xl px-3 sm:px-5 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3.5 shadow-[inset_1px_1px_4px_rgba(0,0,0,0.1)] text-left min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#5c3c24] flex items-center justify-center text-[#f7eedf] shadow-md shrink-0">
+                <Truck size={15} className="sm:size-[18px] stroke-[2.5]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[7.5px] sm:text-[9px] font-black text-[#5c3c24]/80 uppercase tracking-wider leading-none mb-1 truncate">NO PÁTIO</span>
+                <span className="text-xl sm:text-3xl font-black text-[#1c1109] leading-none">
+                  {safeData.filter(i => i.estaNoPatio === 'Sim').length}
+                </span>
+              </div>
+            </div>
+
+            {/* FLUXO PENDENTE CARD */}
+            <div className="flex-1 md:flex-none md:min-w-[180px] bg-[#f0dfcc]/60 border-2 border-[#5c3c24]/30 rounded-2xl px-3 sm:px-5 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3.5 shadow-[inset_1px_1px_4px_rgba(0,0,0,0.1)] text-left min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#8c060a] flex items-center justify-center text-[#fdefd1] shadow-md shrink-0">
+                <Activity size={15} className="sm:size-[18px] stroke-[2.5]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[7.5px] sm:text-[9px] font-black text-[#8c060a] uppercase tracking-wider leading-none mb-1 truncate">PENDENTE</span>
+                <span className="text-xl sm:text-3xl font-black text-[#8c060a] leading-none">
+                  {safeData.length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </WoodenPlaque>
+      </div>
+
+      {/* Mobile Tab Selector */}
+      <div className="hidden w-full lg:hidden bg-[#e8d5bc]/80 p-1 border-3 border-[#5c3c24]/25 rounded-2xl shadow-inner relative z-10 mt-4 shrink-0">
+        <button
+          onClick={() => setMobileTab('lista')}
+          className={cn(
+            "flex-1 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
+            mobileTab === 'lista'
+              ? "bg-gradient-to-b from-[#a27a5d] to-[#835835] text-[#fdefd1] shadow-md border-2 border-[#5c3c24]/40"
+              : "text-[#5c3c24] hover:bg-[#debfa0]/40"
+          )}
+        >
+          <Truck size={14} className="stroke-[2.5]" />
+          <span>Gerenciar Pátio ({filteredData.length})</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('importar')}
+          className={cn(
+            "flex-1 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
+            mobileTab === 'importar'
+              ? "bg-gradient-to-b from-[#a27a5d] to-[#835835] text-[#fdefd1] shadow-md border-2 border-[#5c3c24]/40"
+              : "text-[#5c3c24] hover:bg-[#debfa0]/40"
+          )}
+        >
+          <Database size={14} className="stroke-[2.5]" />
+          <span>Importar Lote</span>
+        </button>
+      </div>
+
+      {/* ================= CONTROLLER CODES & DATA GRID PANEL ================= */}
+      <div className="w-full relative z-10 max-w-[94rem] mx-auto mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
+        
+        {/* LEFT COLUMN: INGESTION CONSOLE PLAQUE */}
+        <div className={cn("lg:col-span-4 h-full flex flex-col", mobileTab === 'importar' ? "flex" : "hidden lg:flex")}>
+          <WoodenPlaque className="h-full flex-1" screwSize="w-2.5 h-2.5">
+            <div className="flex items-center gap-3 mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
+              <Database size={18} className="text-[#8c060a]" />
+              <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Console de Ingestão</h2>
+            </div>
+
+            <div className="space-y-4 flex flex-col justify-between flex-1">
+              
+              <div className="space-y-4">
+                {/* Embedded Terminal Board */}
+                <div className="relative bg-gradient-to-br from-[#1d120a] to-[#2b190f] border-3 border-[#5c3c24]/85 p-1.5 rounded-xl shadow-[inset_0_4px_10px_rgba(0,0,0,0.85),0_1px_2px_rgba(255,255,255,0.15)] overflow-hidden">
+                  <textarea 
+                    className="w-full h-48 bg-transparent p-4 text-[12px] text-[#edd9bf] font-mono resize-none focus:outline-none placeholder:text-[#5c3c24]/50 uppercase leading-relaxed font-semibold"
+                    placeholder="AGUARDANDO ENTRADA DE DADOS ..."
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                  />
+                  
+                  {/* Glowing Indicator lamp */}
+                  <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                    <span className="text-[8px] font-mono text-[#edd9bf]/40 uppercase tracking-widest">INPUT BUFFER</span>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
                   </div>
-                ))}
+                </div>
+
+                {statusMsg && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={cn(
+                      "p-3 rounded-lg border-2 text-[10px] font-black uppercase tracking-wider flex items-center gap-2.5 shadow-md text-left",
+                      statusMsg.type === 'error' 
+                        ? "bg-[#fdedeb] border-red-800/40 text-red-900" 
+                        : "bg-[#eefdf5] border-emerald-800/40 text-emerald-950"
+                    )}
+                  >
+                    <ShieldCheck size={14} className={statusMsg.type === 'error' ? 'text-red-700' : 'text-emerald-700'} />
+                    <span>{statusMsg.text}</span>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Premium 4K Aesthetic Coffee Image Frame to fill the Empty Space */}
+              <div className="flex-1 my-4 flex items-center justify-center min-h-[220px] lg:min-h-[280px]">
+                <div className="w-full h-full min-h-[220px] lg:min-h-[280px] relative rounded-2xl overflow-hidden border-2 border-[#5c3c24]/80 shadow-[0_8px_20px_rgba(0,0,0,0.35),inset_0_2px_4px_rgba(255,255,255,0.1)] group bg-[#26160d]">
+                  <img 
+                    src="https://i.postimg.cc/2SDqGtb9/top.jpg" 
+                    alt="Café Especial 3 Corações Rústico"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* Overlay vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1d120a]/90 via-[#1d120a]/20 to-[#1d120a]/40 pointer-events-none" />
+                  
+                  {/* Badge */}
+                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center bg-[#1d120a]/90 border border-[#cead80]/40 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-lg">
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9px] font-serif font-black text-[#edd9bf] uppercase tracking-wider">Edição Rústica</span>
+                      <span className="text-[7px] font-sans text-[#cead80] tracking-widest font-bold">SOFISTICADA</span>
+                    </div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#B32025] animate-pulse shadow-[0_0_8px_#B32025]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons styled like the wooden theme buttons */}
+              <div className="flex flex-col gap-3.5 pt-4">
+                
+                {/* Advanced Hidden File OCR option */}
+                <div className="flex items-center gap-2">
+                  <label className="flex-1 filter hover:brightness-110 transition-all">
+                    <div className="flex items-center justify-center gap-2 py-2 px-4 border-2 border-dashed border-[#5c3c24]/40 hover:border-[#5c3c24]/80 rounded-xl bg-[#eddaba]/40 text-[#5c3c24] text-[10px] font-bold uppercase tracking-widest cursor-pointer">
+                      <ImageIcon size={14} className="stroke-[2.5]" />
+                      <span>{imageFile ? imageFile.name.substring(0, 18) + '...' : 'Anexar Imagem OCR'}</span>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setImageFile(e.target.files[0]);
+                          setStatusMsg({ type: 'success', text: `Imagem '${e.target.files[0].name}' selecionada. Clique em Executar.` });
+                        }
+                      }} 
+                    />
+                  </label>
+                  {imageFile && (
+                    <button 
+                      onClick={() => { setImageFile(null); setStatusMsg(null); }}
+                      className="p-2 border-2 border-red-800/20 text-red-700 bg-red-150-10 hover:bg-red-500 hover:text-white rounded-xl text-xs font-bold transition-all"
+                    >
+                      X
+                    </button>
+                  )}
+                </div>
+
+                <motion.button 
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={handleProcessData}
+                  disabled={isProcessing}
+                  className={cn(
+                    "w-full py-4 font-black text-[11px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2 rounded-xl cursor-pointer shadow-[0_5px_0px_#800609,0_6px_10px_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-[0_2px_0px_#800609,0_3px_5px_rgba(0,0,0,0.4)] border-2 border-[#ff3e47]/30 text-white",
+                    isProcessing 
+                      ? "bg-slate-800 text-slate-500 shadow-none border-transparent cursor-not-allowed" 
+                      : "bg-gradient-to-b from-[#ca1a20] to-[#8c060a] hover:from-[#e52229] hover:to-[#a9080d]"
+                  )}
+                >
+                  {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} className="stroke-[3]" />}
+                  Executar Lote
+                </motion.button>
+                
+                <button 
+                  onClick={handleClearAll}
+                  className="w-full py-2.5 text-[#5c3c24] hover:text-[#8c060a] hover:border-[#8c060a]/30 font-black text-[10px] uppercase tracking-[0.25em] border-2 border-[#5c3c24]/20 rounded-xl bg-[#f0e3d2]/60 hover:bg-[#ebd9c3] transition-all cursor-pointer shadow-sm"
+                >
+                  Resetar Registros
+                </button>
+              </div>
+
             </div>
+          </WoodenPlaque>
         </div>
 
-        {/* Console Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* RIGHT COLUMN: CORE MONITOR DATA TABLE SCREEN */}
+        <div className={cn("lg:col-span-8 h-full flex flex-col min-h-[22rem] lg:min-h-[30rem]", mobileTab === 'lista' ? "flex" : "hidden lg:flex")}>
+          <WoodenPlaque className="h-full flex-1" screwSize="w-2.5 h-2.5">
             
-            {/* Left: Tactical Console */}
-            <div className="hidden lg:block lg:col-span-4 space-y-10">
-                {/* Console de Ingestão */}
-                <div className="bg-[#080a12] border border-white/10 p-8 relative overflow-hidden backdrop-blur-sm">
-                    {/* Decorative pattern */}
-                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 40px)` }} />
-                    
-                    <div className="flex items-center justify-between mb-10">
-                        <div className="flex items-center gap-3">
-                            <Database size={16} className="text-purple-500" />
-                            <h2 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">Console de Ingestão</h2>
-                        </div>
-                        <div className="w-12 h-[1px] bg-white/10" />
-                    </div>
+            {/* Header filters and Search bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b-2 border-[#5c3c24]/10">
+              
+              {/* Filter Tabs raising nicely from wood */}
+              <div className="flex w-full sm:w-auto bg-[#e8d5bc]/80 p-0.5 border-3 border-[#5c3c24]/25 rounded-xl shadow-inner relative z-10 shrink-0">
+                {(['Todos', 'Sim', 'Não'] as const).map((filterOpt) => (
+                  <button
+                    key={filterOpt}
+                    onClick={() => setPatioFilter(filterOpt)}
+                    className={cn(
+                      "flex-1 sm:flex-none px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-lg transition-all cursor-pointer select-none",
+                      patioFilter === filterOpt 
+                        ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-white shadow-[0_3px_8px_rgba(128,6,10,0.45)] border border-[#ff3e47]/20 font-black" 
+                        : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+                    )}
+                  >
+                    {filterOpt}
+                  </button>
+                ))}
+              </div>
 
-                    <div className="space-y-6">
-                        <div className="relative bg-black/60 border border-white/5 p-1">
-                            <textarea 
-                                className="w-full h-40 bg-transparent p-5 text-[11px] text-slate-400 font-mono resize-none focus:outline-none placeholder:text-slate-800"
-                                placeholder="AGUARDANDO ENTRADA DE DADOS..."
-                                value={pasteText}
-                                onChange={(e) => setPasteText(e.target.value)}
-                            />
-                            <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                                <span className="text-[8px] font-mono text-slate-700 uppercase">Input Buffer</span>
-                                <div className="w-1.5 h-1.5 rounded-full bg-purple-500/20" />
-                            </div>
-                        </div>
+              {/* Textured search Input bar */}
+              <div className="relative w-full sm:max-w-md group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5c3c24]/60 group-focus-within:text-[#8c060a] transition-colors" size={16} />
+                <input 
+                  type="text"
+                  placeholder="LOCALIZAR PLACA OU MANIFESTO..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-[#f8f5ee] border-2 border-[#5c3c24]/40 rounded-xl pl-11 pr-5 py-2 text-xs font-black tracking-[0.2em] text-[#311f14] uppercase focus:border-[#8c060a] outline-none transition-all placeholder:text-[#5c3c24]/40 shadow-inner"
+                />
+              </div>
 
-                        {statusMsg && (
-                            <motion.div 
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className={cn(
-                                    "p-4 border-l-2 text-[10px] font-black uppercase tracking-wider flex items-center gap-3",
-                                    statusMsg.type === 'error' ? "bg-rose-500/5 border-rose-500 text-rose-400" : "bg-emerald-500/5 border-emerald-500 text-emerald-400"
-                                )}
-                            >
-                                <ShieldCheck size={14} />
-                                {statusMsg.text}
-                            </motion.div>
-                        )}
-
-                        <div className="flex flex-col gap-3">
-                            <motion.button 
-                                whileTap={{ scale: 0.98 }}
-                                onClick={handleProcessData}
-                                disabled={isProcessing}
-                                className={cn(
-                                    "w-full py-5 font-black text-[10px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-4",
-                                    isProcessing ? "bg-slate-900 text-slate-700" : "bg-white text-black hover:bg-purple-500 hover:text-white"
-                                )}
-                            >
-                                {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                                Executar Lote
-                            </motion.button>
-                            <button 
-                                onClick={handleClearAll}
-                                className="w-full py-4 text-slate-600 hover:text-rose-500 font-black text-[9px] uppercase tracking-[0.4em] border border-white/5 hover:border-rose-500/20 transition-all"
-                            >
-                                Resetar Registros
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            {/* Main Operational Monitor */}
-            <div className="lg:col-span-8 flex flex-col gap-10">
-                <div className="bg-[#080a12] border border-white/10 p-5 flex flex-col xl:flex-row items-center gap-10">
-                    <div className="flex bg-black p-1 border border-white/5 xl:min-w-[320px]">
-                        {(['Todos', 'Sim', 'Não'] as const).map((filterOpt) => (
-                            <button
-                                key={filterOpt}
-                                onClick={() => setPatioFilter(filterOpt)}
-                                className={cn(
-                                    "flex-1 px-4 py-3 text-[9px] font-black uppercase tracking-[0.2em] transition-all",
-                                    patioFilter === filterOpt 
-                                        ? "bg-purple-600 text-white" 
-                                        : "text-slate-600 hover:bg-white/5"
-                                )}
+            {/* Desktop Table view */}
+            <div className="hidden md:block flex-1 pr-1.5">
+              <table className="w-full text-left border-collapse leading-none min-w-[500px]">
+                <thead>
+                  <tr className="border-b-2 border-[#5c3c24]/20">
+                    <th className="py-3 px-4 text-[10px] font-black text-[#5c3c24]/70 uppercase tracking-[0.25em]">Identificador</th>
+                    <th className="py-3 px-4 text-[10px] font-black text-[#5c3c24]/70 uppercase tracking-[0.25em]">Está no Pátio?</th>
+                    <th className="py-3 px-4 text-[10px] font-black text-[#5c3c24]/70 uppercase tracking-[0.25em]">Assinou?</th>
+                    <th className="py-3 px-4 text-[10px] font-black text-[#5c3c24]/70 uppercase tracking-[0.25em] text-center">--</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#5c3c24]/10">
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-24 text-center">
+                        <span className="text-[#5c3c24]/40 font-black uppercase tracking-[0.4em] text-[11px] animate-pulse">Aguardando Sincronização de Fluxo</span>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((item) => (
+                      <tr key={item.id} className="hover:bg-[#ebd9c3]/30 transition-colors">
+                        
+                        {/* Plate with Mercosul view */}
+                        <td className="py-3.5 px-4">
+                          <LicensePlate plate={item.cavalo} />
+                        </td>
+
+                        {/* Dropdown Está no Pátio */}
+                        <td className="py-3.5 px-4">
+                          <div className="relative inline-block w-36">
+                            <select 
+                              value={item.estaNoPatio} 
+                              onChange={(e) => updatePatioData(item.id, 'estaNoPatio', e.target.value as 'Sim' | 'Não')} 
+                              className={cn(
+                                "w-full bg-gradient-to-b from-[#a27a5d] to-[#835835] border-2 border-[#5c3c24]/60 text-[#fdefd1] font-black text-xs uppercase tracking-widest rounded-xl py-2 px-4 shadow-md outline-none cursor-pointer hover:from-[#bfa186] hover:to-[#926b4c] transition-all appearance-none text-center"
+                              )}
                             >
-                                {filterOpt}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700 group-focus-within:text-purple-500 transition-colors" size={16} />
-                        <input 
-                            type="text"
-                            placeholder="LOCALIZAR PLACA OU MANIFESTO..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-black border border-white/5 pl-14 pr-6 py-4 text-[10px] font-black tracking-[0.4em] text-white uppercase focus:border-purple-500/50 outline-none transition-all placeholder:text-slate-800"
-                        />
-                    </div>
-                </div>
-
-                {/* Overhauled Vehicle Grid */}
-                <div className="hidden md:block">
-                    <div className="grid grid-cols-1 gap-2 leading-none">
-                        {filteredData.length === 0 ? (
-                            <div className="py-32 text-center bg-[#080a12] border border-dashed border-white/5">
-                                <span className="text-slate-700 font-black uppercase tracking-[0.6em] text-[10px]">Aguardando Sincronização de Fluxo</span>
+                              <option value="Sim" className="bg-[#5c3c24] text-[#fdefd1] font-bold">SIM</option>
+                              <option value="Não" className="bg-[#5c3c24] text-[#fdefd1] font-bold">NÃO</option>
+                            </select>
+                            <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none text-[#fdefd1] text-[9px] font-bold">
+                              ▼
                             </div>
-                        ) : (
-                            filteredData.map((item) => (
-                                <motion.div 
-                                    layout
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    key={item.id} 
-                                    className="bg-[#080a12] border border-white/5 flex items-center hover:bg-purple-500/5 hover:border-purple-500/40 transition-all group h-20 overflow-hidden"
-                                >
-                                    {/* Vertical Index Stripe */}
-                                    <div className="w-1.5 h-full bg-white/5 group-hover:bg-purple-500 transition-colors" />
-                                    
-                                    {/* Primary Key Identification */}
-                                    <div className="px-10 flex items-center gap-10 min-w-[200px] border-r border-white/5 h-full">
-                                        <div className="flex flex-col gap-1.5">
-                                            <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Identificador</span>
-                                            <LicensePlate plate={item.cavalo} />
-                                        </div>
-                                    </div>
+                          </div>
+                        </td>
 
-                                    {/* Contextual Status Slab */}
-                                    <div className="flex-1 px-12 grid grid-cols-2 gap-16">
-                                        <div className="flex items-center gap-8">
-                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] w-24">Está no Pátio?</span>
-                                            <select 
-                                                value={item.estaNoPatio} 
-                                                onChange={(e) => updatePatioData(item.id, 'estaNoPatio', e.target.value)} 
-                                                className={cn(
-                                                    "bg-black border border-white/10 px-6 py-2 text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer hover:border-purple-500/50 transition-all",
-                                                    item.estaNoPatio === 'Sim' ? "text-emerald-500 border-emerald-500/40" : "text-slate-500"
-                                                )}
-                                            >
-                                                <option>Sim</option>
-                                                <option>Não</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="flex items-center gap-8">
-                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] w-24">Assinou?</span>
-                                            <select 
-                                                value={item.assinado} 
-                                                onChange={(e) => handleAssinadoChange(item.id, e.target.value)} 
-                                                className={cn(
-                                                    "bg-black border border-white/10 px-6 py-2 text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer hover:border-purple-500/50 transition-all",
-                                                    item.assinado === 'Sim' ? "text-emerald-500 border-emerald-500/40" : "text-slate-500"
-                                                )}
-                                            >
-                                                <option>Sim</option>
-                                                <option>Não</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Termination Action */}
-                                    <div className="px-10 border-l border-white/5 h-full flex items-center">
-                                        <button 
-                                          onClick={() => handleDeleteItem(item.id)}
-                                          className="p-3 text-slate-700 hover:text-rose-500 transition-colors"
-                                          title="Deletar Registro"
-                                        >
-                                          <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* Mobile View - Refined Industrial Aesthetic */}
-                <div className="md:hidden flex flex-col gap-3">
-                    {filteredData.map((item) => (
-                        <div key={item.id} className="p-5 bg-[#080a12] border border-white/5 flex flex-col gap-5 relative overflow-hidden">
-                            <div className="absolute left-0 top-0 w-1 h-full bg-purple-500/20" />
-                            <div className="flex justify-between items-start">
-                                <div className="flex flex-col gap-1.5">
-                                    <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Identificador</span>
-                                    <LicensePlate plate={item.cavalo || ''} />
-                                </div>
-                                <button 
-                                  onClick={() => handleDeleteItem(item.id)}
-                                  className="p-3 bg-white/[0.02] border border-white/5 text-slate-700 hover:text-rose-500 rounded-lg transition-all"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                        {/* Dropdown Assinou */}
+                        <td className="py-3.5 px-4">
+                          <div className="relative inline-block w-36">
+                            <select 
+                              value={item.assinado} 
+                              onChange={(e) => handleAssinadoChange(item.id, e.target.value)} 
+                              className={cn(
+                                "w-full bg-gradient-to-b from-[#a27a5d] to-[#835835] border-2 border-[#5c3c24]/60 text-[#fdefd1] font-black text-xs uppercase tracking-widest rounded-xl py-2 px-4 shadow-md outline-none cursor-pointer hover:from-[#bfa186] hover:to-[#926b4c] transition-all appearance-none text-center"
+                              )}
+                            >
+                              <option value="Sim" className="bg-[#5c3c24] text-[#fdefd1] font-bold">SIM</option>
+                              <option value="Não" className="bg-[#5c3c24] text-[#fdefd1] font-bold">NÃO</option>
+                            </select>
+                            <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none text-[#fdefd1] text-[9px] font-bold">
+                              ▼
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
-                                <div className="flex flex-col gap-2">
-                                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-wider italic">ESTÁ NO PÁTIO?</span>
-                                    <select 
-                                        value={item.estaNoPatio} 
-                                        onChange={(e) => updatePatioData(item.id, 'estaNoPatio', e.target.value)} 
-                                        className={cn(
-                                            "w-full bg-black border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest outline-none",
-                                            item.estaNoPatio === 'Sim' ? "text-emerald-500" : "text-slate-500"
-                                        )}
-                                    >
-                                        <option>Sim</option>
-                                        <option>Não</option>
-                                    </select>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-wider italic">ASSINOU?</span>
-                                    <select 
-                                        value={item.assinado} 
-                                        onChange={(e) => handleAssinadoChange(item.id, e.target.value)} 
-                                        className={cn(
-                                            "w-full bg-black border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest outline-none",
-                                            item.assinado === 'Sim' ? "text-emerald-500" : "text-slate-500"
-                                        )}
-                                    >
-                                        <option>Sim</option>
-                                        <option>Não</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                          </div>
+                        </td>
+
+                        {/* Action Delete */}
+                        <td className="py-3.5 px-4 text-center">
+                          <button 
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="p-2.5 bg-[#fdedeb] hover:bg-red-200 border-2 border-red-800/10 hover:border-red-800/30 text-red-700 hover:text-red-900 rounded-xl transition-all cursor-pointer shadow-sm active:translate-y-0.5"
+                            title="Deletar Registro"
+                          >
+                            <Trash2 size={15} className="stroke-[2.5]" />
+                          </button>
+                        </td>
+
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
+
+            {/* Mobile Cards List view */}
+            <div className="block md:hidden flex-1 space-y-4">
+              {filteredData.length === 0 ? (
+                <div className="py-20 text-center bg-[#f0dfcc]/30 rounded-2xl border-2 border-[#5c3c24]/10">
+                  <span className="text-[#5c3c24]/40 font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">Aguardando Sincronização</span>
+                </div>
+              ) : (
+                filteredData.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-2xl p-4 shadow-md flex flex-col gap-4 relative hover:border-[#8c060a]/40 transition-colors text-left font-sans"
+                  >
+                    {/* Delete action button */}
+                    <button 
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="absolute top-3.5 right-3.5 p-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
+                      title="Deletar Registro"
+                    >
+                      <Trash2 size={13} className="stroke-[2.5]" />
+                    </button>
+
+                    {/* Plates & identifiers details */}
+                    <div className="flex items-start gap-3.5">
+                      <LicensePlate plate={item.cavalo} />
+                      <div className="flex flex-col min-w-0 pr-6 select-text">
+                        <div className="hidden items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-black text-[#5c3c24]/60 uppercase tracking-wider">Carreta:</span>
+                          <span className="text-xs font-black text-[#311f14] font-mono bg-[#ebd9c3]/30 px-1.5 py-0.5 rounded border border-[#5c3c24]/10">{item.carreta || '---'}</span>
+                        </div>
+                        {item.motorista && (
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            <span className="text-[9px] font-black text-[#5c3c24]/60 uppercase tracking-wider">Mot:</span>
+                            <span className="text-xs font-bold text-[#311f14] truncate max-w-[155px]">{item.motorista}</span>
+                          </div>
+                        )}
+                        <div className="hidden items-center gap-1.5 mt-1.5 flex-wrap">
+                          <span className="text-[9px] font-black text-[#5c3c24]/60 uppercase tracking-wider">Destino:</span>
+                          <span className="text-xs font-black text-[#8c060a] uppercase tracking-wide font-sans truncate max-w-[155px]">{item.destino || '---'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive Dropdown Tap Zones */}
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#5c3c24]/10">
+                      {/* Está no Pátio select zone */}
+                      <div className="flex flex-col gap-1 text-left">
+                        <span className="text-[8.5px] font-black text-[#5c3c24]/75 uppercase tracking-wider pl-1 font-sans">No Pátio?</span>
+                        <div className="relative">
+                          <select 
+                            value={item.estaNoPatio} 
+                            onChange={(e) => updatePatioData(item.id, 'estaNoPatio', e.target.value as 'Sim' | 'Não')} 
+                            className={cn(
+                              "w-full bg-gradient-to-b from-[#a27a5d] to-[#835835] border-2 border-[#5c3c24]/50 text-[#fdefd1] font-black text-[10.5px] uppercase tracking-widest rounded-xl py-2 pl-3 pr-7 shadow-sm outline-none cursor-pointer hover:from-[#bfa186] hover:to-[#926b4c] transition-all appearance-none text-center"
+                            )}
+                          >
+                            <option value="Sim" className="bg-[#5c3c24] text-[#fdefd1]">SIM</option>
+                            <option value="Não" className="bg-[#5c3c24] text-[#fdefd1]">NÃO</option>
+                          </select>
+                          <div className="absolute top-1/2 right-2.5 -translate-y-1/2 pointer-events-none text-[#fdefd1] text-[7.5px]">
+                            ▼
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Assinou select zone */}
+                      <div className="flex flex-col gap-1 text-left">
+                        <span className="text-[8.5px] font-black text-[#5c3c24]/75 uppercase tracking-wider pl-1 font-sans">Assinado?</span>
+                        <div className="relative">
+                          <select 
+                            value={item.assinado} 
+                            onChange={(e) => handleAssinadoChange(item.id, e.target.value)} 
+                            className={cn(
+                              "w-full bg-gradient-to-b from-[#a27a5d] to-[#835835] border-2 border-[#5c3c24]/50 text-[#fdefd1] font-black text-[10.5px] uppercase tracking-widest rounded-xl py-2 pl-3 pr-7 shadow-sm outline-none cursor-pointer hover:from-[#bfa186] hover:to-[#926b4c] transition-all appearance-none text-center"
+                            )}
+                          >
+                            <option value="Sim" className="bg-[#5c3c24] text-[#fdefd1]">SIM</option>
+                            <option value="Não" className="bg-[#5c3c24] text-[#fdefd1]">NÃO</option>
+                          </select>
+                          <div className="absolute top-1/2 right-2.5 -translate-y-1/2 pointer-events-none text-[#fdefd1] text-[7.5px]">
+                            ▼
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                ))
+              )}
+            </div>
+
+          </WoodenPlaque>
         </div>
+
+      </div>
+
+      {/* ================= PORTABLE FOOTER METAL PLATE BAR ================= */}
+      <div className="w-full relative z-10 max-w-[94rem] mx-auto mt-6 shrink-0">
+        <div 
+          className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-[#442e1d]/95 via-[#26150b]/98 to-[#442e1d]/95 border-2 border-[#bfa27a]/50 shadow-[0_12px_25px_rgba(0,0,0,0.7),inset_0_1px_4px_rgba(255,255,255,0.15)] flex flex-col md:flex-row justify-between items-center gap-3 relative text-[9px] font-bold text-[#cfa588] select-none text-center md:text-left"
+        >
+          {/* Edge Anchoring screws */}
+          <Screw className="absolute left-5 top-1/2 -translate-y-1/2 w-3 h-3 hidden md:flex" />
+          <Screw className="absolute right-5 top-1/2 -translate-y-1/2 w-3 h-3 hidden md:flex" />
+
+          {/* Left copyright notice */}
+          <span className="md:pl-8 select-none text-[#cca285]">
+            © 2026 Sistema PGR • Todos os direitos reservados.
+          </span>
+
+          {/* Center message script */}
+          <div className="flex flex-col items-center max-w-lg md:max-w-3xl lg:max-w-4xl text-center px-4 my-1">
+            <span className="text-[7.5px] font-mono tracking-widest text-[#cca285] uppercase mb-0.5 font-bold">Princípio de Liderança: {principle.title}</span>
+            <span className="font-serif italic text-[10px] md:text-[11px] tracking-wide text-[#eddabf] font-semibold leading-tight">
+              "{principle.description}"
+            </span>
+            <div className="flex justify-center gap-1 mt-1 text-[#bfa27a]/60">
+              {PRINCIPLES_OF_LEADERSHIP.map((_, idx) => {
+                const isActive = idx === PRINCIPLES_OF_LEADERSHIP.indexOf(principle);
+                return (
+                  <span 
+                    key={idx} 
+                    className={`w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-[#B32025] scale-125 shadow-[0_0_4px_#B32025]' : 'bg-[#5c3c24]'}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right author attribution */}
+          <span className="md:pr-8 text-center md:text-right select-none text-[#cca285]">
+            Sistema Web • Criado por <span className="text-[#f1daaf] font-black tracking-wide">Jefferson Augusto</span>
+          </span>
+        </div>
+      </div>
+
     </div>
   );
 }

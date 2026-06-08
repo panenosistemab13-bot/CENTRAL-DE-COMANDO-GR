@@ -15,10 +15,13 @@ import {
   Database,
   ArrowRight,
   ShieldCheck,
-  Activity
+  Activity,
+  ChevronUp,
+  ChevronDown,
+  GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-const coffeeBg = "/src/assets/images/coffee_rustic_bg_1780760486326.png";
+const coffeeBg = "/assets/images/coffee_rustic_bg_1780760486326.png";
 
 interface RouteItem {
   ida: string;
@@ -52,6 +55,46 @@ export default function Rotas() {
   const [isEditing, setIsEditing] = useState(false);
   const [tempRoutes, setTempRoutes] = useState<RouteItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, realIndex: number) => {
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedIndex(realIndex);
+  };
+
+  const handleDragOver = (e: React.DragEvent, realIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === realIndex) return;
+    setHoveredIndex(realIndex);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setHoveredIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetRealIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetRealIndex) {
+      setDraggedIndex(null);
+      setHoveredIndex(null);
+      return;
+    }
+
+    const list = isEditing ? [...tempRoutes] : [...routes];
+    const [draggedItem] = list.splice(draggedIndex, 1);
+    list.splice(targetRealIndex, 0, draggedItem);
+
+    if (isEditing) {
+      setTempRoutes(list);
+    } else {
+      setRoutes(list);
+      localStorage.setItem('app_rotas_data', JSON.stringify(list));
+    }
+    setDraggedIndex(null);
+    setHoveredIndex(null);
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('app_rotas_data');
@@ -91,6 +134,26 @@ export default function Rotas() {
     setTempRoutes(tempRoutes.filter((_, i) => i !== index));
   };
 
+  const moveRoute = (route: RouteItem, direction: 'up' | 'down') => {
+    const list = isEditing ? [...tempRoutes] : [...routes];
+    const index = list.indexOf(route);
+    if (index === -1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex >= 0 && targetIndex < list.length) {
+      // Swap
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+      if (isEditing) {
+        setTempRoutes(list);
+      } else {
+        setRoutes(list);
+        localStorage.setItem('app_rotas_data', JSON.stringify(list));
+      }
+    }
+  };
+
   const clearAll = () => {
     if(confirm('Limpar todas as rotas permanentemente?')) {
         setTempRoutes([]);
@@ -108,46 +171,46 @@ export default function Rotas() {
   );
 
   return (
-    <div className="min-h-screen bg-[#170e0a] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] p-4 md:p-8 space-y-8 pb-32 text-[#e6d5c3]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] p-4 md:p-8 space-y-8 pb-32 text-[#3A2414]">
       {/* Dynamic Earthy Hero Section */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-[#2b180d] border-4 border-[#4a2e1d] p-6 lg:p-8 shadow-2xl relative">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#ebd8bf] to-[#d6bc99] border-4 border-[#3A2414] p-6 lg:p-8 shadow-md">
         {/* Decorative corner accents */}
-        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#c79165]/30 pointer-events-none" />
-        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#c79165]/30 pointer-events-none" />
-        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#c79165]/30 pointer-events-none" />
-        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#c79165]/30 pointer-events-none" />
+        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
+        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
+        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-8">
           <div className="flex flex-col md:flex-row items-center gap-6 w-full xl:w-2/3">
             {/* Studio Composition Image Frame */}
-            <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#c79165] shadow-lg group">
+            <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#3A2414] shadow-md group">
               <img 
                 src={coffeeBg} 
                 alt="Edição Rústica Sofisticada" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2b180d]/85 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3A2414]/30 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-[9px] font-mono font-bold tracking-widest text-[#fdfaf5] uppercase">Composição Macro</span>
+                <span className="w-2 h-2 rounded-full bg-[#B32025] animate-pulse" />
+                <span className="text-[9px] font-mono font-bold tracking-widest text-white uppercase">Composição Macro</span>
               </div>
             </div>
 
             <div className="text-center md:text-left space-y-2">
-              <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#fdfaf5] tracking-tight leading-tight">
+              <h1 className="text-3xl md:text-4xl font-serif font-black text-[#3A2414] tracking-tight leading-tight">
                 Edição Rústica Sofisticada
               </h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
-                <span className="font-mono text-xs text-[#c79165] font-black uppercase tracking-widest">
+                <span className="font-mono text-xs text-[#B32025] font-black uppercase tracking-widest">
                   CAFÉ EM GRÃOS SELECIONADOS
                 </span>
-                <span className="text-zinc-500">•</span>
-                <span className="font-serif italic text-xs text-[#e6d5c3]">
+                <span className="text-[#3A2414]/30">•</span>
+                <span className="font-serif italic text-xs text-[#3A2414]/80">
                   Composição de Estúdio "3corações"
                 </span>
               </div>
-              <p className="text-xs text-[#e2d4c9] leading-relaxed max-w-xl font-medium">
+              <p className="text-xs text-[#3A2414]/80 leading-relaxed max-w-xl font-medium">
                 Cata de texturas artesanais de café: juta, papel kraft, cobre polido, gotejador de cobre, caneca de cerâmica rústica, folhas de café frescas e o selo de cera vermelho-escura.
               </p>
             </div>
@@ -155,18 +218,18 @@ export default function Rotas() {
 
           {/* Metrics styled like paper tag tickets hanging */}
           <div className="flex items-center gap-4 w-full xl:w-auto justify-center xl:justify-end">
-            <div className="px-5 py-4 bg-[#fdfaf5] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#7a4b31]/40 rounded-2xl shadow-md min-w-[120px] text-center relative rotate-[-1.5deg]">
+            <div className="px-5 py-4 bg-[#fdfcf9] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[-1.5deg]">
               {/* String hanging effect */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#c0a892] rounded" />
-              <span className="text-[9px] font-black text-[#7a4b31] uppercase tracking-widest block mb-1">TRECHOS</span>
-              <span className="text-3xl font-serif font-black text-[#3e2516]">{currentData.length}</span>
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#3A2414]/25 rounded" />
+              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">TRECHOS</span>
+              <span className="text-3xl font-serif font-black text-[#3A2414]">{currentData.length}</span>
             </div>
             
-            <div className="px-5 py-4 bg-[#fdfaf5] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#7a4b31]/40 rounded-2xl shadow-md min-w-[120px] text-center relative rotate-[1.5deg]">
+            <div className="px-5 py-4 bg-[#fdfcf9] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[1.5deg]">
               {/* String hanging effect */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#c0a892] rounded" />
-              <span className="text-[9px] font-black text-[#7a4b31] uppercase tracking-widest block mb-1">CÓDIGOS</span>
-              <span className="text-3xl font-serif font-black text-[#3e2516]">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#3A2414]/25 rounded" />
+              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">CÓDIGOS</span>
+              <span className="text-3xl font-serif font-black text-[#3A2414]">
                 {currentData.filter(r => r.idaCod).length + currentData.filter(r => r.voltaCod).length}
               </span>
             </div>
@@ -175,12 +238,12 @@ export default function Rotas() {
       </div>
 
       {/* Main Content Card - Styled as a premium rustic board sheet */}
-      <div className="bg-[#fdfaf5] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-4 border-[#2b180d] rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative overflow-hidden text-[#2b180d]">
+      <div className="bg-[#fdfcf9]/85 backdrop-blur-md bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-4 border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-md relative overflow-hidden text-[#3A2414]">
         
         {/* Actions & Filters Bar */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-grow group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#7a4b31]">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#B32025]">
               <Search size={18} />
             </div>
             <input 
@@ -188,7 +251,7 @@ export default function Rotas() {
               placeholder="PESQUISAR ROTA, CIDADE OU CÓDIGO SM..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#fcf8f2] border-2 border-[#c0a892] focus:border-[#7a4b31] focus:ring-4 focus:ring-[#7a4b31]/10 rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-[#2b180d] placeholder-[#8c7a6b] transition-all outline-none uppercase tracking-widest font-mono"
+              className="w-full bg-white border-2 border-[#3A2414]/15 focus:border-[#B32025] rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-[#3A2414] placeholder-stone-400 transition-all outline-none uppercase tracking-widest font-mono shadow-sm"
             />
           </div>
 
@@ -196,7 +259,7 @@ export default function Rotas() {
             {!isEditing ? (
               <button 
                 onClick={handleStartEdit} 
-                className="flex items-center gap-3 px-6 py-4 bg-[#7a4b31] hover:bg-[#5c3722] text-[#fdfaf5] border-2 border-[#4e311b] rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap active:scale-95 shadow-md shadow-[#2b180d]/10"
+                className="flex items-center gap-3 px-6 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-sm"
               >
                 <Edit2 size={16} /> Editar Configuração
               </button>
@@ -204,19 +267,19 @@ export default function Rotas() {
               <div className="flex gap-2 w-full md:w-auto">
                 <button 
                   onClick={addRow} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#5c3722] hover:bg-[#3e2516] text-[#fdfaf5] border-2 border-[#2b180d] rounded-2xl text-xs font-black uppercase transition-all"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#3A2414] hover:brightness-110 text-white border-2 border-[#3A2414]/20 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-sm"
                 >
                   <Plus size={16} /> Adicionar
                 </button>
                 <button 
                   onClick={handleSave} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#7a4b31] to-[#a05a35] hover:from-[#5c3722] hover:to-[#7a4b31] text-[#fdfaf5] border-2 border-[#4e311b] rounded-2xl text-xs font-black uppercase transition-all shadow-lg shadow-[#7a4b31]/20"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-sm"
                 >
                   <Save size={16} /> Salvar
                 </button>
                 <button 
                   onClick={handleCancel} 
-                  className="p-4 bg-[#e6d5c3] hover:bg-[#d8c4af] text-[#7a4b31] border-2 border-[#c0a892] rounded-2xl transition-all"
+                  className="p-4 bg-white hover:bg-stone-50 text-[#3A2414] border-2 border-[#3A2414]/15 rounded-2xl transition-all cursor-pointer shadow-sm"
                 >
                   <X size={18} />
                 </button>
@@ -226,122 +289,143 @@ export default function Rotas() {
         </div>
 
         {/* Tactical UI View (Desktop Table) */}
-        <div className="hidden md:block overflow-hidden rounded-3xl border-2 border-[#c0a892] bg-[#fcf8f2] shadow-inner">
+        <div className="hidden md:block overflow-hidden rounded-3xl border-2 border-[#3A2414]/15 bg-white shadow-sm">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-gradient-to-b from-[#7a4b31] to-[#5c3722] text-[#fdfaf5] border-b-2 border-[#2b180d]">
-                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[35%]">Sentido Ida (Operação)</th>
+              <tr className="bg-[#3A2414] text-white border-b-2 border-[#3A2414]">
+                <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[8%]">Mover</th>
+                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[32%]">Sentido Ida (Operação)</th>
                 <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Cod</th>
-                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[35%]">Sentido Volta (Retorno)</th>
+                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[32%]">Sentido Volta (Retorno)</th>
                 <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Cod</th>
-                {isEditing && <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Ação</th>}
+                {isEditing && <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[8%]">Ação</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#c0a892]/45">
+            <tbody className="divide-y divide-[#3A2414]/10">
               <AnimatePresence mode="popLayout">
-                {currentData.map((route, i) => (
-                  <motion.tr 
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    key={`${route.idaCod}-${i}`} 
-                    className="group hover:bg-[#f3ebd3] transition-colors"
-                  >
-                    <td className="p-5">
-                      {isEditing ? (
-                        <div className="flex items-center gap-3">
-                           <MapPin size={14} className="text-[#7a4b31]" />
-                           <input 
-                             value={route.ida} 
-                             onChange={(e) => updateRow(i, 'ida', e.target.value)} 
-                             className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-xs text-[#2b180d] font-bold focus:border-[#7a4b31] outline-none uppercase"
-                             placeholder="ORIGEM X DESTINO"
-                           />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[#7a4b31]/10 rounded-lg">
-                            <ArrowRight size={14} className="text-[#7a4b31]" />
-                          </div>
-                          <span className="text-xs font-black text-[#2b180d] uppercase tracking-tight font-serif">{route.ida || '---'}</span>
-                        </div>
+                {currentData.map((route) => {
+                  const realIndex = safeRawData.indexOf(route);
+                  if (realIndex === -1) return null;
+                  return (
+                    <motion.tr 
+                      layout
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, realIndex)}
+                      onDragOver={(e) => handleDragOver(e, realIndex)}
+                      onDragEnd={handleDragEnd}
+                      onDrop={(e) => handleDrop(e, realIndex)}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      key={`${route.idaCod}-${route.voltaCod}-${realIndex}`} 
+                      className={cn(
+                        "group hover:bg-[#3A2414]/5 transition-colors cursor-grab active:cursor-grabbing",
+                        draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10" : "",
+                        hoveredIndex === realIndex ? "border-t-2 border-b-2 border-dashed border-[#B32025]/50 bg-[#B32025]/5" : ""
                       )}
-                    </td>
-                    <td className="p-5">
-                      {isEditing ? (
-                        <input 
-                          value={route.idaCod} 
-                          onChange={(e) => updateRow(i, 'idaCod', e.target.value)} 
-                          className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-[11px] text-[#7a4b31] font-mono text-center focus:border-[#7a4b31] outline-none font-bold"
-                          placeholder="0000"
-                        />
-                      ) : (
-                        <div className="flex justify-center">
-                          <span className="bg-[#d2c2b2] text-[#4a3623] border-2 border-[#c0a892] px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
-                            {route.idaCod || '----'}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-5">
-                      {isEditing ? (
-                        <div className="flex items-center gap-3">
-                           <MapPin size={14} className="text-[#a05a35]" />
-                           <input 
-                             value={route.volta} 
-                             onChange={(e) => updateRow(i, 'volta', e.target.value)} 
-                             className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-xs text-[#2b180d] font-bold focus:border-[#a05a35] outline-none uppercase"
-                             placeholder="ORIGEM X DESTINO"
-                           />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[#a05a35]/10 rounded-lg">
-                            <ArrowRight size={14} className="text-[#a05a35] rotate-180" />
-                          </div>
-                          <span className="text-xs font-black text-[#2b180d] uppercase tracking-tight font-serif">{route.volta || '---'}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-5">
-                      {isEditing ? (
-                        <input 
-                          value={route.voltaCod} 
-                          onChange={(e) => updateRow(i, 'voltaCod', e.target.value)} 
-                          className="w-full bg-[#fdfaf5] p-3 rounded-xl border-2 border-[#c0a892] text-[11px] text-[#7a4b31] font-mono text-center focus:border-[#7a4b31] outline-none font-bold"
-                          placeholder="0000"
-                        />
-                      ) : (
-                        <div className="flex justify-center">
-                          <span className="bg-[#d2c2b2] text-[#4a3623] border-2 border-[#c0a892] px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
-                            {route.voltaCod || '----'}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                    {isEditing && (
+                    >
                       <td className="p-5">
-                        <div className="flex justify-center">
-                          <button 
-                            onClick={() => removeRow(i)} 
-                            className="p-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl transition-all border border-red-200"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="p-1 px-1.5 text-[#3A2414]/40 group-hover:text-[#B32025] transition-colors cursor-grab active:cursor-grabbing" title="Arraste para reordenar">
+                            <GripVertical size={16} />
+                          </div>
                         </div>
                       </td>
-                    )}
-                  </motion.tr>
-                ))}
+                      <td className="p-5">
+                        {isEditing ? (
+                          <div className="flex items-center gap-3">
+                             <MapPin size={14} className="text-[#B32025]" />
+                             <input 
+                               value={route.ida} 
+                               onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
+                               className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-bold focus:border-[#B32025] outline-none uppercase shadow-sm"
+                               placeholder="ORIGEM X DESTINO"
+                             />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-[#B32025]/10 rounded-lg">
+                              <ArrowRight size={14} className="text-[#B32025]" />
+                            </div>
+                            <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.ida || '---'}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-5">
+                        {isEditing ? (
+                          <input 
+                            value={route.idaCod} 
+                            onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
+                            className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
+                            placeholder="0000"
+                          />
+                        ) : (
+                          <div className="flex justify-center">
+                            <span className="bg-[#3A2414]/5 text-[#3A2414] border border-[#3A2414]/15 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
+                              {route.idaCod || '----'}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-5">
+                        {isEditing ? (
+                          <div className="flex items-center gap-3">
+                             <MapPin size={14} className="text-[#B32025]" />
+                             <input 
+                               value={route.volta} 
+                               onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
+                               className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-bold focus:border-[#B32025] outline-none uppercase shadow-sm"
+                               placeholder="ORIGEM X DESTINO"
+                             />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-[#B32025]/10 rounded-lg">
+                              <ArrowRight size={14} className="text-[#B32025] rotate-180" />
+                            </div>
+                            <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.volta || '---'}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-5">
+                        {isEditing ? (
+                          <input 
+                            value={route.voltaCod} 
+                            onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
+                            className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
+                            placeholder="0000"
+                          />
+                        ) : (
+                          <div className="flex justify-center">
+                            <span className="bg-[#3A2414]/5 text-[#3A2414] border border-[#3A2414]/15 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
+                              {route.voltaCod || '----'}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      {isEditing && (
+                        <td className="p-5">
+                          <div className="flex justify-center">
+                            <button 
+                              onClick={() => removeRow(realIndex)} 
+                              className="p-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl transition-all border border-red-200"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </motion.tr>
+                  );
+                })}
               </AnimatePresence>
             </tbody>
           </table>
           
           {currentData.length === 0 && (
-            <div className="p-20 text-center bg-[#fdfaf5]">
-              <Database className="w-12 h-12 text-[#c0a892] mx-auto mb-4" />
-              <p className="text-xs font-black text-[#8c7a6b] uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
+            <div className="p-20 text-center bg-white">
+              <Database className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+              <p className="text-xs font-black text-stone-400 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
             </div>
           )}
         </div>
@@ -349,94 +433,115 @@ export default function Rotas() {
         {/* Mobile Tactical Card View */}
         <div className="md:hidden flex flex-col gap-4">
           <AnimatePresence mode="popLayout">
-            {currentData.map((route, i) => (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                key={i} 
-                className="bg-[#fcf8f2] border-2 border-[#c0a892] rounded-3xl p-5 relative overflow-hidden"
-              >
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#7a4b31]" />
-                
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#7a4b31]/10 rounded-xl flex items-center justify-center">
-                      <Navigation size={14} className="text-[#7a4b31]" />
-                    </div>
-                    <span className="text-[10px] font-black text-[#7a4b31] uppercase tracking-widest">Rota #{i+1}</span>
-                  </div>
-                  {isEditing && (
-                    <button 
-                      onClick={() => removeRow(i)} 
-                      className="p-3 bg-red-100 text-red-700 rounded-xl"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+            {currentData.map((route) => {
+              const realIndex = safeRawData.indexOf(route);
+              if (realIndex === -1) return null;
+              return (
+                <motion.div 
+                  layout
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, realIndex)}
+                  onDragOver={(e) => handleDragOver(e, realIndex)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, realIndex)}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  key={`${route.idaCod}-${route.voltaCod}-${realIndex}`} 
+                  className={cn(
+                    "bg-[#fdfcf9] border rounded-3xl p-5 relative overflow-hidden shadow-sm transition-all cursor-grab active:cursor-grabbing",
+                    draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10 border-[#3A2414]/25" : "border-[#3A2414]/15",
+                    hoveredIndex === realIndex ? "border-2 border-dashed border-[#B32025]/50 bg-[#B32025]/5" : ""
                   )}
-                </div>
+                >
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#B32025]" />
+                  
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-[#B32025]/10 rounded-xl flex items-center justify-center">
+                        <Navigation size={14} className="text-[#B32025]" />
+                      </div>
+                      <span className="text-[10px] font-black text-[#3A2414] uppercase tracking-widest">Rota #{realIndex + 1}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="p-2 text-[#3A2414]/40 hover:text-[#B32025] transition-colors cursor-grab active:cursor-grabbing" title="Arraste para reordenar">
+                        <GripVertical size={16} />
+                      </div>
 
-                <div className="space-y-4">
-                  <div className="bg-[#fdfaf5] p-4 rounded-2xl border-2 border-[#c0a892]/30">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[9px] font-black text-[#7a4b31] uppercase tracking-widest">Sentido Ida</span>
-                      {isEditing ? (
-                         <input 
-                           value={route.idaCod} 
-                           onChange={(e) => updateRow(i, 'idaCod', e.target.value)} 
-                           className="w-20 bg-[#fdfaf5] p-1 text-[10px] text-[#7a4b31] text-center border-2 border-[#c0a892] rounded uppercase font-bold"
-                         />
-                      ) : (
-                         <span className="text-[11px] font-mono font-black text-[#4a3623] bg-[#d2c2b2] border border-[#c0a892] px-2 py-0.5 rounded-md">{route.idaCod || '----'}</span>
+                      {isEditing && (
+                        <button 
+                          onClick={() => removeRow(realIndex)} 
+                          className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl cursor-pointer border border-red-200 transition-all"
+                          title="Excluir"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       )}
                     </div>
-                    {isEditing ? (
-                      <input 
-                        value={route.ida} 
-                        onChange={(e) => updateRow(i, 'ida', e.target.value)} 
-                        className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase font-serif"
-                      />
-                    ) : (
-                      <p className="text-xs font-black text-[#2b180d] uppercase leading-tight font-serif">{route.ida || '---'}</p>
-                    )}
                   </div>
 
-                  <div className="bg-[#fdfaf5] p-4 rounded-2xl border-2 border-[#c0a892]/30">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[9px] font-black text-[#a05a35] uppercase tracking-widest">Sentido Volta</span>
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-2xl border border-[#3A2414]/10 shadow-sm">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest">Sentido Ida</span>
+                        {isEditing ? (
+                           <input 
+                             value={route.idaCod} 
+                             onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
+                             className="w-20 bg-white p-1 text-[10px] text-[#312c27] text-center border border-[#3A2414]/15 rounded uppercase font-bold focus:border-[#B32025] outline-none"
+                           />
+                        ) : (
+                           <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.idaCod || '----'}</span>
+                        )}
+                      </div>
                       {isEditing ? (
-                         <input 
-                           value={route.voltaCod} 
-                           onChange={(e) => updateRow(i, 'voltaCod', e.target.value)} 
-                           className="w-20 bg-[#fdfaf5] p-1 text-[10px] text-[#7a4b31] text-center border-2 border-[#c0a892] rounded uppercase font-bold"
-                         />
+                        <input 
+                          value={route.ida} 
+                          onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
+                          className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase"
+                        />
                       ) : (
-                         <span className="text-[11px] font-mono font-black text-[#4a3623] bg-[#d2c2b2] border border-[#c0a892] px-2 py-0.5 rounded-md">{route.voltaCod || '----'}</span>
+                        <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.ida || '---'}</p>
                       )}
                     </div>
-                    {isEditing ? (
-                      <input 
-                        value={route.volta} 
-                        onChange={(e) => updateRow(i, 'volta', e.target.value)} 
-                        className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase font-serif"
-                      />
-                    ) : (
-                      <p className="text-xs font-black text-[#2b180d] uppercase leading-tight font-serif">{route.volta || '---'}</p>
-                    )}
+
+                    <div className="bg-white p-4 rounded-2xl border border-[#3A2414]/10 shadow-sm">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest">Sentido Volta</span>
+                        {isEditing ? (
+                           <input 
+                             value={route.voltaCod} 
+                             onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
+                             className="w-20 bg-white p-1 text-[10px] text-[#312c27] text-center border border-[#3A2414]/15 rounded uppercase font-bold focus:border-[#B32025] outline-none"
+                           />
+                        ) : (
+                           <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.voltaCod || '----'}</span>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <input 
+                          value={route.volta} 
+                          onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
+                          className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase"
+                        />
+                      ) : (
+                        <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.volta || '---'}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
 
         {/* Destructive Action */}
         {isEditing && (
-          <div className="mt-8 pt-8 border-t-2 border-[#c0a892]/40 flex justify-center">
+          <div className="mt-8 pt-8 border-t-2 border-[#3A2414]/10 flex justify-center">
             <button 
               onClick={clearAll} 
-              className="px-6 py-3 bg-red-100 text-red-800 hover:bg-red-200 border-2 border-red-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+              className="px-6 py-3 bg-red-50 text-red-800 hover:bg-red-100 border-2 border-red-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm"
             >
               Resetar Base de Dados de Rotas
             </button>
@@ -445,12 +550,12 @@ export default function Rotas() {
       </div>
 
       {/* Floating Status Indicator - Styled as an extraction badge */}
-      <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-[#2b180d]/90 backdrop-blur-xl border-2 border-[#7a4b31]/40 px-6 py-3 rounded-full shadow-2xl z-50">
+      <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-[#3A2414]/90 backdrop-blur-md border border-white/20 px-6 py-3 rounded-full shadow-lg z-50">
         <div className="relative">
-          <div className="absolute inset-0 bg-amber-500 blur shadow-[0_0_10px_#f59e0b]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 relative z-10" />
+          <div className="absolute inset-0 bg-[#B32025] blur shadow-[0_0_10px_#B32025]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#B32025] relative z-10" />
         </div>
-        <span className="text-[10px] font-black text-[#fdfaf5] uppercase tracking-widest font-mono">Torra e Rastreio Ativo</span>
+        <span className="text-[10px] font-black text-white uppercase tracking-widest font-mono">Torra e Rastreio Ativo</span>
       </div>
     </div>
   );

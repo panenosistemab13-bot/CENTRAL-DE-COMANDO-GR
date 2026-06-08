@@ -1,1228 +1,914 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Heart, 
-  Sparkles, 
+  Search, 
+  ChevronLeft, 
+  ChevronRight, 
+  Clock, 
   Coffee, 
-  Tag, 
-  Activity, 
-  Flame, 
-  Check, 
-  RotateCw, 
-  Volume2, 
-  VolumeX, 
-  SlidersHorizontal, 
-  Wind, 
-  Sliders, 
-  Package, 
-  FileText, 
-  Award, 
-  Droplet, 
-  UtensilsCrossed, 
-  Leaf, 
-  Compass, 
-  HelpCircle,
-  Eye,
-  Info,
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Trash2,
-  Search,
-  UserPlus,
-  Percent,
-  Clock,
-  FileSpreadsheet
+  Users,
+  ChevronUp,
+  Heart,
+  Calendar,
+  Camera
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { rtdb } from '../firebase';
-import { ref, onValue, set, update, remove } from 'firebase/database';
-import { isWorkDay, getWorkScheduleForDate } from '../utils/workSchedule';
-
-// Dynamic import of Google Fonts for cursive tag and display serif fonts
-const fontImportStyle = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Satisfy&family=Caveat:wght@400..700&display=swap');
-  
-  .font-handwritten {
-    font-family: 'Satisfy', 'Caveat', cursive, sans-serif;
-  }
-  .font-serif-display {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
-`;
-
-interface Hotspot {
-  id: string;
-  index: number;
-  title: string;
-  subtitle: string;
-  description: string;
-  infoQuote: string;
-  editorialNote: string;
-  icon: React.ComponentType<any>;
-  top: string;
-  left: string;
-  handwrittenText?: string;
-  itemCode: string;
-}
-
-const COFFEE_HOTSPOTS: Hotspot[] = [
-  {
-    id: 'saco_juta',
-    index: 1,
-    title: 'Saco de Juta',
-    subtitle: 'Saco de Juta Rústico & Grãos',
-    description: 'Um saco de serapilheira rústico, denso e altamente texturizado, preenchido até a borda com grãos de café de torra escura.',
-    infoQuote: 'O saco é amarrado à mão com barbante de juta cru de fibra grossa. O entrelaçamento natural das fibras ajuda a reter os óleos aromáticos voláteis, protegendo o lote contra variações de temperatura externos e preservando as características de grãos gourmet cultivados em elevadas altitudes.',
-    editorialNote: 'Grãos 100% Arábica selecionados meticulosamente. Notas olfativas intensas de chocolate amargo e avelã torrada.',
-    icon: Package,
-    top: '25%',
-    left: '23%',
-    itemCode: 'LOTE #1704B'
-  },
-  {
-    id: 'etiqueta_kraft',
-    index: 2,
-    title: 'Etiqueta de Papel',
-    subtitle: 'Papel Kraft Texturizado',
-    description: 'Presa elegantemente ao saco através do barbante de juta, a etiqueta de papel kraft envelhecido apresenta bordas intencionalmente irregulares e rasgadas.',
-    infoQuote: 'Num convite à herança clássica das fazendas mineiras, a etiqueta serve como certidão de origem do microlote. Ostenta uma caligrafia manual refinada que acentua a curadoria especial desta safra selecionada.',
-    editorialNote: 'O design gráfico minimalista e monocromático destaca o contraste sofisticado entre o artesanal e o contemporâneo.',
-    icon: Tag,
-    top: '41%',
-    left: '21%',
-    handwrittenText: 'Edição Rústica Sofisticada / Café em Grãos Selecionados',
-    itemCode: 'CURADORIA DE ESTÚDIO'
-  },
-  {
-    id: 'selo_cera',
-    index: 3,
-    title: 'Selo de Cera',
-    subtitle: 'Selo 3corações Premium',
-    description: 'Um suntuoso selo de lacre de cera vermelha-escura derretida, posicionado com precisão impecável no canto inferior esquerdo da etiqueta de papel.',
-    infoQuote: 'O selo ostenta o icônico logotipo da "3corações" em relevo dourado tridimensional. Uma técnica centenária que sela um compromisso indissolúvel de integridade, afeto corporativo e alto padrão artesanal.',
-    editorialNote: 'A cera especial de alta fusão preserva os detalhes microscópicos do design com um brilho profundo que captura a luz directional do estúdio.',
-    icon: Award,
-    top: '60%',
-    left: '16%',
-    itemCode: 'AUTENTICIDADE CERTIFICADA'
-  },
-  {
-    id: 'gotejador_cobre',
-    index: 4,
-    title: 'Gotejador de Cobre',
-    subtitle: 'Cestinha de Gotejamento Polido',
-    description: 'Um refinado gotejador de café cônico em cobre puríssimo e bronze escovado, exibindo ranhuras espirais internas para fluxo uniforme da água.',
-    infoQuote: 'Dentro do filtro de papel branco imaculado, repousa o pó fresco sob calor preciso. Plumas translúcidas de vapor de água aquecida sobem delicadamente em espirais sinuosas no ar, evocando a tranquilidade dos rituais lentos.',
-    editorialNote: 'O design cônico V60 de cobre polido distribui o calor com excelência térmica inigualável durante toda a extração.',
-    icon: Droplet,
-    top: '31%',
-    left: '41%',
-    itemCode: 'V60 SOLID COPPER'
-  },
-  {
-    id: 'caneca_ceramica',
-    index: 5,
-    title: 'Caneca de Cerâmica',
-    subtitle: 'Cerâmica Artesanal de Argila',
-    description: 'Modelada manualmente em torno de oleiro e finalizada com um esmalte vitrificado em tons terrosos, a caneca ostenta a marca "3corações" em baixo-relevo.',
-    infoQuote: 'Uma verdadeira peça de autor. A espessura generosa da argila refratária preserva o calor da bebida com perfeição térmica, enquanto a textura áspera da base crua confere um toque tátil e orgânico extremamente prazeroso.',
-    editorialNote: 'Esmaltação reativa em alta temperatura que torna cada caneca uma peça estritamente única no mundo.',
-    icon: Coffee,
-    top: '56%',
-    left: '42%',
-    itemCode: 'STUDIO CERAMICS'
-  },
-  {
-    id: 'graos_espalhados',
-    index: 6,
-    title: 'Grãos de Café',
-    subtitle: 'Grãos de Torra Escura',
-    description: 'Grãos selecionados espalhados espontaneamente e de forma casual sobre a fatia de tronco de árvore desgastada, capturando os reflexos da iluminação.',
-    infoQuote: 'Os grãos recém-saídos da torra revelam uma pátina sutil de óleos essenciais na superfície, o que comprova o ponto de caramelização perfeita dos açúcares naturais da semente.',
-    editorialNote: 'Origem controlada das melhores regiões montanhosas do cerrado mineiro com altitude superior a 1.100 metros.',
-    icon: Sparkles,
-    top: '69%',
-    left: '32%',
-    itemCode: '100% ARÁBICA'
-  },
-  {
-    id: 'cerejas_maduras',
-    index: 7,
-    title: 'Frutos de Café (Cerejas)',
-    subtitle: 'Cerejas de Café Frescas & Secas',
-    description: 'Um cacho de café maduro posicionado no canto inferior direito, exibindo frutos na cor vermelho-rubi profunda ao lado de bagas secas em tons café.',
-    infoQuote: 'Amarrados à história agrícola, as cerejas frescas relembram a conexão botânica do café com a terra e o ciclo fenológico da planta antes de se transformar na bebida dourada.',
-    editorialNote: 'Colheita estritamente manual (hand-picking) para assegurar que apenas os frutos no topo de maturidade celular sejam selecionados.',
-    icon: UtensilsCrossed,
-    top: '68%',
-    left: '55%',
-    itemCode: 'BOTÂNICA DA SEMENTE'
-  },
-  {
-    id: 'folhas_verdes',
-    index: 8,
-    title: 'Folhas de Café',
-    subtitle: 'Folhas Verdes Frescas',
-    description: 'Duas folhas de coloração verde-viva intensa com textura encerada e nervuras simétricas proeminentes, dispostas gentilmente sobre a fatia de madeira.',
-    infoQuote: 'Colhidas no mesmo dia diretamente da lavoura experimental, as folhas adicionam vida e um contraste cromático impecável com os tons de bronze, terracota e marrom da composição rústica.',
-    editorialNote: 'As folhas refletem o vigor fisiológico do cafeeiro da espécie Arábica Bourbon Amarelo.',
-    icon: Leaf,
-    top: '71%',
-    left: '12%',
-    itemCode: 'TERROIR MINEIRO'
-  },
-  {
-    id: 'moedor_metal',
-    index: 9,
-    title: 'Moedor de Café',
-    subtitle: 'Moedor Manual Antigo',
-    description: 'Um moedor clássico de manivela de ferro fundido e caixa de jacarandá antiga, parcialmente visível no bokeh deslumbrante de fundo.',
-    infoQuote: 'As lâminas cônicas internas de aço carbono trituram os grãos de forma sutil, minimizando o atrito térmico negativo para evitar a perda dos aromas voláteis mais sutis e preservando o amargor equilibrado.',
-    editorialNote: 'Regulado sob fricção fina tradicional para extrações curtas ou médias no gotejador de cobre.',
-    icon: Compass,
-    top: '40%',
-    left: '63%',
-    itemCode: 'HERANÇA COLONIAL'
-  }
-];
 
 export default function PresenceList() {
-  const [selectedIdx, setSelectedIdx] = useState<number>(0);
-  const activeHotspot = COFFEE_HOTSPOTS[selectedIdx];
+  const getTodayStr = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  };
 
-  // Warmth control
-  const [warmth, setWarmth] = useState<number>(100);
-
-  // Audio simulation states
-  const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const noiseSourceRef = useRef<AudioWorkletNode | ScriptProcessorNode | null>(null);
-  const lfoRef = useRef<OscillatorNode | null>(null);
-
-  // Extraction stimulation states
-  const [extractionState, setExtractionState] = useState<'idle' | 'brewing' | 'done'>('idle');
-  const [extractionProgress, setExtractionProgress] = useState<number>(0);
-  const [extractionStep, setExtractionStep] = useState<string>('');
-  const [steamParticles, setSteamParticles] = useState<Array<{ id: number; left: string; delay: string; duration: string }>>([]);
-
-  // Wax stamp states
-  const [stampState, setStampState] = useState<'idle' | 'stamping' | 'stamped'>('idle');
-  const [grindSize, setGrindSize] = useState<'FINA' | 'MÉDIA' | 'GROSSA'>('MÉDIA');
-
-  // --- CALENDAR & ATTENDANCE STATES ---
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2026, 5, 1)); // June 2026
-  const [selectedDate, setSelectedDate] = useState<string>('2026-06-06'); // June 6, 2026
-  const [escalasList, setEscalasList] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Custom new collaborator form state
-  const [newColabName, setNewColabName] = useState('');
-  const [newColabRole, setNewColabRole] = useState('Motorista');
-  const [newColabNote, setNewColabNote] = useState('');
+  const [selectedDate, setSelectedDate] = useState(getTodayStr());
+  const [profileImage, setProfileImage] = useState('https://i.postimg.cc/hjdJt0Wh/Whats-App-Image-2026-06-06-at-02-34-52.jpg');
+  const [viewDate, setViewDate] = useState<Date>(() => {
+    return new Date();
+  });
 
-  // Editing notes state
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [tempNoteText, setTempNoteText] = useState('');
-  const [isHoliday, setIsHoliday] = useState<boolean>(false);
+  // New persistent states for calendar status and times
+  const [dayStatuses, setDayStatuses] = useState<Record<string, 'trabalhei' | 'falta' | 'folga' | ''>>(() => {
+    const saved = localStorage.getItem('presence_statuses');
+    let parsed: Record<string, 'trabalhei' | 'falta' | 'folga' | ''> = {};
+    if (saved) {
+      try { parsed = JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    if (!parsed["2026-06-08"]) {
+      parsed["2026-06-08"] = "trabalhei";
+    }
+    return parsed;
+  });
 
-  // Sync escalasList from Firebase Realtime Database
+  const [dayTimes, setDayTimes] = useState<Record<string, { entrada: string; saida: string }>>(() => {
+    const saved = localStorage.getItem('presence_times');
+    let parsed: Record<string, { entrada: string; saida: string }> = {};
+    if (saved) {
+      try { parsed = JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    if (!parsed["2026-06-08"]) {
+      parsed["2026-06-08"] = { entrada: "18:00", saida: "06:00" };
+    }
+    return parsed;
+  });
+
   useEffect(() => {
-    const escalasListRef = ref(rtdb, 'escalas');
-    const unsubscribe = onValue(escalasListRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setEscalasList(Object.values(data));
+    localStorage.setItem('presence_statuses', JSON.stringify(dayStatuses));
+  }, [dayStatuses]);
+
+  useEffect(() => {
+    localStorage.setItem('presence_times', JSON.stringify(dayTimes));
+  }, [dayTimes]);
+
+  // Convert time "HH:MM" to minutes from midnight
+  const timeToMinutes = (timeStr: string): number => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return 0;
+    return h * 60 + m;
+  };
+
+  // Convert minutes back to pretty string representation
+  const formatBalanceMinutes = (totalMinutes: number): string => {
+    const sign = totalMinutes >= 0 ? '+' : '-';
+    const absMinutes = Math.abs(totalMinutes);
+    const hrs = Math.floor(absMinutes / 60);
+    const mins = absMinutes % 60;
+    return `${sign}${String(hrs).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m`;
+  };
+
+  // Calculate day bank-of-hours balance based on rules
+  const calculateDayBalance = (dateStr: string, status: string, entradaStr: string, saidaStr: string) => {
+    if (status !== 'trabalhei') {
+      return { total: 0, entradaDiff: 0, saidaDiff: 0, entradaStatus: 'none', saidaStatus: 'none' as 'none' | 'positivo' | 'negativo' };
+    }
+
+    const entrada = entradaStr || '18:00';
+    const saida = saidaStr || '06:00';
+
+    const entMin = timeToMinutes(entrada);
+    const saiMin = timeToMinutes(saida);
+
+    const targetEntMin = 18 * 60; // 1080 min (18:00)
+    const targetSaiMin = 6 * 60;  // 360 min (06:00)
+
+    let entradaDiff = 0;
+    let entradaStatus: 'positivo' | 'negativo' | 'none' = 'none';
+
+    let saidaDiff = 0;
+    let saidaStatus: 'positivo' | 'negativo' | 'none' = 'none';
+
+    // Rule 1: "se eu bater ponto antes das 18:06 irar negativo para o banco de horas"
+    // Rule 4: "se eu bater ponto antes 17:54 irar positivo para o banco de horas"
+    if (entMin < 17 * 60 + 54) { // Before 17:54 (early arrival)
+      entradaDiff = targetEntMin - entMin; // Extra early minutes
+      entradaStatus = 'positivo';
+    } else if (entMin < 18 * 60 + 6) { // Between 17:54 and 18:06 (late/regular window)
+      if (entMin < targetEntMin) {
+        // Handled as penalty for not arriving sufficiently early, as requested
+        entradaDiff = -10; 
       } else {
-        setEscalasList([]);
+        // Late arrival
+        entradaDiff = targetEntMin - entMin;
+      }
+      entradaStatus = 'negativo';
+    } else {
+      // Arrived after 18:06 (Definitely late)
+      entradaDiff = targetEntMin - entMin;
+      entradaStatus = 'negativo';
+    }
+
+    // Rule 2: "se eu bater ponto antes 05:56 irar negativo para o banco de horas"
+    // Rule 3: "se eu bater ponto antes 06:06 irar positivo para o banco de horas"
+    if (saiMin < 5 * 60 + 56) { // Before 05:56
+      saidaDiff = saiMin - targetSaiMin; // Left early (negative)
+      saidaStatus = 'negativo';
+    } else if (saiMin < 6 * 60 + 6) { // Between 05:56 and 06:06 (positive zone)
+      if (saiMin < targetSaiMin) {
+        saidaDiff = 5; // Positive incentive bonus
+      } else {
+        saidaDiff = saiMin - targetSaiMin; // Overtime
+      }
+      saidaStatus = 'positivo';
+    } else {
+      // After 06:06 (standard positive overtime)
+      saidaDiff = saiMin - targetSaiMin;
+      saidaStatus = 'positivo';
+    }
+
+    return {
+      total: entradaDiff + saidaDiff,
+      entradaDiff,
+      saidaDiff,
+      entradaStatus,
+      saidaStatus
+    };
+  };
+
+  const calculateTotalBankOfHours = () => {
+    let total = 0;
+    Object.keys(dayStatuses).forEach(dateStr => {
+      if (dayStatuses[dateStr] === 'trabalhei') {
+        const times = dayTimes[dateStr] || { entrada: '18:00', saida: '06:00' };
+        const bal = calculateDayBalance(dateStr, 'trabalhei', times.entrada, times.saida);
+        total += bal.total;
       }
     });
-    return () => unsubscribe();
-  }, []);
+    return total;
+  };
 
-  // Filter scales for active selectedDate
-  const activeRoster = useMemo(() => {
-    return escalasList.filter((item: any) => item.date === selectedDate);
-  }, [escalasList, selectedDate]);
+  const totalBankOfHours = calculateTotalBankOfHours();
 
-  // Filter roster by name search
-  const filteredRoster = useMemo(() => {
-    if (!searchQuery.trim()) return activeRoster;
-    return activeRoster.filter((item: any) => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (item.role && item.role.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [activeRoster, searchQuery]);
+  const getActiveMonthStats = () => {
+    let presentes = 0;
+    let faltas = 0;
+    const year = viewDate.getFullYear();
+    const month = String(viewDate.getMonth() + 1).padStart(2, '0');
+    const prefix = `${year}-${month}`;
 
-  // Handle month changes
+    Object.keys(dayStatuses).forEach(dateStr => {
+      if (dateStr.startsWith(prefix)) {
+        if (dayStatuses[dateStr] === 'trabalhei') presentes++;
+        if (dayStatuses[dateStr] === 'falta') faltas++;
+      }
+    });
+
+    return { presentes, faltas };
+  };
+
+  const { presentes, faltas } = getActiveMonthStats();
+
+  const formatLocalDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return dateStr;
+    const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const weekday = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+    const formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} - ${formatted}`;
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          setProfileImage(event.target.result);
+        }
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  // viewDate state moved to the top of component to resolve initialization order conflicts
+
+  const getHolidayForDate = (dateStr: string) => {
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return null;
+    const mmdd = `${parts[1]}-${parts[2]}`;
+
+    const annualHolidays: { [key: string]: string } = {
+      '01-01': 'Confraternização Universal',
+      '04-21': 'Tiradentes',
+      '05-01': 'Dia do Trabalho',
+      '09-07': 'Independência do Brasil',
+      '10-12': 'Nossa Senhora Aparecida',
+      '11-02': 'Finados',
+      '11-15': 'Proclamação da República',
+      '11-20': 'Dia da Consciência Negra',
+      '12-25': 'Natal'
+    };
+
+    const specificHolidays: { [key: string]: string } = {
+      '2026-06-04': 'Corpus Christi',
+      '2025-06-19': 'Corpus Christi',
+      '2027-05-27': 'Corpus Christi'
+    };
+
+    if (specificHolidays[dateStr]) {
+      return { date: dateStr, name: specificHolidays[dateStr] };
+    }
+    if (annualHolidays[mmdd]) {
+      return { date: dateStr, name: annualHolidays[mmdd] };
+    }
+    return null;
+  };
+
+  const currentHoliday = getHolidayForDate(selectedDate);
+  const isHoliday = !!currentHoliday;
+
+  const currentStatus = dayStatuses[selectedDate] || '';
+  const isSelectedWorkDay = currentStatus === 'trabalhei';
+
+  const daysOfWeek = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+
+  // Generate dynamic calendar days grid for any selected month/year
+  const generateCalendarDays = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+    const days: { day: number; inactive?: boolean; dateStr: string }[] = [];
+
+    // Fill previous month days
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      const prevDay = prevMonthTotalDays - i;
+      const prevMonthDate = new Date(year, month - 1, prevDay);
+      const dateStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}-${String(prevMonthDate.getDate()).padStart(2, '0')}`;
+      days.push({
+        day: prevDay,
+        inactive: true,
+        dateStr
+      });
+    }
+
+    // Fill current month days
+    for (let i = 1; i <= totalDays; i++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      days.push({
+        day: i,
+        dateStr
+      });
+    }
+
+    // Fill next month days to make grid have standard size (35 or 42 cells)
+    const totalCellsNeeded = days.length <= 35 ? 35 : 42;
+    const remaining = totalCellsNeeded - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      const nextMonthDate = new Date(year, month + 1, i);
+      const dateStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}-${String(nextMonthDate.getDate()).padStart(2, '0')}`;
+      days.push({
+        day: i,
+        inactive: true,
+        dateStr
+      });
+    }
+
+    const weeks: { day: number; inactive?: boolean; dateStr: string }[][] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      weeks.push(days.slice(i, i + 7));
+    }
+
+    return weeks;
+  };
+
+  const calendarDays = generateCalendarDays();
+
   const handlePrevMonth = () => {
-    const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
-    setCurrentMonth(prev);
-    playSynthesizedTone(440, 'sine', 0.1, 0.05);
+    setViewDate(prev => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() - 1);
+      return d;
+    });
   };
 
   const handleNextMonth = () => {
-    const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
-    setCurrentMonth(next);
-    playSynthesizedTone(460, 'sine', 0.1, 0.05);
-  };
-
-  // Populate Default Collaborators for a fresh day roster
-  const handlePopulateDefault = async () => {
-    const DEFAULT_STAFF = [
-      { name: "Manoel Silva", role: "Motorista", worked: true, observacao: "Presença regular" },
-      { name: "Luiz Carlos", role: "Motorista", worked: true, observacao: "Início pontual" },
-      { name: "Cláudio Sousa", role: "Ajudante", worked: true, observacao: "Carregamento concluído" },
-      { name: "Carlos Alberto", role: "Ajudante", worked: false, observacao: "Falta médica justificativa" },
-      { name: "Roberto Dias", role: "Monitor", worked: true, observacao: "Rotas verificadas" },
-      { name: "Thiago Santos", role: "Motorista", worked: true, observacao: "Apoio de pátio" },
-      { name: "Eduardo Souza", role: "Monitor", worked: true, observacao: "Operação SM ativa" },
-      { name: "José Augusto", role: "Supervisor", worked: true, observacao: "Supervisão geral" }
-    ];
-
-    for (const staff of DEFAULT_STAFF) {
-      const nameKey = staff.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const entryId = `${selectedDate}_${nameKey}`;
-      await set(ref(rtdb, `escalas/${entryId}`), {
-        id: entryId,
-        name: staff.name,
-        role: staff.role,
-        date: selectedDate,
-        worked: staff.worked,
-        observacao: staff.observacao
-      });
-    }
-    playSynthesizedTone(580, 'sine', 0.3, 0.1);
-  };
-
-  // Toggle present/worked status in Firebase
-  const handleToggleWorked = async (item: any) => {
-    await update(ref(rtdb, `escalas/${item.id}`), {
-      worked: !item.worked
+    setViewDate(prev => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() + 1);
+      return d;
     });
-    playSynthesizedTone(item.worked ? 220 : 330, 'triangle', 0.15, 0.12);
   };
 
-  // Delete worker from selected date scale
-  const handleDeleteWorker = async (id: string) => {
-    await remove(ref(rtdb, `escalas/${id}`));
-    playSynthesizedTone(180, 'sine', 0.25, 0.08);
-  };
-
-  // Add new custom collaborator to this date
-  const handleAddCollaborator = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newColabName.trim()) return;
-    const nameKey = newColabName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const entryId = `${selectedDate}_${nameKey}`;
-    
-    await set(ref(rtdb, `escalas/${entryId}`), {
-      id: entryId,
-      name: newColabName.trim(),
-      role: newColabRole,
-      date: selectedDate,
-      worked: true,
-      observacao: newColabNote.trim() || 'Adicionado manualmente'
-    });
-
-    setNewColabName('');
-    setNewColabNote('');
-    playSynthesizedTone(620, 'sine', 0.2, 0.1);
-  };
-
-  // Start inline note editing
-  const startEditingNote = (item: any) => {
-    setEditingNoteId(item.id);
-    setTempNoteText(item.observacao || '');
-    playSynthesizedTone(420, 'sine', 0.1, 0.05);
-  };
-
-  // Save modified note inline to Firebase
-  const saveEditedNote = async (id: string) => {
-    await update(ref(rtdb, `escalas/${id}`), {
-      observacao: tempNoteText.trim()
-    });
-    setEditingNoteId(null);
-    playSynthesizedTone(540, 'sine', 0.15, 0.1);
-  };
-
-  // Calendar month-grid generator
-  const calendarDays = useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    
-    const firstDay = new Date(year, month, 1);
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    const startOffset = firstDay.getDay();
-
-    const days: Array<{ dayNum: number; fullDateStr: string; isActiveMonth: boolean }> = [];
-
-    // Prev month filler
-    const prevMonthTotalDays = new Date(year, month, 0).getDate();
-    for (let i = startOffset - 1; i >= 0; i--) {
-      const dNum = prevMonthTotalDays - i;
-      const prevMonth = month === 0 ? 11 : month - 1;
-      const prevYear = month === 0 ? year - 1 : year;
-      const mStr = String(prevMonth + 1).padStart(2, '0');
-      const dStr = String(dNum).padStart(2, '0');
-      days.push({
-        dayNum: dNum,
-        fullDateStr: `${prevYear}-${mStr}-${dStr}`,
-        isActiveMonth: false
-      });
-    }
-
-    // Active month
-    for (let dNum = 1; dNum <= totalDays; dNum++) {
-      const mStr = String(month + 1).padStart(2, '0');
-      const dStr = String(dNum).padStart(2, '0');
-      days.push({
-        dayNum: dNum,
-        fullDateStr: `${year}-${mStr}-${dStr}`,
-        isActiveMonth: true
-      });
-    }
-
-    // Next month filler
-    const remaining = 42 - days.length;
-    for (let dNum = 1; dNum <= remaining; dNum++) {
-      const nextMonth = month === 11 ? 0 : month + 1;
-      const nextYear = month === 11 ? year + 1 : year;
-      const mStr = String(nextMonth + 1).padStart(2, '0');
-      const dStr = String(dNum).padStart(2, '0');
-      days.push({
-        dayNum: dNum,
-        fullDateStr: `${nextYear}-${mStr}-${dStr}`,
-        isActiveMonth: false
-      });
-    }
-
-    return days;
-  }, [currentMonth]);
-
-  // Check if a date string has any attendance logged for badges
-  const getAttendanceSummaryForDate = (dateStr: string) => {
-    const items = escalasList.filter((item: any) => item.date === dateStr);
-    const total = items.length;
-    const present = items.filter((item: any) => item.worked).length;
-    return { total, present };
-  };
-
-  // List of beautiful coffee images related to monthly theme
-  const CALENDAR_IMAGES = [
-    'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&q=80&w=800', // Janeiro: Torrefação
-    'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800', // Fevereiro: Cafeteira
-    'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800', // Março: Grãos em pilhas
-    'https://images.unsplash.com/photo-1498804103079-a6351b050096?auto=format&fit=crop&q=80&w=800', // Abril: Frutos vermelhos
-    'https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&q=80&w=800', // Maio: Caneca antiga
-    'https://i.postimg.cc/dVfY4TLn/Whats-App-Image-2026-06-06-at-02-34-52.jpg', // Junho: Extração manual lenta
-    'https://images.unsplash.com/photo-1459756269037-a7da64077552?auto=format&fit=crop&q=80&w=800', // Julho: Mesa rústica outonal
-    'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&q=80&w=800', // Agosto: Cappuccino art em estúdio
-    'https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&q=80&w=800', // Setembro: Gotículas de café expresso
-    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800', // Outubro: Bistrô antigo
-    'https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&q=80&w=800', // Novembro: Vapor de café fervendo
-    'https://images.unsplash.com/photo-1512568400610-62da28bc8a13?auto=format&fit=crop&q=80&w=800'  // Dezembro: Presente rústico de grãos
+  const monthNames = [
+    'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
+    'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
   ];
+  const currentMonthLabel = `${monthNames[viewDate.getMonth()]} / ${viewDate.getFullYear()}`;
 
-  const MONTHS_NAMES = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
-
-  const currentMonthImage = CALENDAR_IMAGES[currentMonth.getMonth()];
-  const currentMonthName = MONTHS_NAMES[currentMonth.getMonth()];
-
-  // Stats calculation
-  const totalStaff = activeRoster.length;
-  const totalPresent = activeRoster.filter(item => item.worked).length;
-  const totalAbsent = activeRoster.filter(item => !item.worked).length;
-  const attendancePercentage = totalStaff > 0 ? Math.round((totalPresent / totalStaff) * 100) : 0;
-  
-  const scheduleInfo = useMemo(() => getWorkScheduleForDate(new Date(selectedDate)), [selectedDate]);
-
-  // Trigger sound synthesis for ambient
-  const toggleAmbientSound = () => {
-    if (typeof window === 'undefined') return;
-
-    if (isAudioPlaying) {
-      stopAmbientSound();
-    } else {
-      startAmbientSound();
-    }
-  };
-
-  const startAmbientSound = () => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-
-      const ctx = new AudioCtx();
-      audioCtxRef.current = ctx;
-
-      // Master output volume
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0.35, ctx.currentTime);
-      masterGain.connect(ctx.destination);
-      gainNodeRef.current = masterGain;
-
-      // 1. Create a quiet crackling white-noise generator of fireplace
-      // We will make 1 second of buffer noise and loop it
-      const bufferSize = ctx.sampleRate * 2;
-      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
+  const getHolidaysForView = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth() + 1;
+    const list: { date: string; name: string }[] = [];
+    
+    const totalDays = new Date(year, month, 0).getDate();
+    for (let day = 1; day <= totalDays; day++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const holiday = getHolidayForDate(dateStr);
+      if (holiday) {
+        list.push(holiday);
       }
-      
-      const fireNoise = ctx.createBufferSource();
-      fireNoise.buffer = noiseBuffer;
-      fireNoise.loop = true;
-
-      // Crackle bandpass filter
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(900, ctx.currentTime);
-      filter.Q.setValueAtTime(1.5, ctx.currentTime);
-
-      // Random gain spikes to simulate fireplace/pop sound
-      const modulationGain = ctx.createGain();
-      modulationGain.gain.setValueAtTime(0.015, ctx.currentTime);
-
-      // Low frequency hum for boiling water
-      const lowOsc = ctx.createOscillator();
-      lowOsc.type = 'sine';
-      lowOsc.frequency.setValueAtTime(82, ctx.currentTime);
-      const lowGain = ctx.createGain();
-      lowGain.gain.setValueAtTime(0.05, ctx.currentTime);
-
-      // Subtle bubble popping oscillator
-      const bubbleOsc = ctx.createOscillator();
-      bubbleOsc.type = 'triangle';
-      bubbleOsc.frequency.setValueAtTime(450, ctx.currentTime);
-      const bubbleGain = ctx.createGain();
-      bubbleGain.gain.setValueAtTime(0, ctx.currentTime);
-
-      // Frequency modulation for bubble
-      const bubbleLFO = ctx.createOscillator();
-      bubbleLFO.type = 'sine';
-      bubbleLFO.frequency.setValueAtTime(2.5, ctx.currentTime); // 2.5Hz bubbles
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(50, ctx.currentTime);
-
-      bubbleLFO.connect(lfoGain);
-      lfoGain.connect(bubbleOsc.frequency);
-      bubbleOsc.connect(bubbleGain);
-
-      // Connect modules
-      fireNoise.connect(filter);
-      filter.connect(modulationGain);
-      modulationGain.connect(masterGain);
-
-      lowOsc.connect(lowGain);
-      lowGain.connect(masterGain);
-      bubbleGain.connect(masterGain);
-
-      // Start sound oscillators
-      fireNoise.start(0);
-      lowOsc.start(0);
-      bubbleOsc.start(0);
-      bubbleLFO.start(0);
-
-      // Keep reference to LFO/crackler to stop them
-      lfoRef.current = lowOsc; // reuse for ease
-      setIsAudioPlaying(true);
-
-      // Gentle intermittent rustle gain
-      const interval = setInterval(() => {
-        if (ctx.state === 'closed') {
-          clearInterval(interval);
-          return;
-        }
-        // Occasional crackle burst
-        const t = ctx.currentTime;
-        modulationGain.gain.setValueAtTime(0.02 + Math.random() * 0.04, t);
-        modulationGain.gain.exponentialRampToValueAtTime(0.008, t + 0.15);
-
-        // Occasional bubble pop sound
-        if (Math.random() > 0.4) {
-          bubbleGain.gain.setValueAtTime(0.08, t);
-          bubbleOsc.frequency.setValueAtTime(220 + Math.random() * 600, t);
-          bubbleGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        }
-      }, 250);
-
-    } catch (e) {
-      console.error("Audio Synthesis error", e);
     }
-  };
-
-  const stopAmbientSound = () => {
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close().then(() => {
-        setIsAudioPlaying(false);
-        audioCtxRef.current = null;
-      });
+    
+    if (list.length === 0) {
+      return [
+        { date: `${year}-01-01`, name: 'Confraternização Universal' },
+        { date: `${year}-05-01`, name: 'Dia do Trabalho' },
+        { date: `${year}-09-07`, name: 'Independência do Brasil' },
+        { date: `${year}-12-25`, name: 'Natal' }
+      ];
     }
+    return list;
   };
 
-  useEffect(() => {
-    return () => {
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close();
-      }
-    };
-  }, []);
-
-  // Synthesis a small stamp "thump" or extraction ping
-  const playSynthesizedTone = (frequency: number, type: OscillatorType, dur: number, vol: number) => {
-    if (!audioCtxRef.current) return;
-    try {
-      const ctx = audioCtxRef.current;
-      const osc = ctx.createOscillator();
-      const node = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
-      node.gain.setValueAtTime(vol, ctx.currentTime);
-      node.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-      
-      osc.connect(node);
-      node.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + dur);
-    } catch(e){}
-  };
-
-  // Run stamp animation
-  const handleStampWax = () => {
-    if (stampState === 'stamping') return;
-    setStampState('stamping');
-    playSynthesizedTone(150, 'triangle', 0.4, 0.25);
-    setTimeout(() => {
-      setStampState('stamped');
-      playSynthesizedTone(380, 'sine', 0.25, 0.12);
-      setSelectedIdx(2); // Auto select wax seal on complete to inspect
-    }, 1100);
-  };
-
-  // Run water infusion/extraction procedure
-  const handleStartExtraction = () => {
-    if (extractionState === 'brewing') return;
-    setExtractionState('brewing');
-    setExtractionProgress(0);
-    playSynthesizedTone(290, 'sine', 0.6, 0.2);
-
-    // Dynamic steam particles triggers
-    const particles = Array.from({ length: 12 }).map((_, i) => ({
-      id: i,
-      left: `${35 + Math.random() * 15}%`,
-      delay: `${i * 0.4}s`,
-      duration: `${1.5 + Math.random() * 1.5}s`
-    }));
-    setSteamParticles(particles);
-
-    const steps = [
-      { max: 20, label: 'Aquecendo caldeira e gotejador de cobre...' },
-      { max: 45, label: 'Invocando pré-infusão aromática (bloom)...' },
-      { max: 70, label: 'Efluxo vertical lento pelo coador cônico...' },
-      { max: 95, label: 'Gotejamento artesanal e fusão do esmalte...' },
-      { max: 100, label: 'Extração Completa! Sirva-se com afeto.' }
-    ];
-
-    let currentProg = 0;
-    const interval = setInterval(() => {
-      currentProg += 1.5;
-      if (currentProg >= 100) {
-        currentProg = 100;
-        setExtractionProgress(100);
-        setExtractionStep('Extração Completa! Desfrute do seu Café 3corações.');
-        setExtractionState('done');
-        playSynthesizedTone(520, 'sine', 0.5, 0.15);
-        clearInterval(interval);
-        setSelectedIdx(4); // Highlight ceramic mug on complete
-      } else {
-        setExtractionProgress(currentProg);
-        const activeStep = steps.find(s => currentProg <= s.max);
-        if (activeStep) {
-          setExtractionStep(activeStep.label);
-        }
-      }
-    }, 120);
-  };
+  const activeHolidaysList = getHolidaysForView();
 
   return (
-    <div className="space-y-8 pb-12 select-none relative" id="rustic_coffee_studio_card">
-      {/* Dynamic Style Injection */}
-      <style dangerouslySetInnerHTML={{ __html: fontImportStyle }} />
-
-      {/* Centered Main Layout */}
-      <div className="w-full px-2 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        
-        {/* Visual Composition Studio Frame */}
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-[#1a1411] border-4 border-[#3e2516] shadow-2xl p-3 relative group w-full">
+    <div className="w-full relative z-10 max-w-[96rem] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch font-sans">
+      
+      {/* Left Column (Card) */}
+      <div className="hidden lg:block lg:col-span-4 lg:col-start-1">
+        <div className="rounded-3xl bg-[#1d1008] border border-[#a27a5d]/30 shadow-2xl overflow-hidden relative flex flex-col h-full ring-4 ring-[#1d1008]/50 outline outline-1 outline-[#a27a5d]/20">
           
-          {/* Ambient vignette shadow frame inside */}
-          <div className="absolute inset-x-0 bottom-0 top-0 bg-gradient-to-t from-black/20 via-transparent to-black/5 z-10 pointer-events-none" />
-
-          {/* Corner traditional framing brackets */}
-          <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-amber-500/40 z-20 pointer-events-none" />
-          <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-amber-500/40 z-20 pointer-events-none" />
-          <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-amber-500/40 z-20 pointer-events-none" />
-          <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-amber-500/40 z-20 pointer-events-none" />
-
-          {/* The Image Canvas containing the main photographic scene */}
-          <div className="relative w-full aspect-[16/10] sm:aspect-[16/9.5] rounded-[2rem] overflow-hidden bg-black shadow-inner border border-white/5">
-            <img 
-              src="/assets/images/coffee_rustic_bg_1780760486326.png" 
-              alt="Café 3corações Edição Rústica Sofisticada" 
-              className="w-full h-full object-cover transition-all duration-1000 scale-[1.01] group-hover:scale-105"
-              referrerPolicy="no-referrer"
-              style={{ filter: `contrast(1.05) brightness(1.15) saturate(1.1)` }}
-            />
-
-            {/* Steam simulation particles floating over drip filter */}
-            <AnimatePresence>
-              {extractionState === 'brewing' && (
-                <div className="absolute inset-0 pointer-events-none z-15">
-                  {steamParticles.map((particle) => (
-                    <motion.div
-                      key={particle.id}
-                      initial={{ opacity: 0, y: "45%", scale: 0.8 }}
-                      animate={{ 
-                        opacity: [0, 0.65, 0.3, 0], 
-                        y: ["42%", "20%", "5%"],
-                        x: ["0%", "5%", "-5%", "2%"],
-                        scale: [0.8, 1.4, 2.2, 3] 
-                      }}
-                      transition={{ 
-                        delay: particle.id * 0.25,
-                        duration: 4, 
-                        repeat: Infinity,
-                        ease: "easeOut"
-                      }}
-                      className="absolute w-12 h-12 bg-white/10 blur-[15px] rounded-full"
-                      style={{ left: particle.left }}
-                    />
-                  ))}
+          {/* Inner padded container for top content */}
+          <div className="p-6 pb-4">
+            {/* Header: Logo & Title */}
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-[#B32025] border-2 border-[#D4AF37] flex items-center justify-center shrink-0 relative shadow-lg">
+                {/* Simulated 3 Corações Logo */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Heart size={24} className="text-[#D4AF37] fill-[#D4AF37]" />
                 </div>
-              )}
-            </AnimatePresence>
-
-            {/* Stamped wax seal golden glowing feedback on the label area */}
-            <AnimatePresence>
-              {stampState === 'stamped' && (
-                <motion.div
-                  initial={{ scale: 2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="absolute z-20 pointer-events-none"
-                  style={{ top: '56%', left: '11%' }}
-                >
-                  <div className="w-16 h-16 rounded-full border-4 border-amber-500/80 bg-red-800/10 animate-pulse flex items-center justify-center shadow-[0_0_35px_rgba(251,191,36,0.6)]">
-                    <Sparkles size={18} className="text-amber-300" />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Hotspots mapped over the canvas */}
-            {COFFEE_HOTSPOTS.map((hotspot, idx) => {
-              const isActive = selectedIdx === idx;
-              const IconComp = hotspot.icon;
-              return (
-                <div 
-                  key={hotspot.id}
-                  className="absolute z-30"
-                  style={{ top: hotspot.top, left: hotspot.left }}
-                >
-                  {/* Pulsating back ring */}
-                  <div className={cn(
-                    "absolute -inset-4 rounded-full border transition-all duration-500 pointer-events-none",
-                    isActive 
-                      ? "border-amber-400/80 bg-amber-400/5 animate-pulse shadow-[0_0_20px_#eab308]" 
-                      : "border-amber-500/20 bg-transparent group-hover:border-amber-500/40"
-                  )} />
-                  
-                  {/* Pulsating beam ring */}
-                  <div className={cn(
-                    "absolute -inset-2.5 rounded-full border border-dashed transition-all duration-700 pointer-events-none",
-                    isActive 
-                      ? "border-amber-400/60 animate-spin" 
-                      : "border-transparent"
-                  )} 
-                    style={{ animationDuration: '10s' }}
-                  />
-
-                  {/* Interactive Hotspot Node Button */}
-                  <button
-                    onClick={() => {
-                      setSelectedIdx(idx);
-                      playSynthesizedTone(300 + idx * 40, 'sine', 0.2, 0.08);
-                    }}
-                    className={cn(
-                      "relative w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 border backdrop-blur-2xl shadow-xl",
-                      isActive 
-                        ? "bg-gradient-to-br from-amber-500 to-amber-700 border-amber-300 text-white hover:scale-110" 
-                        : "bg-black/85 border-[#4a2e1d]/90 text-amber-200/90 hover:bg-black hover:border-amber-400 hover:scale-115"
-                    )}
-                    aria-label={`Visualizar item ${hotspot.title}`}
-                  >
-                    <IconComp size={12} className={isActive ? "text-white" : "text-amber-400/90"} />
-
-                    {/* Hotspot Hover Mini-Tooltip */}
-                    <span className="absolute bottom-9 left-1/2 -translate-x-1/2 bg-[#1c120c] border border-[#523019] px-2.5 py-1 rounded-lg text-[8px] font-mono uppercase tracking-[0.2em] font-black text-[#fbf8f5] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-2xl">
-                      {hotspot.title}
-                    </span>
-                  </button>
-                </div>
-              );
-            })}
-
-          </div>
-
-{/* Integrated Hotspot details panel embedded below the image - HIDDEN as per user request */}
-          {/*
-          <div className="mt-4 p-6 bg-[#120d0b] border border-[#3e2516] rounded-3xl shadow-inner text-stone-200">
-            
-          </div>
-          */}
-
-
-        </div>
-
-        {/* SECTION 2: Interactive Rustic Calendar & Collaborator Attendance List */}
-        <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.8 }}
-            className="bg-[#181310] border-4 border-[#3e2516] rounded-[2.5rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden w-full"
-            id="presence_rustic_manager_panel"
-          >
-            {/* Cozy hanging wooden signs decor */}
-            <div className="absolute top-0 left-12 w-[1px] h-6 bg-amber-800/40" />
-            <div className="absolute top-0 left-14 w-[1px] h-10 bg-amber-800/30" />
-            <div className="absolute top-0 right-14 w-[1px] h-8 bg-amber-800/30" />
-
-            {/* Dual Pane Layout: Calendar & Duty Roster */}
-            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-12 gap-8 items-start">
-              
-              {/* LEFT PANEL: Interactive Calendar & Picture of the Month (Column span 5) */}
-              <div className="md:col-span-5 lg:col-span-1 xl:col-span-1 2xl:col-span-5 space-y-6">
-                
-                {/* Calendar Image Frame Card */}
-                <div className="relative overflow-hidden rounded-2xl border-2 border-[#3c291d] bg-stone-950 aspect-[16/10] group/cal-img">
-                  <img 
-                    src={currentMonthImage} 
-                    alt={`Ritual do Café - ${currentMonthName}`}
-                    className="w-full h-full object-cover opacity-80 transition-all duration-700 group-hover/cal-img:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent" />
-                  
-
-                </div>
-
-                {/* Practical Calendar grid Box */}
-                <div className="bg-[#120d0a] border-2 border-[#2f1c11] rounded-2xl p-5 shadow-inner" id="presence_calendar_widget">
-                  
-                  {/* Calendar Month & Navigation header */}
-                  <div className="flex items-center justify-between pb-4 border-b border-[#2d1b10] mb-4">
-                    <button 
-                      onClick={handlePrevMonth}
-                      className="p-1 px-1.5 rounded-lg bg-[#1a110a] border border-[#3e2516] text-[#eab308] hover:bg-amber-950/40 transition-all cursor-pointer"
-                      title="Mês Anterior"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-
-                    <div className="text-center">
-                      <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#eab308]/75 block">Central de Escalas</span>
-                      <h4 className="text-lg font-serif-display font-bold text-white uppercase tracking-wider">
-                        {currentMonthName} <span className="text-amber-500 font-mono text-sm">/ {currentMonth.getFullYear()}</span>
-                      </h4>
-                    </div>
-
-                    <button 
-                      onClick={handleNextMonth}
-                      className="p-1 px-1.5 rounded-lg bg-[#1a110a] border border-[#3e2516] text-[#eab308] hover:bg-amber-950/40 transition-all cursor-pointer"
-                      title="Próximo Mês"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-
-                  {/* Calendar Days cells */}
-                  <div className="grid grid-cols-7 gap-2">
-                    {calendarDays.map((dayItem, dayIdx) => {
-                      const isSelected = dayItem.fullDateStr === selectedDate;
-                      const { total, present } = getAttendanceSummaryForDate(dayItem.fullDateStr);
-                      
-                      // Today highlight
-                      const todayObj = new Date();
-                      const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
-                      const isToday = dayItem.fullDateStr === todayStr;
-
-                      return (
-                        <button
-                          key={dayIdx}
-                          onClick={() => {
-                            setSelectedDate(dayItem.fullDateStr);
-                            playSynthesizedTone(350 + dayItem.dayNum * 5, 'sine', 0.12, 0.08);
-                          }}
-                          className={cn(
-                            "relative aspect-square rounded-xl flex flex-col items-center justify-between p-2 transition-all group/day border outline-none cursor-pointer",
-                            dayItem.isActiveMonth 
-                              ? "text-stone-300 hover:border-amber-500/40" 
-                              : "text-stone-600 hover:border-amber-500/20",
-                            isSelected 
-                              ? "bg-gradient-to-br from-amber-500 to-amber-700 text-white border-amber-300 shadow-[0_0_15px_#eab308]/40 scale-105 animate-none" 
-                              : "bg-[#18110c] border-[#29180d]",
-                            isToday && !isSelected ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-black" : ""
-                          )}
-                        >
-                          {/* Day Number */}
-                          <div className={cn(
-                            "absolute bottom-1 left-2 right-2 h-0.5 rounded-full pointer-events-none",
-                            (() => {
-                                const baseDate = new Date(2026, 5, 6);
-                                const dt = new Date(dayItem.fullDateStr + 'T12:00:00');
-                                return Math.floor((dt.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24)) % 2 === 0 ? "bg-yellow-400" : "bg-transparent";
-                            })()
-                          )} />
-                          <span className={cn(
-                            "text-sm font-mono font-bold leading-none self-start",
-                            isSelected ? "text-white" : "",
-                            !dayItem.isActiveMonth && !isSelected ? "opacity-35" : ""
-                          )}>
-                            {dayItem.dayNum}
-                          </span>
-
-                          {/* Attendances badge inside day cell */}
-                          {total > 0 && (
-                            <div className="flex gap-0.5 items-center justify-center mt-auto">
-                              {isSelected ? (
-                                <div className="w-1.5 h-1.5 rounded-full bg-white opacity-80 animate-pulse" />
-                              ) : (
-                                <div className="flex items-center gap-0.5">
-                                  {/* Glowing coffee heart icon representation */}
-                                  <Heart size={8} className="text-amber-400 fill-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]" />
-                                  <span className="text-[7px] font-mono text-amber-500 font-bold">
-                                    {present}/{total}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Back to Today quick trigger */}
-                  <div className="mt-4 flex justify-between items-center text-[10px] font-mono text-stone-500">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                      Hoje: 06 de Junho de 2026
-                    </span>
-                    <button
-                      onClick={() => {
-                        setSelectedDate('2026-06-06');
-                        setCurrentMonth(new Date(2026, 5, 1));
-                        playSynthesizedTone(300, 'triangle', 0.25, 0.1);
-                      }}
-                      className="px-2 py-1 rounded bg-[#1c120a] hover:bg-[#2c1d11] border border-[#3e2516] text-[#eab308] hover:text-white transition-colors cursor-pointer font-bold"
-                    >
-                      Ir para Hoje
-                    </button>
-                  </div>
-
-                </div>
-
+                <div className="absolute inset-1 border-[1px] border-dashed border-[#D4AF37]/50 rounded-full" />
+                <span className="absolute bottom-2 text-[6px] font-bold text-[#D4AF37] tracking-widest mt-4">3 CORAÇÕES</span>
               </div>
-
-              {/* RIGHT PANEL: Collaborators Presence Checklist roster (Column span 7) */}
-              <div className="md:col-span-7 lg:col-span-1 xl:col-span-1 2xl:col-span-7 flex flex-col h-full bg-[#110d0a] border-2 border-[#2f1c11] rounded-[2rem] p-6 shadow-inner">
-                
-                {/* Active Date Title */}
-                <div className="pb-4 border-b border-[#2d1b10] mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <span className="text-[9px] font-mono tracking-widest text-[#c79165]/80 block uppercase">
-                      LISTA ATIVA DE ATENDIMENTO
-                    </span>
-                    
-                    {/* Format date string for humans */}
-                    <h3 className="text-2xl font-serif-display font-medium text-white tracking-wide uppercase mt-0.5">
-                      Escala: <span className="text-[#eab308]">
-                        {selectedDate.split('-').reverse().join('/')}
-                      </span>
-                    </h3>
-                  </div>
-
-                  {/* Roster Search bar */}
-                  <div className="relative max-w-xs">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-500 pointer-events-none">
-                      <Search size={12} />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Filtrar colaborador..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-1.5 bg-[#18110b] border border-[#3c291d] rounded-xl text-xs text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500/80 transition-colors"
-                    />
-                    {searchQuery && (
-                      <button 
-                        onClick={() => setSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-500 hover:text-white cursor-pointer"
-                      >
-                        <span className="text-xs">×</span>
-                      </button>
-                    )}
-                  </div>
+              <div>
+                <h2 className="text-white font-serif text-2xl tracking-wide font-bold">LISTA DE PRESENÇA</h2>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                  <span className="text-[#a27a5d] text-[10px] font-bold tracking-widest uppercase">MÓDULO ATIVO</span>
                 </div>
-
-  {/* Quick Gauges / Stats of the selected date */}
-                <div className="flex items-center justify-between gap-3 mb-6">
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" checked={isHoliday} onChange={(e) => setIsHoliday(e.target.checked)} className="peer sr-only" />
-                        <div className="w-8 h-4 rounded-full bg-stone-800 peer-checked:bg-amber-600 transition-colors" />
-                        <span className="text-[10px] font-mono text-stone-500 group-hover:text-amber-400">Feriado Nacional</span>
-                    </label>
-
-                    <div className={cn(
-                        "px-3 py-1 rounded-lg text-[10px] font-mono font-bold flex items-center gap-2 border",
-                        scheduleInfo.working 
-                            ? "bg-amber-950/20 border-amber-500/30 text-amber-500" 
-                            : "bg-stone-900 border-stone-800 text-stone-500"
-                    )}>
-                        <span>{scheduleInfo.working ? "🕒" : "🌙"}</span>
-                        {scheduleInfo.label}
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  
-                  {/* Gauge 1: Present count */}
-                  <div className="bg-[#17110c] border border-[#2d1a0f] rounded-xl p-3 text-center flex flex-col justify-center">
-                    <span className="text-[8px] font-mono text-stone-500 uppercase block mb-1">Presentes</span>
-                    <span className="text-xl font-mono font-bold text-amber-500">{totalPresent}</span>
-                    <span className="text-[9px] text-stone-600 font-mono">efetivos ativos</span>
-                  </div>
-
-                  {/* Gauge 2: Absent count */}
-                  <div className="bg-[#17110c] border border-[#2d1a0f] rounded-xl p-3 text-center flex flex-col justify-center">
-                    <span className="text-[8px] font-mono text-stone-500 uppercase block mb-1">Faltas</span>
-                    <span className="text-xl font-mono font-bold text-red-400">{totalAbsent}</span>
-                    <span className="text-[9px] text-stone-600 font-mono">justificadas / ausentes</span>
-                  </div>
-
-                  {/* Gauge 3: Presence Rate */}
-                  <div className="bg-[#17110c] border border-[#2d1a0f] rounded-xl p-3 text-center flex flex-col justify-center">
-                    <span className="text-[8px] font-mono text-stone-500 uppercase block mb-1">Frequência</span>
-                    <div className="flex items-center justify-center gap-1">
-                      <Percent size={12} className="text-amber-500" />
-                      <span className="text-xl font-mono font-bold text-white">{attendancePercentage}%</span>
-                    </div>
-                    <span className="text-[9px] text-stone-600 font-mono">presença média</span>
-                  </div>
-
-                </div>
-
-                {/* Interactive collaborators checklist */}
-                <div className="flex-grow space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                  <AnimatePresence mode="popLayout">
-                    {filteredRoster.length > 0 ? (
-                      filteredRoster.map((item: any) => {
-                        const isEditing = editingNoteId === item.id;
-                        const isPresent = item.worked;
-
-                        return (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 10 }}
-                            className={cn(
-                              "p-3 rounded-xl border flex flex-col gap-2 transition-all",
-                              isPresent 
-                                ? "bg-[#18120d] border-amber-950/60 hover:border-amber-500/30" 
-                                : "bg-[#1c1511]/40 border-stone-800/60 opacity-80"
-                            )}
-                          >
-                            <div className="flex items-center justify-between gap-4">
-                              
-                              {/* Left contents info */}
-                              <div className="flex items-center gap-3">
-                                {/* Avatar icon */}
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-mono font-black font-bold",
-                                  isPresent 
-                                    ? "bg-amber-950/65 border-amber-500/40 text-amber-500" 
-                                    : "bg-stone-900 border-stone-800 text-stone-500"
-                                )}>
-                                  {item.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
-                                </div>
-
-                                <div>
-                                  <h4 className="text-xs font-mono font-bold text-stone-200 tracking-wider">
-                                    {item.name}
-                                  </h4>
-                                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-stone-900 border border-stone-800 text-stone-400 text-[8px] uppercase">
-                                    {item.role || 'Colaborador'}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Action toggle switch present/absent */}
-                              <div className="flex items-center gap-2">
-                                
-                                {/* Presence status select */}
-                                <select 
-                                  value={item.attendanceStatus || 'nao_informado'}
-                                  onChange={(e) => update(ref(rtdb, `escalas/${item.id}`), { attendanceStatus: e.target.value })}
-                                  className={cn(
-                                    "px-2 py-1 rounded-lg text-[9px] font-mono font-bold tracking-wider border cursor-pointer bg-[#1a1310] text-[#eab308] border-[#421d1d]"
-                                  )}
-                                >
-                                  <option value="nao_informado">Status...</option>
-                                  <option value="trabalhei">Trabalhei</option>
-                                  <option value="falta">Falta</option>
-                                  <option value="folguei">Folguei</option>
-                                  <option value="sair_cedo">Sair cedo</option>
-                                  <option value="cheguei_atrasado">Cheguei atrasado</option>
-                                </select>
-
-                                {/* Delete Button */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteWorker(item.id)}
-                                  className="p-1.5 rounded-lg bg-[#2a170e] hover:bg-red-900/35 text-stone-500 hover:text-red-400 transition-colors border border-transparent hover:border-red-950 cursor-pointer"
-                                  title="Remover Registro"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                                
-                              </div>
-
-                            </div>
-
-                            {/* Notes label and inline editor */}
-                            <div className="pl-11 pr-2 pb-1 text-[10px] flex items-start gap-2 text-stone-400 font-mono">
-                              {isEditing ? (
-                                <div className="flex items-center gap-2 w-full mt-1">
-                                  <input
-                                    type="text"
-                                    value={tempNoteText}
-                                    onChange={(e) => setTempNoteText(e.target.value)}
-                                    className="flex-1 bg-[#120a06] border border-[#4a2e1d] p-1 px-2 rounded text-[10px] text-white outline-none focus:border-amber-500"
-                                    placeholder="Insira uma observação..."
-                                    autoFocus
-                                  />
-                                  <button 
-                                    type="button"
-                                    onClick={() => saveEditedNote(item.id)}
-                                    className="px-2 py-1 rounded bg-[#3c2517] border border-amber-500/40 text-[#eab308] font-bold text-[8px] cursor-pointer"
-                                  >
-                                    SALVAR
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    onClick={() => setEditingNoteId(null)}
-                                    className="px-2 py-1 rounded bg-stone-900 border border-stone-800 text-stone-500 font-bold text-[8px] cursor-pointer"
-                                  >
-                                    CANCELAR
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="flex items-center justify-between w-full gap-4 text-[9px] bg-[#120c08] border border-stone-950 p-2.5 rounded-lg text-stone-500">
-                                  <span className="italic text-[#c79165]/90">
-                                    {item.observacao ? `"${item.observacao}"` : "Sem notas de operação."}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => startEditingNote(item)}
-                                    className="text-[8px] text-amber-500/70 hover:text-amber-500 uppercase font-black cursor-pointer"
-                                  >
-                                    Editar Notas
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                      </motion.div>
-                    );
-                  }) ) : null}
-              </AnimatePresence>
+              </div>
             </div>
 
-            {/* Quick Add Custom Collaborator Container */}
-            {activeRoster.length > 0 && (
-              <form 
-                onSubmit={handleAddCollaborator} 
-                className="mt-5 pt-4 border-t border-[#29180f] grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end"
-              >
-                <div className="sm:col-span-5">
-                  <label className="text-[8px] font-mono uppercase tracking-widest text-[#c79165]/80 block mb-1">
-                    Nome do Colaborador
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Geraldo Fonseca"
-                    value={newColabName}
-                    onChange={(e) => setNewColabName(e.target.value)}
-                    className="w-full bg-[#18110b] border border-[#3c291d] p-1.5 px-2.5 rounded-lg text-[11px] text-stone-200 placeholder-stone-700 focus:outline-none focus:border-amber-500 transition-colors"
-                  />
-                </div>
-
-                <div className="sm:col-span-3">
-                  <label className="text-[8px] font-mono uppercase tracking-widest text-[#c79165]/80 block mb-1">
-                    Função / Cargo
-                  </label>
-                  <select
-                    value={newColabRole}
-                    onChange={(e) => setNewColabRole(e.target.value)}
-                    className="w-full bg-[#18110b] border border-[#3c291d] p-1.5 px-2.5 rounded-lg text-[11px] text-stone-300 focus:outline-none focus:border-amber-500 transition-colors"
-                  >
-                    <option value="Motorista">Motorista</option>
-                    <option value="Ajudante">Ajudante</option>
-                    <option value="Monitor">Monitor</option>
-                    <option value="Supervisor">Supervisor</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-3">
-                  <label className="text-[8px] font-mono uppercase tracking-widest text-[#c79165]/80 block mb-1">
-                    Nota Inicial
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Escala de Viagem"
-                    value={newColabNote}
-                    onChange={(e) => setNewColabNote(e.target.value)}
-                    className="w-full bg-[#18110b] border border-[#3c291d] p-1.5 px-2.5 rounded-lg text-[11px] text-stone-200 placeholder-stone-700 focus:outline-none focus:border-amber-500 transition-colors"
-                  />
-                </div>
-
-                <div className="sm:col-span-1">
-                  <button
-                    type="submit"
-                    className="w-full h-[32px] rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 border border-amber-400 hover:border-amber-300 shadow flex items-center justify-center text-stone-950 hover:scale-105 transition-transform cursor-pointer"
-                    title="Adicionar Novo Colaborador"
-                  >
-                    <Plus size={16} strokeWidth={3} />
-                  </button>
-                </div>
-              </form>
-            )}
-
+            {/* Gold Ribbon Label */}
+            <div className="mt-6 bg-gradient-to-r from-[#996b42] to-[#bfa16a] text-white py-3 px-4 rounded-xl text-center shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-[#e4c28c]/40 font-semibold tracking-widest text-[11px] uppercase">
+              Café 3 Corações Edição Rústica Sofisticada
+            </div>
           </div>
 
+          {/* Large Center Image with fade effect */}
+          <div className="relative w-full aspect-[4/3] flex-1 min-h-[220px]">
+             {/* Coffee beans image similar to original */}
+             <img 
+               src="https://i.postimg.cc/2SDqGtb9/top.jpg" 
+               alt="Gãos de Café" 
+               className="w-full h-full object-cover object-center grayscale-[20%] contrast-125 brightness-75"
+             />
+             {/* Vignette gradients to blend image into the dark card */}
+             <div className="absolute inset-0 bg-gradient-to-t from-[#1d1008] via-transparent to-transparent" />
+             <div className="absolute inset-0 bg-gradient-to-b from-[#1d1008] opacity-50 via-transparent to-transparent h-12" />
+          </div>
+
+          {/* Bottom Info Section */}
+          <div className="p-6 pt-2 bg-[#1d1008] z-10 flex flex-col justify-end">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-[#8c6b4e] text-xs font-mono font-bold tracking-widest uppercase">Lote #3708B</span>
+              <span className="text-[#a27a5d] font-handwritten text-xl opacity-90 hidden sm:block font-serif italic">Qualidade Premium</span>
+            </div>
+            
+            <h3 className="text-white text-2xl font-bold font-serif mb-3 tracking-wide">SACO DE JUTA</h3>
+            <p className="text-stone-400 text-xs leading-relaxed max-w-[90%] mb-6 font-light">
+              Uma edição especial e limitada, aprimorada naturalmente, torrada com maestria para momentos que pedem presença.
+            </p>
+
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-3 mt-auto">
+              <button className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[10px] font-bold uppercase tracking-wider py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg outline-none cursor-pointer">
+                <Coffee size={14} className="fill-current" />
+                SÓ BOAS VIBRAÇÕES
+              </button>
+              <button className="bg-[#593d2b] hover:bg-[#4a3222] text-[#e8dbcc] border border-[#7a5b44] text-[10px] font-bold uppercase tracking-wider py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg outline-none cursor-pointer">
+                <Coffee size={14} />
+                DETALHES DO CAFÉ
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
 
-      </motion.div>
+      {/* Right Column (Main App Panel) */}
+      <div className="col-span-1 lg:col-span-8 lg:col-start-5 flex flex-col">
+        <div className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-hidden flex flex-col"
+             style={{
+               backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+             }}
+        >
+          {/* Inner border trim */}
+          <div className="absolute inset-1.5 rounded-[1.35rem] border border-[#a6866b]/40 pointer-events-none z-0" />
+          
+          {/* Main Padding Container */}
+          <div className="p-6 relative z-10 flex flex-col h-full gap-5">
+            
+            {/* Top Area: Splitted into Left (Profile) and Right (Image + Titles) */}
+            <div className="flex flex-col md:flex-row gap-5">
+              
+              {/* Left Col: Profile Image card */}
+              <div className="w-24 h-24 md:w-[30%] md:h-auto rounded-full md:rounded-xl mx-auto md:mx-0 relative group border-2 border-[#5c3e29] overflow-hidden shrink-0 shadow-md bg-[#e2cfb9]">
+                <img 
+                  src={profileImage}
+                  alt="Perfil" 
+                  className="w-full h-full md:h-auto object-cover block"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {/* Upload Overlay */}
+                <label className="absolute inset-0 bg-[#3A2414]/60 flex-col items-center justify-center gap-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex text-[#e2cfb9]">
+                  <Camera size={24} />
+                  <span className="text-[10px] font-bold tracking-wider uppercase">Alterar Foto</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleImageUpload} 
+                  />
+                </label>
+              </div>
 
+              {/* Right Col: Banner Image + Headers */}
+              <div className="flex-1 flex flex-col justify-between pt-0.5">
+                
+                {/* 4K Image Banner (Aesthetic from Initial Menu) */}
+                <div className="w-full flex-1 max-h-[160px] min-h-[100px] mb-2 rounded-xl overflow-hidden border-2 border-[#5c3e29]/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative group hidden md:block">
+                  <img 
+                    src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&q=100&w=1200&h=400"
+                    alt="Coffee Aesthetic Header"
+                    className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 filter sepia-[20%] contrast-[1.1] brightness-90 relative z-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 shadow-[inset_0_0_25px_rgba(0,0,0,0.5)] pointer-events-none z-10" />
+                </div>
+
+                {/* Inspirational Phrase */}
+                <p className="w-full text-[#3d2415] font-serif italic text-sm text-center mb-4 leading-snug px-4">
+                  "Seja inquieto, curioso e criativo. Transforme necessidades em oportunidades. Teste e aprenda rápido, gerando e adaptando ideias. Empreenda a fim de gerar valor para o negócio. Seja um agente de transformação!"
+                </p>
+
+                {/* Bottom of Right Col: Texts + Black Tag */}
+                <div className="flex items-end justify-between">
+                  {/* Title texts */}
+                  <div className="pb-1">
+                    <span className="text-[#5c3e29] font-bold text-[11px] tracking-widest uppercase block mb-1">
+                      Lista Ativa de Atendimento
+                    </span>
+                    <h1 className="text-3xl font-black text-[#3A2414] font-serif uppercase tracking-tight">
+                      ESCALA: <span className="text-[#B32025]">{selectedDate.split('-').reverse().join('/')}</span>
+                    </h1>
+                  </div>
+
+                  {/* Black tag: Feito com paixão */}
+                  <div className="hidden md:flex bg-[#18110b] border-[3px] border-[#5c3e29] rounded-2xl p-4 px-6 items-center justify-center gap-5 shadow-[0_4px_10px_rgba(0,0,0,0.4)] relative">
+                    {/* Screw holes */}
+                    <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    
+                    <div className="w-10 h-10 rounded-xl bg-transparent border border-[#cfab84]/50 flex items-center justify-center">
+                      <Coffee className="text-[#cfab84]" size={20} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-handwritten text-[#e5d5c1] text-xl font-bold leading-none mb-1">Feito com paixão.</span>
+                      <span className="font-handwritten text-[#e5d5c1]/70 text-sm font-medium leading-none">Para quem entrega.</span>
+                      <div className="flex gap-1.5 mt-2">
+                        <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                        <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                        <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Input Filter & Ribbon row */}
+            <div className="flex flex-col gap-2">
+              <div className="relative w-full">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                <input 
+                  type="text"
+                  placeholder="Filtrar colaboradores..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-[#d6be9c] rounded-xl py-3 pl-12 pr-4 text-sm text-[#3A2414] placeholder-stone-400 outline-none focus:border-[#B32025] shadow-inner font-medium"
+                />
+              </div>
+
+              {/* Status Ribbon (Feriado Nacional / Time) */}
+              <div className="flex items-center justify-between bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl px-4 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2">
+                  {isHoliday ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#8b5a2b]" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">{currentHoliday.name}</span>
+                    </>
+                  ) : currentStatus === 'trabalhei' ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#B32025]" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">Dia de Trabalho (12x36)</span>
+                    </>
+                  ) : currentStatus === 'falta' ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-600" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">Falta Registrada</span>
+                    </>
+                  ) : currentStatus === 'folga' ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">Dia de Folga</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-stone-300" />
+                      <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Aguardando Registro</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 text-[#9a785c]">
+                  <div className="flex items-center gap-1.5 bg-[#e1ccb0]/50 px-2.5 py-1 rounded text-[10px] font-bold">
+                    ESCALA 12x36
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} />
+                    <span className="text-xs font-mono font-bold">18:00 - 06:00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom 2-Panel Area */}
+            <div className="flex flex-col md:flex-row gap-5 flex-1 min-h-0 pt-2">
+              
+              {/* Left Inner: Calendar */}
+              <div className="w-full md:w-[45%] flex flex-col shrink-0 rounded-3xl overflow-hidden border border-[#eedecb] shadow-xl bg-gradient-to-b from-[#fffbf7] to-[#FAF6ED]">
+                
+                {/* Calendar Header with premium brand look */}
+                <div className="bg-gradient-to-r from-[#3e2516] to-[#4e341f] text-white flex items-center justify-between py-3.5 px-5 select-none shadow-sm relative">
+                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-[#dfc2a1]/20" />
+                  <button onClick={handlePrevMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1.5 rounded-full hover:bg-white/10"><ChevronLeft size={18} /></button>
+                  <span className="text-xs sm:text-sm font-black tracking-[0.15em] uppercase font-sans text-[#eddcc9]">{currentMonthLabel}</span>
+                  <button onClick={handleNextMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1.5 rounded-full hover:bg-white/10"><ChevronRight size={18} /></button>
+                </div>
+
+                {/* Calendar Grid Container */}
+                <div className="flex-1 p-4 flex flex-col justify-between">
+                  {/* Days of week header with refined spacing */}
+                  <div className="grid grid-cols-7 mb-2 bg-[#f4ebdc]/40 rounded-xl py-2 border border-[#eedecb]/40">
+                    {daysOfWeek.map(d => (
+                      <div key={d} className="text-center text-[10px] font-black tracking-wider text-[#8b6b4e]">{d}</div>
+                    ))}
+                  </div>
+                  
+                  {/* Days cells with premium tiled aesthetic */}
+                  <div className="grid grid-cols-7 flex-1 gap-1.5">
+                    {calendarDays.map((week, wIdx) => (
+                      week.map((d, dIdx) => {
+                        const isSelected = selectedDate === d.dateStr;
+                        const status = dayStatuses[d.dateStr] || '';
+                        
+                        let cellStyle = 'bg-white hover:bg-[#FAF6ED]/70 border border-[#eedecb]/70 rounded-2xl';
+                        if (status === 'trabalhei') cellStyle = 'bg-green-50/50 border border-green-200/80 hover:bg-green-50/85 rounded-2xl';
+                        else if (status === 'falta') cellStyle = 'bg-red-50/50 border border-red-200/80 hover:bg-red-50/85 rounded-2xl';
+                        else if (status === 'folga') cellStyle = 'bg-amber-50/50 border border-amber-200/80 hover:bg-amber-50/85 rounded-2xl';
+                        else if (d.inactive) cellStyle = 'bg-stone-50/40 border border-transparent text-stone-300 opacity-40 rounded-2xl pointer-events-none';
+
+                        if (isSelected && !d.inactive) {
+                          cellStyle = 'bg-[#FAF5EE] border-2 border-[#B32025] shadow-[0_4px_14px_rgba(179,32,37,0.14)] ring-2 ring-[#B32025]/15 scale-[1.03] z-10 rounded-2xl';
+                        }
+
+                        return (
+                          <div 
+                            key={`${wIdx}-${dIdx}`} 
+                            onClick={() => {
+                              setSelectedDate(d.dateStr);
+                              if (d.inactive) {
+                                setViewDate(new Date(d.dateStr));
+                              }
+                            }}
+                            className={`
+                              flex flex-col justify-between p-2 pb-3.5 transition-all duration-300 relative min-h-[58px] sm:min-h-[66px] cursor-pointer select-none
+                              ${cellStyle}
+                            `}
+                          >
+                            <div className="flex justify-between items-start w-full">
+                              <span className={`font-sans text-[11px] sm:text-xs font-black px-1.5 py-0.5 rounded-lg transition-colors duration-200
+                                ${isSelected ? 'bg-[#B32025] text-white' : 'text-[#4e341f]'}
+                              `}>
+                                {d.day}
+                              </span>
+                            </div>
+
+                            {/* Dropdown status options shown only when selected, otherwise show simple elegant badge */}
+                            {isSelected ? (
+                              <div className="mt-1">
+                                <select
+                                  value={status}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedDate(d.dateStr);
+                                    if (d.inactive) {
+                                      setViewDate(new Date(d.dateStr));
+                                    }
+                                  }}
+                                  onChange={(e) => {
+                                    const val = e.target.value as 'trabalhei' | 'falta' | 'folga' | '';
+                                    setDayStatuses(prev => ({
+                                      ...prev,
+                                      [d.dateStr]: val
+                                    }));
+                                  }}
+                                  className={`
+                                    w-full text-[8.5px] font-black border rounded-lg p-1 cursor-pointer outline-none transition-all duration-200 shadow-sm
+                                    ${status === 'trabalhei' ? 'border-green-600 bg-green-700 text-white font-bold' : ''}
+                                    ${status === 'falta' ? 'border-red-600 bg-red-700 text-white font-bold' : ''}
+                                    ${status === 'folga' ? 'border-amber-600 bg-amber-700 text-white font-bold' : ''}
+                                    ${status === '' ? 'border-[#dac0a3] bg-white text-stone-800' : ''}
+                                  `}
+                                >
+                                  <option value="" className="text-stone-800 bg-[#fdfaf5]">--</option>
+                                  <option value="trabalhei" className="text-stone-800 bg-[#fdfaf5]">TRAB</option>
+                                  <option value="falta" className="text-stone-800 bg-[#fdfaf5]">FALTA</option>
+                                  <option value="folga" className="text-stone-800 bg-[#fdfaf5]">FOLGA</option>
+                                </select>
+                              </div>
+                            ) : (
+                              status ? (
+                                <div className={`
+                                  w-full text-[8px] font-black text-center border rounded-md py-0.5 mt-auto select-none uppercase tracking-wider transition-colors duration-200
+                                  ${status === 'trabalhei' ? 'border-green-500/20 bg-green-600/10 text-green-700' : ''}
+                                  ${status === 'falta' ? 'border-red-500/20 bg-red-600/10 text-red-700' : ''}
+                                  ${status === 'folga' ? 'border-amber-500/20 bg-amber-600/10 text-amber-700' : ''}
+                                `}>
+                                  {status === 'trabalhei' ? 'TRAB' : status === 'falta' ? 'FALTA' : 'FOLGA'}
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-stone-400 mt-auto text-center opacity-25 font-bold select-none">--</div>
+                              )
+                            )}
+
+                            {/* Solid brown line under worked days */}
+                            {status === 'trabalhei' && (
+                              <div className="absolute bottom-1 left-3 right-3 h-[3.5px] bg-[#5c3e29] rounded-full" title="Dia Trabalhado" />
+                            )}
+                          </div>
+                        );
+                      })
+                    ))}
+                  </div> {/* Days cells */}
+                </div> {/* Calendar Grid */}
+              </div> {/* Left Inner: Calendar */}
+
+              {/* Right Inner: Stats & Interactive Controls */}
+              <div className="flex flex-col flex-1 gap-4 relative min-h-[300px] w-full">
+                
+                {/* 3 Stat Boxes Top row */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#2e7d32] uppercase mb-1">Presentes</span>
+                    <span className="text-xl sm:text-2xl font-black text-[#2e7d32] leading-none mb-1">{presentes}</span>
+                    <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">este mês</span>
+                  </div>
+                  <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#c62828] uppercase mb-1">Faltas</span>
+                    <span className="text-xl sm:text-2xl font-black text-[#c62828] leading-none mb-1">{faltas}</span>
+                    <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">registradas</span>
+                  </div>
+                  <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#8c7462] uppercase mb-1">Banco Horas</span>
+                    <span className={`text-sm sm:text-lg font-black leading-none mb-1 ${totalBankOfHours >= 0 ? 'text-green-700' : 'text-[#B32025]'}`}>
+                      {formatBalanceMinutes(totalBankOfHours)}
+                    </span>
+                    <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">saldo total</span>
+                  </div>
+                </div>
+
+                {/* Painel do Dia Selecionado: Entrada, Saída e Status */}
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#B32025] text-white p-1.5 rounded-lg">
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black text-[#3e2516] uppercase tracking-widest leading-none mb-1">Editor de Jornada</h3>
+                        <p className="text-[10px] text-[#8c6b4e] font-mono leading-none">{formatLocalDate(selectedDate)}</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold bg-[#4e341f] text-white px-2 py-0.5 rounded uppercase tracking-wide">Minha Hora</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Status do Dia */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">Status de Presença:</label>
+                      <select
+                        value={dayStatuses[selectedDate] || ''}
+                        onChange={(e) => {
+                          const val = e.target.value as 'trabalhei' | 'falta' | 'folga' | '';
+                          setDayStatuses(prev => ({
+                            ...prev,
+                            [selectedDate]: val
+                          }));
+                        }}
+                        className={`w-full text-xs font-bold border rounded-lg p-2.5 cursor-pointer outline-none transition-all shadow-inner
+                          ${dayStatuses[selectedDate] === 'trabalhei' ? 'border-green-600 bg-green-50 text-green-800' : ''}
+                          ${dayStatuses[selectedDate] === 'falta' ? 'border-red-600 bg-red-50 text-red-800' : ''}
+                          ${dayStatuses[selectedDate] === 'folga' ? 'border-amber-600 bg-amber-50 text-amber-800' : ''}
+                          ${!(dayStatuses[selectedDate]) ? 'border-[#dac0a3] bg-white text-stone-800' : ''}
+                        `}
+                      >
+                        <option value="">Selecione status...</option>
+                        <option value="trabalhei">Fui trabalhar (Trabalhei)</option>
+                        <option value="falta">Falta (Não fui)</option>
+                        <option value="folga">Folga oficial</option>
+                      </select>
+                    </div>
+
+                    {/* Escala padrão label */}
+                    <div className="flex flex-col justify-center bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl p-3 text-center sm:text-left shadow-inner">
+                      <span className="text-[9px] font-bold text-[#8c6b4e] uppercase tracking-wider block">Escala Padrão Noturna</span>
+                      <span className="text-sm font-mono font-bold text-[#4e341f] block mt-0.5">18:00 às 06:00 (12h)</span>
+                    </div>
+                  </div>
+
+                  {/* Se for dia Trabalhado, mostrar opções de horário de Entrada e Saída */}
+                  {(dayStatuses[selectedDate] === 'trabalhei') ? (
+                    <div className="bg-[#fffefb] border border-[#e1ccb0] rounded-xl p-4 flex flex-col gap-3.5 shadow-inner">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9px] font-bold text-[#3e2516] uppercase tracking-wider flex items-center gap-1">
+                            <span>ENTRADA DE TRABALHO</span>
+                          </label>
+                          <input
+                            type="time"
+                            value={dayTimes[selectedDate]?.entrada || '18:00'}
+                            onChange={(e) => {
+                              const existing = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
+                              setDayTimes(prev => ({
+                                ...prev,
+                                [selectedDate]: { ...existing, entrada: e.target.value }
+                              }));
+                            }}
+                            className="bg-white border border-[#dac0a3] text-sm font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9px] font-bold text-[#3e2516] uppercase tracking-wider flex items-center gap-1">
+                            <span>SAÍDA DE TRABALHO</span>
+                          </label>
+                          <input
+                            type="time"
+                            value={dayTimes[selectedDate]?.saida || '06:00'}
+                            onChange={(e) => {
+                              const existing = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
+                              setDayTimes(prev => ({
+                                ...prev,
+                                [selectedDate]: { ...existing, saida: e.target.value }
+                              }));
+                            }}
+                            className="bg-white border border-[#dac0a3] text-sm font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Banco de horas do dia */}
+                      {(() => {
+                        const times = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
+                        const balance = calculateDayBalance(selectedDate, 'trabalhei', times.entrada, times.saida);
+                        
+                        return (
+                          <div className="border-t border-[#e1ccb0] pt-3 flex flex-col gap-2">
+                            <div className="flex items-center justify-between bg-[#fcf8f2] p-2.5 rounded-lg border border-[#e1ccb0]">
+                              <span className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">Saldo Deste Dia:</span>
+                              <span className={`text-sm font-mono font-black ${balance.total >= 0 ? 'text-[#2e7d32]' : 'text-[#B32025]'}`}>
+                                {formatBalanceMinutes(balance.total)}
+                              </span>
+                            </div>
+
+                            {/* Detalhamento dos Gatilhos do Banco de Horas */}
+                            <div className="flex flex-col gap-1.5 pt-1 text-[11px] text-stone-700 font-medium">
+                              {/* Regras da Entrada */}
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs mt-0.5">{balance.entradaStatus === 'positivo' ? '🟢' : '🔴'}</span>
+                                <div>
+                                  <span className="font-bold text-[#4e341f]">Entrada às {times.entrada}: </span>
+                                  {balance.entradaStatus === 'positivo' ? (
+                                    <span className="text-green-700">Gatilho de Entrada antes de 17:54 ativado (Banco Positivo {formatBalanceMinutes(balance.entradaDiff)})</span>
+                                  ) : (
+                                    <span className="text-[#B32025]">Gatilho de Entrada antes de 18:06 ativado (Banco Negativo {formatBalanceMinutes(balance.entradaDiff)})</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Regras de Saída */}
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs mt-0.5">{balance.saidaStatus === 'positivo' ? '🟢' : '🔴'}</span>
+                                <div>
+                                  <span className="font-bold text-[#4e341f]">Saída às {times.saida}: </span>
+                                  {balance.saidaStatus === 'positivo' ? (
+                                    <span className="text-green-700">Gatilho de Saída antes de 06:06 ativado (Banco Positivo {formatBalanceMinutes(balance.saidaDiff)})</span>
+                                  ) : (
+                                    <span className="text-[#B32025]">Gatilho de Saída antes de 05:56 ativado (Banco Negativo {formatBalanceMinutes(balance.saidaDiff)})</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="bg-[#f8f1e5]/50 border border-dashed border-[#d6be9c] rounded-xl p-6 text-center text-stone-400 text-xs">
+                      Não há compensação de banco de horas para faltas ou folgas. Selecione "Fui trabalhar (Trabalhei)" para registrar horários e acumular créditos ou débitos.
+                    </div>
+                  )}
+                </div>
+
+                {/* Quadro explicativo definitivo de Banco de Horas */}
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
+                      <Calendar size={14} />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#3e2516] tracking-widest uppercase">Manual de Regras do Banco</span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 text-xs text-stone-700 leading-relaxed">
+                    <div className="flex items-start gap-2 p-1.5 bg-red-500/5 rounded border border-red-500/10">
+                      <span className="text-[#B32025] font-black">🔴</span>
+                      <div>
+                        <strong className="text-red-900 block">DÉBITO (Banco Negativo):</strong>
+                        <ul className="list-disc pl-4 mt-0.5 space-y-0.5 text-[11px] text-red-800">
+                          <li>Entrada antes de <strong>18:06</strong> (entre 17:54 e 18:05)</li>
+                          <li>Saída antes de <strong>05:56</strong> (ex: saída às 05:50)</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 p-1.5 bg-green-500/5 rounded border border-green-500/10">
+                      <span className="text-green-600 font-black">🟢</span>
+                      <div>
+                        <strong className="text-green-900 block">CRÉDITO (Banco Positivo):</strong>
+                        <ul className="list-disc pl-4 mt-0.5 space-y-0.5 text-[11px] text-green-800">
+                          <li>Entrada antes de <strong>17:54</strong> (ex: chegada às 17:50)</li>
+                          <li>Saída antes de <strong>06:06</strong> (ou após 05:56, ex: saída às 06:05)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div> {/* Close Right Inner */}
+
+            </div> {/* Close Bottom 2-Panel Area */}
+            
+            {/* Very Bottom Text / Return top link inside main container */}
+            <div className="flex items-center justify-between mt-auto opacity-90 pt-2">
+              <span className="text-xs font-bold text-[#5c3e29] font-mono">Hoje: {getTodayStr().split('-').reverse().join('/')}</span>
+              <button 
+                onClick={() => window.scrollTo(0,0)}
+                className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[9px] font-bold uppercase tracking-wider py-1.5 px-4 rounded-lg flex items-center gap-1 shadow-sm transition-colors"
+               >
+                Voltar ao topo <ChevronUp size={12} />
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
   );
 }

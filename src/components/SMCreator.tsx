@@ -399,44 +399,66 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
   };
 
   return (
-    <div className="space-y-8 p-6 sm:p-8 lg:p-12 rounded-[2.5rem] bg-cover bg-center shadow-[inset_0_10px_30px_rgba(0,0,0,0.5)] border-4 border-[#2b180d] relative overflow-hidden" style={{backgroundImage: "url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=2600&auto=format&fit=crop')"}}>
-      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
-      {view === 'codes' ? (
-        <div className="relative z-10 bg-[#fdfaf5] p-6 rounded-xl border-4 border-[#c79165] shadow-2xl">{renderCodesTable()}</div>
-      ) : (
-        <div className="relative z-10 space-y-8">
-          <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] p-2 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative overflow-hidden ring-4 ring-[#eadfc8]/50 ring-offset-4 ring-offset-[#301a0e]">
-            <div className="border border-[#c79165] bg-[#fdfaf5] rounded-xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative shadow-inner">
-            
-            <div className="flex items-center gap-6 relative z-10">
-              <div className="bg-[#b91c1c] w-14 h-14 rounded-full flex items-center justify-center shadow-md border border-[#991b1b]/30 self-center">
-                <Calculator size={24} className="text-[#fbbf24] shadow-sm ml-1" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-[#4a3623] tracking-tighter uppercase font-serif drop-shadow-sm flex items-center gap-2">SM <img src="https://i.postimg.cc/Lsw0vpDT/Gemini-Generated-Image-ju3ympju3ympju3y.png" alt="3 Corações" className="w-8 h-8 rounded-full border border-[#991b1b]/30 shadow-sm" /></h2>
-                <div className="flex items-center gap-2 mt-1">
-                   <span className="w-2 h-2 rounded-full bg-[#1e3a8a] animate-pulse" />
-                   <p className="text-[10px] text-[#4a3623] font-black uppercase tracking-[0.3em] font-serif tracking-widest pl-1">Relatórios & Cálculos Operacionais</p>
-                </div>
-              </div>
-            </div>
-            <motion.button 
-              whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(59,130,246,0.5)" }}
-              whileTap={{ scale: 0.98 }}
-              onClick={copyToEmail}
-              className={cn(
-                "px-8 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3 transition-all relative z-10 shadow-xl border-y-[3px] font-serif",
-                copied 
-                  ? "bg-[#2d5930] text-white border-t-[#3b7540] border-b-[#1b361d] shadow-[0_2px_10px_rgba(0,0,0,0.3)]" 
-                  : "bg-[#14325c] text-[#e2e8f0] hover:bg-[#1e3a8a] border-t-[#274b75] border-b-[#0f2a4a] hover:text-white"
-              )}
-            >
-              {copied ? <Check size={18} /> : <Mail size={18} />}
-              {copied ? 'CONTEÚDO COPIADO' : 'GERAR RELATÓRIO P/ EMAIL'}
-            </motion.button>
-            </div>
+    <>
+      {/* ================= HEADER AREA ================= */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 max-w-[94rem] mx-auto mt-2 mb-6 px-6">
+        
+        {/* Left title and logo stack */}
+        <div className="flex items-center gap-5 text-left w-full md:w-auto">
+          {/* Logo stamp SVG */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 pointer-events-none hover:scale-105 transition-transform duration-500">
+            <svg className="w-full h-full filter drop-shadow-[0_4px_8px_rgba(58,36,20,0.35)]" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffd700" />
+                  <stop offset="40%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#b45309" />
+                </linearGradient>
+                <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#d92d33" />
+                  <stop offset="100%" stopColor="#7a0307" />
+                </linearGradient>
+              </defs>
+              {/* Embossed metal rim */}
+              <circle cx="60" cy="60" r="54" fill="none" stroke="url(#goldGrad)" strokeWidth="4" />
+              <circle cx="60" cy="60" r="50" fill="url(#redGrad)" />
+              <circle cx="60" cy="60" r="44" fill="none" stroke="url(#goldGrad)" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+              
+              {/* Outer heart bundle */}
+              <g transform="translate(60, 56) scale(0.72)">
+                <path d="M-12,-10 C-17,-15 -25,-12 -25,-4 C-25,4 -15,10 0,22 C15,10 25,4 25,-4 C25,-12 17,-15 12,-10 C8,-6 2,-6 0,-6 C-2,-6 -8,-6 -12,-10 Z" fill="url(#goldGrad)" />
+                {/* Embedded hearts inside */}
+                <path d="M-6,-4 C-8.5,-6.5 -12.5,-5 -12.5,-1 C-12.5,3 -7.5,6 0,12 C7.5,6 12.5,3 12.5,-1 C12.5,-5 8.5,-6.5 6,-4 C4,-2 1,-2 0,-2 C-1,-2 -3,-2 -6,-4 Z" fill="#7a0307" />
+                <path d="M-3,-1.5 C-4.2,-2.7 -6.2,-2 -6.2,0 C-6.2,2 -3.7,3.5 0,6 C3.7,3.5 6.2,2 6.2,0 C6.2,-2 4.2,-2.7 3,-1.5 C2,-0.5 0.5,-0.5 0,-0.5 C-0.5,-0.5 -1,-0.5 -3,-1.5 Z" fill="url(#goldGrad)" />
+              </g>
+
+              {/* Gold text border on top */}
+              <path id="brandPath" d="M 18,60 A 42,42 0 0,0 102,60" fill="none" />
+              <text fontFamily="Oswald" fontSize="9" fontWeight="bold" fill="url(#goldGrad)" textAnchor="middle">
+                <textPath href="#brandPath" startOffset="50%">3 CORAÇÕES</textPath>
+              </text>
+            </svg>
           </div>
 
+          {/* Page title next to the logo */}
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-rustic-title font-black text-[#2b180d] uppercase tracking-wide leading-none drop-shadow-[1px_2px_1px_rgba(255,255,255,0.45)]">
+              SM
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-600 border border-[#fefdfa] animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.7)]" />
+              <span className="text-xs font-mono font-black text-[#5c3c24] uppercase tracking-widest pl-0.5">
+                MÓDULO ATIVO
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {view === 'codes' ? (
+        <div className="relative z-10 bg-[#fdfcf9] p-6 rounded-xl border-4 border-[#3A2414] shadow-2xl">{renderCodesTable()}</div>
+      ) : (
+        <div className="relative z-10 space-y-8 animate-fade-in">
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
             {/* Main Work Area */}
             <div className="xl:col-span-3 space-y-8">
@@ -444,13 +466,13 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
               {/* ROTA IDA (Green Theme) */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-[#c29665] font-serif uppercase tracking-widest drop-shadow-md flex items-center gap-2">
-                    <TrendingUp size={16} /> Rota Ida
+                  <h3 className="text-sm font-black text-[#3A2414] font-serif uppercase tracking-widest drop-shadow-sm flex items-center gap-2">
+                    <TrendingUp size={16} className="text-[#B32025]" /> Rota Ida
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('ida')}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-[#312c27] border border-[#111] text-[#fed7aa] font-serif shadow-md hover:bg-[#4e311b] font-bold uppercase tracking-wider transition-all"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-[#B32025] hover:brightness-110 text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -458,19 +480,21 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       <button 
                         onClick={() => copySection(idaRows, 'ROTA IDA', setIdaCopied)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all font-serif",
-                          idaCopied ? "bg-[#2d5930] text-white border border-[#111]" : "bg-[#312c27] text-[#fed7aa] border border-[#111] hover:bg-[#14325c] hover:text-white"
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border-b-2",
+                          idaCopied 
+                            ? "bg-green-600 text-white border-green-800" 
+                            : "bg-[#3A2414] text-white border-black/30 hover:brightness-110"
                         )}
                       >
                         {idaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {idaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setIdaRows([])} className="text-[10px] font-bold text-[#c29665] hover:text-rose-400 text-shadow-sm font-serif ml-2 uppercase tracking-tighter">Limpar Tudo</button>
+                    <button onClick={() => setIdaRows([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] overflow-hidden relative ring-4 ring-[#eadfc8]/50"><div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50 mix-blend-multiply pointer-events-none"></div><div className="relative z-10 w-full overflow-hidden p-1">
+                <div className="bg-white/40 border-4 border-[#3A2414] rounded-2xl shadow-sm overflow-hidden relative"><div className="relative z-10 w-full overflow-hidden p-1.5">
                   {idaRows.length === 0 ? (
                     <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fdfaf5] h-full border border-[#c0a892]/50 shadow-inner">
                       <div className="p-4 bg-[#7a4b31]/10 rounded-full mb-4 border border-[#7a4b31]/20">
@@ -600,15 +624,15 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                 </div></div></section>
 
               {/* ROTA VOLTA (Sky Theme) */}
-              <section className="space-y-4">
+              <section className="space-y-4 animate-fade-in">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-[#c29665] font-serif uppercase tracking-widest flex items-center gap-2 drop-shadow-md">
-                    <Download size={16} className="rotate-180" /> Rota Volta
+                  <h3 className="text-sm font-black text-[#3A2414] font-serif uppercase tracking-widest flex items-center gap-2 drop-shadow-sm">
+                    <Download size={16} className="rotate-180 text-[#B32025]" /> Rota Volta
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('volta')}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] bg-[#312c27] border border-[#111] text-[#fed7aa] font-serif shadow-md hover:bg-[#4e311b] font-bold uppercase tracking-wider transition-all"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-[#B32025] hover:brightness-110 text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -616,19 +640,21 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       <button 
                         onClick={() => copySection(voltaRows, 'ROTA VOLTA', setVoltaCopied)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all font-serif",
-                          voltaCopied ? "bg-[#991b1b] text-white border border-[#111]" : "bg-[#312c27] text-[#fed7aa] border border-[#111] hover:bg-[#14325c] hover:text-white"
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border-b-2",
+                          voltaCopied 
+                            ? "bg-green-600 text-white border-green-800" 
+                            : "bg-[#3A2414] text-white border-black/30 hover:brightness-110"
                         )}
                       >
                         {voltaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {voltaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-bold text-[#c29665] hover:text-rose-400 text-shadow-sm font-serif ml-2 uppercase tracking-tighter">Limpar Tudo</button>
+                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] overflow-hidden relative ring-4 ring-[#eadfc8]/50"><div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50 mix-blend-multiply pointer-events-none"></div><div className="relative z-10 w-full overflow-hidden p-1">
+                <div className="bg-white/40 border-4 border-[#3A2414] rounded-2xl shadow-sm overflow-hidden relative"><div className="relative z-10 w-full overflow-hidden p-1.5">
                   {voltaRows.length === 0 ? (
                     <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fdfaf5] h-full border border-[#c0a892]/50 shadow-inner">
                       <div className="p-4 bg-[#b91c1c]/10 rounded-full mb-4 border border-[#b91c1c]/20">
@@ -772,35 +798,35 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
 
             {/* Calculator Sidebar */}
             <div className="space-y-6">
-              <div className="bg-[#e6d5c3] border-[6px] border-[#c79165] p-2 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative overflow-hidden ring-4 ring-[#eadfc8]/50 ring-offset-4 ring-offset-[#301a0e] h-full flex flex-col">
-       <div className="border border-[#c79165] bg-[#fdfaf5] rounded-xl p-6 flex flex-col flex-1 relative shadow-inner">
+              <div className="bg-white/45 border-4 border-[#3A2414] p-1.5 rounded-3xl shadow-[0_8px_20px_rgba(58,36,20,0.06)] relative overflow-hidden h-full flex flex-col">
+       <div className="border border-[#3A2414]/15 bg-[#fdfcf9] rounded-2xl p-6 flex flex-col flex-1 relative shadow-inner">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-sm font-bold text-[#c29665] font-serif flex items-center gap-2 drop-shadow-sm uppercase">
-                    <Calculator size={16} className="text-[#a57045]" />
+                  <h3 className="text-sm font-bold text-[#3A2414] font-serif flex items-center gap-2 drop-shadow-sm uppercase">
+                    <Calculator size={16} className="text-[#B32025]" />
                     Soma de Valores
                   </h3>
                   <button 
                     onClick={() => setCalcValues([''])}
-                    className="p-1.5 text-[#c29665] hover:text-rose-400 text-shadow-sm font-serif ml-2 transition-colors"
+                    className="p-1.5 text-[#B32025] hover:underline text-shadow-sm font-serif ml-2 transition-colors cursor-pointer"
                     title="Resetar calculadora"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
 
-                <div className="bg-[#312c27] rounded-xl p-6 mb-6 border border-[#111] shadow-[inset_0_4px_10px_rgba(0,0,0,0.8)] text-center relative group/total overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#c29665]/50 to-transparent" />
-                  <p className="text-[11px] font-black text-[#c29665] font-serif uppercase tracking-[0.2em] mb-2">Total Consolidado</p>
-                  <h4 className="text-3xl font-black text-[#fed7aa] tracking-tighter font-serif drop-shadow-md">
-                    <span className="text-[#a57045] mr-2 text-xl font-medium">R$</span>
+                <div className="bg-gradient-to-br from-[#B32025] to-[#8c060d] rounded-xl p-6 mb-6 border border-[#3A2414]/25 shadow-md text-center relative group/total overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+                  <p className="text-[11px] font-black text-white/80 font-serif uppercase tracking-[0.2em] mb-2">Total Consolidado</p>
+                  <h4 className="text-3xl font-black text-white tracking-tighter font-serif drop-shadow-md">
+                    <span className="text-orange-200 mr-2 text-xl font-medium">R$</span>
                     {calculateTotal()}
                   </h4>
                   <div className="absolute top-3 right-3 opacity-0 group-hover/total:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                     <button 
                       onClick={copyTotalRaw}
                       className={cn(
-                        "p-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center",
-                        totalRawCopied ? "bg-green-500 text-white" : "bg-white/10 text-white hover:bg-primary"
+                        "p-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center cursor-pointer",
+                        totalRawCopied ? "bg-green-650 text-white" : "bg-white/10 text-white hover:bg-white/20"
                       )}
                       title="Copiar Valor"
                     >
@@ -812,18 +838,18 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                 <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] no-scrollbar pr-1">
                   {calcValues.map((val, i) => (
                     <div key={i} className="group relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-bold text-[10px]">R$</div>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-[10px]">R$</div>
                       <input
                         type="text"
                         value={val}
                         onChange={(e) => updateCalcValue(i, e.target.value)}
                         placeholder="0,00"
-                        className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-xl pl-9 pr-10 py-3 text-sm text-[#4a3623] font-mono focus:bg-primary/[0.05] focus:border-primary/30 outline-none transition-all placeholder:text-slate-700 shadow-inner"
+                        className="w-full bg-white border border-[#3A2414]/15 rounded-xl pl-9 pr-10 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none transition-all placeholder:text-stone-300 shadow-sm"
                       />
                       {calcValues.length > 1 && (
                         <button 
                           onClick={() => setCalcValues(calcValues.filter((_, idx) => idx !== i))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5 cursor-pointer"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -832,21 +858,21 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                   ))}
                   
                   <motion.button 
-                    whileHover={{ scale: 1.02, backgroundColor: "rgba(99, 102, 241, 0.1)" }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01, backgroundColor: "rgba(179, 32, 37, 0.05)" }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={addCalcLine}
-                    className="w-full py-5 border-2 border-dashed border-white/5 hover:border-primary/30 rounded-2xl text-[#4a3623] hover:text-[#b91c1c] border-[#a57045] hover:bg-[#a57045]/10 flex items-center justify-center gap-4 transition-all text-[11px] font-bold font-serif uppercase tracking-[0.25em] bg-transparent"
+                    className="w-full py-5 border-2 border-dashed border-[#3A2414]/20 hover:border-[#B32025] rounded-2xl text-[#3A2414] hover:text-[#B32025] flex items-center justify-center gap-4 transition-all text-[11px] font-black uppercase tracking-[0.25em] bg-transparent cursor-pointer"
                   >
                     <Plus size={20} /> Adicionar Linha
                   </motion.button>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] p-4 rounded-xl">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="p-2 bg-[#7a4b31]/10 rounded-lg text-[#a57045] mt-1 border border-[#7a4b31]/20">
+                <div className="mt-8 pt-6 border-t border-[#3A2414]/15 bg-white/50 p-4 rounded-xl shadow-inner">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-[#B32025]/10 rounded-lg text-[#B32025] mt-1 border border-[#B32025]/15">
                         <Info size={14} />
                       </div>
-                      <p className="text-[10px] text-[#4a3623] leading-relaxed font-serif">
+                      <p className="text-[10px] text-[#3A2414]/85 leading-relaxed font-serif font-bold">
                         A calculadora aceita valores com pontos e vírgulas. A soma é atualizada em tempo real.
                       </p>
                     </div>
@@ -854,21 +880,21 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
               </div>
             </div>
               
-              <div className="bg-[#fdfaf5] border border-[#c0a892] p-4 flex items-center justify-between group cursor-pointer hover:border-[#a57045] transition-all rounded-xl shadow-sm mt-4">
+              <div className="bg-[#fdfcf9] border border-[#3A2414]/15 p-4 flex items-center justify-between group cursor-pointer hover:border-[#B32025] transition-all rounded-xl shadow-sm mt-4">
                 <div className="flex items-center gap-3">
-                  <CalendarIcon size={18} className="text-[#a57045] group-hover:scale-110 transition-transform" />
+                  <CalendarIcon size={18} className="text-[#B32025] group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[10px] font-black text-[#c29665] uppercase tracking-widest font-serif drop-shadow-sm">Última Atualização</p>
-                    <p className="text-xs font-bold text-[#4a3623] font-serif">Agora mesmo</p>
+                    <p className="text-[10px] font-black text-[#3A2414]/60 uppercase tracking-widest font-serif drop-shadow-sm">Última Atualização</p>
+                    <p className="text-xs font-bold text-[#3A2414] font-serif">Agora mesmo</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-[#c29665] group-hover:text-[#a57045] transition-colors" />
+                <ChevronRight size={16} className="text-[#3A2414]/40 group-hover:text-[#B32025] transition-colors" />
               </div>
             </div>
             
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
