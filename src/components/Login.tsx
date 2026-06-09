@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Lock, User } from 'lucide-react';
 import { auth, handleFirestoreError, OperationType } from '../firebase';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import loginBg from '../assets/images/coffee_shop_bg_1780921585218.png';
 
 interface LoginProps {
   onLogin: () => void;
@@ -26,7 +27,12 @@ export default function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas p-6 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-zinc-950">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      />
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -tranzinc-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
       

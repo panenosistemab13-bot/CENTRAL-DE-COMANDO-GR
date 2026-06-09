@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import coffeeLogo from '../assets/images/artisan_coffee_cup_1780921602243.png';
 
 interface MenuItem {
   id: string;
@@ -363,7 +364,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex }:
         <div className="flex items-center gap-2.5 bg-black/10 backdrop-blur-md rounded-full py-1 pl-1 pr-4.5 border border-white/5 shadow-2xl backdrop-saturate-150 relative transition-transform duration-300 hover:scale-[1.02]">
           <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#cead80] bg-[#800609] flex items-center justify-center shrink-0 shadow-lg shadow-black/40">
             <img 
-              src="https://i.postimg.cc/HxkVgtSZ/Gemini-Generated-Image-ji8y90ji8y90ji8y.png" 
+              src={coffeeLogo} 
               alt="3 Corações Logo Badge" 
               className="w-full h-full object-cover scale-105"
             />

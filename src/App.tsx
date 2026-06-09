@@ -36,6 +36,7 @@ import Envio from './components/Envio';
 import Checklist from './components/Checklist';
 import Iscas from './components/Iscas';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
+import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 
 type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist';
 
@@ -198,7 +199,7 @@ export default function App() {
       {(activeTab === 'menu' || activeTab === 'checklist') ? (
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
            <img
-             src="/assets/images/coffee_rustic_bg_1780760486326.png"
+             src={coffeeBg}
              className="w-full h-full object-cover select-none brightness-105 saturate-110"
              alt="Dashboard Coffee Background"
              referrerPolicy="no-referrer"

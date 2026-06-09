@@ -21,7 +21,9 @@ import {
   GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-const coffeeBg = "/assets/images/coffee_rustic_bg_1780760486326.png";
+import coffeeBg from '../assets/images/coffee_rustic_bg_1780760486326.png';
+import { rtdb as db } from '../firebase';
+import { ref, onValue, set } from 'firebase/database';
 
 interface RouteItem {
   ida: string;
@@ -58,6 +60,20 @@ export default function Rotas() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    const rotasRef = ref(db, 'app_rotas_data');
+    const unsubscribe = onValue(rotasRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setRoutes(data);
+      } else {
+        setRoutes(DEFAULT_ROUTES);
+        set(rotasRef, DEFAULT_ROUTES);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleDragStart = (e: React.DragEvent, realIndex: number) => {
     e.dataTransfer.effectAllowed = "move";
     setDraggedIndex(realIndex);
@@ -90,20 +106,11 @@ export default function Rotas() {
       setTempRoutes(list);
     } else {
       setRoutes(list);
-      localStorage.setItem('app_rotas_data', JSON.stringify(list));
+      set(ref(db, 'app_rotas_data'), list);
     }
     setDraggedIndex(null);
     setHoveredIndex(null);
   };
-
-  useEffect(() => {
-    const saved = localStorage.getItem('app_rotas_data');
-    if (saved) {
-      setRoutes(JSON.parse(saved));
-    } else {
-      setRoutes(DEFAULT_ROUTES);
-    }
-  }, []);
 
   const handleStartEdit = () => {
     setTempRoutes([...routes]);
@@ -116,7 +123,7 @@ export default function Rotas() {
 
   const handleSave = () => {
     setRoutes(tempRoutes);
-    localStorage.setItem('app_rotas_data', JSON.stringify(tempRoutes));
+    set(ref(db, 'app_rotas_data'), tempRoutes);
     setIsEditing(false);
   };
 
@@ -149,7 +156,7 @@ export default function Rotas() {
         setTempRoutes(list);
       } else {
         setRoutes(list);
-        localStorage.setItem('app_rotas_data', JSON.stringify(list));
+        set(ref(db, 'app_rotas_data'), list);
       }
     }
   };

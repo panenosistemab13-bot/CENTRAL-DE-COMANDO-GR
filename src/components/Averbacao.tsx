@@ -6,9 +6,13 @@ import {
   Cpu, 
   User, 
   CreditCard, 
-  Phone
+  Phone,
+  Trash2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import mockupImg from '../assets/images/averba_o_interface_mockup_1780899726248.png';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface RawData {
   dataAverbacao: string;
@@ -32,9 +36,12 @@ interface ExtraData {
 
 interface AverbacaoProps {
   onBack?: () => void;
+  view: 'generator' | 'codes';
 }
 
-export default function Averbacao({ onBack }: AverbacaoProps) {
+const DATA_PATH = 'averbacao_data/default';
+
+export default function Averbacao({ onBack, view }: AverbacaoProps) {
   const [parsedRows, setParsedRows] = useState<RawData[]>([]);
   const [extraData, setExtraData] = useState<ExtraData>({
     transportadora: '',
@@ -46,12 +53,39 @@ export default function Averbacao({ onBack }: AverbacaoProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const storedRows = localStorage.getItem('averbacao_rows');
-    if (storedRows) setParsedRows(JSON.parse(storedRows));
+    const fetchData = async () => {
+      const docRef = doc(db, DATA_PATH);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.parsedRows) setParsedRows(data.parsedRows);
+        if (data.extraData) setExtraData(data.extraData);
+      }
+    };
+    fetchData();
   }, []);
 
-  const handleExtraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setExtraData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const saveData = async (rows: RawData[], extra: ExtraData) => {
+    setParsedRows(rows);
+    setExtraData(extra);
+    await setDoc(doc(db, DATA_PATH), { parsedRows: rows, extraData: extra });
+  };
+
+  const handleExtraChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newExtra = { ...extraData, [e.target.name]: e.target.value };
+    await saveData(parsedRows, newExtra);
+  };
+
+  const clearData = async () => {
+    const emptyRows: RawData[] = [];
+    const emptyExtra: ExtraData = {
+      transportadora: '',
+      tecnologia: '',
+      nomeMotorista: '',
+      cpf: '',
+      telefone: ''
+    };
+    await saveData(emptyRows, emptyExtra);
   };
 
   const parseInput = (text: string) => {
@@ -74,8 +108,7 @@ export default function Averbacao({ onBack }: AverbacaoProps) {
       }
     });
     if (newRows.length > 0) {
-      setParsedRows(newRows);
-      localStorage.setItem('averbacao_rows', JSON.stringify(newRows));
+      saveData(newRows, extraData);
     }
   };
 
@@ -103,37 +136,106 @@ export default function Averbacao({ onBack }: AverbacaoProps) {
   };
 
   const copyToEmail = async () => {
+    const greeting = getGreeting();
     const htmlContent = `
-        <div style="background-color: #F2E4CC; padding: 40px; font-family: 'serif'; color: #2D1A10; border: 8px solid #6B4423;">
-          <h1 style="font-size: 28px; margin-bottom: 20px; font-family: 'Playfair Display', serif;">${getGreeting()}!</h1>
-          <p style="margin-bottom: 25px; font-size: 16px;">Relatório gerado via sistema.</p>
-          <div style="background-color: #E8D4B0; border-left: 8px solid #B32025; padding: 25px; margin: 25px 0; border: 2px solid #C7A26A; border-radius: 4px;">
-            <p style="font-weight: 800; margin: 0 0 10px 0; font-size: 18px; text-transform: uppercase;">ROTA: <span>${getRoute().toUpperCase()}</span></p>
-            <p style="font-weight: 800; margin: 0; font-size: 18px; text-transform: uppercase;">VALOR DA CARGA: <span style="color: #B32025;">${getTotalValue()}</span></p>
-          </div>
-          <p style="margin-bottom: 25px; font-size: 16px;">Segue dados e NF's em anexo.</p>
-          <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 13px; border: 2px solid #3A2414;">
-            <thead>
-              <tr style="background-color: #3A2414; color: #E8D4B0; text-transform: uppercase;">
-                ${['ORIGEM', 'DESTINO', 'TRANSPORTADORA', 'PLACA CAVALO', 'PLACAS CARRETAS', 'TECNOLOGIA', 'NOME MOTORISTA', 'CPF', 'TELEFONE'].map(h => `<th style="padding: 12px; border: 1px solid #6B4423;">${h}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="text-align: center; background-color: #FDF9F0;">
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${parsedRows[0]?.origem || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${parsedRows[0]?.destino || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${extraData.transportadora || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A; font-weight: bold;">${parsedRows[0]?.placaCav || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${getPlacasCarretas() || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${extraData.tecnologia || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${extraData.nomeMotorista || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${extraData.cpf || '---'}</td>
-                <td style="padding: 15px; border: 1px solid #C7A26A;">${extraData.telefone || '---'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      `;
+      <div style="margin: 0; padding: 0; background-color: #f6efe2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; background-color: #ffffff; border: 1px solid #d4c3a3; margin: 20px auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <!-- Header with Logo and Brand -->
+          <tr>
+            <td align="center" style="padding: 30px 20px; background-color: #3a2414; background-image: linear-gradient(135deg, #3a2414 0%, #2b180d 100%);">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom: 10px;">
+                    <div style="display: inline-block; background-color: #b32025; color: #ffffff; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; font-size: 28px; font-weight: 900; border: 3px solid #f2e4cc; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">3</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <h1 style="color: #f2e4cc; margin: 0; font-size: 22px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase;">Averbação de Carga</h1>
+                    <p style="color: #b49271; margin: 5px 0 0 0; font-size: 10px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">Módulo de Logística Premium</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="color: #2d1a10; margin: 0 0 15px 0; font-size: 24px; font-weight: 800;">${greeting}!</h2>
+              <p style="color: #6b4423; margin: 0 0 30px 0; font-size: 15px; line-height: 1.6;">Informamos que o relatório de averbação foi gerado com sucesso através do sistema integrador. Abaixo seguem os detalhes consolidados da operação.</p>
+              
+              <!-- Operation Card -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fdfaf5; border-left: 6px solid #b32025; border-radius: 4px; border: 1px solid #e8d4b0; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding-bottom: 15px;">
+                          <p style="color: #8c6b4e; margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Trajeto da Operação</p>
+                          <p style="color: #2d1a10; margin: 4px 0 0 0; font-size: 18px; font-weight: 800; text-transform: uppercase;">${getRoute()}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p style="color: #8c6b4e; margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Valor Declarado (SM)</p>
+                          <p style="color: #b32025; margin: 4px 0 0 0; font-size: 22px; font-weight: 900;">${getTotalValue()}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #2d1a10; margin: 0 0 15px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Dados Técnicos e Documentação</p>
+              
+              <!-- Data Table -->
+              <div style="overflow-x: auto;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; min-width: 600px;">
+                  <tr style="background-color: #3a2414;">
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Transportadora</th>
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Tecnologia</th>
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Placa Cavalo</th>
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Placa Carreta</th>
+                  </tr>
+                  <tr>
+                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.transportadora || '---'}</td>
+                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.tecnologia || '---'}</td>
+                    <td style="padding: 15px 10px; color: #b32025; font-size: 14px; font-weight: 800; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${parsedRows[0]?.placaCav || '---'}</td>
+                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${getPlacasCarretas() || '---'}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="margin-top: 20px; overflow-x: auto;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; min-width: 600px;">
+                  <tr style="background-color: #3a2414;">
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Motorista</th>
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">CPF</th>
+                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Telefone</th>
+                  </tr>
+                  <tr>
+                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.nomeMotorista || '---'}</td>
+                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.cpf || '---'}</td>
+                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.telefone || '---'}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <p style="margin-top: 30px; color: #6b4423; font-size: 14px; font-style: italic;">As Notas Fiscais seguem anexadas a este envio.</p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px; background-color: #fdf9f0; border-top: 1px solid #e8d4b0; text-align: center;">
+              <p style="margin: 0; color: #8c6b4e; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Sistema PGR Integrado • 3 Corações</p>
+              <p style="margin: 5px 0 0 0; color: #b49271; font-size: 10px;">Feito com paixão. Feito para entregar.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([htmlContent], { type: 'text/html' }) })]);
       setCopied(true);
@@ -173,6 +275,10 @@ export default function Averbacao({ onBack }: AverbacaoProps) {
             <Mail size={16} /> {copied ? 'COPIADO!' : 'COPIAR PARA EMAIL'}
         </button>
 
+        <button onClick={clearData} className="w-full bg-[#3A2414] hover:bg-[#2D1A10] text-[#E8D4B0] py-3 rounded-lg font-black text-[10px] mb-4 flex items-center justify-center gap-2 transition-all border-b-4 border-black/40">
+            <Trash2 size={12} /> LIMPAR INFORMAÇÕES
+        </button>
+
         <div className="bg-[#3A2414] p-4 rounded-lg text-[10px] text-[#F2E4CC] border-2 border-[#C7A26A] shadow-inner font-mono">
             <strong className="text-[#C7A26A]">DICA DE GESTÃO</strong><br/>Verifique os dados cuidadosamente antes de enviar.
         </div>
@@ -182,8 +288,11 @@ export default function Averbacao({ onBack }: AverbacaoProps) {
       <div className="flex-1 p-10 overflow-y-auto">
         {parsedRows.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-[#6B4423]">
-               <Clipboard size={80} className="mb-6 opacity-30"/>
-               <textarea onChange={(e) => parseInput(e.target.value)} placeholder="Cole os dados aqui..." className="w-96 h-48 p-6 border-4 border-dashed border-[#C7A26A] bg-transparent rounded-xl text-center text-[#3A2414] placeholder-[#6B4423]/50"/>
+               <div className="relative mb-8 group">
+                 <div className="absolute -inset-1 bg-gradient-to-r from-[#B32025] to-[#3A2414] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                 <img src={mockupImg} alt="Interface Mockup" className="relative w-80 h-auto rounded-2xl shadow-2xl border-4 border-[#3A2414]/10 transform -rotate-2 hover:rotate-0 transition-all duration-500" />
+               </div>
+               <textarea onChange={(e) => parseInput(e.target.value)} placeholder="Cole os dados aqui..." className="w-96 h-48 p-6 border-4 border-dashed border-[#C7A26A] bg-[#fdfaf5] rounded-2xl text-center text-[#3A2414] placeholder-[#6B4423]/50 shadow-inner focus:border-[#B32025] focus:outline-none transition-all"/>
             </div>
         ) : (
             <div className="report-card p-8">

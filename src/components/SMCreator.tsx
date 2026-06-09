@@ -16,9 +16,8 @@ import {
   Calendar as CalendarIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { GUEST_USER_ID } from '../constants';
+import { rtdb as db } from '../firebase';
+import { ref, onValue, set, update } from 'firebase/database';
 
 const invertRoute = (trecho: string) => {
   if (!trecho) return '';
@@ -121,19 +120,32 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
   const [calcValues, setCalcValues] = useState<string[]>(['']);
 
   useEffect(() => {
-    const storedIda = localStorage.getItem('sm_creator_ida');
-    const storedVolta = localStorage.getItem('sm_creator_volta');
-    const storedCalc = localStorage.getItem('sm_creator_calc');
-    if (storedIda) setIdaRows(JSON.parse(storedIda));
-    if (storedVolta) setVoltaRows(JSON.parse(storedVolta));
-    if (storedCalc) setCalcValues(JSON.parse(storedCalc));
+    const smRef = ref(db, 'sm_creator_data');
+    const unsubscribe = onValue(smRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        if (data.ida) setIdaRows(data.ida);
+        if (data.volta) setVoltaRows(data.volta);
+        if (data.calc) setCalcValues(data.calc);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('sm_creator_ida', JSON.stringify(idaRows));
-    localStorage.setItem('sm_creator_volta', JSON.stringify(voltaRows));
-    localStorage.setItem('sm_creator_calc', JSON.stringify(calcValues));
-  }, [idaRows, voltaRows, calcValues]);
+  const saveIda = (rows: SMRow[]) => {
+    setIdaRows(rows);
+    set(ref(db, 'sm_creator_data/ida'), rows);
+  };
+
+  const saveVolta = (rows: SMRow[]) => {
+    setVoltaRows(rows);
+    set(ref(db, 'sm_creator_data/volta'), rows);
+  };
+
+  const saveCalc = (vals: string[]) => {
+    setCalcValues(vals);
+    set(ref(db, 'sm_creator_data/calc'), vals);
+  };
   const [totalRawCopied, setTotalRawCopied] = useState(false);
   const [copied, setCopied] = useState(false);
   const [idaCopied, setIdaCopied] = useState(false);
@@ -191,7 +203,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
     </div>
   );
 
-  const parseInput = (text: string, setRows: React.Dispatch<React.SetStateAction<SMRow[]>>, section: 'ida' | 'volta', forceZeroValue: boolean = false) => {
+  const parseInput = (text: string, saveFunc: (rows: SMRow[]) => void, existingRows: SMRow[], section: 'ida' | 'volta', forceZeroValue: boolean = false) => {
     const lines = text.trim().split('\n');
     const newRows: SMRow[] = [];
 
@@ -216,13 +228,13 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
     });
 
     if (newRows.length > 0) {
-      setRows(prev => [...prev, ...newRows]);
+      saveFunc([...existingRows, ...newRows]);
     }
   };
 
   const handlePaste = (e: React.ClipboardEvent, section: 'ida' | 'volta') => {
     const text = e.clipboardData.getData('text');
-    parseInput(text, section === 'ida' ? setIdaRows : setVoltaRows, section, true);
+    parseInput(text, section === 'ida' ? saveIda : saveVolta, section === 'ida' ? idaRows : voltaRows, section, true);
   };
 
   const addNewRow = (section: 'ida' | 'volta') => {
@@ -233,12 +245,12 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
       bau1: '',
       bau2: '',
       trecho: '',
-      valorNf: 'R$ 0,00'
+      valorNf: '0,00'
     };
     if (section === 'ida') {
-      setIdaRows([...idaRows, newRow]);
+      saveIda([...idaRows, newRow]);
     } else {
-      setVoltaRows([...voltaRows, newRow]);
+      saveVolta([...voltaRows, newRow]);
     }
   };
 
@@ -253,16 +265,14 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
       finalValue = value.toUpperCase();
     }
 
-    const updater = (prev: SMRow[]) => {
-      const newRows = [...prev];
-      newRows[index] = { ...newRows[index], [field]: finalValue };
-      return newRows;
-    };
-
     if (section === 'ida') {
-      setIdaRows(updater);
+      const newRows = [...idaRows];
+      newRows[index] = { ...newRows[index], [field]: finalValue };
+      saveIda(newRows);
     } else {
-      setVoltaRows(updater);
+      const newRows = [...voltaRows];
+      newRows[index] = { ...newRows[index], [field]: finalValue };
+      saveVolta(newRows);
     }
   };
 
@@ -284,11 +294,11 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
     setTimeout(() => setTotalRawCopied(false), 2000);
   };
 
-  const addCalcLine = () => setCalcValues([...calcValues, '']);
+  const addCalcLine = () => saveCalc([...calcValues, '']);
   const updateCalcValue = (index: number, val: string) => {
     const newVals = [...calcValues];
     newVals[index] = val;
-    setCalcValues(newVals);
+    saveCalc(newVals);
   };
 
   const getGreeting = () => {
@@ -490,7 +500,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                         {idaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setIdaRows([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
+                    <button onClick={() => saveIda([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
                   </div>
                 </div>
 
@@ -609,7 +619,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                               </td>
                               <td className="p-3 text-center">
                                 <button 
-                                  onClick={() => setIdaRows(idaRows.filter((_, idx) => idx !== i))} 
+                                  onClick={() => saveIda(idaRows.filter((_, idx) => idx !== i))} 
                                   className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-lg shadow-rose-500/10"
                                 >
                                   <Trash2 size={16} />
@@ -650,7 +660,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                         {voltaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => setVoltaRows([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
+                    <button onClick={() => saveVolta([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
                   </div>
                 </div>
 
@@ -781,7 +791,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                               </td>
                               <td className="p-3 text-center">
                                 <button 
-                                  onClick={() => setVoltaRows(voltaRows.filter((_, idx) => idx !== i))} 
+                                  onClick={() => saveVolta(voltaRows.filter((_, idx) => idx !== i))} 
                                   className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-lg shadow-rose-500/10"
                                 >
                                   <Trash2 size={16} />
@@ -806,7 +816,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                     Soma de Valores
                   </h3>
                   <button 
-                    onClick={() => setCalcValues([''])}
+                    onClick={() => saveCalc([''])}
                     className="p-1.5 text-[#B32025] hover:underline text-shadow-sm font-serif ml-2 transition-colors cursor-pointer"
                     title="Resetar calculadora"
                   >
@@ -848,7 +858,7 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
                       />
                       {calcValues.length > 1 && (
                         <button 
-                          onClick={() => setCalcValues(calcValues.filter((_, idx) => idx !== i))}
+                          onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i))}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5 cursor-pointer"
                         >
                           <Trash2 size={16} />

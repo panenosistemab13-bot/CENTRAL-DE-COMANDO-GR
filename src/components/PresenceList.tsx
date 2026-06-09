@@ -11,6 +11,8 @@ import {
   Calendar,
   Camera
 } from 'lucide-react';
+import { rtdb as db } from '../firebase';
+import { ref, onValue, set, update } from 'firebase/database';
 
 export default function PresenceList() {
   const getTodayStr = () => {
@@ -25,38 +27,36 @@ export default function PresenceList() {
     return new Date();
   });
 
-  // New persistent states for calendar status and times
-  const [dayStatuses, setDayStatuses] = useState<Record<string, 'trabalhei' | 'falta' | 'folga' | ''>>(() => {
-    const saved = localStorage.getItem('presence_statuses');
-    let parsed: Record<string, 'trabalhei' | 'falta' | 'folga' | ''> = {};
-    if (saved) {
-      try { parsed = JSON.parse(saved); } catch (e) { console.error(e); }
-    }
-    if (!parsed["2026-06-08"]) {
-      parsed["2026-06-08"] = "trabalhei";
-    }
-    return parsed;
-  });
-
-  const [dayTimes, setDayTimes] = useState<Record<string, { entrada: string; saida: string }>>(() => {
-    const saved = localStorage.getItem('presence_times');
-    let parsed: Record<string, { entrada: string; saida: string }> = {};
-    if (saved) {
-      try { parsed = JSON.parse(saved); } catch (e) { console.error(e); }
-    }
-    if (!parsed["2026-06-08"]) {
-      parsed["2026-06-08"] = { entrada: "18:00", saida: "06:00" };
-    }
-    return parsed;
-  });
+  const [dayStatuses, setDayStatuses] = useState<Record<string, 'trabalhei' | 'falta' | 'folga' | ''>>({});
+  const [dayTimes, setDayTimes] = useState<Record<string, { entrada: string; saida: string }>>({});
 
   useEffect(() => {
-    localStorage.setItem('presence_statuses', JSON.stringify(dayStatuses));
-  }, [dayStatuses]);
+    const presenceRef = ref(db, 'presence_list');
+    const unsubscribe = onValue(presenceRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        if (data.statuses) setDayStatuses(data.statuses);
+        if (data.times) setDayTimes(data.times);
+        if (data.profileImage) setProfileImage(data.profileImage);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('presence_times', JSON.stringify(dayTimes));
-  }, [dayTimes]);
+  const updateStatus = (date: string, status: 'trabalhei' | 'falta' | 'folga' | '') => {
+    setDayStatuses(prev => ({ ...prev, [date]: status }));
+    update(ref(db, 'presence_list/statuses'), { [date]: status });
+  };
+
+  const updateTime = (date: string, times: { entrada: string; saida: string }) => {
+    setDayTimes(prev => ({ ...prev, [date]: times }));
+    update(ref(db, 'presence_list/times'), { [date]: times });
+  };
+
+  const updateProfileImage = (url: string) => {
+    setProfileImage(url);
+    set(ref(db, 'presence_list/profileImage'), url);
+  };
 
   // Convert time "HH:MM" to minutes from midnight
   const timeToMinutes = (timeStr: string): number => {
@@ -184,18 +184,6 @@ export default function PresenceList() {
     const weekday = date.toLocaleDateString('pt-BR', { weekday: 'long' });
     const formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
     return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} - ${formatted}`;
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === 'string') {
-          setProfileImage(event.target.result);
-        }
-      };
-      reader.readAsDataURL(e.target.files[0]);
-    }
   };
 
   // viewDate state moved to the top of component to resolve initialization order conflicts
@@ -451,7 +439,17 @@ export default function PresenceList() {
                     type="file" 
                     accept="image/*" 
                     className="hidden" 
-                    onChange={handleImageUpload} 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          if (event.target && typeof event.target.result === 'string') {
+                            updateProfileImage(event.target.result);
+                          }
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }} 
                   />
                 </label>
               </div>
@@ -644,10 +642,7 @@ export default function PresenceList() {
                                   }}
                                   onChange={(e) => {
                                     const val = e.target.value as 'trabalhei' | 'falta' | 'folga' | '';
-                                    setDayStatuses(prev => ({
-                                      ...prev,
-                                      [d.dateStr]: val
-                                    }));
+                                    updateStatus(d.dateStr, val);
                                   }}
                                   className={`
                                     w-full text-[8.5px] font-black border rounded-lg p-1 cursor-pointer outline-none transition-all duration-200 shadow-sm
@@ -737,10 +732,7 @@ export default function PresenceList() {
                         value={dayStatuses[selectedDate] || ''}
                         onChange={(e) => {
                           const val = e.target.value as 'trabalhei' | 'falta' | 'folga' | '';
-                          setDayStatuses(prev => ({
-                            ...prev,
-                            [selectedDate]: val
-                          }));
+                          updateStatus(selectedDate, val);
                         }}
                         className={`w-full text-xs font-bold border rounded-lg p-2.5 cursor-pointer outline-none transition-all shadow-inner
                           ${dayStatuses[selectedDate] === 'trabalhei' ? 'border-green-600 bg-green-50 text-green-800' : ''}
@@ -776,10 +768,7 @@ export default function PresenceList() {
                             value={dayTimes[selectedDate]?.entrada || '18:00'}
                             onChange={(e) => {
                               const existing = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
-                              setDayTimes(prev => ({
-                                ...prev,
-                                [selectedDate]: { ...existing, entrada: e.target.value }
-                              }));
+                              updateTime(selectedDate, { ...existing, entrada: e.target.value });
                             }}
                             className="bg-white border border-[#dac0a3] text-sm font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
                           />
@@ -794,10 +783,7 @@ export default function PresenceList() {
                             value={dayTimes[selectedDate]?.saida || '06:00'}
                             onChange={(e) => {
                               const existing = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
-                              setDayTimes(prev => ({
-                                ...prev,
-                                [selectedDate]: { ...existing, saida: e.target.value }
-                              }));
+                              updateTime(selectedDate, { ...existing, saida: e.target.value });
                             }}
                             className="bg-white border border-[#dac0a3] text-sm font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
                           />
