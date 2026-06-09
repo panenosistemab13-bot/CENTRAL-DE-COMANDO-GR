@@ -54,12 +54,39 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const docRef = doc(db, DATA_PATH);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.parsedRows) setParsedRows(data.parsedRows);
-        if (data.extraData) setExtraData(data.extraData);
+      // First, try loading from local backup as an instant optimistic load/fallback
+      const localSaved = localStorage.getItem('backup_averbacao_data');
+      if (localSaved) {
+        try {
+          const data = JSON.parse(localSaved);
+          if (data.parsedRows) setParsedRows(data.parsedRows);
+          if (data.extraData) setExtraData(data.extraData);
+        } catch (e) {
+          console.error("Local backup parse error:", e);
+        }
+      }
+
+      try {
+        const docRef = doc(db, DATA_PATH);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.parsedRows) setParsedRows(data.parsedRows);
+          if (data.extraData) setExtraData(data.extraData);
+          // Sync back to local backup
+          localStorage.setItem('backup_averbacao_data', JSON.stringify({
+            parsedRows: data.parsedRows || [],
+            extraData: data.extraData || {
+              transportadora: '',
+              tecnologia: '',
+              nomeMotorista: '',
+              cpf: '',
+              telefone: ''
+            }
+          }));
+        }
+      } catch (error) {
+        console.warn("Firestore offline or inaccessible. Operating with local backup:", error);
       }
     };
     fetchData();
@@ -68,7 +95,15 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
   const saveData = async (rows: RawData[], extra: ExtraData) => {
     setParsedRows(rows);
     setExtraData(extra);
-    await setDoc(doc(db, DATA_PATH), { parsedRows: rows, extraData: extra });
+    
+    // Always persist to local backup for offline-first resiliency
+    localStorage.setItem('backup_averbacao_data', JSON.stringify({ parsedRows: rows, extraData: extra }));
+
+    try {
+      await setDoc(doc(db, DATA_PATH), { parsedRows: rows, extraData: extra });
+    } catch (error) {
+      console.warn("Failed to sync with Firestore (client might be offline):", error);
+    }
   };
 
   const handleExtraChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,105 +170,61 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
     return 'Bom dia';
   };
 
+  const getProtocols = () => {
+    const protocols = parsedRows
+      .map(r => r.protocolo?.trim())
+      .filter(p => !!p);
+    return [...new Set(protocols)];
+  };
+
   const copyToEmail = async () => {
     const greeting = getGreeting();
+    const protocols = getProtocols();
     const htmlContent = `
-      <div style="margin: 0; padding: 0; background-color: #f6efe2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; background-color: #ffffff; border: 1px solid #d4c3a3; margin: 20px auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-          <!-- Header with Logo and Brand -->
-          <tr>
-            <td align="center" style="padding: 30px 20px; background-color: #3a2414; background-image: linear-gradient(135deg, #3a2414 0%, #2b180d 100%);">
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td align="center" style="padding-bottom: 10px;">
-                    <div style="display: inline-block; background-color: #b32025; color: #ffffff; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; font-size: 28px; font-weight: 900; border: 3px solid #f2e4cc; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">3</div>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center">
-                    <h1 style="color: #f2e4cc; margin: 0; font-size: 22px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase;">Averbação de Carga</h1>
-                    <p style="color: #b49271; margin: 5px 0 0 0; font-size: 10px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">Módulo de Logística Premium</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Body Content -->
-          <tr>
-            <td style="padding: 40px 30px;">
-              <h2 style="color: #2d1a10; margin: 0 0 15px 0; font-size: 24px; font-weight: 800;">${greeting}!</h2>
-              <p style="color: #6b4423; margin: 0 0 30px 0; font-size: 15px; line-height: 1.6;">Informamos que o relatório de averbação foi gerado com sucesso através do sistema integrador. Abaixo seguem os detalhes consolidados da operação.</p>
-              
-              <!-- Operation Card -->
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fdfaf5; border-left: 6px solid #b32025; border-radius: 4px; border: 1px solid #e8d4b0; margin-bottom: 30px;">
-                <tr>
-                  <td style="padding: 20px;">
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                        <td style="padding-bottom: 15px;">
-                          <p style="color: #8c6b4e; margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Trajeto da Operação</p>
-                          <p style="color: #2d1a10; margin: 4px 0 0 0; font-size: 18px; font-weight: 800; text-transform: uppercase;">${getRoute()}</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <p style="color: #8c6b4e; margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Valor Declarado (SM)</p>
-                          <p style="color: #b32025; margin: 4px 0 0 0; font-size: 22px; font-weight: 900;">${getTotalValue()}</p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: #2d1a10; margin: 0 0 15px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Dados Técnicos e Documentação</p>
-              
-              <!-- Data Table -->
-              <div style="overflow-x: auto;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; min-width: 600px;">
-                  <tr style="background-color: #3a2414;">
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Transportadora</th>
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Tecnologia</th>
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Placa Cavalo</th>
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Placa Carreta</th>
-                  </tr>
-                  <tr>
-                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.transportadora || '---'}</td>
-                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.tecnologia || '---'}</td>
-                    <td style="padding: 15px 10px; color: #b32025; font-size: 14px; font-weight: 800; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${parsedRows[0]?.placaCav || '---'}</td>
-                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${getPlacasCarretas() || '---'}</td>
-                  </tr>
-                </table>
-              </div>
-              
-              <div style="margin-top: 20px; overflow-x: auto;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; min-width: 600px;">
-                  <tr style="background-color: #3a2414;">
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Motorista</th>
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">CPF</th>
-                    <th style="padding: 12px 10px; color: #f2e4cc; font-size: 9px; font-weight: 800; text-align: center; border: 1px solid #2b180d; text-transform: uppercase;">Telefone</th>
-                  </tr>
-                  <tr>
-                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.nomeMotorista || '---'}</td>
-                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.cpf || '---'}</td>
-                    <td style="padding: 15px 10px; color: #3a2414; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid #e8d4b0; background-color: #fdfcf9;">${extraData.telefone || '---'}</td>
-                  </tr>
-                </table>
-              </div>
-              
-              <p style="margin-top: 30px; color: #6b4423; font-size: 14px; font-style: italic;">As Notas Fiscais seguem anexadas a este envio.</p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 30px; background-color: #fdf9f0; border-top: 1px solid #e8d4b0; text-align: center;">
-              <p style="margin: 0; color: #8c6b4e; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Sistema PGR Integrado • 3 Corações</p>
-              <p style="margin: 5px 0 0 0; color: #b49271; font-size: 10px;">Feito com paixão. Feito para entregar.</p>
-            </td>
-          </tr>
+      <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14.5px; color: #000000; line-height: 1.6; padding: 25px 15px; background-color: #ffffff;">
+        <p style="margin: 0 0 15px 0; font-size: 14.5px; color: #000000;">${greeting}!</p>
+        
+        <p style="margin: 0 0 25px 0; font-size: 14.5px; color: #000000;">Segue <span style="background-color: #ffff00; font-weight: bold; padding: 1px 3px; border-radius: 2px;">averbação</span> realizada via sistema.</p>
+        
+        <p style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: bold; color: #000000; text-transform: uppercase;">ROTA: ${getRoute().toUpperCase()}</p>
+        ${protocols.length > 0 
+          ? protocols.map(p => `<p style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: bold; color: #000000;">PROTOCOLO: <span style="color: #0000ff;">${p}</span></p>`).join('') 
+          : `<p style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: bold; color: #000000;">PROTOCOLO: <span style="color: #0000ff;">---</span></p>`
+        }
+        <p style="margin: 0 0 25px 0; font-size: 14.5px; font-weight: bold; color: #000000;">Valor da Carga: <span style="color: #ff0000;">${getTotalValue()}</span></p>
+        
+        <p style="margin: 0 0 15px 0; font-size: 14.5px; color: #000000;">Segue dados e NF's em anexo.</p>
+        
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; border: 1.5px solid #000000; font-family: Arial, Helvetica, sans-serif; font-size: 11px; text-align: center; width: 100%; max-width: 900px; margin-bottom: 25px;">
+          <thead>
+            <tr style="background-color: #000000; color: #ffffff; text-transform: uppercase; font-weight: bold;">
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 11%;">ORIGEM</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 11%;">DESTINO</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 11%;">TRANSPORTADORA</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 11%;">PLACA CAVALO</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 12%;">PLACAS CARRETAS</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 11%;">TECNOLOGIA</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 12%;">NOME MOTORISTA</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 11%;">CPF</th>
+              <th style="border: 1px solid #000000; padding: 10px 5px; width: 10%;">TELEFONE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="font-weight: bold; text-transform: uppercase; color: #000000;">
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${parsedRows[0]?.origem || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${parsedRows[0]?.destino || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${extraData.transportadora || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #cccccc;">${parsedRows[0]?.placaCav || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${getPlacasCarretas() || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${extraData.tecnologia || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${extraData.nomeMotorista || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${extraData.cpf || '---'}</td>
+              <td style="border: 1px solid #000000; padding: 12px 5px; background-color: #ffff00;">${extraData.telefone || '---'}</td>
+            </tr>
+          </tbody>
         </table>
+        
+        <p style="margin: 0; color: #000000; font-size: 14.5px;">Att,</p>
       </div>
     `;
     try {
@@ -295,39 +286,73 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
                <textarea onChange={(e) => parseInput(e.target.value)} placeholder="Cole os dados aqui..." className="w-96 h-48 p-6 border-4 border-dashed border-[#C7A26A] bg-[#fdfaf5] rounded-2xl text-center text-[#3A2414] placeholder-[#6B4423]/50 shadow-inner focus:border-[#B32025] focus:outline-none transition-all"/>
             </div>
         ) : (
-            <div className="report-card p-8">
-                <h2 className="text-3xl font-heading mb-1 text-[#2D1A10]">{getGreeting()}!</h2>
-                <p className="mb-8 text-[#6B4423] font-medium italic">Relatório gerado via sistema integrador.</p>
-                
-                <div className="bg-[#E8D4B0] p-6 rounded-xl mb-8 border-l-8 border-[#B32025] shadow-inner">
-                    <p className="font-bold text-lg text-[#2D1A10] uppercase">ROTA: {getRoute().toUpperCase()}</p>
-                    <p className="font-bold text-xl text-[#B32025] uppercase mt-2">VALOR DA CARGA: {getTotalValue()}</p>
+            <div className="bg-white p-8 md:p-12 border border-[#d4c3a3] rounded-2xl shadow-xl max-w-4xl mx-auto font-sans text-stone-900 text-sm leading-relaxed relative">
+              <div className="flex justify-between items-center border-b border-stone-200 pb-4 mb-8">
+                <div>
+                  <span className="text-[10px] font-black tracking-widest text-[#B32025] uppercase">PRÉ-VISUALIZAÇÃO DE ENVIO</span>
+                  <h3 className="font-bold text-xs text-stone-400">EMAIL DE AVERBAÇÃO</h3>
                 </div>
+                <div className="flex gap-2">
+                  <button onClick={copyToEmail} className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-black text-[10px] uppercase flex items-center gap-1.5 transition-all shadow-md cursor-pointer">
+                    <Clipboard size={12} /> {copied ? 'COPIADO!' : 'COPIAR'}
+                  </button>
+                  <button onClick={clearData} className="px-3.5 py-1.5 bg-stone-100 hover:bg-[#B32025] hover:text-white text-stone-600 rounded-lg font-black text-[10px] uppercase flex items-center gap-1.5 transition-all cursor-pointer">
+                    <Trash2 size={12} /> LIMPAR DADOS
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-5 text-stone-900">
+                <p className="font-medium">{getGreeting()}!</p>
+                <p>Segue <span className="bg-yellow-300 font-bold px-1 py-0.5 rounded text-stone-950">averbação</span> realizada via sistema.</p>
                 
-                <p className="mb-6 text-sm text-[#2D1A10] font-medium uppercase tracking-wide">Segue dados e NF's em anexo.</p>
-                
-                <div className="overflow-hidden border-2 border-[#3A2414] rounded-xl shadow-lg">
-                  <table className="w-full text-center text-xs">
+                <div className="space-y-1.5 py-1 font-bold text-stone-950">
+                  <p className="uppercase">ROTA: {getRoute().toUpperCase()}</p>
+                  {getProtocols().length > 0 ? (
+                    getProtocols().map(p => (
+                      <p key={p}>PROTOCOLO: <span className="text-blue-600">{p}</span></p>
+                    ))
+                  ) : (
+                    <p>PROTOCOLO: <span className="text-blue-600">---</span></p>
+                  )}
+                  <p>Valor da Carga: <span className="text-red-600">{getTotalValue()}</span></p>
+                </div>
+
+                <p>Segue dados e NF's em anexo.</p>
+
+                <div className="overflow-x-auto my-6 border border-stone-900 rounded-lg shadow-sm">
+                  <table className="w-full text-center text-xs border-collapse min-w-[750px]">
                     <thead>
-                      <tr className="bg-[#3A2414] text-[#E8D4B0] uppercase font-black tracking-widest">
-                        {['ORIGEM', 'DESTINO', 'TRANSPORTADORA', 'PLACA CAVALO', 'PLACAS CARRETAS', 'TECNOLOGIA', 'NOME MOTORISTA', 'CPF', 'TELEFONE'].map(h => <th key={h} className="p-4 border-r border-[#6B4423]">{h}</th>)}
+                      <tr className="bg-black text-white uppercase font-bold text-[10px]">
+                        <th className="p-3 border border-stone-900">ORIGEM</th>
+                        <th className="p-3 border border-stone-900">DESTINO</th>
+                        <th className="p-3 border border-stone-900">TRANSPORTADORA</th>
+                        <th className="p-3 border border-stone-900">PLACA CAVALO</th>
+                        <th className="p-3 border border-stone-900">PLACAS CARRETAS</th>
+                        <th className="p-3 border border-stone-900">TECNOLOGIA</th>
+                        <th className="p-3 border border-stone-900">NOME MOTORISTA</th>
+                        <th className="p-3 border border-stone-900">CPF</th>
+                        <th className="p-3 border border-stone-900">TELEFONE</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-[#FDF9F0]">
-                      <tr className="text-[#2D1A10] font-medium">
-                        <td className="p-5 border-r border-[#E8D4B0]">{parsedRows[0]?.origem || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{parsedRows[0]?.destino || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{extraData.transportadora || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0] font-bold text-[#B32025]">{parsedRows[0]?.placaCav || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{getPlacasCarretas() || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{extraData.tecnologia || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{extraData.nomeMotorista || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{extraData.cpf || '---'}</td>
-                        <td className="p-5 border-r border-[#E8D4B0]">{extraData.telefone || '---'}</td>
+                    <tbody>
+                      <tr className="font-bold text-[#000000] uppercase divide-x divide-stone-900">
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{parsedRows[0]?.origem || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{parsedRows[0]?.destino || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{extraData.transportadora || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#cccccc]">{parsedRows[0]?.placaCav || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{getPlacasCarretas() || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{extraData.tecnologia || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{extraData.nomeMotorista || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{extraData.cpf || '---'}</td>
+                        <td className="p-4 border-t border-stone-900 bg-[#ffff00]">{extraData.telefone || '---'}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
+
+                <p className="pt-2">Att,</p>
+              </div>
             </div>
         )}
       </div>

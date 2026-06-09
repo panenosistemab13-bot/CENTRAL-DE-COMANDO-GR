@@ -18,7 +18,12 @@ import {
   Activity,
   ChevronUp,
   ChevronDown,
-  GripVertical
+  GripVertical,
+  Clipboard,
+  Check,
+  Upload,
+  Download,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import coffeeBg from '../assets/images/coffee_rustic_bg_1780760486326.png';
@@ -59,6 +64,37 @@ export default function Rotas() {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // States for backup and migration
+  const [legacyData, setLegacyData] = useState<RouteItem[] | null>(null);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [backupText, setBackupText] = useState('');
+  const [backupStatus, setBackupStatus] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
+  const [isCopied, setIsCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<{ type: 'ida' | 'volta' | 'idaName' | 'voltaName'; index: number } | null>(null);
+
+  const copyIndividualCode = (code: string, type: 'ida' | 'volta' | 'idaName' | 'voltaName', index: number) => {
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCode({ type, index });
+      setTimeout(() => setCopiedCode(null), 1500);
+    });
+  };
+
+  // Check for legacy localstorage on load
+  useEffect(() => {
+    const localSaved = localStorage.getItem('app_rotas_data');
+    if (localSaved) {
+      try {
+        const parsed = JSON.parse(localSaved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLegacyData(parsed);
+        }
+      } catch (e) {
+        console.warn("Legacy localstorage parse error in Rotas:", e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const rotasRef = ref(db, 'app_rotas_data');
@@ -110,6 +146,90 @@ export default function Rotas() {
     }
     setDraggedIndex(null);
     setHoveredIndex(null);
+  };
+
+  const handleImportLegacy = (mode: 'merge' | 'replace') => {
+    if (!legacyData) return;
+    
+    let updated: RouteItem[] = [];
+    if (mode === 'replace') {
+      updated = [...legacyData];
+    } else {
+      const existingSignatures = new Set(
+        routes.map(r => `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`)
+      );
+      
+      const uniqueLegacy = legacyData.filter(r => {
+        const sig = `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`;
+        return !existingSignatures.has(sig);
+      });
+      
+      updated = [...routes, ...uniqueLegacy];
+    }
+    
+    set(ref(db, 'app_rotas_data'), updated).then(() => {
+      setRoutes(updated);
+      localStorage.removeItem('app_rotas_data');
+      setLegacyData(null);
+    }).catch(err => {
+      console.error(err);
+    });
+  };
+
+  const handleManualImport = (mode: 'merge' | 'replace') => {
+    try {
+      const parsed = JSON.parse(backupText);
+      if (!Array.isArray(parsed)) {
+        setBackupStatus({ type: 'error', message: 'Formato inválido: O backup deve ser um array de rotas!' });
+        return;
+      }
+      
+      const cleaned: RouteItem[] = parsed.map(item => ({
+        ida: String(item.ida || ''),
+        idaCod: String(item.idaCod || ''),
+        volta: String(item.volta || ''),
+        voltaCod: String(item.voltaCod || ''),
+      }));
+
+      let updated: RouteItem[] = [];
+      if (mode === 'replace') {
+        updated = cleaned;
+      } else {
+        const existingSignatures = new Set(
+          routes.map(r => `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`)
+        );
+        
+        const uniquePasted = cleaned.filter(r => {
+          const sig = `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`;
+          return !existingSignatures.has(sig);
+        });
+        
+        updated = [...routes, ...uniquePasted];
+      }
+
+      set(ref(db, 'app_rotas_data'), updated).then(() => {
+        setRoutes(updated);
+        setBackupStatus({ type: 'success', message: `${cleaned.length} rotas importadas e sincronizadas com a Nuvem!` });
+        setTimeout(() => {
+          setIsBackupOpen(false);
+          setBackupText('');
+          setBackupStatus({ type: '', message: '' });
+        }, 1500);
+      }).catch(err => {
+        console.error(err);
+        setBackupStatus({ type: 'error', message: 'Erro ao salvar no banco.' });
+      });
+    } catch (e) {
+      setBackupStatus({ type: 'error', message: 'Código de backup inválido! Verifique a sintaxe JSON.' });
+    }
+  };
+
+  const copyToClipboard = () => {
+    const jsonStr = JSON.stringify(routes, null, 2);
+    navigator.clipboard.writeText(jsonStr).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
   };
 
   const handleStartEdit = () => {
@@ -244,6 +364,55 @@ export default function Rotas() {
         </div>
       </div>
 
+      {/* Legacy Data Sync Banner */}
+      {legacyData && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50/90 backdrop-blur-sm border-4 border-[#3A2414] rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] relative overflow-hidden"
+        >
+          <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
+          <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+          <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
+          <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+          
+          <div className="flex flex-col md:flex-row gap-5 items-center text-center md:text-left">
+            <div className="p-4 bg-[#B32025] text-white rounded-2xl shrink-0 shadow-md flex items-center justify-center">
+              <Database size={24} />
+            </div>
+            <div>
+              <h4 className="font-serif font-black text-lg text-[#3A2414] uppercase tracking-tight">Sincronização de Rotas do Computador Corporativo</h4>
+              <p className="text-xs text-[#3A2414]/90 mt-1 font-medium max-w-2xl leading-relaxed">
+                Detectamos <span className="font-black text-[#B32025]">{legacyData.length} rotas antigas</span> salvas localmente neste navegador (antigo backup do Vercel). Deseja sincronizá-las e subir para a Nuvem de forma global para funcionar em todos os dispositivos?
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0 justify-center w-full md:w-auto">
+            <button 
+              onClick={() => handleImportLegacy('merge')}
+              className="px-5 py-3.5 bg-[#3A2414] hover:bg-[#3A2414]/90 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm cursor-pointer border border-[#3A2414]"
+            >
+              Mesclar com Nuvem
+            </button>
+            <button 
+              onClick={() => handleImportLegacy('replace')}
+              className="px-5 py-3.5 bg-[#B32025] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm cursor-pointer border-2 border-[#3A2414]/20"
+            >
+              Substituir Nuvem
+            </button>
+            <button 
+              onClick={() => {
+                localStorage.removeItem('app_rotas_data');
+                setLegacyData(null);
+              }}
+              className="px-5 py-3.5 bg-white hover:bg-stone-50 text-stone-700 border-2 border-[#3A2414]/15 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm cursor-pointer"
+            >
+              Descartar
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Main Content Card - Styled as a premium rustic board sheet */}
       <div className="bg-[#fdfcf9]/85 backdrop-blur-md bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-4 border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-md relative overflow-hidden text-[#3A2414]">
         
@@ -262,14 +431,27 @@ export default function Rotas() {
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap md:flex-nowrap gap-2">
             {!isEditing ? (
-              <button 
-                onClick={handleStartEdit} 
-                className="flex items-center gap-3 px-6 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-sm"
-              >
-                <Edit2 size={16} /> Editar Configuração
-              </button>
+              <>
+                <button 
+                  onClick={handleStartEdit} 
+                  className="flex items-center gap-3 px-6 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-sm"
+                >
+                  <Edit2 size={16} /> Editar Configuração
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsBackupOpen(true);
+                    setBackupStatus({ type: '', message: '' });
+                    setBackupText('');
+                  }} 
+                  className="flex items-center gap-3 px-6 py-4 bg-[#3A2414] hover:brightness-110 text-[#fbdba5] border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-sm"
+                  title="Fazer Backup ou Restaurar Rotas"
+                >
+                  <Database size={16} /> Sincronizar Backup
+                </button>
+              </>
             ) : (
               <div className="flex gap-2 w-full md:w-auto">
                 <button 
@@ -350,11 +532,31 @@ export default function Rotas() {
                              />
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-[#B32025]/10 rounded-lg">
-                              <ArrowRight size={14} className="text-[#B32025]" />
+                          <div className="flex items-center justify-between gap-3 w-full" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-[#B32025]/10 rounded-lg">
+                                <ArrowRight size={14} className="text-[#B32025]" />
+                              </div>
+                              <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.ida || '---'}</span>
                             </div>
-                            <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.ida || '---'}</span>
+                            {route.ida && (
+                              <button
+                                onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
+                                className={cn(
+                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100",
+                                  copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
+                                    ? "bg-green-50 border-green-200 text-green-600 opacity-100"
+                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                )}
+                                title="Copiar nome da rota (Ida)"
+                              >
+                                {copiedCode?.type === 'idaName' && copiedCode?.index === realIndex ? (
+                                  <Check size={11} className="stroke-[3]" />
+                                ) : (
+                                  <Clipboard size={11} />
+                                )}
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
@@ -367,10 +569,31 @@ export default function Rotas() {
                             placeholder="0000"
                           />
                         ) : (
-                          <div className="flex justify-center">
+                          <div className="flex items-center justify-center gap-1.5">
                             <span className="bg-[#3A2414]/5 text-[#3A2414] border border-[#3A2414]/15 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
                               {route.idaCod || '----'}
                             </span>
+                            {route.idaCod && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyIndividualCode(route.idaCod, 'ida', realIndex);
+                                }}
+                                className={cn(
+                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                  copiedCode?.type === 'ida' && copiedCode?.index === realIndex
+                                    ? "bg-green-50 border-green-200 text-green-600"
+                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                )}
+                                title="Copiar código Ida"
+                              >
+                                {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
+                                  <Check size={11} className="stroke-[3]" />
+                                ) : (
+                                  <Clipboard size={11} />
+                                )}
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
@@ -386,11 +609,31 @@ export default function Rotas() {
                              />
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-[#B32025]/10 rounded-lg">
-                              <ArrowRight size={14} className="text-[#B32025] rotate-180" />
+                          <div className="flex items-center justify-between gap-3 w-full" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-[#B32025]/10 rounded-lg">
+                                <ArrowRight size={14} className="text-[#B32025] rotate-180" />
+                              </div>
+                              <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.volta || '---'}</span>
                             </div>
-                            <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.volta || '---'}</span>
+                            {route.volta && (
+                              <button
+                                onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
+                                className={cn(
+                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100",
+                                  copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
+                                    ? "bg-green-50 border-green-200 text-green-600 opacity-100"
+                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                )}
+                                title="Copiar nome da rota (Volta)"
+                              >
+                                {copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex ? (
+                                  <Check size={11} className="stroke-[3]" />
+                                ) : (
+                                  <Clipboard size={11} />
+                                )}
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
@@ -403,10 +646,31 @@ export default function Rotas() {
                             placeholder="0000"
                           />
                         ) : (
-                          <div className="flex justify-center">
+                          <div className="flex items-center justify-center gap-1.5">
                             <span className="bg-[#3A2414]/5 text-[#3A2414] border border-[#3A2414]/15 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
                               {route.voltaCod || '----'}
                             </span>
+                            {route.voltaCod && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyIndividualCode(route.voltaCod, 'volta', realIndex);
+                                }}
+                                className={cn(
+                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                  copiedCode?.type === 'volta' && copiedCode?.index === realIndex
+                                    ? "bg-green-50 border-green-200 text-green-600"
+                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                )}
+                                title="Copiar código Volta"
+                              >
+                                {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
+                                  <Check size={11} className="stroke-[3]" />
+                                ) : (
+                                  <Clipboard size={11} />
+                                )}
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
@@ -499,7 +763,27 @@ export default function Rotas() {
                              className="w-20 bg-white p-1 text-[10px] text-[#312c27] text-center border border-[#3A2414]/15 rounded uppercase font-bold focus:border-[#B32025] outline-none"
                            />
                         ) : (
-                           <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.idaCod || '----'}</span>
+                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                             <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.idaCod || '----'}</span>
+                             {route.idaCod && (
+                               <button
+                                 onClick={() => copyIndividualCode(route.idaCod, 'ida', realIndex)}
+                                 className={cn(
+                                   "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                   copiedCode?.type === 'ida' && copiedCode?.index === realIndex
+                                     ? "bg-green-50 border-green-200 text-green-600"
+                                     : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                 )}
+                                 title="Copiar código Ida"
+                               >
+                                 {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
+                                   <Check size={10} className="stroke-[3]" />
+                                 ) : (
+                                   <Clipboard size={10} />
+                                 )}
+                               </button>
+                             )}
+                           </div>
                         )}
                       </div>
                       {isEditing ? (
@@ -509,7 +793,27 @@ export default function Rotas() {
                           className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase"
                         />
                       ) : (
-                        <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.ida || '---'}</p>
+                        <div className="flex items-center justify-between gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                          <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.ida || '---'}</p>
+                          {route.ida && (
+                            <button
+                              onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
+                              className={cn(
+                                "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
+                                  ? "bg-green-50 border-green-200 text-green-600"
+                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                              )}
+                              title="Copiar nome Ida"
+                            >
+                              {copiedCode?.type === 'idaName' && copiedCode?.index === realIndex ? (
+                                <Check size={10} className="stroke-[3]" />
+                              ) : (
+                                <Clipboard size={10} />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -523,7 +827,27 @@ export default function Rotas() {
                              className="w-20 bg-white p-1 text-[10px] text-[#312c27] text-center border border-[#3A2414]/15 rounded uppercase font-bold focus:border-[#B32025] outline-none"
                            />
                         ) : (
-                           <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.voltaCod || '----'}</span>
+                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                             <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.voltaCod || '----'}</span>
+                             {route.voltaCod && (
+                               <button
+                                 onClick={() => copyIndividualCode(route.voltaCod, 'volta', realIndex)}
+                                 className={cn(
+                                   "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                   copiedCode?.type === 'volta' && copiedCode?.index === realIndex
+                                     ? "bg-green-50 border-green-200 text-green-600"
+                                     : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                 )}
+                                 title="Copiar código Volta"
+                               >
+                                 {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
+                                   <Check size={10} className="stroke-[3]" />
+                                 ) : (
+                                   <Clipboard size={10} />
+                                 )}
+                               </button>
+                             )}
+                           </div>
                         )}
                       </div>
                       {isEditing ? (
@@ -533,7 +857,27 @@ export default function Rotas() {
                           className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase"
                         />
                       ) : (
-                        <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.volta || '---'}</p>
+                        <div className="flex items-center justify-between gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                          <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.volta || '---'}</p>
+                          {route.volta && (
+                            <button
+                              onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
+                              className={cn(
+                                "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
+                                  ? "bg-green-50 border-green-200 text-green-600"
+                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                              )}
+                              title="Copiar nome Volta"
+                            >
+                              {copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex ? (
+                                <Check size={10} className="stroke-[3]" />
+                              ) : (
+                                <Clipboard size={10} />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -555,6 +899,151 @@ export default function Rotas() {
           </div>
         )}
       </div>
+
+      {/* Backup and Sync Modal Overlay */}
+      <AnimatePresence>
+        {isBackupOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-[100] select-none">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-[2.5rem] w-full max-w-2xl bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] overflow-hidden relative shadow-2xl p-6 md:p-8 text-[#3A2414] max-h-[90vh] overflow-y-auto"
+            >
+              {/* Decorative corner accents */}
+              <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
+              <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+              <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
+              <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between border-b-2 border-[#3A2414]/10 pb-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-[#3A2414] text-[#fdefd1] rounded-xl">
+                    <Database size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-black text-xl text-[#3A2414] leading-tight">Backup e Sincronização</h3>
+                    <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider font-mono">Migração de Dados e Nuvem</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsBackupOpen(false)}
+                  className="p-2 bg-stone-100 hover:bg-stone-200 text-[#3A2414] rounded-full transition-all border border-[#3A2414]/10 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="space-y-6">
+                
+                {/* Export Section */}
+                <div className="space-y-3">
+                  <h4 className="font-serif font-black text-sm text-[#3A2414] uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B32025]" />
+                    Exportar Rotas Atuais
+                  </h4>
+                  <p className="text-xs text-[#3A2414]/80 font-medium">
+                    Copie o código abaixo no seu computador com internet ou Vercel para carregar e transferir suas rotas editadas para outro dispositivo ou navegador.
+                  </p>
+                  
+                  <div className="relative">
+                    <div className="bg-[#3A2414]/5 pl-4 pr-32 py-3 rounded-2xl border border-[#3A2414]/15 font-mono text-[11px] font-bold overflow-x-auto whitespace-nowrap text-[#3A2414]/80 max-w-full">
+                      {JSON.stringify(routes)}
+                    </div>
+                    <button
+                      onClick={copyToClipboard}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 px-3.5 bg-[#3A2414] hover:bg-[#3A2414]/95 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check size={12} className="text-green-300" /> Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Clipboard size={12} /> Copiar Código
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Import Section */}
+                <div className="space-y-3 pt-4 border-t border-[#3A2414]/10">
+                  <h4 className="font-serif font-black text-sm text-[#3A2414] uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                    Importar ou Restaurar Rotas
+                  </h4>
+                  <p className="text-xs text-[#3A2414]/80 font-medium">
+                    Cole o código de backup copiado de outro dispositivo no campo abaixo para restaurá-lo diretamente na nuvem:
+                  </p>
+
+                  <textarea 
+                    value={backupText}
+                    onChange={(e) => {
+                      setBackupText(e.target.value);
+                      if (backupStatus.message) setBackupStatus({ type: '', message: '' });
+                    }}
+                    placeholder='Cole aqui seu código JSON de backup... Ex: [{"ida": "ROTA A", "idaCod": "123", ...}]'
+                    className="w-full h-24 bg-white border-2 border-[#3A2414]/15 focus:border-[#B32025] rounded-2xl p-4 text-[11px] font-mono font-bold text-[#3A2414] placeholder-stone-400 outline-none shadow-sm resize-none"
+                  />
+
+                  {/* Inline Status Message */}
+                  {backupStatus.message && (
+                    <div className={cn(
+                      "p-4 rounded-xl text-xs font-bold border flex items-center gap-3",
+                      backupStatus.type === 'success' 
+                        ? "bg-green-50 border-green-200 text-green-800" 
+                        : "bg-red-50 border-red-200 text-red-800"
+                    )}>
+                      {backupStatus.type === 'success' ? <Check size={16} /> : <AlertTriangle size={16} />}
+                      {backupStatus.message}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 justify-end pt-2">
+                    <button
+                      onClick={() => handleManualImport('merge')}
+                      disabled={!backupText.trim()}
+                      className={cn(
+                        "px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm border border-[#3A2414] cursor-pointer transition-all",
+                        backupText.trim()
+                          ? "bg-[#3A2414] hover:brightness-110 text-white"
+                          : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                      )}
+                    >
+                      Mesclar com Base
+                    </button>
+                    <button
+                      onClick={() => handleManualImport('replace')}
+                      disabled={!backupText.trim()}
+                      className={cn(
+                        "px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm border-2 border-[#3A2414]/20 cursor-pointer transition-all",
+                        backupText.trim()
+                          ? "bg-[#B32025] hover:brightness-110 text-white"
+                          : "bg-stone-50 text-stone-300 border-stone-100 cursor-not-allowed"
+                      )}
+                    >
+                      Sobrescrever Tudo
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Info Tip footer */}
+              <div className="mt-8 pt-4 border-t-2 border-[#3A2414]/10 bg-[#3A2414]/5 p-4 rounded-2xl flex items-start gap-3">
+                <span className="text-xs">💡</span>
+                <p className="text-[10px] text-stone-600 font-medium leading-normal">
+                  Ao atualizar e sincronizar do site Vercel, o banco de dados Realtime Database unificado é alimentado na nuvem. Suas alterações estarão seguras e prontas para uso em celulares, tablets ou qualquer outro dispositivo instantaneamente.
+                </p>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Status Indicator - Styled as an extraction badge */}
       <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-[#3A2414]/90 backdrop-blur-md border border-white/20 px-6 py-3 rounded-full shadow-lg z-50">
