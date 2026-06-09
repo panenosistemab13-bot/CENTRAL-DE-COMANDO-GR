@@ -477,232 +477,8 @@ export default function Rotas() {
           </div>
         </div>
 
-        {/* Tactical UI View (Desktop Table) */}
-        <div className="hidden md:block overflow-hidden rounded-3xl border-2 border-[#3A2414]/15 bg-white shadow-sm">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-[#3A2414] text-white border-b-2 border-[#3A2414]">
-                <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[8%]">Mover</th>
-                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[32%]">Sentido Ida (Operação)</th>
-                <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Cod</th>
-                <th className="p-5 text-left text-[11px] font-bold uppercase tracking-widest font-serif w-[32%]">Sentido Volta (Retorno)</th>
-                <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[10%]">Cod</th>
-                {isEditing && <th className="p-5 text-center text-[11px] font-bold uppercase tracking-widest font-serif w-[8%]">Ação</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#3A2414]/10">
-              <AnimatePresence mode="popLayout">
-                {currentData.map((route) => {
-                  const realIndex = safeRawData.indexOf(route);
-                  if (realIndex === -1) return null;
-                  return (
-                    <motion.tr 
-                      layout
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, realIndex)}
-                      onDragOver={(e) => handleDragOver(e, realIndex)}
-                      onDragEnd={handleDragEnd}
-                      onDrop={(e) => handleDrop(e, realIndex)}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      key={`${route.idaCod}-${route.voltaCod}-${realIndex}`} 
-                      className={cn(
-                        "group hover:bg-[#3A2414]/5 transition-colors cursor-grab active:cursor-grabbing",
-                        draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10" : "",
-                        hoveredIndex === realIndex ? "border-t-2 border-b-2 border-dashed border-[#B32025]/50 bg-[#B32025]/5" : ""
-                      )}
-                    >
-                      <td className="p-5">
-                        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                          <div className="p-1 px-1.5 text-[#3A2414]/40 group-hover:text-[#B32025] transition-colors cursor-grab active:cursor-grabbing" title="Arraste para reordenar">
-                            <GripVertical size={16} />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-5">
-                        {isEditing ? (
-                          <div className="flex items-center gap-3">
-                             <MapPin size={14} className="text-[#B32025]" />
-                             <input 
-                               value={route.ida} 
-                               onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
-                               className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-bold focus:border-[#B32025] outline-none uppercase shadow-sm"
-                               placeholder="ORIGEM X DESTINO"
-                             />
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between gap-3 w-full" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-[#B32025]/10 rounded-lg">
-                                <ArrowRight size={14} className="text-[#B32025]" />
-                              </div>
-                              <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.ida || '---'}</span>
-                            </div>
-                            {route.ida && (
-                              <button
-                                onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
-                                className={cn(
-                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100",
-                                  copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
-                                    ? "bg-green-50 border-green-200 text-green-600 opacity-100"
-                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
-                                )}
-                                title="Copiar nome da rota (Ida)"
-                              >
-                                {copiedCode?.type === 'idaName' && copiedCode?.index === realIndex ? (
-                                  <Check size={11} className="stroke-[3]" />
-                                ) : (
-                                  <Clipboard size={11} />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-5">
-                        {isEditing ? (
-                          <input 
-                            value={route.idaCod} 
-                            onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
-                            className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
-                            placeholder="0000"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center gap-1.5">
-                            <span className="bg-[#3A2414]/5 text-[#3A2414] border border-[#3A2414]/15 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
-                              {route.idaCod || '----'}
-                            </span>
-                            {route.idaCod && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyIndividualCode(route.idaCod, 'ida', realIndex);
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
-                                  copiedCode?.type === 'ida' && copiedCode?.index === realIndex
-                                    ? "bg-green-50 border-green-200 text-green-600"
-                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
-                                )}
-                                title="Copiar código Ida"
-                              >
-                                {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
-                                  <Check size={11} className="stroke-[3]" />
-                                ) : (
-                                  <Clipboard size={11} />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-5">
-                        {isEditing ? (
-                          <div className="flex items-center gap-3">
-                             <MapPin size={14} className="text-[#B32025]" />
-                             <input 
-                               value={route.volta} 
-                               onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
-                               className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-bold focus:border-[#B32025] outline-none uppercase shadow-sm"
-                               placeholder="ORIGEM X DESTINO"
-                             />
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between gap-3 w-full" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-[#B32025]/10 rounded-lg">
-                                <ArrowRight size={14} className="text-[#B32025] rotate-180" />
-                              </div>
-                              <span className="text-xs font-black text-[#3A2414] uppercase tracking-tight">{route.volta || '---'}</span>
-                            </div>
-                            {route.volta && (
-                              <button
-                                onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
-                                className={cn(
-                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100",
-                                  copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
-                                    ? "bg-green-50 border-green-200 text-green-600 opacity-100"
-                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
-                                )}
-                                title="Copiar nome da rota (Volta)"
-                              >
-                                {copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex ? (
-                                  <Check size={11} className="stroke-[3]" />
-                                ) : (
-                                  <Clipboard size={11} />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-5">
-                        {isEditing ? (
-                          <input 
-                            value={route.voltaCod} 
-                            onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
-                            className="w-full bg-white p-3 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
-                            placeholder="0000"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center gap-1.5">
-                            <span className="bg-[#3A2414]/5 text-[#3A2414] border border-[#3A2414]/15 px-3 py-1.5 rounded-lg font-mono text-[11px] font-black shadow-sm">
-                              {route.voltaCod || '----'}
-                            </span>
-                            {route.voltaCod && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyIndividualCode(route.voltaCod, 'volta', realIndex);
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
-                                  copiedCode?.type === 'volta' && copiedCode?.index === realIndex
-                                    ? "bg-green-50 border-green-200 text-green-600"
-                                    : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
-                                )}
-                                title="Copiar código Volta"
-                              >
-                                {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
-                                  <Check size={11} className="stroke-[3]" />
-                                ) : (
-                                  <Clipboard size={11} />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      {isEditing && (
-                        <td className="p-5">
-                          <div className="flex justify-center">
-                            <button 
-                              onClick={() => removeRow(realIndex)} 
-                              className="p-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl transition-all border border-red-200"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </motion.tr>
-                  );
-                })}
-              </AnimatePresence>
-            </tbody>
-          </table>
-          
-          {currentData.length === 0 && (
-            <div className="p-20 text-center bg-white">
-              <Database className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-              <p className="text-xs font-black text-stone-400 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Tactical Card View */}
-        <div className="md:hidden flex flex-col gap-4">
+        {/* Premium Responsive Route Cards Grid (Matches Attached Image) */}
+        <div className="space-y-4">
           <AnimatePresence mode="popLayout">
             {currentData.map((route) => {
               const realIndex = safeRawData.indexOf(route);
@@ -710,106 +486,71 @@ export default function Rotas() {
               return (
                 <motion.div 
                   layout
-                  draggable
+                  draggable={!isEditing}
                   onDragStart={(e) => handleDragStart(e, realIndex)}
                   onDragOver={(e) => handleDragOver(e, realIndex)}
                   onDragEnd={handleDragEnd}
                   onDrop={(e) => handleDrop(e, realIndex)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   key={`${route.idaCod}-${route.voltaCod}-${realIndex}`} 
                   className={cn(
-                    "bg-[#fdfcf9] border rounded-3xl p-5 relative overflow-hidden shadow-sm transition-all cursor-grab active:cursor-grabbing",
-                    draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10 border-[#3A2414]/25" : "border-[#3A2414]/15",
+                    "grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch p-1 rounded-3xl transition-all relative",
+                    draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10" : "",
                     hoveredIndex === realIndex ? "border-2 border-dashed border-[#B32025]/50 bg-[#B32025]/5" : ""
                   )}
                 >
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#B32025]" />
-                  
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-[#B32025]/10 rounded-xl flex items-center justify-center">
-                        <Navigation size={14} className="text-[#B32025]" />
+                  {/* CARD LEFT: IDA */}
+                  <div className="flex items-center gap-3 bg-[#fdfcf9] hover:bg-[#FAF6F0] border border-[#3A2414]/12 rounded-[1.5rem] p-3 shadow-[0_2px_8px_rgba(58,36,20,0.03)] hover:shadow-[0_4px_14px_rgba(58,36,20,0.05)] transition-all group/card relative w-full">
+                    {/* Six Dots Drag Handle */}
+                    {!isEditing && (
+                      <div 
+                        className="p-1 px-1.5 text-[#3A2414]/30 hover:text-[#B32025] cursor-grab active:cursor-grabbing shrink-0 transition-colors" 
+                        title="Arraste para reordenar"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <GripVertical size={16} className="stroke-[2.5]" />
                       </div>
-                      <span className="text-[10px] font-black text-[#3A2414] uppercase tracking-widest">Rota #{realIndex + 1}</span>
-                    </div>
+                    )}
                     
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <div className="p-2 text-[#3A2414]/40 hover:text-[#B32025] transition-colors cursor-grab active:cursor-grabbing" title="Arraste para reordenar">
-                        <GripVertical size={16} />
-                      </div>
-
-                      {isEditing && (
-                        <button 
-                          onClick={() => removeRow(realIndex)} 
-                          className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl cursor-pointer border border-red-200 transition-all"
-                          title="Excluir"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                    {/* Brown button with right arrow (→) */}
+                    <div className="w-11 h-11 bg-[#B37C4E] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 hover:scale-105">
+                      <ArrowRight size={18} className="stroke-[3]" />
                     </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <div className="bg-white p-4 rounded-2xl border border-[#3A2414]/10 shadow-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest">Sentido Ida</span>
-                        {isEditing ? (
-                           <input 
-                             value={route.idaCod} 
-                             onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
-                             className="w-20 bg-white p-1 text-[10px] text-[#312c27] text-center border border-[#3A2414]/15 rounded uppercase font-bold focus:border-[#B32025] outline-none"
-                           />
-                        ) : (
-                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                             <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.idaCod || '----'}</span>
-                             {route.idaCod && (
-                               <button
-                                 onClick={() => copyIndividualCode(route.idaCod, 'ida', realIndex)}
-                                 className={cn(
-                                   "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
-                                   copiedCode?.type === 'ida' && copiedCode?.index === realIndex
-                                     ? "bg-green-50 border-green-200 text-green-600"
-                                     : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
-                                 )}
-                                 title="Copiar código Ida"
-                               >
-                                 {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
-                                   <Check size={10} className="stroke-[3]" />
-                                 ) : (
-                                   <Clipboard size={10} />
-                                 )}
-                               </button>
-                             )}
-                           </div>
-                        )}
-                      </div>
+                    {/* Route Name Column */}
+                    <div className="flex-1 min-w-0 pr-1">
                       {isEditing ? (
-                        <input 
-                          value={route.ida} 
-                          onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
-                          className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase"
-                        />
+                        <div className="flex items-center gap-2">
+                          <MapPin size={13} className="text-[#B32025] shrink-0" />
+                          <input 
+                            value={route.ida} 
+                            onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
+                            className="w-full bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-sm font-mono tracking-tight"
+                            placeholder="ORIGEM X DESTINO"
+                          />
+                        </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
-                          <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.ida || '---'}</p>
+                        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-[11px] lg:text-xs font-black text-[#3A2414] uppercase tracking-tight break-words font-sans">
+                            {route.ida || '---'}
+                          </span>
                           {route.ida && (
                             <button
                               onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
                               className={cn(
-                                "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover/card:opacity-100 focus:opacity-100",
                                 copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border-green-200 text-green-600"
-                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                  ? "bg-green-50 border-green-200 text-green-600 opacity-100"
+                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
                               )}
-                              title="Copiar nome Ida"
+                              title="Copiar nome da Rota (Ida)"
                             >
                               {copiedCode?.type === 'idaName' && copiedCode?.index === realIndex ? (
-                                <Check size={10} className="stroke-[3]" />
+                                <Check size={11} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={10} />
+                                <Clipboard size={11} />
                               )}
                             </button>
                           )}
@@ -817,63 +558,135 @@ export default function Rotas() {
                       )}
                     </div>
 
-                    <div className="bg-white p-4 rounded-2xl border border-[#3A2414]/10 shadow-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest">Sentido Volta</span>
-                        {isEditing ? (
-                           <input 
-                             value={route.voltaCod} 
-                             onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
-                             className="w-20 bg-white p-1 text-[10px] text-[#312c27] text-center border border-[#3A2414]/15 rounded uppercase font-bold focus:border-[#B32025] outline-none"
-                           />
-                        ) : (
-                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                             <span className="text-[11px] font-mono font-black text-[#3A2414] bg-[#3A2414]/5 border border-[#3A2414]/15 px-2 py-0.5 rounded-md">{route.voltaCod || '----'}</span>
-                             {route.voltaCod && (
-                               <button
-                                 onClick={() => copyIndividualCode(route.voltaCod, 'volta', realIndex)}
-                                 className={cn(
-                                   "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
-                                   copiedCode?.type === 'volta' && copiedCode?.index === realIndex
-                                     ? "bg-green-50 border-green-200 text-green-600"
-                                     : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
-                                 )}
-                                 title="Copiar código Volta"
-                               >
-                                 {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
-                                   <Check size={10} className="stroke-[3]" />
-                                 ) : (
-                                   <Clipboard size={10} />
-                                 )}
-                               </button>
-                             )}
-                           </div>
-                        )}
-                      </div>
+                    {/* Code Badge & Copy Code Button */}
+                    <div className="flex items-center gap-2 shrink-0">
                       {isEditing ? (
-                        <input 
-                          value={route.volta} 
-                          onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
-                          className="w-full bg-transparent text-xs text-[#2b180d] font-bold outline-none uppercase"
-                        />
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-black uppercase text-[#B32025] tracking-widest">Código</span>
+                          <input 
+                            value={route.idaCod} 
+                            onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
+                            className="w-20 bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
+                            placeholder="----"
+                          />
+                        </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
-                          <p className="text-xs font-black text-[#3A2414] uppercase leading-tight">{route.volta || '---'}</p>
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <div className="bg-[#fdeedc]/20 hover:bg-[#ffe6cc]/30 text-[#3A2414] border border-[#3A2414]/12 px-4 py-2 rounded-xl font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
+                            {route.idaCod || '—'}
+                          </div>
+                          {route.idaCod && (
+                            <button
+                              onClick={() => copyIndividualCode(route.idaCod, 'ida', realIndex)}
+                              className={cn(
+                                "p-2.5 bg-white border border-[#3A2414]/15 hover:border-[#B32025]/30 hover:bg-[#B32025]/5 rounded-xl text-[#3A2414]/50 hover:text-[#B32025] shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer",
+                                copiedCode?.type === 'ida' && copiedCode?.index === realIndex
+                                  ? "bg-green-50 border-green-200 text-green-600 border-green-300"
+                                  : ""
+                              )}
+                              title="Copiar Código Ida"
+                            >
+                              {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
+                                <Check size={13} className="stroke-[3]" />
+                              ) : (
+                                <Clipboard size={13} />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Remove button inside card, visible only if editing */}
+                    {isEditing && (
+                      <button 
+                        onClick={() => removeRow(realIndex)} 
+                        className="absolute -top-1.5 -left-1.5 p-1.5 bg-red-100 hover:bg-red-200 border border-red-200 text-red-700 rounded-full transition-all cursor-pointer shadow-sm"
+                        title="Excluir trecho"
+                      >
+                        <X size={10} className="stroke-[2.5]" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* CARD RIGHT: VOLTA */}
+                  <div className="flex items-center gap-3 bg-[#fdfcf9] hover:bg-[#FAF6F0] border border-[#3A2414]/12 rounded-[1.5rem] p-3 shadow-[0_2px_8px_rgba(58,36,20,0.03)] hover:shadow-[0_4px_14px_rgba(58,36,20,0.05)] transition-all group/card relative w-full">
+                    {/* Light beige button with left arrow (←) */}
+                    <div className="w-11 h-11 bg-[#EEDBC5] text-[#3A2414] rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 hover:scale-105">
+                      <ArrowRight size={18} className="stroke-[3] rotate-180" />
+                    </div>
+
+                    {/* Route Name Column */}
+                    <div className="flex-1 min-w-0 pr-1">
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <MapPin size={13} className="text-[#B32025] shrink-0" />
+                          <input 
+                            value={route.volta} 
+                            onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
+                            className="w-full bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-sm font-mono tracking-tight"
+                            placeholder="ORIGEM X DESTINO"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-[11px] lg:text-xs font-black text-[#3A2414] uppercase tracking-tight break-words font-sans">
+                            {route.volta || '---'}
+                          </span>
                           {route.volta && (
                             <button
                               onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
                               className={cn(
-                                "p-1 rounded-md border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0",
+                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover/card:opacity-100 focus:opacity-100",
                                 copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border-green-200 text-green-600"
-                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                  ? "bg-green-50 border-green-200 text-green-600 opacity-100"
+                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
                               )}
-                              title="Copiar nome Volta"
+                              title="Copiar nome da Rota (Volta)"
                             >
                               {copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex ? (
-                                <Check size={10} className="stroke-[3]" />
+                                <Check size={11} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={10} />
+                                <Clipboard size={11} />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Code Badge & Copy Code Button */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isEditing ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-black uppercase text-[#B32025] tracking-widest">Código</span>
+                          <input 
+                            value={route.voltaCod} 
+                            onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
+                            className="w-20 bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
+                            placeholder="----"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <div className="bg-[#fdeedc]/20 hover:bg-[#ffe6cc]/30 text-[#3A2414] border border-[#3A2414]/12 px-4 py-2 rounded-xl font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
+                            {route.voltaCod || '—'}
+                          </div>
+                          {route.voltaCod && (
+                            <button
+                              onClick={() => copyIndividualCode(route.voltaCod, 'volta', realIndex)}
+                              className={cn(
+                                "p-2.5 bg-white border border-[#3A2414]/15 hover:border-[#B32025]/30 hover:bg-[#B32025]/5 rounded-xl text-[#3A2414]/50 hover:text-[#B32025] shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer",
+                                copiedCode?.type === 'volta' && copiedCode?.index === realIndex
+                                  ? "bg-green-50 border-green-200 text-green-600 border-green-300"
+                                  : ""
+                              )}
+                              title="Copiar Código Volta"
+                            >
+                              {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
+                                <Check size={13} className="stroke-[3]" />
+                              ) : (
+                                <Clipboard size={13} />
                               )}
                             </button>
                           )}
@@ -885,6 +698,13 @@ export default function Rotas() {
               );
             })}
           </AnimatePresence>
+
+          {currentData.length === 0 && (
+            <div className="p-20 text-center bg-white rounded-3xl border border-[#3A2414]/15">
+              <Database className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+              <p className="text-xs font-black text-stone-400 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
+            </div>
+          )}
         </div>
 
         {/* Destructive Action */}

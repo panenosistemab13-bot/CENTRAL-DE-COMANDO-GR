@@ -13,7 +13,8 @@ import {
   Info,
   Copy,
   RefreshCw,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
@@ -847,23 +848,35 @@ export default function SMCreator({ view = 'generator' }: SMCreatorProps) {
 
                 <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] no-scrollbar pr-1">
                   {calcValues.map((val, i) => (
-                    <div key={i} className="group relative">
+                    <div key={i} className="group relative flex items-center">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-[10px]">R$</div>
                       <input
                         type="text"
                         value={val}
                         onChange={(e) => updateCalcValue(i, e.target.value)}
                         placeholder="0,00"
-                        className="w-full bg-white border border-[#3A2414]/15 rounded-xl pl-9 pr-10 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none transition-all placeholder:text-stone-300 shadow-sm"
+                        className="w-full bg-white border border-[#3A2414]/15 rounded-xl pl-9 pr-20 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none transition-all placeholder:text-stone-300 shadow-sm"
                       />
-                      {calcValues.length > 1 && (
-                        <button 
-                          onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5 cursor-pointer"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                        {val && (
+                          <button 
+                            onClick={() => updateCalcValue(i, '')}
+                            className="text-[#3A2414]/40 hover:text-[#B32025] hover:bg-[#B32025]/5 rounded-lg p-1.5 transition-all cursor-pointer"
+                            title="Limpar Campo"
+                          >
+                            <X size={13} className="stroke-[2.5]" />
+                          </button>
+                        )}
+                        {calcValues.length > 1 && (
+                          <button 
+                            onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i))}
+                            className="text-[#3A2414]/40 hover:text-red-650 hover:bg-[#B32025]/5 rounded-lg p-1.5 transition-all cursor-pointer"
+                            title="Remover Linha"
+                          >
+                            <Trash2 size={13} className="stroke-[2.5]" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   
