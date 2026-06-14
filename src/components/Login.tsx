@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Lock, User } from 'lucide-react';
 import { auth, handleFirestoreError, OperationType } from '../firebase';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { toAbsoluteUrl } from '../utils/url';
 import loginBg from '../assets/images/coffee_shop_bg_1780921585218.png';
 
 interface LoginProps {
@@ -31,7 +32,7 @@ export default function Login({ onLogin }: LoginProps) {
       {/* Background Image */}
       <div 
         className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
-        style={{ backgroundImage: `url(${loginBg})` }}
+        style={{ backgroundImage: `url(${toAbsoluteUrl(loginBg)})` }}
       />
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -tranzinc-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />

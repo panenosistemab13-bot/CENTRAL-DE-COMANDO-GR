@@ -7,9 +7,11 @@ import {
   User, 
   CreditCard, 
   Phone,
-  Trash2
+  Trash2,
+  LayoutGrid
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { toAbsoluteUrl } from '../utils/url';
 import mockupImg from '../assets/images/averba_o_interface_mockup_1780899726248.png';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -235,10 +237,20 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
   };
 
   return (
-    <div className="flex h-screen canvas-grid">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen canvas-grid">
       {/* Sidebar - Artisan Plate */}
-      <div className="w-[320px] bg-[#E8D4B0] p-6 flex flex-col border-r-8 border-[#6B4423] shadow-2xl relative">
-        <div className="flex items-center gap-3 mb-8 bg-[#3A2414] p-4 rounded-xl border border-[#C7A26A]">
+      <div className="w-full md:w-[320px] bg-[#E8D4B0] p-6 flex flex-col border-b-8 md:border-b-0 md:border-r-8 border-[#6B4423] shadow-2xl relative shrink-0">
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="md:hidden flex items-center justify-center gap-2 mb-4 w-full bg-[#3A2414] hover:bg-[#2D1A10] text-[#E8D4B0] py-3.5 rounded-xl font-black text-xs transition-all border border-[#C7A26A] shadow-md"
+          >
+            <LayoutGrid size={16} />
+            VOLTAR AO MENU INICIAL
+          </button>
+        )}
+
+        <div className="flex items-center gap-3 mb-6 bg-[#3A2414] p-4 rounded-xl border border-[#C7A26A]">
           <div className="w-12 h-12 bg-[#B32025] rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/20">3</div>
           <div>
             <h1 className="font-bold text-sm text-[#F2E4CC] tracking-widest uppercase">AVERBAÇÃO</h1>
@@ -247,7 +259,7 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
         </div>
         
         {/* Input Fields */}
-        <div className="space-y-4 flex-1">
+        <div className="space-y-4 flex-grow mb-6">
           {[
             { label: 'TRANSPORTADORA', key: 'transportadora', icon: Truck },
             { label: 'TECNOLOGIA', key: 'tecnologia', icon: Cpu },
@@ -276,14 +288,14 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
       </div>
       
       {/* Main - Artisan Report */}
-      <div className="flex-1 p-10 overflow-y-auto">
+      <div className="flex-1 p-4 sm:p-10 overflow-y-auto">
         {parsedRows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-[#6B4423]">
-               <div className="relative mb-8 group">
+            <div className="flex flex-col items-center justify-center min-h-[400px] h-full text-[#6B4423] py-8">
+               <div className="relative mb-6 group w-full max-w-sm flex justify-center">
                  <div className="absolute -inset-1 bg-gradient-to-r from-[#B32025] to-[#3A2414] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                 <img src={mockupImg} alt="Interface Mockup" className="relative w-80 h-auto rounded-2xl shadow-2xl border-4 border-[#3A2414]/10 transform -rotate-2 hover:rotate-0 transition-all duration-500" />
+                 <img src={toAbsoluteUrl(mockupImg)} alt="Interface Mockup" className="relative w-72 sm:w-80 h-auto rounded-2xl shadow-2xl border-4 border-[#3A2414]/10 transform -rotate-2 hover:rotate-0 transition-all duration-500" />
                </div>
-               <textarea onChange={(e) => parseInput(e.target.value)} placeholder="Cole os dados aqui..." className="w-96 h-48 p-6 border-4 border-dashed border-[#C7A26A] bg-[#fdfaf5] rounded-2xl text-center text-[#3A2414] placeholder-[#6B4423]/50 shadow-inner focus:border-[#B32025] focus:outline-none transition-all"/>
+               <textarea onChange={(e) => parseInput(e.target.value)} placeholder="Cole os dados aqui..." className="w-full max-w-md h-48 p-6 border-4 border-dashed border-[#C7A26A] bg-[#fdfaf5] rounded-2xl text-center text-[#3A2414] placeholder-[#6B4423]/50 shadow-inner focus:border-[#B32025] focus:outline-none transition-all"/>
             </div>
         ) : (
             <div className="bg-white p-8 md:p-12 border border-[#d4c3a3] rounded-2xl shadow-xl max-w-4xl mx-auto font-sans text-stone-900 text-sm leading-relaxed relative">

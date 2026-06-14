@@ -125,7 +125,8 @@ export default function Checklist() {
         dataVencimento: format(addDays(new Date(), 60), 'yyyy-MM-dd'),
         manutencaoOs: '',
         periferico: '',
-        observacao: ''
+        observacao: '',
+        statusOverride: undefined
       });
     } catch (error) {
       console.error("Erro ao adicionar checklist:", error);
@@ -190,36 +191,42 @@ export default function Checklist() {
 
   const handleCopyGenerator = () => {
     const htmlContent = `
-      <div style="font-family: Georgia, serif; color: #4a3623; font-size: 15px; max-width: 600px; background-color: #fdfaf5; padding: 30px; border: 2px solid #d0a782; border-radius: 12px;">
-        <div style="display: flex; align-items: center; margin-bottom: 24px; gap: 12px;">
-           <img src="https://i.postimg.cc/HxkVgtSZ/Gemini-Generated-Image-ji8y90ji8y90ji8y.png" alt="3 Corações" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;" />
-           <strong style="color: #b48554; font-size: 16px; letter-spacing: 1px; text-transform: uppercase;">Grupo 3 Corações</strong>
-        </div>
-        <p style="margin-bottom: 16px;">${genData.greeting},</p>
-        <p style="margin-bottom: 24px;">Solicito o <strong>checklist</strong> para o conjunto abaixo:</p>
-        <table style="width: 100%; border-collapse: collapse; font-family: Georgia, serif; font-size: 15px; text-align: center; border: 1px solid #c0a892; border-radius: 4px; overflow: hidden; margin-bottom: 32px;">
+      <div style="font-family: Georgia, serif; color: #4a3623; font-size: 15px; max-width: 550px; background-color: #fdfaf5; padding: 30px; border: 2px solid #c79165; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+        <p style="margin-bottom: 16px; font-family: Georgia, serif; font-size: 15px; color: #4a3623; margin-top: 0;">${genData.greeting},</p>
+        <p style="margin-bottom: 24px; font-family: Georgia, serif; font-size: 15px; color: #4a3623;">Solicito o <span style="font-weight: bold; text-decoration: underline; text-decoration-color: #d0a782; text-decoration-thickness: 2px;">checklist</span> para os conjuntos abaixo:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; font-family: Georgia, serif; font-size: 14px; text-align: center; border: 1px solid #c0a892; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
           <thead>
-            <tr style="background-color: #1e0e05; color: #fcf8f2;">
-              <th style="padding: 12px 16px; border-bottom: 1px solid #c0a892; font-weight: bold; width: 50%; text-transform: uppercase;">CAVALO</th>
-              <th style="padding: 12px 16px; border-bottom: 1px solid #c0a892; font-weight: bold; width: 50%; text-transform: uppercase;">CARRETAS</th>
+            <tr style="background-color: #4e2d18; color: #fdfaf5;">
+              <th style="padding: 12px 14px; border-bottom: 1px solid #c0a892; font-weight: bold; width: 50%; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-right: 1px solid #3d2212;">VEÍCULO CAVALO</th>
+              <th style="padding: 12px 14px; border-bottom: 1px solid #c0a892; font-weight: bold; width: 50%; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">CARRETAS DO CONJUNTO</th>
             </tr>
           </thead>
           <tbody>
-            <tr style="background-color: #d2c2b2; color: #4a3623; font-size: 16px;">
-              <td style="padding: 16px; border-right: 1px solid #c0a892; font-weight: bold;">${genData.cavalo}</td>
-              <td style="padding: 16px; font-weight: bold;">${genData.carretas}</td>
+            <tr style="background-color: rgba(230, 213, 195, 0.5); color: #301a0e; font-size: 15px; font-weight: bold; font-family: monospace;">
+              <td style="padding: 14px; border-right: 1px solid #c0a892; text-transform: uppercase; letter-spacing: 0.5px;">${genData.cavalo || "—"}</td>
+              <td style="padding: 14px; text-transform: uppercase; letter-spacing: 0.5px;">${genData.carretas || "—"}</td>
             </tr>
           </tbody>
         </table>
-        <p style="font-size: 15px; color: #4a3623;"><strong>Contato:</strong> ${genData.contato}</p>
-        <div style="margin-top: 40px; text-align: right;">
-           <p style="color: #4a3623;">Att,</p>
-           <p style="font-style: italic; font-size: 24px; font-family: 'Brush Script MT', cursive; color: #292524; margin: 0;">Jefferson</p>
-           <p style="font-size: 11px; color: #8c7465; margin: 0;">Agente de Risco</p>
+
+        <div style="background-color: rgba(230, 213, 195, 0.3); border-radius: 12px; padding: 12px 16px; border: 1px solid rgba(192, 168, 146, 0.4); margin-bottom: 30px;">
+          <div style="font-family: monospace; font-size: 14px; font-weight: bold; color: #37281a; margin: 0; text-align: left;">
+            Canal de Atendimento: ${genData.contato}
+          </div>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 1px solid rgba(214, 195, 165, 0.5); padding-top: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
+           <p style="color: #737373; font-size: 13px; margin: 0; font-family: Georgia, serif;">Atenciosamente,</p>
+           <div style="text-align: center; margin-right: 8px;">
+              <p style="font-style: italic; font-size: 24px; font-family: 'Brush Script MT', 'Great Vibes', cursive; color: #292524; margin: 0 0 2px 0; line-height: 1;">Jefferson Augusto</p>
+              <div style="width: 128px; height: 1px; background-color: #d1c4b4; margin: 4px auto;"></div>
+              <p style="font-size: 9px; color: #B58A4C; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-family: sans-serif;">Agente de Risco</p>
+           </div>
         </div>
       </div>
     `;
-    const textContent = `${genData.greeting},\n\nSolicito o checklist para o conjunto abaixo:\n\nCAVALO: ${genData.cavalo}\nCARRETAS: ${genData.carretas}\n\nContato: ${genData.contato}\n\nAtt,\nAgente de Risco (Jefferson)`;
+    const textContent = `*${genData.greeting}*,\n\nSolicito o *checklist* para os conjuntos abaixo:\n\n*VEÍCULO CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS DO CONJUNTO*: ${genData.carretas || "—"}\n\n*Canal de Atendimento*: ${genData.contato}\n\nAtenciosamente,\n*Jefferson Augusto* - Agente de Risco`;
     try {
       const typeHtml = "text/html";
       const typeText = "text/plain";
@@ -475,26 +482,9 @@ export default function Checklist() {
           <div className="lg:col-span-2 relative z-10 flex items-center justify-center h-full">
             <div className="w-full max-w-xl bg-[#e6d5c3] p-1.5 rounded-3xl border-[6px] border-[#c79165] shadow-[0_15px_40px_rgba(0,0,0,0.7)] relative ring-2 ring-[#eadfc8]/40 ring-offset-4 ring-offset-[#1a0f08]">
               <div className="border border-[#c79165] rounded-2xl p-6 sm:p-10 bg-[#fdfaf5] shadow-inner relative min-h-[350px]">
-                {/* Vintage graphic watermark watermark */}
-                <div className="absolute top-10 right-10 text-[#d0a782]/15 pointer-events-none select-none">
-                  <Heart size={150} strokeWidth={1} style={{ fill: 'currentColor' }} />
-                </div>
-
                 <div className="relative z-10 space-y-6 font-serif text-[#4a3623] text-sm sm:text-base">
-                  <div className="flex items-center gap-3 border-b-2 border-[#d6c3a5] pb-4 mb-4">
-                    <img 
-                      src="https://i.postimg.cc/HxkVgtSZ/Gemini-Generated-Image-ji8y90ji8y90ji8y.png" 
-                      alt="3 Corações" 
-                      className="w-12 h-12 rounded-full object-cover shadow-sm border border-[#B32025]/30" 
-                    />
-                    <div>
-                      <h2 className="text-[#a47a46] text-sm font-bold uppercase tracking-widest leading-none">Grupo 3 Corações</h2>
-                      <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block mt-1">LOGÍSTICA DE ESCAPE</span>
-                    </div>
-                  </div>
-
                   <p className="leading-relaxed">{genData.greeting},</p>
-                  <p className="leading-relaxed">Solicito o <strong className="font-bold underline decoration-[#d0a782] decoration-2 underline-offset-4">checklist</strong> de segurança para o veículo abaixo:</p>
+                  <p className="leading-relaxed">Solicito o <strong className="font-bold underline decoration-[#d0a782] decoration-2 underline-offset-4">checklist</strong> para os conjuntos abaixo:</p>
 
                   <div className="overflow-hidden rounded-xl border border-[#c0a892] shadow-sm my-6">
                     <table className="w-full text-center">
@@ -513,22 +503,16 @@ export default function Checklist() {
                     </table>
                   </div>
 
-                  <div className="flex justify-between items-center bg-[#e6d5c3]/30 rounded-xl p-3 border border-[#c0a892]/40 text-xs text-stone-700">
-                    <div>
-                      <p><strong>Canal de Atendimento:</strong> {genData.contato}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[#B32025]">
-                      <Heart size={14} className="fill-current" />
-                      <Heart size={10} className="fill-current rotate-12" />
-                    </div>
+                  <div className="bg-[#e6d5c3]/20 rounded-xl p-3 sm:py-3.5 border border-[#c0a892]/40 text-[#4a3623]">
+                    <p id="canal-atendimento-p" className="font-mono font-bold text-xs sm:text-[14px]">Canal de Atendimento: {genData.contato}</p>
                   </div>
 
                   <div className="pt-8 flex justify-between items-end border-t border-[#d6c3a5]/50">
                     <p className="text-stone-500 text-xs">Atenciosamente,</p>
                     <div className="text-center mr-2">
-                      <p className="italic text-2xl font-serif text-[#292524] opacity-90 leading-none pb-1" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson</p>
+                      <p className="italic text-2xl font-serif text-[#292524] opacity-90 leading-none pb-1" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson Augusto</p>
                       <div className="w-32 h-[1px] bg-stone-300 my-1 mx-auto"></div>
-                      <p className="text-[9px] uppercase tracking-widest text-[#B58A4C] font-bold">Agente de Gerenciamento de Risco</p>
+                      <p className="text-[9px] uppercase tracking-widest text-[#B58A4C] font-bold">Agente de Risco</p>
                     </div>
                   </div>
                 </div>
@@ -559,10 +543,176 @@ export default function Checklist() {
 
           {/* MAIN CHECKLIST VINTAGE WOOD CONTAINER CARDS */}
           <div className="space-y-6 relative z-10">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {filteredItems.map((item) => {
                 const status = getStatus(item);
                 const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
+                const isEditingThis = editingItem && editingItem.id === item.id;
+
+                if (isEditingThis) {
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      className="bg-[#FAF0DE] border-[4px] border-[#3A2414] rounded-[2.2rem] p-6 shadow-[0_15px_40px_rgba(58,36,20,0.25)] relative overflow-hidden text-[#3A2414] w-full"
+                    >
+                      {/* Corner decorative rivet screws */}
+                      <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] opacity-80" />
+                      <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] opacity-80" />
+                      <div className="absolute bottom-3 left-3 w-2 h-2 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] opacity-80" />
+                      <div className="absolute bottom-3 right-3 w-2 h-2 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] opacity-80" />
+
+                      <div className="flex items-center gap-3 border-b border-[#3A2414]/15 pb-3.5 mb-4">
+                        <Truck size={22} className="text-[#B32025]" />
+                        <div>
+                          <h3 className="text-xl font-black font-serif text-[#3A2414] uppercase tracking-wide">
+                            Editar Checkpoint: {item.cavalo}
+                          </h3>
+                          <p className="text-[#3A2414]/70 text-[9px] uppercase tracking-widest mt-0.5 font-bold">
+                            REGISTRO DE ESCAPE CENTRAL - PGR
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 font-serif">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Placa Cavalo</label>
+                          <input 
+                            type="text" 
+                            value={editingItem.cavalo}
+                            onChange={(e) => {
+                              const val = e.target.value.toUpperCase();
+                              setEditingItem(prev => prev ? ({ ...prev, cavalo: val }) : null);
+                            }}
+                            placeholder="POZ4431"
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Placas Carretas</label>
+                          <input 
+                            type="text" 
+                            value={editingItem.carretas}
+                            onChange={(e) => {
+                              const val = e.target.value.toUpperCase();
+                              setEditingItem(prev => prev ? ({ ...prev, carretas: val }) : null);
+                            }}
+                            placeholder="PNE7353 / PNE7433"
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Data Efetiva Teste</label>
+                          <input 
+                            type="date" 
+                            value={editingItem.dataTeste}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingItem(prev => prev ? ({ ...prev, dataTeste: val }) : null);
+                            }}
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-sm cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Data Efetiva Vencimento</label>
+                          <input 
+                            type="date" 
+                            value={editingItem.dataVencimento}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingItem(prev => prev ? ({ ...prev, dataVencimento: val }) : null);
+                            }}
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-sm cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Item Periférico</label>
+                          <select 
+                            value={editingItem.periferico}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingItem(prev => prev ? ({ ...prev, periferico: val }) : null);
+                            }}
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none cursor-pointer shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%232c1a12%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem_1.1rem] bg-[right_1rem_center] bg-no-repeat"
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="TECLADO">TECLADO</option>
+                            <option value="TRAVA BAU">TRAVA BAU</option>
+                            <option value="SENSOR">SENSOR</option>
+                            <option value="BAU">BAU</option>
+                            <option value="PAINEL">PAINEL</option>
+                            <option value="OUTROS">OUTROS</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Ordem de Serviço (OS)</label>
+                          <input 
+                            type="text" 
+                            value={editingItem.manutencaoOs || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingItem(prev => prev ? ({ ...prev, manutencaoOs: val }) : null);
+                            }}
+                            placeholder="OS #98221"
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-1 col-span-1 md:col-span-2">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">status do checklist</label>
+                          <select 
+                            value={editingItem.statusOverride || ''}
+                            onChange={(e) => {
+                              const val = e.target.value as ChecklistItem['statusOverride'] | '';
+                              setEditingItem(prev => prev ? ({ ...prev, statusOverride: val || undefined }) : null);
+                            }}
+                            className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-2.5 text-xs text-[#2D1A10] font-mono focus:border-[#B32025] outline-none cursor-pointer shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%232c1a12%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem_1.1rem] bg-[right_1rem_center] bg-no-repeat"
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="NEGATIVADO">NEGATIVADO</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1 md:col-span-2">
+                          <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Observações Livres</label>
+                          <textarea 
+                            value={editingItem.observacao || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingItem(prev => prev ? ({ ...prev, observacao: val }) : null);
+                            }}
+                            placeholder="Mais observações do veículo..."
+                            className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4.5 py-2.5 text-xs text-[#2D1A10] focus:border-[#B32025] outline-none min-h-[55px] resize-none shadow-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4 pt-4 border-t border-[#3A2414]/15 uppercase">
+                        <button 
+                          onClick={() => {
+                            setEditingItem(null);
+                          }} 
+                          className="flex-1 py-2.5 text-xs font-bold text-[#3A2414]/70 hover:text-[#B32025] tracking-widest transition-colors font-serif cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                        <button 
+                          onClick={handleUpdate}
+                          className="flex-1 py-2.5 bg-[#B32025] text-white rounded-xl border border-[#B32025] font-serif font-black text-xs tracking-wider shadow-md hover:bg-[#8c060d] active:scale-98 transition-all cursor-pointer"
+                        >
+                          Salvar Alterações
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                }
 
                 return (
                   <motion.div
@@ -570,7 +720,7 @@ export default function Checklist() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[4px] border-[#3A2414] rounded-[2.2rem] p-5 shadow-[0_12px_28px_rgba(58,36,20,0.15)] relative overflow-hidden group"
+                    className="bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-2 sm:border-[4px] border-[#3A2414] rounded-[1.5rem] sm:rounded-[2.2rem] p-3.5 sm:p-5 shadow-[0_12px_28px_rgba(58,36,20,0.15)] relative overflow-hidden group"
                   >
                     {/* Metal rivets in corners */}
                     <div className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
@@ -579,16 +729,16 @@ export default function Checklist() {
                     <div className="absolute bottom-2.5 right-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
 
                     {/* Bento Layout Grid representing 6 information cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-3.5">
                       
                       {/* IDENTIFICADOR (BRASIL LICENSE PLATE) */}
-                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3 h-28 relative shadow-sm">
+                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3 min-h-24 md:h-28 relative shadow-sm">
                         <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest mb-1.5">IDENTIFICADOR</span>
                         <LicensePlate plate={item.cavalo} />
                       </div>
 
                       {/* STATUS (ROTATED DISTRESSED RUBBER STAMP) */}
-                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3 h-28 relative overflow-hidden shadow-sm">
+                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3 min-h-24 md:h-28 relative overflow-hidden shadow-sm">
                         <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest mb-1">STATUS</span>
                         <div className="flex items-center justify-center flex-1 w-full mt-1.5 select-none z-10">
                           {status.label === 'APROVADO' && (
@@ -615,11 +765,11 @@ export default function Checklist() {
                       </div>
 
                       {/* VALIDADE (CLOCK & DATE) */}
-                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
                         <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">VALIDADE</span>
                         <div className="flex flex-col flex-1 justify-center mt-1">
                           <div className={cn(
-                            "flex items-center gap-1.5 font-mono font-black text-sm",
+                            "flex items-center gap-1.5 font-mono font-black text-xs sm:text-sm",
                             diasParaVencer < 0 ? "text-[#B32025]" : "text-[#55a360]"
                           )}>
                             <Clock size={15} />
@@ -630,7 +780,7 @@ export default function Checklist() {
                       </div>
 
                       {/* CARRETAS (TRUCK MODEL ICON) */}
-                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
                         <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">CARRETAS</span>
                         <div className="flex flex-col flex-1 justify-center mt-1">
                           <div className="flex items-center gap-1.5 text-[#2D1A10] font-mono font-bold text-xs">
@@ -644,7 +794,7 @@ export default function Checklist() {
                       </div>
 
                       {/* PERIFÉRICO (WRENCH TOOL CONTROLS) */}
-                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
                         <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">PERIFÉRICO</span>
                         <div className="flex flex-col flex-1 justify-center mt-1">
                           <div className="flex items-center gap-1.5 text-[#2D1A10] font-bold text-xs truncate">
@@ -655,7 +805,7 @@ export default function Checklist() {
                       </div>
 
                       {/* RESTANTES (CALENDAR DAYS REMAINING COUNTDOWN) */}
-                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-3.5 h-28 shadow-sm">
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
                         <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">RESTANTES</span>
                         <div className="flex flex-col flex-1 justify-center mt-1">
                           <span className={cn(
@@ -680,33 +830,7 @@ export default function Checklist() {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-4">
-                          {/* Inside patio custom selector */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold font-serif text-[#3A2414]/80 uppercase tracking-wide">Está no pátio?</span>
-                            <select 
-                              value={item.estaNoPatio || 'NÃO'}
-                              onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { estaNoPatio: e.target.value })}
-                              className="bg-white border border-[#3A2414]/20 text-[#2D1A10] font-mono font-bold text-xs px-2.5 py-1 rounded-lg outline-none cursor-pointer focus:border-[#B32025] shadow-sm"
-                            >
-                              <option value="NÃO">NÃO</option>
-                              <option value="SIM">SIM</option>
-                            </select>
-                          </div>
-
-                          {/* Assumed checklist selector */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold font-serif text-[#3A2414]/80 uppercase tracking-wide">Assinou?</span>
-                            <select 
-                              value={item.assinou || 'NÃO'}
-                              onChange={(e) => update(ref(rtdb, `checklist_veiculos/${item.id}`), { assinou: e.target.value })}
-                              className="bg-white border border-[#3A2414]/20 text-[#2D1A10] font-mono font-bold text-xs px-2.5 py-1 rounded-lg outline-none cursor-pointer focus:border-[#B32025] shadow-sm"
-                            >
-                              <option value="NÃO">NÃO</option>
-                              <option value="SIM">SIM</option>
-                            </select>
-                          </div>
-                        </div>
+                        {/* Options hidden by user request */}
                       </div>
 
                       {/* Administrative control actions buttons */}
@@ -756,37 +880,49 @@ export default function Checklist() {
         </>
       )}
 
-      {/* RUSTIC PREMIUM ADD & EDIT MODAL SHEET */}
+      {/* RUSTIC PREMIUM ADD MODAL SHEET */}
       <AnimatePresence>
-        {(isAdding || editingItem) && (
+        {isAdding && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/85 backdrop-blur-md"
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+              }}
+              className="bg-black/85 backdrop-blur-md"
               onClick={() => {
                 setIsAdding(false);
-                setEditingItem(null);
               }}
             />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="relative w-full max-w-xl bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[6px] border-[#3A2414] rounded-[3rem] p-8 shadow-[0_30px_70px_rgba(58,36,20,0.4)] space-y-6 text-[#3A2414]"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+              }}
+              className="w-full max-w-xl bg-[#FAF0DE] border-[6px] border-[#3A2414] rounded-[2.5rem] p-7 md:p-9 shadow-[0_30px_70px_rgba(58,36,20,0.5)] space-y-6 text-[#3A2414] max-h-[92vh] overflow-y-auto"
             >
               {/* Corner decorative rivet screws */}
-              <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
-              <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
-              <div className="absolute bottom-3 left-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
-              <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
+              <div className="absolute top-4 left-4 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] border border-[#3A2414]/30 shadow-sm" />
+              <div className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] border border-[#3A2414]/30 shadow-sm" />
+              <div className="absolute bottom-4 left-4 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] border border-[#3A2414]/30 shadow-sm" />
+              <div className="absolute bottom-4 right-4 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] border border-[#3A2414]/30 shadow-sm" />
 
               <div className="flex items-center gap-3 border-b border-[#3A2414]/15 pb-4 mb-2">
                 <Truck size={24} className="text-[#B32025]" />
                 <div>
-                  <h3 className="text-xl font-bold font-serif text-[#3A2414] uppercase tracking-tight">
-                    {editingItem ? 'Editar Checkpoint' : 'Adicionar Checkpoint'}
+                  <h3 className="text-xl font-black font-serif text-[#3A2414] uppercase tracking-wide">
+                    Adicionar Checkpoint
                   </h3>
                   <p className="text-[#3A2414]/70 text-[10px] uppercase tracking-widest mt-0.5 font-bold">
                     REGISTRO DE ESCAPE CENTRAL - PGR
@@ -794,75 +930,70 @@ export default function Checklist() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-serif">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 font-serif">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Placa Cavalo</label>
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Placa Cavalo</label>
                   <input 
                     type="text" 
-                    value={editingItem ? editingItem.cavalo : newItem.cavalo}
+                    value={newItem.cavalo}
                     onChange={(e) => {
                       const val = e.target.value.toUpperCase();
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, cavalo: val }) : null);
-                      else setNewItem(prev => ({ ...prev, cavalo: val }));
+                      setNewItem(prev => ({ ...prev, cavalo: val }));
                     }}
                     placeholder="POZ4431"
-                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-inner"
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Placas Carretas</label>
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Placas Carretas</label>
                   <input 
                     type="text" 
-                    value={editingItem ? editingItem.carretas : newItem.carretas}
+                    value={newItem.carretas}
                     onChange={(e) => {
                       const val = e.target.value.toUpperCase();
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, carretas: val }) : null);
-                      else setNewItem(prev => ({ ...prev, carretas: val }));
+                      setNewItem(prev => ({ ...prev, carretas: val }));
                     }}
                     placeholder="PNE7353 / PNE7433"
-                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-inner"
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none tracking-wider uppercase shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Data Efetiva Teste</label>
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Data Efetiva Teste</label>
                   <input 
                     type="date" 
-                    value={editingItem ? editingItem.dataTeste : newItem.dataTeste}
+                    value={newItem.dataTeste}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, dataTeste: val }) : null);
-                      else setNewItem(prev => ({ ...prev, dataTeste: val }));
+                      setNewItem(prev => ({ ...prev, dataTeste: val }));
                     }}
-                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-inner"
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-sm cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Data Efetiva Vencimento</label>
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Data Efetiva Vencimento</label>
                   <input 
                     type="date" 
-                    value={editingItem ? editingItem.dataVencimento : newItem.dataVencimento}
+                    value={newItem.dataVencimento}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, dataVencimento: val }) : null);
-                      else setNewItem(prev => ({ ...prev, dataVencimento: val }));
+                      setNewItem(prev => ({ ...prev, dataVencimento: val }));
                     }}
-                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-inner"
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-sm cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Item Periférico</label>
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Item Periférico</label>
                   <select 
-                    value={editingItem ? editingItem.periferico : newItem.periferico}
+                    value={newItem.periferico}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, periferico: val }) : null);
-                      else setNewItem(prev => ({ ...prev, periferico: val }));
+                      setNewItem(prev => ({ ...prev, periferico: val }));
                     }}
-                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none cursor-pointer shadow-inner appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%232c1a12%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat"
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none cursor-pointer shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%232c1a12%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem_1.1rem] bg-[right_1rem_center] bg-no-repeat"
                   >
                     <option value="">Selecione...</option>
                     <option value="TECLADO">TECLADO</option>
@@ -875,28 +1006,41 @@ export default function Checklist() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Ordem de Serviço (OS)</label>
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">Ordem de Serviço (OS)</label>
                   <input 
                     type="text" 
-                    value={editingItem ? editingItem.manutencaoOs : newItem.manutencaoOs}
+                    value={newItem.manutencaoOs}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, manutencaoOs: val }) : null);
-                      else setNewItem(prev => ({ ...prev, manutencaoOs: val }));
+                      setNewItem(prev => ({ ...prev, manutencaoOs: val }));
                     }}
                     placeholder="OS #98221"
-                    className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-inner"
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none shadow-sm"
                   />
+                </div>
+
+                <div className="space-y-1 col-span-1 md:col-span-2">
+                  <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider block ml-1">status do checklist</label>
+                  <select 
+                    value={newItem.statusOverride || ''}
+                    onChange={(e) => {
+                      const val = e.target.value as ChecklistItem['statusOverride'] | '';
+                      setNewItem(prev => ({ ...prev, statusOverride: val || undefined }));
+                    }}
+                    className="w-full bg-white border border-[#3A2414]/15 rounded-xl px-4 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none cursor-pointer shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%232c1a12%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem_1.1rem] bg-[right_1rem_center] bg-no-repeat"
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="NEGATIVADO">NEGATIVADO</option>
+                  </select>
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-[10px] font-black text-[#3A2414] uppercase tracking-wider ml-1">Observações Livres</label>
                   <textarea 
-                    value={editingItem ? editingItem.observacao : newItem.observacao}
+                    value={newItem.observacao}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (editingItem) setEditingItem(prev => prev ? ({ ...prev, observacao: val }) : null);
-                      else setNewItem(prev => ({ ...prev, observacao: val }));
+                      setNewItem(prev => ({ ...prev, observacao: val }));
                     }}
                     placeholder="Mais observações do veículo..."
                     className="w-full bg-white border border-[#3A2414]/20 rounded-xl px-4.5 py-3 text-sm text-[#2D1A10] focus:border-[#B32025] outline-none min-h-[75px] resize-none shadow-inner"
@@ -908,17 +1052,16 @@ export default function Checklist() {
                 <button 
                   onClick={() => {
                     setIsAdding(false);
-                    setEditingItem(null);
                   }} 
                   className="flex-1 py-3.5 text-xs font-bold text-[#3A2414]/70 hover:text-[#B32025] tracking-widest transition-colors font-serif cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
-                  onClick={editingItem ? handleUpdate : handleAdd}
+                  onClick={handleAdd}
                   className="flex-1 py-3.5 bg-[#B32025] text-white rounded-xl border border-[#B32025] font-serif font-black text-xs tracking-wider shadow-lg hover:bg-[#8c060d] active:scale-98 transition-all cursor-pointer"
                 >
-                  {editingItem ? 'Salvar Alterações' : 'Validar Checklist'}
+                  Validar Checklist
                 </button>
               </div>
             </motion.div>

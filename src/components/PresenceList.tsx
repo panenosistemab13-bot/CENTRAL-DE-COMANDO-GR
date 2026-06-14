@@ -9,12 +9,17 @@ import {
   ChevronUp,
   Heart,
   Calendar,
-  Camera
+  Camera,
+  LayoutGrid
 } from 'lucide-react';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set, update } from 'firebase/database';
 
-export default function PresenceList() {
+interface PresenceListProps {
+  onBack?: () => void;
+}
+
+export default function PresenceList({ onBack }: PresenceListProps) {
   const getTodayStr = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -29,6 +34,14 @@ export default function PresenceList() {
 
   const [dayStatuses, setDayStatuses] = useState<Record<string, 'trabalhei' | 'falta' | 'folga' | ''>>({});
   const [dayTimes, setDayTimes] = useState<Record<string, { entrada: string; saida: string }>>({});
+  const [escalaConfig, setEscalaConfig] = useState<{ enabled: boolean; startDate: string }>({
+    enabled: true,
+    startDate: '2026-06-14',
+  });
+  const [bancoHorasManual, setBancoHorasManual] = useState<number>(0);
+  const [isEditingBankCard, setIsEditingBankCard] = useState(false);
+  const [tempHours, setTempHours] = useState('');
+  const [tempMins, setTempMins] = useState('');
 
   useEffect(() => {
     const presenceRef = ref(db, 'presence_list');
@@ -38,10 +51,43 @@ export default function PresenceList() {
         if (data.statuses) setDayStatuses(data.statuses);
         if (data.times) setDayTimes(data.times);
         if (data.profileImage) setProfileImage(data.profileImage);
+        if (data.escalaConfig) {
+          setEscalaConfig(data.escalaConfig);
+        }
+        if (data.bancoHorasManual !== undefined && typeof data.bancoHorasManual === 'number') {
+          setBancoHorasManual(data.bancoHorasManual);
+        }
       }
     });
     return () => unsubscribe();
   }, []);
+
+  const updateEscalaConfig = (config: { enabled: boolean; startDate: string }) => {
+    setEscalaConfig(config);
+    set(ref(db, 'presence_list/escalaConfig'), config);
+  };
+
+  const updateBancoHorasManual = (minutes: number) => {
+    setBancoHorasManual(minutes);
+    set(ref(db, 'presence_list/bancoHorasManual'), minutes);
+  };
+
+  const getDaysDifference = (dateStr1: string, dateStr2: string): number => {
+    if (!dateStr1 || !dateStr2) return 0;
+    const d1 = new Date(dateStr1 + 'T12:00:00');
+    const d2 = new Date(dateStr2 + 'T12:00:00');
+    const diffTime = d1.getTime() - d2.getTime();
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const isAutomaticWorkDay = (dateStr: string): boolean => {
+    if (!dateStr) return false;
+    const isEnabled = escalaConfig.enabled !== false;
+    if (!isEnabled) return false;
+    const refDate = escalaConfig.startDate || '2026-06-14';
+    const diff = getDaysDifference(dateStr, refDate);
+    return Math.abs(diff) % 2 === 0;
+  };
 
   const updateStatus = (date: string, status: 'trabalhei' | 'falta' | 'folga' | '') => {
     setDayStatuses(prev => ({ ...prev, [date]: status }));
@@ -152,7 +198,7 @@ export default function PresenceList() {
         total += bal.total;
       }
     });
-    return total;
+    return total + (bancoHorasManual || 0);
   };
 
   const totalBankOfHours = calculateTotalBankOfHours();
@@ -336,7 +382,7 @@ export default function PresenceList() {
     <div className="w-full relative z-10 max-w-[96rem] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch font-sans">
       
       {/* Left Column (Card) */}
-      <div className="hidden lg:block lg:col-span-4 lg:col-start-1">
+      <div className="hidden">
         <div className="rounded-3xl bg-[#1d1008] border border-[#a27a5d]/30 shadow-2xl overflow-hidden relative flex flex-col h-full ring-4 ring-[#1d1008]/50 outline outline-1 outline-[#a27a5d]/20">
           
           {/* Inner padded container for top content */}
@@ -366,17 +412,16 @@ export default function PresenceList() {
             </div>
           </div>
 
-          {/* Large Center Image with fade effect */}
-          <div className="relative w-full aspect-[4/3] flex-1 min-h-[220px]">
-             {/* Coffee beans image similar to original */}
-             <img 
-               src="https://i.postimg.cc/2SDqGtb9/top.jpg" 
-               alt="Gãos de Café" 
-               className="w-full h-full object-cover object-center grayscale-[20%] contrast-125 brightness-75"
-             />
-             {/* Vignette gradients to blend image into the dark card */}
-             <div className="absolute inset-0 bg-gradient-to-t from-[#1d1008] via-transparent to-transparent" />
-             <div className="absolute inset-0 bg-gradient-to-b from-[#1d1008] opacity-50 via-transparent to-transparent h-12" />
+          {/* Representative Center Image scaled down to match user photo size */}
+          <div className="py-4 flex justify-center bg-[#1d1008]">
+             <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-[#a27a5d]/40 shadow-lg relative group bg-[#e2cfb9] shrink-0">
+               <img 
+                 src="https://i.postimg.cc/2SDqGtb9/top.jpg" 
+                 alt="Grãos de Café" 
+                 className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+               />
+               <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+             </div>
           </div>
 
           {/* Bottom Info Section */}
@@ -407,7 +452,7 @@ export default function PresenceList() {
       </div>
 
       {/* Right Column (Main App Panel) */}
-      <div className="col-span-1 lg:col-span-8 lg:col-start-5 flex flex-col">
+      <div className="col-span-1 lg:col-span-12 flex flex-col">
         <div className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-hidden flex flex-col"
              style={{
                backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
@@ -417,7 +462,16 @@ export default function PresenceList() {
           <div className="absolute inset-1.5 rounded-[1.35rem] border border-[#a6866b]/40 pointer-events-none z-0" />
           
           {/* Main Padding Container */}
-          <div className="p-6 relative z-10 flex flex-col h-full gap-5">
+          <div className="p-4 sm:p-6 relative z-10 flex flex-col h-full gap-5">
+            {onBack && (
+              <button 
+                onClick={onBack}
+                className="md:hidden flex items-center justify-center gap-2 w-full bg-[#1c1008] hover:bg-[#2c1a11] text-[#efdfc6] py-3.5 rounded-2xl font-black text-xs transition-all border border-[#5c3e29] shadow-md mb-2 cursor-pointer"
+              >
+                <LayoutGrid size={16} className="text-[#bf9663]" />
+                <span>Voltar ao Menu Inicial</span>
+              </button>
+            )}
             
             {/* Top Area: Splitted into Left (Profile) and Right (Image + Titles) */}
             <div className="flex flex-col md:flex-row gap-5">
@@ -570,41 +624,51 @@ export default function PresenceList() {
             <div className="flex flex-col md:flex-row gap-5 flex-1 min-h-0 pt-2">
               
               {/* Left Inner: Calendar */}
-              <div className="w-full md:w-[45%] flex flex-col shrink-0 rounded-3xl overflow-hidden border border-[#eedecb] shadow-xl bg-gradient-to-b from-[#fffbf7] to-[#FAF6ED]">
+              <div className="w-full md:w-[48%] md:max-w-[340px] md:self-start flex flex-col shrink-0 rounded-3xl overflow-hidden border border-[#eedecb] shadow-xl bg-gradient-to-b from-[#fffbf7] to-[#FAF6ED]">
                 
                 {/* Calendar Header with premium brand look */}
-                <div className="bg-gradient-to-r from-[#3e2516] to-[#4e341f] text-white flex items-center justify-between py-3.5 px-5 select-none shadow-sm relative">
+                <div className="bg-[#1c1008] text-white flex items-center justify-between py-3 px-4 select-none shadow-sm relative">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-[#dfc2a1]/20" />
-                  <button onClick={handlePrevMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1.5 rounded-full hover:bg-white/10"><ChevronLeft size={18} /></button>
-                  <span className="text-xs sm:text-sm font-black tracking-[0.15em] uppercase font-sans text-[#eddcc9]">{currentMonthLabel}</span>
-                  <button onClick={handleNextMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1.5 rounded-full hover:bg-white/10"><ChevronRight size={18} /></button>
+                  <button onClick={handlePrevMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1 rounded-full hover:bg-white/10"><ChevronLeft size={18} /></button>
+                  <span className="text-xs sm:text-sm font-black tracking-[0.15em] uppercase font-sans text-white">{currentMonthLabel}</span>
+                  <button onClick={handleNextMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1 rounded-full hover:bg-white/10"><ChevronRight size={18} /></button>
                 </div>
 
                 {/* Calendar Grid Container */}
-                <div className="flex-1 p-4 flex flex-col justify-between">
+                <div className="p-4 py-3 flex flex-col">
                   {/* Days of week header with refined spacing */}
-                  <div className="grid grid-cols-7 mb-2 bg-[#f4ebdc]/40 rounded-xl py-2 border border-[#eedecb]/40">
+                  <div className="grid grid-cols-7 mb-3 py-1">
                     {daysOfWeek.map(d => (
-                      <div key={d} className="text-center text-[10px] font-black tracking-wider text-[#8b6b4e]">{d}</div>
+                       <div key={d} className="text-center text-[10px] font-black tracking-wider text-[#a27a5d] uppercase">{d}</div>
                     ))}
                   </div>
                   
-                  {/* Days cells with premium tiled aesthetic */}
-                  <div className="grid grid-cols-7 flex-1 gap-1.5">
+                  {/* Days cells with premium minimalist circular aesthetic */}
+                  <div className="grid grid-cols-7 gap-y-1.5 gap-x-1 py-1">
                     {calendarDays.map((week, wIdx) => (
                       week.map((d, dIdx) => {
                         const isSelected = selectedDate === d.dateStr;
                         const status = dayStatuses[d.dateStr] || '';
+                        const isAutoWork = !d.inactive && isAutomaticWorkDay(d.dateStr);
+                        const isAutoRest = !d.inactive && escalaConfig.enabled && !isAutoWork;
                         
-                        let cellStyle = 'bg-white hover:bg-[#FAF6ED]/70 border border-[#eedecb]/70 rounded-2xl';
-                        if (status === 'trabalhei') cellStyle = 'bg-green-50/50 border border-green-200/80 hover:bg-green-50/85 rounded-2xl';
-                        else if (status === 'falta') cellStyle = 'bg-red-50/50 border border-red-200/80 hover:bg-red-50/85 rounded-2xl';
-                        else if (status === 'folga') cellStyle = 'bg-amber-50/50 border border-amber-200/80 hover:bg-amber-50/85 rounded-2xl';
-                        else if (d.inactive) cellStyle = 'bg-stone-50/40 border border-transparent text-stone-300 opacity-40 rounded-2xl pointer-events-none';
+                        // Setup premium minimalist circular classes
+                        let cellStyle = 'relative flex flex-col items-center justify-center cursor-pointer select-none aspect-square rounded-full transition-all duration-200 w-9 h-9 md:w-10 md:h-10 mx-auto';
+                        let fontStyle = 'font-sans text-xs sm:text-sm font-bold';
 
                         if (isSelected && !d.inactive) {
-                          cellStyle = 'bg-[#FAF5EE] border-2 border-[#B32025] shadow-[0_4px_14px_rgba(179,32,37,0.14)] ring-2 ring-[#B32025]/15 scale-[1.03] z-10 rounded-2xl';
+                          cellStyle += ' border-2 border-[#b8956c] bg-transparent';
+                          fontStyle += ' text-[#3e2516]';
+                        } else if (d.inactive) {
+                          fontStyle += ' text-stone-300 opacity-40 pointer-events-none';
+                        } else {
+                          cellStyle += ' hover:bg-[#f4ebdc]/50';
+                          fontStyle += ' text-[#4e341f]';
                         }
+
+                        const showWorkLine = !d.inactive && (status === 'trabalhei' || (status === '' && isAutoWork));
+                        const showFaltaLine = !d.inactive && status === 'falta';
+                        const showFolgaLine = !d.inactive && (status === 'folga' || (status === '' && isAutoRest));
 
                         return (
                           <div 
@@ -615,68 +679,21 @@ export default function PresenceList() {
                                 setViewDate(new Date(d.dateStr));
                               }
                             }}
-                            className={`
-                              flex flex-col justify-between p-2 pb-3.5 transition-all duration-300 relative min-h-[58px] sm:min-h-[66px] cursor-pointer select-none
-                              ${cellStyle}
-                            `}
+                            className="flex items-center justify-center py-0.5"
                           >
-                            <div className="flex justify-between items-start w-full">
-                              <span className={`font-sans text-[11px] sm:text-xs font-black px-1.5 py-0.5 rounded-lg transition-colors duration-200
-                                ${isSelected ? 'bg-[#B32025] text-white' : 'text-[#4e341f]'}
-                              `}>
+                            <div className={cellStyle}>
+                              <span className={fontStyle}>
                                 {d.day}
                               </span>
+                              
+                              {/* Horizontal green line indicator for work days, red for absence, gold for rest */}
+                              {showWorkLine && (
+                                <div className="absolute bottom-[2.5px] w-4.5 h-[3.5px] bg-[#10b981] rounded-full animate-pulse" title="Dia Trabalhado" />
+                              )}
+                              {showFaltaLine && (
+                                <div className="absolute bottom-[2.5px] w-4.5 h-[3.5px] bg-red-500 rounded-full" title="Falta" />
+                              )}
                             </div>
-
-                            {/* Dropdown status options shown only when selected, otherwise show simple elegant badge */}
-                            {isSelected ? (
-                              <div className="mt-1">
-                                <select
-                                  value={status}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedDate(d.dateStr);
-                                    if (d.inactive) {
-                                      setViewDate(new Date(d.dateStr));
-                                    }
-                                  }}
-                                  onChange={(e) => {
-                                    const val = e.target.value as 'trabalhei' | 'falta' | 'folga' | '';
-                                    updateStatus(d.dateStr, val);
-                                  }}
-                                  className={`
-                                    w-full text-[8.5px] font-black border rounded-lg p-1 cursor-pointer outline-none transition-all duration-200 shadow-sm
-                                    ${status === 'trabalhei' ? 'border-green-600 bg-green-700 text-white font-bold' : ''}
-                                    ${status === 'falta' ? 'border-red-600 bg-red-700 text-white font-bold' : ''}
-                                    ${status === 'folga' ? 'border-amber-600 bg-amber-700 text-white font-bold' : ''}
-                                    ${status === '' ? 'border-[#dac0a3] bg-white text-stone-800' : ''}
-                                  `}
-                                >
-                                  <option value="" className="text-stone-800 bg-[#fdfaf5]">--</option>
-                                  <option value="trabalhei" className="text-stone-800 bg-[#fdfaf5]">TRAB</option>
-                                  <option value="falta" className="text-stone-800 bg-[#fdfaf5]">FALTA</option>
-                                  <option value="folga" className="text-stone-800 bg-[#fdfaf5]">FOLGA</option>
-                                </select>
-                              </div>
-                            ) : (
-                              status ? (
-                                <div className={`
-                                  w-full text-[8px] font-black text-center border rounded-md py-0.5 mt-auto select-none uppercase tracking-wider transition-colors duration-200
-                                  ${status === 'trabalhei' ? 'border-green-500/20 bg-green-600/10 text-green-700' : ''}
-                                  ${status === 'falta' ? 'border-red-500/20 bg-red-600/10 text-red-700' : ''}
-                                  ${status === 'folga' ? 'border-amber-500/20 bg-amber-600/10 text-amber-700' : ''}
-                                `}>
-                                  {status === 'trabalhei' ? 'TRAB' : status === 'falta' ? 'FALTA' : 'FOLGA'}
-                                </div>
-                              ) : (
-                                <div className="text-[10px] text-stone-400 mt-auto text-center opacity-25 font-bold select-none">--</div>
-                              )
-                            )}
-
-                            {/* Solid brown line under worked days */}
-                            {status === 'trabalhei' && (
-                              <div className="absolute bottom-1 left-3 right-3 h-[3.5px] bg-[#5c3e29] rounded-full" title="Dia Trabalhado" />
-                            )}
                           </div>
                         );
                       })
@@ -700,13 +717,92 @@ export default function PresenceList() {
                     <span className="text-xl sm:text-2xl font-black text-[#c62828] leading-none mb-1">{faltas}</span>
                     <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">registradas</span>
                   </div>
-                  <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
-                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#8c7462] uppercase mb-1">Banco Horas</span>
-                    <span className={`text-sm sm:text-lg font-black leading-none mb-1 ${totalBankOfHours >= 0 ? 'text-green-700' : 'text-[#B32025]'}`}>
-                      {formatBalanceMinutes(totalBankOfHours)}
-                    </span>
-                    <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">saldo total</span>
-                  </div>
+                  {isEditingBankCard ? (
+                    <div className="bg-[#fcf8f2] rounded-xl border-2 border-[#B32025] flex flex-col items-center justify-between p-1.5 shadow-md text-center">
+                      <span className="text-[8.5px] font-black tracking-wider text-[#B32025] uppercase mb-1 leading-none">Ajustar Saldo</span>
+                      
+                      {/* Compact Inputs For Hours and Minutes */}
+                      <div className="flex items-center justify-center gap-1 mb-1.5">
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            placeholder="H"
+                            value={tempHours}
+                            onChange={(e) => setTempHours(e.target.value)}
+                            className="w-10 bg-white border border-[#dac0a3] text-[9.5px] font-mono font-bold rounded py-0.5 text-center text-[#3e2516] outline-none shadow-inner"
+                            title="Ex: 10 ou -5"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-[#8c6b4e]">:</span>
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            placeholder="M"
+                            value={tempMins}
+                            onChange={(e) => setTempMins(e.target.value)}
+                            className="w-7 bg-white border border-[#dac0a3] text-[9.5px] font-mono font-bold rounded py-0.5 text-center text-[#3e2516] outline-none shadow-inner"
+                            title="Ex: 30"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 justify-center w-full">
+                        <button
+                          onClick={() => {
+                            const hrs = parseInt(tempHours) || 0;
+                            const mins = parseInt(tempMins) || 0;
+                            
+                            // Check sign of input
+                            const hasMinus = tempHours.includes('-') || tempMins.includes('-');
+                            const totalMinsInput = (hasMinus ? -1 : 1) * (Math.abs(hrs) * 60 + Math.abs(mins));
+
+                            // Calculate original automatic balance
+                            let currentAutoBalance = 0;
+                            Object.keys(dayStatuses).forEach(dateStr => {
+                              if (dayStatuses[dateStr] === 'trabalhei') {
+                                const times = dayTimes[dateStr] || { entrada: '18:00', saida: '06:00' };
+                                const bal = calculateDayBalance(dateStr, 'trabalhei', times.entrada, times.saida);
+                                currentAutoBalance += bal.total;
+                              }
+                            });
+
+                            updateBancoHorasManual(totalMinsInput - currentAutoBalance);
+                            setIsEditingBankCard(false);
+                          }}
+                          className="bg-[#10b981] hover:bg-emerald-600 text-white text-[7px] font-black uppercase px-2 py-0.5 rounded transition-all cursor-pointer shadow-sm"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => setIsEditingBankCard(false)}
+                          className="bg-stone-55 hover:bg-stone-100 text-stone-600 text-[7px] font-black uppercase px-2 py-0.5 border border-[#dac0a3] rounded transition-all cursor-pointer"
+                        >
+                          Sair
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => {
+                        const hrs = Math.trunc(totalBankOfHours / 60);
+                        const mins = Math.abs(totalBankOfHours % 60);
+                        setTempHours(String(hrs));
+                        setTempMins(String(mins).padStart(2, '0'));
+                        setIsEditingBankCard(true);
+                      }}
+                      className="bg-[#fdfbf7] hover:bg-[#FAF6ED] active:scale-95 transition-all duration-300 rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center relative cursor-pointer group"
+                      title="Clique para editar o saldo do Banco de Horas"
+                    >
+                      <span className="text-[8px] sm:text-[9.5px] font-bold tracking-wider text-[#8c7462] uppercase mb-1 flex items-center justify-center gap-0.5">
+                        Banco Horas 
+                        <span className="opacity-70 group-hover:opacity-100 transition-opacity text-[#b8956c] text-[8px] sm:text-[10px]">✏️</span>
+                      </span>
+                      <span className={`text-sm sm:text-lg font-black leading-none mb-1 ${totalBankOfHours >= 0 ? 'text-[#10b981]' : 'text-[#B32025]'}`}>
+                        {formatBalanceMinutes(totalBankOfHours)}
+                      </span>
+                      <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">saldo (editar)</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Painel do Dia Selecionado: Entrada, Saída e Status */}
@@ -754,6 +850,29 @@ export default function PresenceList() {
                       <span className="text-sm font-mono font-bold text-[#4e341f] block mt-0.5">18:00 às 06:00 (12h)</span>
                     </div>
                   </div>
+
+                  {escalaConfig.enabled && !dayStatuses[selectedDate] && (
+                    <div className={`p-4 rounded-xl border flex flex-col sm:flex-row items-stretch sm:items-center justify-between text-xs gap-3 ${
+                      isAutomaticWorkDay(selectedDate)
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-950"
+                        : "bg-amber-500/5 border-amber-500/20 text-[#5c3e29]"
+                    }`}>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#B32025]">PREVISÃO DE JORNADA</span>
+                        <span className="font-semibold text-[11px] sm:text-xs">
+                          Dia previsto na escala como <strong>{isAutomaticWorkDay(selectedDate) ? "TRABALHO (12x36)" : "FOLGA"}</strong>.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          updateStatus(selectedDate, isAutomaticWorkDay(selectedDate) ? 'trabalhei' : 'folga');
+                        }}
+                        className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[9.5px] font-bold uppercase tracking-wider py-2 px-3.5 rounded-xl transition-all shadow-sm hover:scale-102 active:scale-98 cursor-pointer shrink-0 text-center"
+                      >
+                        Confirmar {isAutomaticWorkDay(selectedDate) ? 'TRABALHO' : 'FOLGA'}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Se for dia Trabalhado, mostrar opções de horário de Entrada e Saída */}
                   {(dayStatuses[selectedDate] === 'trabalhei') ? (
@@ -841,6 +960,110 @@ export default function PresenceList() {
                       Não há compensação de banco de horas para faltas ou folgas. Selecione "Fui trabalhar (Trabalhei)" para registrar horários e acumular créditos ou débitos.
                     </div>
                   )}
+                </div>
+
+                {/* Configuração da Escala 12x36 */}
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
+                        <Calendar size={14} />
+                      </div>
+                      <h3 className="text-xs font-black text-[#3e2516] uppercase tracking-widest leading-none">Escala Automática 12x36</h3>
+                    </div>
+                    {/* Status Toggle Badge */}
+                    <button
+                      onClick={() => updateEscalaConfig({ ...escalaConfig, enabled: !escalaConfig.enabled })}
+                      className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer border ${
+                        escalaConfig.enabled
+                          ? "bg-green-600 text-white border-green-700 hover:bg-green-700 shadow-sm"
+                          : "bg-[#e1ccb0]/30 text-[#8c6b4e] border-[#eedecb] hover:bg-[#e1ccb0]/55"
+                      }`}
+                    >
+                      {escalaConfig.enabled ? "Ativada" : "Desativada"}
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-[#5c3e29] leading-relaxed">
+                    Marque os dias da sua jornada 12x36 de forma automatizada no calendário. Informe abaixo um dia de referência em que você trabalhou:
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="flex-1 flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-[#5c3e29] uppercase tracking-wider">Último dia de trabalho (Referência):</label>
+                      <input
+                        type="date"
+                        value={escalaConfig.startDate || getTodayStr()}
+                        onChange={(e) => updateEscalaConfig({ ...escalaConfig, startDate: e.target.value })}
+                        disabled={!escalaConfig.enabled}
+                        className="bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Configuração do Banco de Horas */}
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
+                        <Clock size={14} />
+                      </div>
+                      <h3 className="text-xs font-black text-[#3e2516] uppercase tracking-widest leading-none">Ajuste de Banco de Horas</h3>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-[#5c3e29] leading-relaxed">
+                    Você pode adicionar um saldo inicial ou fazer um ajuste manual de horas para o seu banco. Valores positivos adicionam créditos e valores negativos adicionam débitos.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-[#5c3e29] uppercase tracking-wider">Ajuste Manual (Horas):</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 5 ou -10"
+                        value={Math.trunc(bancoHorasManual / 60) || ""}
+                        onChange={(e) => {
+                          const hrs = parseInt(e.target.value) || 0;
+                          const currentMins = bancoHorasManual % 60;
+                          updateBancoHorasManual(hrs * 60 + currentMins);
+                        }}
+                        className="bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-[#5c3e29] uppercase tracking-wider">Ajuste Manual (Minutos):</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 30 ou -45"
+                        min="-59"
+                        max="59"
+                        value={bancoHorasManual % 60 || ""}
+                        onChange={(e) => {
+                          const mins = parseInt(e.target.value) || 0;
+                          const currentHrs = Math.trunc(bancoHorasManual / 60);
+                          updateBancoHorasManual(currentHrs * 60 + mins);
+                        }}
+                        className="bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-1 pt-1.5 border-t border-[#f4ebdc]">
+                    <div className="text-[10px] text-[#8c6b4e] font-mono">
+                      Ajuste manual configurado: <strong className={bancoHorasManual >= 0 ? "text-green-700 font-bold" : "text-red-700 font-bold"}>{formatBalanceMinutes(bancoHorasManual)}</strong>
+                    </div>
+                    {bancoHorasManual !== 0 && (
+                      <button
+                        onClick={() => updateBancoHorasManual(0)}
+                        className="text-[9px] font-black uppercase text-[#B32025] hover:underline cursor-pointer"
+                      >
+                        Limpar Ajuste
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Quadro explicativo definitivo de Banco de Horas */}

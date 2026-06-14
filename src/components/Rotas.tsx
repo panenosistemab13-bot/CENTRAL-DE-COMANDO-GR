@@ -23,9 +23,11 @@ import {
   Check,
   Upload,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { toAbsoluteUrl } from '../utils/url';
 import coffeeBg from '../assets/images/coffee_rustic_bg_1780760486326.png';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set } from 'firebase/database';
@@ -57,7 +59,7 @@ const DEFAULT_ROUTES: RouteItem[] = [
   { ida: 'SANTA LUZIA-MG X VESPASIANO-MG', idaCod: '', volta: 'VESPASIANO-MG X SANTA LUZIA-MG', voltaCod: '3989/3990' },
 ];
 
-export default function Rotas() {
+export default function Rotas({ onBack }: { onBack?: () => void }) {
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [tempRoutes, setTempRoutes] = useState<RouteItem[]>([]);
@@ -298,7 +300,17 @@ export default function Rotas() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] p-4 md:p-8 space-y-8 pb-32 text-[#3A2414]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] p-4 md:p-8 space-y-6 md:space-y-8 pb-32 text-[#3A2414]">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="md:hidden flex items-center justify-center gap-2 w-full bg-[#3A2414] hover:bg-[#2A1408] text-[#fbdba5] py-3.5 rounded-2xl font-black text-xs transition-all border border-[#3A2414] shadow-md cursor-pointer mb-2"
+        >
+          <LayoutGrid size={16} className="text-[#B32025]" />
+          <span>Voltar ao Menu Inicial</span>
+        </button>
+      )}
+
       {/* Dynamic Earthy Hero Section */}
       <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#ebd8bf] to-[#d6bc99] border-4 border-[#3A2414] p-6 lg:p-8 shadow-md">
         {/* Decorative corner accents */}
@@ -312,7 +324,7 @@ export default function Rotas() {
             {/* Studio Composition Image Frame */}
             <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#3A2414] shadow-md group">
               <img 
-                src={coffeeBg} 
+                src={toAbsoluteUrl(coffeeBg)} 
                 alt="Edição Rústica Sofisticada" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
@@ -540,7 +552,7 @@ export default function Rotas() {
                             <button
                               onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
                               className={cn(
-                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover/card:opacity-100 focus:opacity-100",
+                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100",
                                 copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
                                   ? "bg-green-50 border-green-200 text-green-600 opacity-100"
                                   : "bg-white border-[#3A2414]/15 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
@@ -637,7 +649,7 @@ export default function Rotas() {
                             <button
                               onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
                               className={cn(
-                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-0 group-hover/card:opacity-100 focus:opacity-100",
+                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100",
                                 copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
                                   ? "bg-green-50 border-green-200 text-green-600 opacity-100"
                                   : "bg-white border-[#3A2414]/15 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
