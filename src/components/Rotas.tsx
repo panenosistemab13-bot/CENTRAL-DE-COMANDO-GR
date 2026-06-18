@@ -357,14 +357,14 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
 
           {/* Metrics styled like paper tag tickets hanging */}
           <div className="flex items-center gap-4 w-full xl:w-auto justify-center xl:justify-end">
-            <div className="px-5 py-4 bg-[#fdfcf9] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[-1.5deg]">
+            <div className="px-5 py-4 bg-[#fdfcf9]  border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[-1.5deg]">
               {/* String hanging effect */}
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#3A2414]/25 rounded" />
               <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">TRECHOS</span>
               <span className="text-3xl font-serif font-black text-[#3A2414]">{currentData.length}</span>
             </div>
             
-            <div className="px-5 py-4 bg-[#fdfcf9] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[1.5deg]">
+            <div className="px-5 py-4 bg-[#fdfcf9]  border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[1.5deg]">
               {/* String hanging effect */}
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#3A2414]/25 rounded" />
               <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">CÓDIGOS</span>
@@ -381,7 +381,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50/90 backdrop-blur-sm border-4 border-[#3A2414] rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] relative overflow-hidden"
+          className="bg-red-50/90 backdrop-blur-sm border-4 border-[#3A2414] rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md  relative overflow-hidden"
         >
           <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
           <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
@@ -426,7 +426,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
       )}
 
       {/* Main Content Card - Styled as a premium rustic board sheet */}
-      <div className="bg-[#fdfcf9]/85 backdrop-blur-md bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] border-4 border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-md relative overflow-hidden text-[#3A2414]">
+      <div className="bg-[#fdfcf9]/85 backdrop-blur-md  border-4 border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-md relative overflow-hidden text-[#3A2414]">
         
         {/* Actions & Filters Bar */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -740,7 +740,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-[2.5rem] w-full max-w-2xl bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] overflow-hidden relative shadow-2xl p-6 md:p-8 text-[#3A2414] max-h-[90vh] overflow-y-auto"
+              className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-[2.5rem] w-full max-w-2xl  overflow-hidden relative shadow-2xl p-6 md:p-8 text-[#3A2414] max-h-[90vh] overflow-y-auto"
             >
               {/* Decorative corner accents */}
               <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />

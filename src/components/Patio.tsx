@@ -13,7 +13,9 @@ import {
   Plus, 
   Database,
   Image as ImageIcon,
-  ChevronLeft
+  ChevronLeft,
+  Copy,
+  Check
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
@@ -93,6 +95,198 @@ const LicensePlate: React.FC<{ plate: string }> = ({ plate }) => {
   );
 };
 
+interface ParsedTable {
+  headers: string[];
+  rows: string[][];
+}
+
+const parseTableData = (text: string): ParsedTable => {
+  if (!text || !text.trim()) return { headers: [], rows: [] };
+  
+  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line !== '');
+  if (lines.length === 0) return { headers: [], rows: [] };
+
+  // Detect delimiter (tab, semicolon, pipe, comma)
+  let delimiter = '\t';
+  const checkLinesCount = Math.min(lines.length, 5);
+  const delimiters = ['\t', ';', '|', ','];
+  let bestDelimiter = '\t';
+  let maxDelimiterScore = -1;
+  
+  delimiters.forEach(del => {
+    let count = 0;
+    for (let i = 0; i < checkLinesCount; i++) {
+       if (lines[i]) count += lines[i].split(del).length - 1;
+    }
+    if (count > maxDelimiterScore) {
+      maxDelimiterScore = count;
+      bestDelimiter = del;
+    }
+  });
+  
+  if (maxDelimiterScore > 0) {
+    delimiter = bestDelimiter;
+  }
+
+  const allRows = lines.map(line => line.split(delimiter).map(cell => cell.trim()));
+  const headers = allRows[0] || [];
+  const rows = allRows.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== ''));
+  return { headers, rows };
+};
+
+const getCellStyle = (cellValue: string, isHeader: boolean): string => {
+  if (isHeader) {
+    return 'background-color: #000000; color: #ffffff; font-family: Calibri, Arial, sans-serif; font-size: 10pt; font-weight: bold; text-align: center; border: 1px solid #000000; padding: 6px 10px; white-space: nowrap; text-transform: uppercase;';
+  }
+  
+  const val = cellValue.trim().toUpperCase();
+  let bg = '#ffffff';
+  let color = '#000000';
+  let isBold = false;
+  
+  // Regras de formatação condicional inteligente baseadas no Excel real
+  if (val === 'SIM' || val === 'LIBERADO' || val === 'VIGENTE' || val === 'EM' || val === 'SIM/SIM' || val === 'CADASTRO VIGENTE') {
+    bg = '#c6efce'; // preenchimento verde claro
+    color = '#006100'; // texto verde escuro
+    isBold = true;
+  } else if (val === 'NÃO' || val === 'NAO' || val === 'REPROVADO' || val === 'REPROVADO/REPROVADO' || val === 'NÃO/NÃO' || val === 'NÃO/NAO' || val === 'NAO/NAO' || val === 'VENCIDO' || val === 'BLOQUEADO' || val === 'DIVERGENTE') {
+    bg = '#ffc7ce'; // preenchimento vermelho claro
+    color = '#9c0006'; // texto vermelho escuro
+    isBold = true;
+  } else if (val === 'ATENÇÃO' || val === 'ATENCAO' || val === 'ALERTA' || val.includes('VENCER') || val.includes('VENCENDO')) {
+    bg = '#ffeb9c'; // preenchimento amarelo claro
+    color = '#9c6500'; // texto amarelo escuro
+    isBold = true;
+  } else if (val === 'MACRO' || val === 'TECNOLOGIA') {
+    color = '#0066cc';
+    isBold = true;
+  } else if (val.includes('SEGURO')) {
+    bg = '#c6efce';
+    color = '#006100';
+    isBold = true;
+  }
+  
+  return `background-color: ${bg}; color: ${color}; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; font-weight: ${isBold ? 'bold' : 'normal'}; border: 1px solid #000000; padding: 5px 8px; white-space: nowrap; text-align: center;`;
+};
+
+const getCellStyleObj = (cellValue: string, isHeader: boolean): React.CSSProperties => {
+  if (isHeader) {
+    return {
+      backgroundColor: '#000000',
+      color: '#ffffff',
+      fontFamily: 'Calibri, Arial, sans-serif',
+      fontSize: '10pt',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      border: '1px solid #000000',
+      padding: '6px 10px',
+      whiteSpace: 'nowrap',
+      textTransform: 'uppercase'
+    };
+  }
+  
+  const val = cellValue.trim().toUpperCase();
+  let bg = '#ffffff';
+  let color = '#000000';
+  let isBold = false;
+  
+  if (val === 'SIM' || val === 'LIBERADO' || val === 'VIGENTE' || val === 'EM' || val === 'SIM/SIM' || val === 'CADASTRO VIGENTE') {
+    bg = '#c6efce';
+    color = '#006100';
+    isBold = true;
+  } else if (val === 'NÃO' || val === 'NAO' || val === 'REPROVADO' || val === 'REPROVADO/REPROVADO' || val === 'NÃO/NÃO' || val === 'NÃO/NAO' || val === 'NAO/NAO' || val === 'VENCIDO' || val === 'BLOQUEADO' || val === 'DIVERGENTE') {
+    bg = '#ffc7ce';
+    color = '#9c0006';
+    isBold = true;
+  } else if (val === 'ATENÇÃO' || val === 'ATENCAO' || val === 'ALERTA' || val.includes('VENCER') || val.includes('VENCENDO')) {
+    bg = '#ffeb9c';
+    color = '#9c6500';
+    isBold = true;
+  } else if (val === 'MACRO' || val === 'TECNOLOGIA') {
+    color = '#0066cc';
+    isBold = true;
+  } else if (val.includes('SEGURO')) {
+    bg = '#c6efce';
+    color = '#006100';
+    isBold = true;
+  }
+  
+  return {
+    backgroundColor: bg,
+    color: color,
+    fontFamily: 'Calibri, Arial, sans-serif',
+    fontSize: '9.5pt',
+    fontWeight: isBold ? 'bold' : 'normal',
+    border: '1px solid #000000',
+    padding: '5px 8px',
+    whiteSpace: 'nowrap',
+    textAlign: 'center'
+  };
+};
+
+const generateDisponibilidadeHtmlAndText = (greeting: 'bom dia' | 'boa tarde' | 'boa noite', text: string) => {
+  const { headers, rows } = parseTableData(text);
+  
+  const greetingPhrase = `Prezados, ${greeting}!`;
+  const subPhrase1 = `Segue a disponibilidade de veículos.`;
+  const subPhrase2Text = `Favor ficarem atentos à origem de cada carregamento`;
+  const subPhrase2 = `${subPhrase2Text}.`;
+  
+  // HTML format - totalmente plano, limpo e profissional para ser colado no e-mail (idêntico à imagem de anexo)
+  let html = `<div style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; background-color: #ffffff; padding: 10px; margin: 0;">
+    <p style="margin: 0 0 16px 0; font-family: Verdana, sans-serif; font-weight: bold; font-size: 11pt; color: #000000;">${greetingPhrase}</p>
+    <p style="margin: 0 0 4px 0; font-family: Verdana, sans-serif; font-weight: bold; font-size: 11pt; color: #000000;">${subPhrase1}</p>
+    <p style="margin: 0 0 16px 0; font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000;">
+      <span style="background-color: #b4a7d6; font-weight: bold; font-family: Verdana, sans-serif; font-size: 20px; color: #000000; padding: 1px 3px;">${subPhrase2Text}</span>.
+    </p>`;
+
+  if (headers.length > 0) {
+    let tableHtml = `<table style="border-collapse: collapse; width: 100%; border: 1px solid #000000; font-family: Calibri, Arial, sans-serif; font-size: 10pt; background-color: #ffffff;">
+      <thead>
+        <tr>`;
+            
+    headers.forEach(h => {
+      tableHtml += `<th style="${getCellStyle(h, true)}">${h}</th>`;
+    });
+    
+    tableHtml += `</tr>
+      </thead>
+      <tbody>`;
+        
+    rows.forEach((row) => {
+      tableHtml += `<tr>`;
+      for (let i = 0; i < headers.length; i++) {
+        const cellValue = row[i] || '';
+        tableHtml += `<td style="${getCellStyle(cellValue, false)}">${cellValue}</td>`;
+      }
+      tableHtml += `</tr>`;
+    });
+    
+    tableHtml += `</tbody>
+    </table>`;
+    
+    html += tableHtml;
+  }
+  
+  html += `</div>`;
+  
+  // Text format (for WhatsApp)
+  let plainText = `*${greetingPhrase}*\n\n${subPhrase1}\n*${subPhrase2}*\n\n`;
+  if (headers.length > 0) {
+    plainText += `${headers.map(h => `[${h}]`).join(' | ')}\n`;
+    plainText += `${headers.map(() => '---').join(' | ')}\n`;
+    rows.forEach(row => {
+      const alignedRow = [];
+      for (let i = 0; i < headers.length; i++) {
+        alignedRow.push(row[i] || '—');
+      }
+      plainText += `${alignedRow.join(' | ')}\n`;
+    });
+  }
+  
+  return { html, text: plainText };
+};
+
 export default function Patio({ onBack }: PatioProps) {
   const principle = useCurrentPrinciple();
   const [patioData, setPatioData] = useState<PatioItem[]>([]);
@@ -104,6 +298,10 @@ export default function Patio({ onBack }: PatioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
+  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade'>('patio');
+  const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>('bom dia');
+  const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
+  const [dispCopied, setDispCopied] = useState(false);
 
   useEffect(() => {
     // Escutar rtdb
@@ -729,7 +927,43 @@ export default function Patio({ onBack }: PatioProps) {
           </button>
         )}
       </div>
-      {/* ================= HERO OPERATIONAL MONITORS PLAQUE ================= */}
+
+      {/* ================= NAVIGATION TABS ================= */}
+      <div className="w-full relative z-10 max-w-[94rem] mx-auto mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-2 bg-[#e8d5bc]/80 p-1 border-2 border-[#5c3c24]/25 rounded-xl shadow-inner w-full sm:w-auto shrink-0">
+          <button
+            onClick={() => setActiveSubTab('patio')}
+            className={cn(
+              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              activeSubTab === 'patio'
+                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+            )}
+          >
+            <Truck size={14} className="stroke-[2.5]" />
+            <span>Gerenciar Pátio</span>
+          </button>
+          <button
+            onClick={() => setActiveSubTab('disponibilidade')}
+            className={cn(
+              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              activeSubTab === 'disponibilidade'
+                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+            )}
+          >
+            <Activity size={14} className="stroke-[2.5]" />
+            <span>Disponibilidade</span>
+          </button>
+        </div>
+        <div className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider hidden md:block">
+          SISTEMA DE CONTROLE DE FLUXO & DISPONIBILIDADE
+        </div>
+      </div>
+
+      {activeSubTab === 'patio' ? (
+        <>
+          {/* ================= HERO OPERATIONAL MONITORS PLAQUE ================= */}
       <div className="hidden md:block w-full relative z-10 max-w-[94rem] mx-auto mt-6 shrink-0">
         <WoodenPlaque className="py-4 px-6 md:px-8 flex flex-col md:flex-row items-center justify-center gap-6" screwSize="w-2.5 h-2.5">
           {/* Core Metrics Widgets */}
@@ -842,7 +1076,7 @@ export default function Patio({ onBack }: PatioProps) {
               <div className="flex-1 my-4 flex items-center justify-center min-h-[220px] lg:min-h-[280px]">
                 <div className="w-full h-full min-h-[220px] lg:min-h-[280px] relative rounded-2xl overflow-hidden border-2 border-[#5c3c24]/80 shadow-[0_8px_20px_rgba(0,0,0,0.35),inset_0_2px_4px_rgba(255,255,255,0.1)] group bg-[#26160d]">
                   <img 
-                    src="https://i.postimg.cc/2SDqGtb9/top.jpg" 
+                    src="/images/top.jpg" 
                     alt="Café Especial 3 Corações Rústico"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     referrerPolicy="no-referrer"
@@ -1137,6 +1371,200 @@ export default function Patio({ onBack }: PatioProps) {
         </div>
 
       </div>
+        </>
+      ) : (
+        /* ================= DISPONIBILIDADE CONSOLE ================= */
+        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
+          
+          {/* LEFT COLUMN: CONTROL & INPUT */}
+          <div className="lg:col-span-5 h-full flex flex-col">
+            <WoodenPlaque className="h-full flex-1" screwSize="w-2.5 h-2.5">
+              <div className="flex items-center gap-3 mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
+                <Activity size={18} className="text-[#ca1a20]" />
+                <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Configuração & Ingestão</h2>
+              </div>
+
+              <div className="space-y-5 flex flex-col justify-between flex-1">
+                
+                {/* Greeting Dropdown Selector */}
+                <div className="flex flex-col gap-2 text-left">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">Saudação Inicial (Menu Suspenso):</label>
+                  <div className="relative inline-block w-full">
+                    <select 
+                      value={disponibilidadeGreeting} 
+                      onChange={(e) => setDisponibilidadeGreeting(e.target.value as 'bom dia' | 'boa tarde' | 'boa noite')} 
+                      className="w-full bg-gradient-to-b from-[#f8f5ee] to-[#eddaba] border-2 border-[#5c3c24]/60 text-[#311f14] font-black text-xs uppercase tracking-widest rounded-xl py-3 px-4 shadow-md outline-none cursor-pointer hover:bg-[#e4cbab] transition-all appearance-none text-left"
+                    >
+                      <option value="bom dia">Prezados, bom dia!</option>
+                      <option value="boa tarde">Prezados, boa tarde!</option>
+                      <option value="boa noite">Prezados, boa noite!</option>
+                    </select>
+                    <div className="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none text-[#5c3c24] text-xs font-bold">
+                      ▼
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input Area */}
+                <div className="flex flex-col gap-2 text-left flex-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">Cole a Tabela da Planilha (Excel/Google Sheets):</label>
+                    <button 
+                      onClick={() => setDisponibilidadeInput('')}
+                      className="text-[9px] uppercase tracking-wider font-extrabold text-[#ca1a20] hover:underline cursor-pointer"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+                  <div className="relative bg-gradient-to-br from-[#1d120a] to-[#2b190f] border-3 border-[#5c3c24]/85 p-1.5 rounded-xl shadow-[inset_0_4px_10px_rgba(0,0,0,0.85),0_1px_2px_rgba(255,255,255,0.15)] flex-1 min-h-[16rem] flex flex-col">
+                    <textarea 
+                      className="w-full h-full flex-1 bg-transparent p-4 text-[12px] text-[#edd9bf] font-mono resize-none focus:outline-none placeholder:text-[#5c3c24]/50 uppercase leading-relaxed font-semibold min-h-[14rem]"
+                      placeholder="COLE SUA PLANILHA AQUI (CTRL+V)...&#13;IDENTIFICAMOS AS COLUNAS DE FORMA INTELIGENTE!"
+                      value={disponibilidadeInput}
+                      onChange={(e) => setDisponibilidadeInput(e.target.value)}
+                    />
+                    
+                    <div className="absolute bottom-4 right-4 flex items-center gap-2 pointer-events-none">
+                      <span className="text-[8px] font-mono text-[#edd9bf]/40 uppercase tracking-widest">SHEETS BUFFER</span>
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_#f59e0b]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3 pt-4 shrink-0">
+                  <motion.button 
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={async () => {
+                      if (!disponibilidadeInput.trim()) return;
+                      const { html, text } = generateDisponibilidadeHtmlAndText(disponibilidadeGreeting, disponibilidadeInput);
+                      try {
+                        const typeHtml = "text/html";
+                        const typeText = "text/plain";
+                        const blobHtml = new Blob([html], { type: typeHtml });
+                        const blobText = new Blob([text], { type: typeText });
+                        const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
+                        await navigator.clipboard.write(data);
+                        setDispCopied(true);
+                        setTimeout(() => setDispCopied(false), 2000);
+                      } catch (err) {
+                        await navigator.clipboard.writeText(text);
+                        setDispCopied(true);
+                        setTimeout(() => setDispCopied(false), 2000);
+                      }
+                    }}
+                    disabled={!disponibilidadeInput.trim()}
+                    className={cn(
+                      "w-full py-4 font-black text-[11px] uppercase tracking-[0.25em] transition-all flex items-center justify-center gap-2 rounded-xl cursor-pointer shadow-[0_5px_0px_#800609,0_6px_10px_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-[0_2px_0px_#800609,0_3px_5px_rgba(0,0,0,0.4)] border-2 border-[#ff3e47]/30 text-white",
+                      !disponibilidadeInput.trim() 
+                        ? "bg-slate-800 text-slate-500 shadow-none border-transparent cursor-not-allowed opacity-50" 
+                        : "bg-gradient-to-b from-[#ca1a20] to-[#8c060a] hover:from-[#e52229] hover:to-[#a9080d]"
+                    )}
+                  >
+                    {dispCopied ? (
+                      <>
+                        <Check size={16} className="stroke-[3]" />
+                        Disponibilidade Copiada!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={16} className="stroke-[2.5]" />
+                        Copiar Disponibilidade (HTML)
+                      </>
+                    )}
+                  </motion.button>
+                  <p className="text-[8.5px] italic text-stone-500 text-center leading-normal">
+                    * Ao copiar, as informações são formatadas em uma tabela profissional ideal para envio no Outlook, Gmail ou Teams/WhatsApp.
+                  </p>
+                </div>
+
+              </div>
+            </WoodenPlaque>
+          </div>
+
+          {/* RIGHT COLUMN: INTERACTIVE PREVIEW */}
+          <div className="lg:col-span-7 h-full flex flex-col">
+            <WoodenPlaque className="h-full flex-1" screwSize="w-2.5 h-2.5">
+              <div className="flex items-center justify-between mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
+                <div className="flex items-center gap-3">
+                  <Activity size={18} className="text-[#5c3c24]" />
+                  <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Visualização do Resultado</h2>
+                </div>
+                <div className="text-[10px] text-green-700 bg-green-100 border border-green-300 rounded px-2.5 py-0.5 font-bold uppercase tracking-wider animate-pulse select-none">
+                  Tempo Real
+                </div>
+              </div>
+
+              {/* LIVE EMBEDDED EMAIL PREVIEW */}
+              <div className="flex-1 overflow-y-auto pr-1">
+                {!disponibilidadeInput.trim() ? (
+                  <div className="h-full min-h-[24rem] flex flex-col items-center justify-center border-2 border-dashed border-[#5c3c24]/20 rounded-2xl bg-[#eddaba]/10 p-8 text-center select-none">
+                    <Database className="text-[#5c3c24]/30 w-12 h-12 mb-4 animate-bounce" />
+                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#5c3c24]/60">Nenhum Dado De Ingestão</span>
+                    <p className="text-[10px] text-stone-500 max-w-sm mt-3 font-semibold leading-relaxed">
+                      Cole as informações copiadas da planilha Excel no painel à esquerda para gerar o cabeçalho e a tabela da disponibilidade de forma organizada.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-[#ffffff] border-3 border-[#311f14] rounded-2xl p-6 shadow-md text-left select-text max-w-full overflow-hidden">
+                    
+                    {/* Hardcoded Header Info with dropdown alignment */}
+                    <div className="border-b border-dashed border-stone-300 pb-4 mb-5 select-text font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif' }}>
+                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '16px', fontFamily: 'Verdana', fontWeight: 'bold' }}>
+                        Prezados, {disponibilidadeGreeting}!
+                      </p>
+                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '4px', fontFamily: 'Verdana', fontWeight: 'bold' }}>
+                        Segue a disponibilidade de veículos.
+                      </p>
+                      <p className="text-[15px] text-black m-0 leading-normal" style={{ fontFamily: 'Verdana' }}>
+                        <span className="bg-[#b4a7d6] text-black px-1 py-0.5 rounded-none font-bold text-[20px]" style={{ fontSize: '20px', fontWeight: 'bold', fontFamily: 'Verdana' }}>Favor ficarem atentos à origem de cada carregamento</span>.
+                      </p>
+                    </div>
+
+                    {/* Preview Table */}
+                    {(() => {
+                      const { headers, rows } = parseTableData(disponibilidadeInput);
+                      if (headers.length === 0) return null;
+                      return (
+                        <div className="overflow-x-auto rounded-none border border-black max-w-full select-text">
+                          <table className="w-full text-left border-collapse min-w-full" style={{ border: '1px solid #000000' }}>
+                            <thead>
+                              <tr>
+                                {headers.map((h, hIdx) => (
+                                  <th key={hIdx} style={getCellStyleObj(h, true)}>
+                                    {h}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="select-text">
+                              {rows.map((row, rIdx) => (
+                                <tr key={rIdx}>
+                                  {headers.map((_, colIdx) => {
+                                    const cellVal = row[colIdx] || '';
+                                    return (
+                                      <td key={colIdx} style={getCellStyleObj(cellVal, false)}>
+                                        {cellVal}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()}
+
+                  </div>
+                )}
+              </div>
+            </WoodenPlaque>
+          </div>
+
+        </div>
+      )}
 
       {/* ================= PORTABLE FOOTER METAL PLATE BAR ================= */}
       <div className="w-full relative z-10 max-w-[94rem] mx-auto mt-6 shrink-0">

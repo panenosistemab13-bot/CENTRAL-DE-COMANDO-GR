@@ -27,7 +27,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
-  const [profileImage, setProfileImage] = useState('https://i.postimg.cc/hjdJt0Wh/Whats-App-Image-2026-06-06-at-02-34-52.jpg');
+  const [profileImage, setProfileImage] = useState('/images/avatar.jpg');
   const [viewDate, setViewDate] = useState<Date>(() => {
     return new Date();
   });
@@ -416,7 +416,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
           <div className="py-4 flex justify-center bg-[#1d1008]">
              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-[#a27a5d]/40 shadow-lg relative group bg-[#e2cfb9] shrink-0">
                <img 
-                 src="https://i.postimg.cc/2SDqGtb9/top.jpg" 
+                 src="/images/top.jpg" 
                  alt="Grãos de Café" 
                  className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
                />
@@ -514,7 +514,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                 {/* 4K Image Banner (Aesthetic from Initial Menu) */}
                 <div className="w-full flex-1 max-h-[160px] min-h-[100px] mb-2 rounded-xl overflow-hidden border-2 border-[#5c3e29]/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative group hidden md:block">
                   <img 
-                    src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&q=100&w=1200&h=400"
+                    src="/images/banner_coffee.jpg"
                     alt="Coffee Aesthetic Header"
                     className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 filter sepia-[20%] contrast-[1.1] brightness-90 relative z-0"
                     referrerPolicy="no-referrer"

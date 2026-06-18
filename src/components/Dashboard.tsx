@@ -216,7 +216,7 @@ export default function Dashboard() {
     <div className="min-h-full bg-[#F2E4CC] text-[#2D1A10] p-4 md:p-8 font-sans overflow-auto flex flex-col relative gap-6">
       
       {/* Decorative Artisan Background Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")' }}></div>
+      <div className="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(circle_at_center,rgba(58,36,20,0.05)_0%,transparent_100%)]"></div>
 
       {/* HEADER SECTION - Premium Artisan Plate Style */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b-2 border-[#6B4423]/20 relative z-10 shrink-0">

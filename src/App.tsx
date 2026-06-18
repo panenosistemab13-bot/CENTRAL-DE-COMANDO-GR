@@ -43,13 +43,13 @@ type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' |
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
-  presence: 'https://images.unsplash.com/photo-1498804103079-a6351b050096?auto=format&fit=crop&q=80&w=2070', // Notebook and coffee on rustic wood table
-  risk: 'https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&q=80&w=2070',
-  averbacao: 'https://images.unsplash.com/photo-1518057111178-44a106bad636?auto=format&fit=crop&q=80&w=2070', // Coffee sacks stacked with rich roast beans
-  sm_creator: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=2070', // Quality checker analyzing coffee beans
-  rotas: 'https://images.unsplash.com/photo-1559589689-577aabd1db4f?auto=format&fit=crop&q=80&w=2070', // Scenic coffee plantation rows winding through green hills
-  patio: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&q=80&w=2070', // Manual vintage grinder and mug on rustic dark background (matches attached design)
-  checklist: 'https://images.unsplash.com/photo-1522012118064-2e650e89d2c2?auto=format&fit=crop&q=80&w=2070' // Vintage rustic coffee preparation mockup
+  presence: '/images/bg_presence.jpg', // Notebook and coffee on rustic wood table
+  risk: '/images/bg_risk.jpg',
+  averbacao: '/images/bg_averbacao.jpg', // Coffee sacks stacked with rich roast beans
+  sm_creator: '/images/bg_sm_creator.jpg', // Quality checker analyzing coffee beans
+  rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
+  patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
+  checklist: '/images/bg_checklist.jpg' // Vintage rustic coffee preparation mockup
 };
 
 const tabs = [
@@ -238,7 +238,7 @@ export default function App() {
             <div className={cn("hidden md:flex items-center gap-6 w-1/4 pointer-events-auto", activeTab === 'averbacao' ? "opacity-0 invisible" : "")}>
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#cead80] bg-[#800609] flex items-center justify-center shrink-0 shadow-lg shadow-black/30">
-                  <img src="https://i.postimg.cc/HxkVgtSZ/Gemini-Generated-Image-ji8y90ji8y90ji8y.png" alt="Logo" className="w-full h-full object-cover scale-105" />
+                  <img src="/logo-pgr.png" alt="Logo" className="w-full h-full object-cover scale-105" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-2xl font-black tracking-widest text-[#3A2414] leading-none font-serif">SISTEMA PGR</span>

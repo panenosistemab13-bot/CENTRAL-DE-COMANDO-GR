@@ -97,7 +97,7 @@ const generateStyledTableHtml = (rows: SMRow[], isIda: boolean) => {
   });
 
   return `
-    <div style="width: 100%; max-width: 1000px; box-sizing: border-box; background-color: #e6d5c3; background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'); border: 6px solid #c79165; border-radius: 12px; padding: 4px; display: block; text-align: left; margin: 10px 0;">
+    <div style="width: 100%; max-width: 1000px; box-sizing: border-box; background-color: #e6d5c3;  border: 6px solid #c79165; border-radius: 12px; padding: 4px; display: block; text-align: left; margin: 10px 0;">
       <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; background-color: rgba(253, 250, 245, 0.95); border-radius: 6px; overflow: hidden; font-family: 'Georgia', serif; font-size: 12px;">
         <thead>
           <tr style="background-color: ${color}; background-image: linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%); color: ${textColor}; height: 42px;">
@@ -530,7 +530,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'ida')}
                           placeholder="Ctrl+V aqui..."
-                          className="w-full h-24 bg-white/5 border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-green-500/50 resize-none"
+                          className="w-full h-24 bg-white/5 border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)]  bg-[#d2c2b2] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-green-500/50 resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('ida')}
@@ -563,7 +563,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'ida')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 font-bold group/cell">
@@ -572,7 +572,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'ida')}
-                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
@@ -588,7 +588,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.placa}
                                   onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'ida')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-black tracking-widest uppercase"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-black tracking-widest uppercase"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -596,7 +596,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'ida')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -604,7 +604,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'ida')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3">
@@ -612,7 +612,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.trecho}
                                   onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'ida')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
                                 />
                               </td>
                               <td className="p-3 text-right font-black text-green-500 group/cell">
@@ -628,7 +628,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'ida')}
-                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
                                   />
                                 </div>
                               </td>
@@ -690,7 +690,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'volta')}
                           placeholder="Ctrl+V aqui..."
-                          className="w-full h-24 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-[#b91c1c] resize-none"
+                          className="w-full h-24  bg-[#d2c2b2] border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-[#b91c1c] resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('volta')}
@@ -723,7 +723,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'volta')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 font-bold group/cell">
@@ -732,7 +732,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'volta')}
-                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
@@ -748,7 +748,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.placa}
                                   onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'volta')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-black tracking-widest uppercase"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-black tracking-widest uppercase"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -756,7 +756,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'volta')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3 text-center">
@@ -764,7 +764,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'volta')}
-                                  className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                 />
                               </td>
                               <td className="p-3">
@@ -773,7 +773,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.trecho}
                                     onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'volta')}
-                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
                                   />
                                   <button 
                                     onClick={() => {
@@ -800,7 +800,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'volta')}
-                                    className="w-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
                                   />
                                 </div>
                               </td>
