@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ClipboardCheck, 
   Trash2, 
@@ -12,13 +12,24 @@ import {
   Edit2,
   Copy,
   Check,
-  Heart
+  Heart,
+  Upload,
+  FileText,
+  X,
+  Loader2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { rtdb } from '../firebase';
+import { rtdb, storage } from '../firebase';
 import { ref, onValue, set, remove, update } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, differenceInDays, parseISO, addDays } from 'date-fns';
+
+interface PdfFile {
+  id: string;
+  name: string;
+  url: string;
+}
 
 interface ChecklistItem {
   id: string;
@@ -32,6 +43,7 @@ interface ChecklistItem {
   statusOverride?: 'APROVADO' | 'VENCIDO' | 'NEGATIVADO' | 'REPROVADO';
   estaNoPatio?: 'SIM' | 'NÃO';
   assinou?: 'SIM' | 'NÃO';
+  pdfs?: PdfFile[];
 }
 
 const CoffeeBean = ({ className = "w-6 h-6", ...props }: { className?: string; [key: string]: any }) => (
@@ -57,6 +69,50 @@ const LicensePlate = ({ plate }: { plate: string }) => (
   </div>
 );
 
+const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
+  const [objectUrl, setObjectUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (!pdfUrl) return;
+    
+    if (pdfUrl.startsWith('data:application/pdf;base64,')) {
+      try {
+        const base64Data = pdfUrl.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setObjectUrl(url + '#view=FitH&toolbar=0&navpanes=0&scrollbar=0');
+        
+        return () => URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error("Error creating blob from data URL", e);
+        setObjectUrl(pdfUrl);
+      }
+    } else {
+      setObjectUrl(pdfUrl + '#view=FitH&toolbar=0&navpanes=0&scrollbar=0');
+    }
+  }, [pdfUrl]);
+
+  if (!objectUrl) return (
+    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+      <Loader2 size={20} className="animate-spin text-[#B32025]/50" />
+    </div>
+  );
+
+  return (
+    <iframe 
+      src={objectUrl}
+      className="w-full h-full object-cover pointer-events-none"
+      title={title}
+    />
+  );
+};
+
 export default function Checklist() {
   const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
   const [items, setItems] = useState<ChecklistItem[]>([]);
@@ -81,6 +137,71 @@ export default function Checklist() {
     contato: '(31) 984817047'
   });
   const [genCopied, setGenCopied] = useState(false);
+  const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
+
+  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>, itemId: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      alert('Apenas arquivos PDF são permitidos.');
+      return;
+    }
+
+    setUploadingItemId(itemId);
+    try {
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        try {
+          const base64String = reader.result as string;
+          const fileId = Date.now().toString();
+          
+          const item = items.find(i => i.id === itemId);
+          if (item) {
+            const newPdf = { id: fileId, name: file.name, url: base64String };
+            const updatedPdfs = item.pdfs ? [...item.pdfs, newPdf] : [newPdf];
+            await update(ref(rtdb, `checklist_veiculos/${itemId}`), { pdfs: updatedPdfs });
+          }
+        } catch (error) {
+          console.error("Erro ao salvar PDF:", error);
+          alert("Erro ao fazer upload do arquivo. O arquivo pode ser muito grande.");
+        } finally {
+          setUploadingItemId(null);
+          event.target.value = '';
+        }
+      };
+
+      reader.onerror = () => {
+        console.error("Erro ao ler o arquivo PDF");
+        alert("Erro ao ler o arquivo.");
+        setUploadingItemId(null);
+        event.target.value = '';
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Erro ao processar PDF:", error);
+      alert("Erro ao processar o arquivo.");
+      setUploadingItemId(null);
+      event.target.value = '';
+    }
+  };
+
+  const handlePdfDelete = async (itemId: string, pdfId: string) => {
+    if (!confirm('Deseja realmente remover este arquivo?')) return;
+    
+    try {
+      const item = items.find(i => i.id === itemId);
+      if (!item || !item.pdfs) return;
+
+      const updatedPdfs = item.pdfs.filter(p => p.id !== pdfId);
+      await update(ref(rtdb, `checklist_veiculos/${itemId}`), { pdfs: updatedPdfs });
+    } catch (error) {
+      console.error("Erro ao deletar PDF:", error);
+      alert("Erro ao remover o arquivo.");
+    }
+  };
 
   useEffect(() => {
     const checklistRef = ref(rtdb, 'checklist_veiculos');
@@ -818,6 +939,66 @@ export default function Checklist() {
                         </div>
                       </div>
 
+                    </div>
+
+                    {/* PDF FILES SECTION */}
+                    <div className="mt-6 pt-4 border-t border-[#3A2414]/10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[11px] font-black font-serif text-[#3A2414] uppercase tracking-[0.1em] flex items-center gap-2">
+                          <FileText size={14} className="text-[#B32025]" />
+                          Planilhas Anexadas
+                        </span>
+                        
+                        <label className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 bg-[#fdfcf9] border border-[#3A2414]/20 text-[#3A2414] font-serif font-black text-[9px] rounded-lg tracking-wider transition-colors shadow-sm cursor-pointer hover:bg-[#B32025]/10",
+                          uploadingItemId === item.id && "opacity-50 pointer-events-none"
+                        )}>
+                          {uploadingItemId === item.id ? (
+                            <Loader2 size={11} className="animate-spin text-[#B32025]" />
+                          ) : (
+                            <Upload size={11} className="text-[#B32025]" />
+                          )}
+                          <span>{uploadingItemId === item.id ? 'ENVIANDO...' : 'ANEXAR PDF'}</span>
+                          <input 
+                            type="file" 
+                            accept="application/pdf" 
+                            className="hidden" 
+                            onChange={(e) => handlePdfUpload(e, item.id)}
+                            disabled={uploadingItemId === item.id}
+                          />
+                        </label>
+                      </div>
+
+                      <div className="flex overflow-x-auto gap-4 pb-2 snap-x" style={{ scrollbarWidth: 'thin' }}>
+                        {item.pdfs && item.pdfs.length > 0 ? (
+                          item.pdfs.map(pdf => (
+                            <div key={pdf.id} className="relative w-[160px] h-[220px] shrink-0 bg-white border border-[#3A2414]/15 shadow-sm snap-start group overflow-hidden transition-all hover:shadow-md hover:border-[#B32025]/30">
+                              <PdfThumbnail pdfUrl={pdf.url} title={pdf.name} />
+                              
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-10">
+                                <a href={pdf.url} download={pdf.name} className="absolute inset-0 z-10" title="Baixar PDF" />
+                                <div className="absolute top-1 right-1 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handlePdfDelete(item.id, pdf.id);
+                                    }}
+                                    className="w-7 h-7 flex items-center justify-center bg-white/90 text-[#B32025] hover:bg-[#B32025] hover:text-white rounded-md shadow-sm transition-colors border border-[#3A2414]/10"
+                                    title="Remover anexo"
+                                  >
+                                    <X size={14} className="stroke-[2]" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="w-full py-4 px-4 border border-dashed border-[#3A2414]/20 rounded-2xl flex items-center justify-center bg-white/50 text-[#3A2414]/50">
+                            <span className="text-[10px] font-serif italic tracking-wide">Nenhuma planilha anexada para este veículo.</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* CONTROL SHELF: INLINE PÁTIO/ASSINADO DROPDOWNS & ACTIONS */}

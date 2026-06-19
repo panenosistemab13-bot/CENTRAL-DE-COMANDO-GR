@@ -337,7 +337,7 @@ export default function App() {
         {/* Scrollable Canvas */}
         <main id="main-scroll-container" className={cn(
           "flex-1 relative",
-          activeTab === 'menu' ? "overflow-hidden" : "overflow-y-visible md:overflow-y-auto pb-24 md:pb-32"
+          activeTab === 'menu' ? "overflow-hidden" : "overflow-y-visible md:overflow-y-auto pb-4 md:pb-8"
         )}>
           <div className={cn(
             "w-full max-w-[1600px] mx-auto relative z-10 flex flex-col transition-all duration-500",
@@ -386,15 +386,15 @@ export default function App() {
 
         {/* System Footer (Only on active modules) */}
         {activeTab !== 'menu' && activeTab !== 'patio' && (
-          <footer className="shrink-0 py-4 px-8 mt-4 flex flex-col md:flex-row items-center justify-between gap-4 relative z-50 text-[10px] font-mono font-bold text-[#c7a482] bg-gradient-to-b from-[#1a0f08] to-[#0a0502] border-t border-[#4a2e1b]/50 shadow-[0_-4px_15px_rgba(0,0,0,0.5)]">
-            <span className="opacity-80">
-              © 2026 <strong className="text-[#e2c19e]">Sistema PGR</strong> - Todos os direitos reservados.
+          <footer className="shrink-0 py-2 px-6 flex flex-row items-center justify-between gap-4 relative z-50 text-[10px] font-mono font-bold text-[#c7a482] bg-gradient-to-b from-[#1a0f08] to-[#0a0502] border-t border-[#4a2e1b]/50 shadow-[0_-4px_15px_rgba(0,0,0,0.5)]">
+            <span className="opacity-80 flex-1 hidden sm:block">
+              © 2026 <strong className="text-[#e2c19e]">Sistema PGR</strong>
             </span>
-            <div className="flex flex-col items-center max-w-lg md:max-w-3xl lg:max-w-4xl text-center px-4">
-              <span className="text-[8px] font-mono tracking-widest text-[#cead80] uppercase mb-0.5 font-bold">Princípios de Liderança 3corações</span>
-              <span className="font-sans font-black text-[#edd9bf] text-[10px] md:text-xs uppercase tracking-wide mb-1 leading-tight">{principle.title}</span>
-              <p className="text-[9px] md:text-[10px] text-[#c7a482] font-semibold leading-relaxed italic">{principle.description}</p>
-              <div className="flex gap-1 mt-1.5 opacity-80">
+            <div className="flex flex-col items-center justify-center flex-[2] text-center px-2">
+              <span className="font-sans font-black text-[#edd9bf] text-[9px] sm:text-[10px] uppercase tracking-wide leading-tight">
+                {principle.title}
+              </span>
+              <div className="flex gap-1 mt-1 opacity-80">
                 {PRINCIPLES_OF_LEADERSHIP.map((item, idx) => {
                   const isActive = idx === PRINCIPLES_OF_LEADERSHIP.indexOf(principle);
                   return (
@@ -407,8 +407,8 @@ export default function App() {
                 })}
               </div>
             </div>
-            <span className="opacity-80 text-center sm:text-right">
-              Sistema Web • Criado por <span className="text-[#e2c19e] font-black">Jefferson Augusto</span>
+            <span className="opacity-80 flex-1 text-right">
+              <span className="hidden sm:inline">Criado por </span><span className="text-[#e2c19e] font-black">Jefferson</span>
             </span>
           </footer>
         )}

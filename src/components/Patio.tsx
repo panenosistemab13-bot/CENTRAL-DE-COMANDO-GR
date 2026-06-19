@@ -234,10 +234,10 @@ const generateDisponibilidadeHtmlAndText = (greeting: 'bom dia' | 'boa tarde' | 
   
   // HTML format - totalmente plano, limpo e profissional para ser colado no e-mail (idêntico à imagem de anexo)
   let html = `<div style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; background-color: #ffffff; padding: 10px; margin: 0;">
-    <p style="margin: 0 0 16px 0; font-family: Verdana, sans-serif; font-weight: bold; font-size: 11pt; color: #000000;">${greetingPhrase}</p>
-    <p style="margin: 0 0 4px 0; font-family: Verdana, sans-serif; font-weight: bold; font-size: 11pt; color: #000000;">${subPhrase1}</p>
+    <p style="margin: 0 0 16px 0; font-family: Verdana, sans-serif; font-weight: normal; font-size: 11pt; color: #000000;">${greetingPhrase}</p>
+    <p style="margin: 0 0 4px 0; font-family: Verdana, sans-serif; font-weight: normal; font-size: 11pt; color: #000000;">${subPhrase1}</p>
     <p style="margin: 0 0 16px 0; font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000;">
-      <span style="background-color: #b4a7d6; font-weight: bold; font-family: Verdana, sans-serif; font-size: 20px; color: #000000; padding: 1px 3px;">${subPhrase2Text}</span>.
+      <span style="background-color: #b4a7d6; font-weight: bold; font-family: Verdana, sans-serif; font-size: 17px; color: #000000; padding: 1px 3px;">${subPhrase2Text}</span>.
     </p>`;
 
   if (headers.length > 0) {
@@ -1076,7 +1076,7 @@ export default function Patio({ onBack }: PatioProps) {
               <div className="flex-1 my-4 flex items-center justify-center min-h-[220px] lg:min-h-[280px]">
                 <div className="w-full h-full min-h-[220px] lg:min-h-[280px] relative rounded-2xl overflow-hidden border-2 border-[#5c3c24]/80 shadow-[0_8px_20px_rgba(0,0,0,0.35),inset_0_2px_4px_rgba(255,255,255,0.1)] group bg-[#26160d]">
                   <img 
-                    src="/images/top.jpg" 
+                    src="/images/banner_coffee.jpg" 
                     alt="Café Especial 3 Corações Rústico"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     referrerPolicy="no-referrer"
@@ -1511,14 +1511,14 @@ export default function Patio({ onBack }: PatioProps) {
                     
                     {/* Hardcoded Header Info with dropdown alignment */}
                     <div className="border-b border-dashed border-stone-300 pb-4 mb-5 select-text font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif' }}>
-                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '16px', fontFamily: 'Verdana', fontWeight: 'bold' }}>
+                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '16px', fontFamily: 'Verdana', fontWeight: 'normal' }}>
                         Prezados, {disponibilidadeGreeting}!
                       </p>
-                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '4px', fontFamily: 'Verdana', fontWeight: 'bold' }}>
+                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '4px', fontFamily: 'Verdana', fontWeight: 'normal' }}>
                         Segue a disponibilidade de veículos.
                       </p>
                       <p className="text-[15px] text-black m-0 leading-normal" style={{ fontFamily: 'Verdana' }}>
-                        <span className="bg-[#b4a7d6] text-black px-1 py-0.5 rounded-none font-bold text-[20px]" style={{ fontSize: '20px', fontWeight: 'bold', fontFamily: 'Verdana' }}>Favor ficarem atentos à origem de cada carregamento</span>.
+                        <span className="bg-[#b4a7d6] text-black px-1 py-0.5 rounded-none font-bold text-[17px]" style={{ fontSize: '17px', fontWeight: 'bold', fontFamily: 'Verdana' }}>Favor ficarem atentos à origem de cada carregamento</span>.
                       </p>
                     </div>
 

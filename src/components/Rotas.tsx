@@ -514,11 +514,11 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                   )}
                 >
                   {/* CARD LEFT: IDA */}
-                  <div className="flex items-center gap-3 bg-[#fdfcf9] hover:bg-[#FAF6F0] border border-[#3A2414]/12 rounded-[1.5rem] p-3 shadow-[0_2px_8px_rgba(58,36,20,0.03)] hover:shadow-[0_4px_14px_rgba(58,36,20,0.05)] transition-all group/card relative w-full">
+                  <div className="flex items-center gap-4 bg-[#FCFBF8] hover:bg-[#F8F5F0] border border-[#3A2414]/10 rounded-[2rem] p-2 pr-4 shadow-[0_2px_8px_rgba(58,36,20,0.02)] hover:shadow-[0_4px_16px_rgba(58,36,20,0.06)] transition-all group/card relative w-full">
                     {/* Six Dots Drag Handle */}
                     {!isEditing && (
                       <div 
-                        className="p-1 px-1.5 text-[#3A2414]/30 hover:text-[#B32025] cursor-grab active:cursor-grabbing shrink-0 transition-colors" 
+                        className="pl-2 pr-1 text-[#3A2414]/20 hover:text-[#B32025] cursor-grab active:cursor-grabbing shrink-0 transition-colors" 
                         title="Arraste para reordenar"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -527,8 +527,8 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     )}
                     
                     {/* Brown button with right arrow (→) */}
-                    <div className="w-11 h-11 bg-[#B37C4E] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 hover:scale-105">
-                      <ArrowRight size={18} className="stroke-[3]" />
+                    <div className="w-10 h-10 bg-[#B37C4E] text-white rounded-full flex items-center justify-center shrink-0 shadow-inner transition-transform duration-300 hover:scale-105">
+                      <ArrowRight size={16} className="stroke-[3]" />
                     </div>
 
                     {/* Route Name Column */}
@@ -545,17 +545,17 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[11px] lg:text-xs font-black text-[#3A2414] uppercase tracking-tight break-words font-sans">
+                          <span className="text-[11px] lg:text-xs font-bold text-[#4a3322] uppercase tracking-wide break-words">
                             {route.ida || '---'}
                           </span>
                           {route.ida && (
                             <button
                               onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
                               className={cn(
-                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100",
+                                "w-7 h-7 flex items-center justify-center rounded-full transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
                                 copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border-green-200 text-green-600 opacity-100"
-                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                  ? "bg-green-50 text-green-600"
+                                  : "bg-white border border-[#3A2414]/5 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/20 hover:bg-[#B32025]/5 shadow-sm"
                               )}
                               title="Copiar nome da Rota (Ida)"
                             >
@@ -583,25 +583,25 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                           />
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <div className="bg-[#fdeedc]/20 hover:bg-[#ffe6cc]/30 text-[#3A2414] border border-[#3A2414]/12 px-4 py-2 rounded-xl font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="bg-[#FAF5F0] hover:bg-[#F2E8DE] text-[#3A2414] border border-[#3A2414]/10 px-4 py-1.5 rounded-full font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
                             {route.idaCod || '—'}
                           </div>
                           {route.idaCod && (
                             <button
                               onClick={() => copyIndividualCode(route.idaCod, 'ida', realIndex)}
                               className={cn(
-                                "p-2.5 bg-white border border-[#3A2414]/15 hover:border-[#B32025]/30 hover:bg-[#B32025]/5 rounded-xl text-[#3A2414]/50 hover:text-[#B32025] shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer",
+                                "w-8 h-8 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer shadow-sm",
                                 copiedCode?.type === 'ida' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border-green-200 text-green-600 border-green-300"
-                                  : ""
+                                  ? "bg-green-50 border border-green-200 text-green-600"
+                                  : "bg-white border border-[#3A2414]/10 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
                               )}
                               title="Copiar Código Ida"
                             >
                               {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
-                                <Check size={13} className="stroke-[3]" />
+                                <Check size={12} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={13} />
+                                <Clipboard size={12} />
                               )}
                             </button>
                           )}
@@ -613,7 +613,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     {isEditing && (
                       <button 
                         onClick={() => removeRow(realIndex)} 
-                        className="absolute -top-1.5 -left-1.5 p-1.5 bg-red-100 hover:bg-red-200 border border-red-200 text-red-700 rounded-full transition-all cursor-pointer shadow-sm"
+                        className="absolute -top-2 -left-2 w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 border border-red-200 text-red-700 rounded-full transition-all cursor-pointer shadow-sm z-10"
                         title="Excluir trecho"
                       >
                         <X size={10} className="stroke-[2.5]" />
@@ -622,10 +622,10 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                   </div>
 
                   {/* CARD RIGHT: VOLTA */}
-                  <div className="flex items-center gap-3 bg-[#fdfcf9] hover:bg-[#FAF6F0] border border-[#3A2414]/12 rounded-[1.5rem] p-3 shadow-[0_2px_8px_rgba(58,36,20,0.03)] hover:shadow-[0_4px_14px_rgba(58,36,20,0.05)] transition-all group/card relative w-full">
+                  <div className="flex items-center gap-4 bg-[#FCFBF8] hover:bg-[#F8F5F0] border border-[#3A2414]/10 rounded-[2rem] p-2 pr-4 shadow-[0_2px_8px_rgba(58,36,20,0.02)] hover:shadow-[0_4px_16px_rgba(58,36,20,0.06)] transition-all group/card relative w-full">
                     {/* Light beige button with left arrow (←) */}
-                    <div className="w-11 h-11 bg-[#EEDBC5] text-[#3A2414] rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 hover:scale-105">
-                      <ArrowRight size={18} className="stroke-[3] rotate-180" />
+                    <div className="w-10 h-10 bg-[#EEDBC5] text-[#3A2414] rounded-full flex items-center justify-center shrink-0 shadow-inner transition-transform duration-300 hover:scale-105 ml-1">
+                      <ArrowRight size={16} className="stroke-[3] rotate-180" />
                     </div>
 
                     {/* Route Name Column */}
@@ -642,17 +642,17 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[11px] lg:text-xs font-black text-[#3A2414] uppercase tracking-tight break-words font-sans">
+                          <span className="text-[11px] lg:text-xs font-bold text-[#4a3322] uppercase tracking-wide break-words">
                             {route.volta || '---'}
                           </span>
                           {route.volta && (
                             <button
                               onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
                               className={cn(
-                                "p-1.5 rounded-lg border transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100",
+                                "w-7 h-7 flex items-center justify-center rounded-full transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
                                 copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border-green-200 text-green-600 opacity-100"
-                                  : "bg-white border-[#3A2414]/15 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                  ? "bg-green-50 text-green-600"
+                                  : "bg-white border border-[#3A2414]/5 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/20 hover:bg-[#B32025]/5 shadow-sm"
                               )}
                               title="Copiar nome da Rota (Volta)"
                             >
@@ -680,25 +680,25 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                           />
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <div className="bg-[#fdeedc]/20 hover:bg-[#ffe6cc]/30 text-[#3A2414] border border-[#3A2414]/12 px-4 py-2 rounded-xl font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="bg-[#FAF5F0] hover:bg-[#F2E8DE] text-[#3A2414] border border-[#3A2414]/10 px-4 py-1.5 rounded-full font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
                             {route.voltaCod || '—'}
                           </div>
                           {route.voltaCod && (
                             <button
                               onClick={() => copyIndividualCode(route.voltaCod, 'volta', realIndex)}
                               className={cn(
-                                "p-2.5 bg-white border border-[#3A2414]/15 hover:border-[#B32025]/30 hover:bg-[#B32025]/5 rounded-xl text-[#3A2414]/50 hover:text-[#B32025] shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer",
+                                "w-8 h-8 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer shadow-sm",
                                 copiedCode?.type === 'volta' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border-green-200 text-green-600 border-green-300"
-                                  : ""
+                                  ? "bg-green-50 border border-green-200 text-green-600"
+                                  : "bg-white border border-[#3A2414]/10 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
                               )}
                               title="Copiar Código Volta"
                             >
                               {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
-                                <Check size={13} className="stroke-[3]" />
+                                <Check size={12} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={13} />
+                                <Clipboard size={12} />
                               )}
                             </button>
                           )}
