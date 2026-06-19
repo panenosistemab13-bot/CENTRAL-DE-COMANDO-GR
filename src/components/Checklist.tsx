@@ -105,11 +105,14 @@ const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
   );
 
   return (
-    <iframe 
-      src={objectUrl}
-      className="w-full h-full object-cover pointer-events-none"
-      title={title}
-    />
+    <div className="w-full h-full overflow-hidden relative bg-white">
+      <iframe 
+        src={objectUrl}
+        className="absolute top-0 left-0 w-[800px] h-[1100px] origin-top-left scale-[0.2] pointer-events-none border-0"
+        title={title}
+        scrolling="no"
+      />
+    </div>
   );
 };
 
