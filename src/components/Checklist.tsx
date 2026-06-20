@@ -108,7 +108,7 @@ const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
     <div className="w-full h-full overflow-hidden relative bg-white">
       <iframe 
         src={objectUrl}
-        className="absolute top-0 left-0 w-[400%] h-[1200px] origin-top-left pointer-events-none border-0"
+        className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left pointer-events-none border-0"
         style={{ transform: 'scale(0.25)' }}
         title={title}
         scrolling="no"
