@@ -1484,30 +1484,31 @@ export default function Patio({ onBack }: PatioProps) {
           </div>
 
           {/* RIGHT COLUMN: INTERACTIVE PREVIEW */}
-          <div className="lg:col-span-7 h-full flex flex-col">
-            <WoodenPlaque className="h-full flex-1" screwSize="w-2.5 h-2.5">
-              <div className="flex items-center justify-between mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
-                <div className="flex items-center gap-3">
-                  <Activity size={18} className="text-[#5c3c24]" />
-                  <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Visualização do Resultado</h2>
-                </div>
-                <div className="text-[10px] text-green-700 bg-green-100 border border-green-300 rounded px-2.5 py-0.5 font-bold uppercase tracking-wider animate-pulse select-none">
-                  Tempo Real
-                </div>
-              </div>
-
-              {/* LIVE EMBEDDED EMAIL PREVIEW */}
-              <div className="flex-1 overflow-y-auto pr-1">
-                {!disponibilidadeInput.trim() ? (
-                  <div className="h-full min-h-[24rem] flex flex-col items-center justify-center border-2 border-dashed border-[#5c3c24]/20 rounded-2xl bg-[#eddaba]/10 p-8 text-center select-none">
-                    <Database className="text-[#5c3c24]/30 w-12 h-12 mb-4 animate-bounce" />
-                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#5c3c24]/60">Nenhum Dado De Ingestão</span>
-                    <p className="text-[10px] text-stone-500 max-w-sm mt-3 font-semibold leading-relaxed">
-                      Cole as informações copiadas da planilha Excel no painel à esquerda para gerar o cabeçalho e a tabela da disponibilidade de forma organizada.
-                    </p>
+          <div className="lg:col-span-7 relative min-h-[500px] lg:min-h-0">
+            <div className="lg:absolute lg:inset-0 flex flex-col h-full">
+              <WoodenPlaque className="h-full flex-1 flex flex-col min-h-0" screwSize="w-2.5 h-2.5">
+                <div className="flex items-center justify-between mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left shrink-0">
+                  <div className="flex items-center gap-3">
+                    <Activity size={18} className="text-[#5c3c24]" />
+                    <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Visualização do Resultado</h2>
                   </div>
-                ) : (
-                  <div className="bg-[#ffffff] border-3 border-[#311f14] rounded-2xl p-6 shadow-md text-left select-text max-w-full overflow-hidden">
+                  <div className="text-[10px] text-green-700 bg-green-100 border border-green-300 rounded px-2.5 py-0.5 font-bold uppercase tracking-wider animate-pulse select-none">
+                    Tempo Real
+                  </div>
+                </div>
+
+                {/* LIVE EMBEDDED EMAIL PREVIEW */}
+                <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+                  {!disponibilidadeInput.trim() ? (
+                    <div className="h-full min-h-[24rem] flex flex-col items-center justify-center border-2 border-dashed border-[#5c3c24]/20 rounded-2xl bg-[#eddaba]/10 p-8 text-center select-none">
+                      <Database className="text-[#5c3c24]/30 w-12 h-12 mb-4 animate-bounce" />
+                      <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#5c3c24]/60">Nenhum Dado De Ingestão</span>
+                      <p className="text-[10px] text-stone-500 max-w-sm mt-3 font-semibold leading-relaxed">
+                        Cole as informações copiadas da planilha Excel no painel à esquerda para gerar o cabeçalho e a tabela da disponibilidade de forma organizada.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-[#ffffff] border-3 border-[#311f14] rounded-2xl p-6 shadow-md text-left select-text w-full overflow-x-hidden">
                     
                     {/* Hardcoded Header Info with dropdown alignment */}
                     <div className="border-b border-dashed border-stone-300 pb-4 mb-5 select-text font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif' }}>
@@ -1561,6 +1562,7 @@ export default function Patio({ onBack }: PatioProps) {
                 )}
               </div>
             </WoodenPlaque>
+            </div>
           </div>
 
         </div>

@@ -108,7 +108,8 @@ const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
     <div className="w-full h-full overflow-hidden relative bg-white">
       <iframe 
         src={objectUrl}
-        className="absolute top-0 left-0 w-[800px] h-[1100px] origin-top-left scale-[0.2] pointer-events-none border-0"
+        className="absolute top-0 left-0 w-[400%] h-[1200px] origin-top-left pointer-events-none border-0"
+        style={{ transform: 'scale(0.25)' }}
         title={title}
         scrolling="no"
       />
@@ -945,8 +946,8 @@ export default function Checklist() {
                     </div>
 
                     {/* PDF FILES SECTION */}
-                    <div className="mt-6 pt-4 border-t border-[#3A2414]/10">
-                      <div className="flex items-center justify-between mb-4">
+                    <div className="mt-4 pt-3 border-t border-[#3A2414]/10">
+                      <div className="flex items-center justify-between mb-3">
                         <span className="text-[11px] font-black font-serif text-[#3A2414] uppercase tracking-[0.1em] flex items-center gap-2">
                           <FileText size={14} className="text-[#B32025]" />
                           Planilhas Anexadas
@@ -972,40 +973,36 @@ export default function Checklist() {
                         </label>
                       </div>
 
-                      <div className="flex overflow-x-auto gap-4 pb-2 snap-x" style={{ scrollbarWidth: 'thin' }}>
-                        {item.pdfs && item.pdfs.length > 0 ? (
-                          item.pdfs.map(pdf => (
-                            <div key={pdf.id} className="relative w-[160px] h-[220px] shrink-0 bg-white border border-[#3A2414]/15 shadow-sm snap-start group overflow-hidden transition-all hover:shadow-md hover:border-[#B32025]/30">
+                      {item.pdfs && item.pdfs.length > 0 && (
+                        <div className="flex overflow-x-auto gap-4 pb-1 snap-x" style={{ scrollbarWidth: 'thin' }}>
+                          {item.pdfs.map(pdf => (
+                            <div key={pdf.id} className="relative w-[320px] h-[180px] shrink-0 bg-white border border-[#3A2414]/15 shadow-sm snap-start group overflow-hidden transition-all hover:shadow-md hover:border-[#B32025]/30">
                               <PdfThumbnail pdfUrl={pdf.url} title={pdf.name} />
                               
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-10">
-                                <a href={pdf.url} download={pdf.name} className="absolute inset-0 z-10" title="Baixar PDF" />
-                                <div className="absolute top-1 right-1 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" title="Visualizar PDF" />
+                                <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <button 
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       handlePdfDelete(item.id, pdf.id);
                                     }}
-                                    className="w-7 h-7 flex items-center justify-center bg-white/90 text-[#B32025] hover:bg-[#B32025] hover:text-white rounded-md shadow-sm transition-colors border border-[#3A2414]/10"
+                                    className="w-8 h-8 flex items-center justify-center bg-white text-[#B32025] hover:bg-[#B32025] hover:text-white rounded-full shadow-md transition-all border border-[#3A2414]/10"
                                     title="Remover anexo"
                                   >
-                                    <X size={14} className="stroke-[2]" />
+                                    <X size={16} className="stroke-[2.5]" />
                                   </button>
                                 </div>
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="w-full py-4 px-4 border border-dashed border-[#3A2414]/20 rounded-2xl flex items-center justify-center bg-white/50 text-[#3A2414]/50">
-                            <span className="text-[10px] font-serif italic tracking-wide">Nenhuma planilha anexada para este veículo.</span>
-                          </div>
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* CONTROL SHELF: INLINE PÁTIO/ASSINADO DROPDOWNS & ACTIONS */}
-                    <div className="mt-4 pt-4 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="mt-3 pt-3 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="flex flex-wrap items-center gap-5">
                         {item.observacao && (
                           <div className="bg-[#fdfbf6] border border-[#3A2414]/15 rounded-xl px-3 py-1.5 text-xs text-[#2D1A10] max-w-xs font-serif italic truncate" title={item.observacao}>

@@ -82,6 +82,18 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Global shortcuts (Ctrl + Number)
+      if (e.ctrlKey) {
+        switch (e.key) {
+          case '1': e.preventDefault(); setActiveTab('patio'); return;
+          case '2': e.preventDefault(); setActiveTab('presence'); return;
+          case '3': e.preventDefault(); setActiveTab('averbacao'); return;
+          case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
+          case '5': e.preventDefault(); setActiveTab('rotas'); return;
+          case '6': e.preventDefault(); setActiveTab('checklist'); return;
+        }
+      }
+
       const isInputFocused = document.activeElement?.tagName === 'INPUT' || 
                              document.activeElement?.tagName === 'TEXTAREA' || 
                              document.activeElement?.getAttribute('contenteditable') === 'true';
