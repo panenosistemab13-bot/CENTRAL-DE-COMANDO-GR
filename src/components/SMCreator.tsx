@@ -872,7 +872,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     Soma de Valores
                   </h3>
                   <button 
-                    onClick={() => saveCalc([''])}
+                    onClick={() => saveCalc(calcValues.map(() => ''))}
                     className="p-1.5 text-[#B32025] hover:underline text-shadow-sm font-serif ml-2 transition-colors cursor-pointer"
                     title="Resetar calculadora"
                   >
@@ -948,7 +948,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <motion.button 
                       whileHover={{ scale: 1.01, backgroundColor: "rgba(225, 29, 72, 0.05)" }}
                       whileTap={{ scale: 0.99 }}
-                      onClick={() => saveCalc([''])}
+                      onClick={() => saveCalc(calcValues.map(() => ''))}
                       className="py-4 border-2 border-dashed border-rose-500/20 hover:border-rose-500 text-rose-500/80 hover:text-rose-500 rounded-xl flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
                       title="Limpar todos os valores adicionados"
                     >
