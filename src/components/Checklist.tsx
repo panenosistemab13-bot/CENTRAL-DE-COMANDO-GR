@@ -16,7 +16,9 @@ import {
   Upload,
   FileText,
   X,
-  Loader2
+  Loader2,
+  Eye,
+  Download
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb, storage } from '../firebase';
@@ -119,6 +121,40 @@ const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
 
 export default function Checklist() {
   const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
+
+  const handlePdfAction = (e: React.MouseEvent, base64Url: string, name: string, action: 'view' | 'download') => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      let objectUrl = base64Url;
+      if (base64Url.startsWith('data:application/pdf;base64,')) {
+        const base64Data = base64Url.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        objectUrl = URL.createObjectURL(blob);
+      }
+
+      if (action === 'download') {
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        window.open(objectUrl, '_blank');
+      }
+    } catch (error) {
+      console.error("Error processing PDF action:", error);
+    }
+  };
+
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'TODOS' | 'EM DIA' | 'VENCIDO' | 'NEGATIVADOS'>('TODOS');
@@ -979,21 +1015,35 @@ export default function Checklist() {
                             <div key={pdf.id} className="relative w-[320px] h-[180px] shrink-0 bg-white border border-[#3A2414]/15 shadow-sm snap-start group overflow-hidden transition-all hover:shadow-md hover:border-[#B32025]/30">
                               <PdfThumbnail pdfUrl={pdf.url} title={pdf.name} />
                               
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-10">
-                                <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" title="Visualizar PDF" />
-                                <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button 
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handlePdfDelete(item.id, pdf.id);
-                                    }}
-                                    className="w-8 h-8 flex items-center justify-center bg-white text-[#B32025] hover:bg-[#B32025] hover:text-white rounded-full shadow-md transition-all border border-[#3A2414]/10"
-                                    title="Remover anexo"
-                                  >
-                                    <X size={16} className="stroke-[2.5]" />
-                                  </button>
-                                </div>
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors z-10 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3">
+                                
+                                <button
+                                  onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'view')}
+                                  className="w-10 h-10 flex items-center justify-center bg-white text-[#3A2414] hover:bg-stone-100 rounded-full shadow-lg transition-transform hover:scale-110"
+                                  title="Visualizar"
+                                >
+                                  <Eye size={18} className="stroke-[2.5]" />
+                                </button>
+                                
+                                <button
+                                  onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'download')}
+                                  className="w-10 h-10 flex items-center justify-center bg-white text-[#3A2414] hover:bg-stone-100 rounded-full shadow-lg transition-transform hover:scale-110"
+                                  title="Baixar"
+                                >
+                                  <Download size={18} className="stroke-[2.5]" />
+                                </button>
+
+                                <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handlePdfDelete(item.id, pdf.id);
+                                  }}
+                                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white text-[#B32025] hover:bg-[#B32025] hover:text-white rounded-full shadow-md transition-all border border-[#3A2414]/10"
+                                  title="Remover anexo"
+                                >
+                                  <X size={16} className="stroke-[2.5]" />
+                                </button>
                               </div>
                             </div>
                           ))}
