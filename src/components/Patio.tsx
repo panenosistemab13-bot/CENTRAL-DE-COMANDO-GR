@@ -287,6 +287,13 @@ const generateDisponibilidadeHtmlAndText = (greeting: 'bom dia' | 'boa tarde' | 
   return { html, text: plainText };
 };
 
+interface IngestedVehicle {
+  id: string;
+  placa: string;
+  isPatio: string;
+  hasAssinou: string;
+}
+
 export default function Patio({ onBack }: PatioProps) {
   const principle = useCurrentPrinciple();
   const [patioData, setPatioData] = useState<PatioItem[]>([]);
@@ -302,6 +309,37 @@ export default function Patio({ onBack }: PatioProps) {
   const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>('bom dia');
   const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
   const [dispCopied, setDispCopied] = useState(false);
+  const [ingestedVehicles, setIngestedVehicles] = useState<IngestedVehicle[]>([]);
+
+  useEffect(() => {
+    if (!disponibilidadeInput.trim()) {
+      setIngestedVehicles([]);
+      return;
+    }
+    const { headers, rows } = parseTableData(disponibilidadeInput);
+    if (!headers.length) return;
+
+    const termoIdx = headers.findIndex(h => h.trim().toUpperCase() === 'TERMO');
+    const placaIdx = headers.findIndex(h => {
+       const up = h.trim().toUpperCase();
+       return up === 'PLACA' || up === 'IDENTIFICADOR' || up === 'VEÍCULO' || up === 'VEICULO' || up.includes('PLACA');
+    });
+
+    if (termoIdx === -1 || placaIdx === -1) return;
+
+    const newVehicles = rows
+      .filter((row) => {
+         const termo = (row[termoIdx] || '').trim().toUpperCase();
+         return termo === 'NÃO' || termo === 'NAO';
+      })
+      .map((row, idx) => ({
+         id: `veh_${idx}_${Date.now()}`,
+         placa: (row[placaIdx] || '').trim().toUpperCase().substring(0, 8),
+         isPatio: 'NÃO',
+         hasAssinou: 'NÃO'
+      }));
+    setIngestedVehicles(newVehicles);
+  }, [disponibilidadeInput]);
 
   useEffect(() => {
     // Escutar rtdb
@@ -1508,57 +1546,85 @@ export default function Patio({ onBack }: PatioProps) {
                       </p>
                     </div>
                   ) : (
-                    <div className="bg-[#ffffff] border-3 border-[#311f14] rounded-2xl p-6 shadow-md text-left select-text w-full overflow-x-hidden">
-                    
-                    {/* Hardcoded Header Info with dropdown alignment */}
-                    <div className="border-b border-dashed border-stone-300 pb-4 mb-5 select-text font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif' }}>
-                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '16px', fontFamily: 'Verdana', fontWeight: 'normal' }}>
-                        Prezados, {disponibilidadeGreeting}!
-                      </p>
-                      <p className="text-[15px] text-black m-0 leading-normal" style={{ marginBottom: '4px', fontFamily: 'Verdana', fontWeight: 'normal' }}>
-                        Segue a disponibilidade de veículos.
-                      </p>
-                      <p className="text-[15px] text-black m-0 leading-normal" style={{ fontFamily: 'Verdana' }}>
-                        <span className="bg-[#b4a7d6] text-black px-1 py-0.5 rounded-none font-bold text-[17px]" style={{ fontSize: '17px', fontWeight: 'bold', fontFamily: 'Verdana' }}>Favor ficarem atentos à origem de cada carregamento</span>.
-                      </p>
-                    </div>
-
-                    {/* Preview Table */}
-                    {(() => {
-                      const { headers, rows } = parseTableData(disponibilidadeInput);
-                      if (headers.length === 0) return null;
-                      return (
-                        <div className="overflow-x-auto rounded-none border border-black max-w-full select-text">
-                          <table className="w-full text-left border-collapse min-w-full" style={{ border: '1px solid #000000' }}>
-                            <thead>
+                    <div className="bg-[#ffffff] border-3 border-[#311f14] rounded-2xl shadow-md text-left select-text w-full overflow-hidden flex flex-col h-full bg-[#f8f5ee]">
+                      <div className="flex-1 overflow-auto">
+                        {ingestedVehicles.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center p-8 text-center mt-10">
+                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#5c3c24]/60">Nenhum veículo filtrado</span>
+                            <p className="text-[10px] text-stone-500 max-w-sm mt-3 font-semibold leading-relaxed">
+                              Nenhuma linha da tabela colada atende aos critérios do filtro (Termo = NÃO).
+                            </p>
+                          </div>
+                        ) : (
+                          <table className="w-full text-left border-collapse min-w-full">
+                            <thead className="sticky top-0 bg-[#311f14] shadow-md z-10">
                               <tr>
-                                {headers.map((h, hIdx) => (
-                                  <th key={hIdx} style={getCellStyleObj(h, true)}>
-                                    {h}
-                                  </th>
-                                ))}
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#edd9bf] border-b-2 border-[#5c3c24] text-center">Identificador</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#edd9bf] border-b-2 border-[#5c3c24] text-center">Está no Pátio?</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#edd9bf] border-b-2 border-[#5c3c24] text-center">Assinou?</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#edd9bf] border-b-2 border-[#5c3c24] text-center">Ações</th>
                               </tr>
                             </thead>
-                            <tbody className="select-text">
-                              {rows.map((row, rIdx) => (
-                                <tr key={rIdx}>
-                                  {headers.map((_, colIdx) => {
-                                    const cellVal = row[colIdx] || '';
-                                    return (
-                                      <td key={colIdx} style={getCellStyleObj(cellVal, false)}>
-                                        {cellVal}
-                                      </td>
-                                    );
-                                  })}
+                            <tbody className="bg-transparent divide-y divide-[#5c3c24]/10">
+                              {ingestedVehicles.map(veh => (
+                                <tr key={veh.id} className="hover:bg-[#eddaba]/20 transition-colors">
+                                  <td className="px-6 py-4 text-center align-middle">
+                                    <div className="inline-flex flex-col border-[2px] border-black rounded-md overflow-hidden bg-white shadow-sm w-28 mx-auto">
+                                      <div className="bg-[#003399] w-full py-0.5 border-b border-black">
+                                        <div className="text-[7px] text-white font-black text-center tracking-widest">BRASIL</div>
+                                      </div>
+                                      <div className="py-2 text-[#111111] font-black text-sm tracking-[0.15em] text-center font-mono">
+                                        {veh.placa || '------'}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  
+                                  <td className="px-6 py-4 text-center align-middle">
+                                    <select
+                                      value={veh.isPatio}
+                                      onChange={(e) => {
+                                        setIngestedVehicles(prev => prev.map(p => p.id === veh.id ? { ...p, isPatio: e.target.value } : p));
+                                      }}
+                                      className="bg-white border-2 border-[#5c3c24]/30 text-[#311f14] font-bold text-xs rounded-lg py-2 px-3 outline-none cursor-pointer hover:border-[#5c3c24]/60 transition-colors text-center appearance-none shadow-sm w-24 mx-auto block"
+                                    >
+                                      <option value="NÃO">NÃO</option>
+                                      <option value="SIM">SIM</option>
+                                    </select>
+                                  </td>
+
+                                  <td className="px-6 py-4 text-center align-middle">
+                                    <select
+                                      value={veh.hasAssinou}
+                                      onChange={(e) => {
+                                        setIngestedVehicles(prev => prev.map(p => p.id === veh.id ? { ...p, hasAssinou: e.target.value } : p));
+                                      }}
+                                      className="bg-white border-2 border-[#5c3c24]/30 text-[#311f14] font-bold text-xs rounded-lg py-2 px-3 outline-none cursor-pointer hover:border-[#5c3c24]/60 transition-colors text-center appearance-none shadow-sm w-24 mx-auto block"
+                                    >
+                                      <option value="NÃO">NÃO</option>
+                                      <option value="SIM">SIM</option>
+                                    </select>
+                                  </td>
+
+                                  <td className="px-6 py-4 text-center align-middle">
+                                    <div className="flex justify-center">
+                                      <button 
+                                        onClick={() => {
+                                          setIngestedVehicles(prev => prev.filter(p => p.id !== veh.id));
+                                        }}
+                                        className="w-9 h-9 flex items-center justify-center bg-white text-[#ca1a20] hover:bg-[#ca1a20] hover:text-white rounded-full transition-colors border border-[#ca1a20]/20 shadow-sm disabled:opacity-50"
+                                        title="Excluir Veículo"
+                                      >
+                                        <Trash2 size={16} className="stroke-[2.5]" />
+                                      </button>
+                                    </div>
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
-                        </div>
-                      );
-                    })()}
-
-                  </div>
+                        )}
+                      </div>
+                    </div>
                 )}
               </div>
             </WoodenPlaque>
