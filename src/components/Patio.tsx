@@ -319,25 +319,54 @@ export default function Patio({ onBack }: PatioProps) {
     const { headers, rows } = parseTableData(disponibilidadeInput);
     if (!headers.length) return;
 
-    const termoIdx = headers.findIndex(h => h.trim().toUpperCase() === 'TERMO');
-    const placaIdx = headers.findIndex(h => {
-       const up = h.trim().toUpperCase();
-       return up === 'PLACA' || up === 'IDENTIFICADOR' || up === 'VEÍCULO' || up === 'VEICULO' || up.includes('PLACA');
+    // Normalização dos cabeçalhos
+    const normalizedHeaders = headers.map(h => h.trim().toLowerCase());
+    const termoIdx = normalizedHeaders.findIndex(h => h.includes('termo'));
+    const cavaloIdx = normalizedHeaders.findIndex(h => h.includes('cavalo'));
+    const carretaIdx = normalizedHeaders.findIndex(h => h.includes('carreta'));
+
+    if (termoIdx === -1) return;
+
+    const newVehicles: IngestedVehicle[] = [];
+
+    rows.forEach((row, rowIndex) => {
+      // Pula linhas completamente vazias
+      if (!row || row.length === 0 || row.every(cell => !cell?.trim())) return;
+
+      // Valor da coluna termo, obtido de forma segura
+      const termoValor = row[termoIdx]?.toString().trim().toLowerCase() || '';
+
+      // Filtro tolerante: "não" ou "nao"
+      if (termoValor === 'não' || termoValor === 'nao') {
+        
+        // Se houver a coluna CAVALO e tiver um tamanho mínimo (ex: placa)
+        if (cavaloIdx !== -1) {
+          const placaCavalo = row[cavaloIdx]?.toString().trim() || '';
+          if (placaCavalo.length >= 3) {
+            newVehicles.push({
+              id: `veh_${rowIndex}_cavalo_${Date.now()}`,
+              placa: placaCavalo.toUpperCase().substring(0, 8),
+              isPatio: 'NÃO',
+              hasAssinou: 'NÃO'
+            });
+          }
+        }
+        
+        // Se houver a coluna CARRETA e tiver um tamanho mínimo
+        if (carretaIdx !== -1) {
+          const placaCarreta = row[carretaIdx]?.toString().trim() || '';
+          if (placaCarreta.length >= 3) {
+            newVehicles.push({
+              id: `veh_${rowIndex}_carreta_${Date.now()}`,
+              placa: placaCarreta.toUpperCase().substring(0, 8),
+              isPatio: 'NÃO',
+              hasAssinou: 'NÃO'
+            });
+          }
+        }
+      }
     });
 
-    if (termoIdx === -1 || placaIdx === -1) return;
-
-    const newVehicles = rows
-      .filter((row) => {
-         const termo = (row[termoIdx] || '').trim().toUpperCase();
-         return termo === 'NÃO' || termo === 'NAO';
-      })
-      .map((row, idx) => ({
-         id: `veh_${idx}_${Date.now()}`,
-         placa: (row[placaIdx] || '').trim().toUpperCase().substring(0, 8),
-         isPatio: 'NÃO',
-         hasAssinou: 'NÃO'
-      }));
     setIngestedVehicles(newVehicles);
   }, [disponibilidadeInput]);
 
