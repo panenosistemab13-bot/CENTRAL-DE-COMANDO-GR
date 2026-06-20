@@ -54,6 +54,7 @@ interface SMRow {
   bau2: string;
   trecho: string;
   valorNf: string;
+  ok?: boolean;
 }
 
 interface SMCreatorProps {
@@ -257,14 +258,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     }
   };
 
-  const updateRowValue = (index: number, field: keyof SMRow, value: string, section: 'ida' | 'volta') => {
+  const updateRowValue = (index: number, field: keyof SMRow, value: any, section: 'ida' | 'volta') => {
     let finalValue = value;
     
-    if (field === 'valorNf') {
+    if (field === 'valorNf' && typeof value === 'string') {
       finalValue = formatNfValue(value);
-    } else if (field === 'placa') {
+    } else if (field === 'placa' && typeof value === 'string') {
       finalValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    } else if (field === 'trecho') {
+    } else if (field === 'trecho' && typeof value === 'string') {
       finalValue = value.toUpperCase();
     }
 
@@ -545,6 +546,8 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-gradient-to-b from-[#14325c] to-[#0f2a4a] text-[#e2e8f0] text-[10px] uppercase font-bold tracking-[0.2em] border-b border-[#1e3a8a] shadow-sm">
+                            <th className="p-4 w-10 text-center">#</th>
+                            <th className="p-4 w-12 text-center">OK</th>
                             <th className="p-4">Data</th>
                             <th className="p-4">Motorista</th>
                             <th className="p-4 text-center">Placa</th>
@@ -558,6 +561,24 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         <tbody className="divide-y divide-[#c0a892]/50 bg-[#fdfaf5]/90 font-serif backdrop-blur-sm">
                           {idaRows.map((row, i) => (
                             <tr key={i} className="text-xs text-[#4a3623] hover:bg-[#d0a782]/10 transition-all group/row font-bold relative">
+                              <td className="p-3 text-center text-stone-500 font-mono font-bold text-xs w-10">
+                                {i + 1}
+                              </td>
+                              <td className="p-3 text-center w-12">
+                                <button
+                                  type="button"
+                                  onClick={() => updateRowValue(i, 'ok', !row.ok, 'ida')}
+                                  className={cn(
+                                    "w-5 h-5 mx-auto flex items-center justify-center rounded-md border-2 transition-all cursor-pointer",
+                                    row.ok 
+                                      ? "bg-green-600 border-green-700 text-white shadow-sm" 
+                                      : "bg-stone-100 border-stone-300 text-transparent hover:border-green-600/50"
+                                  )}
+                                  title={row.ok ? "Marcar como pendente" : "Marcar como OK"}
+                                >
+                                  <Check size={12} className="stroke-[3]" />
+                                </button>
+                              </td>
                               <td className="p-3">
                                 <input 
                                   type="text"
@@ -705,6 +726,8 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-gradient-to-b from-[#7f1d1d] to-[#991b1b] text-[#fdfaf5] text-[10px] uppercase font-bold tracking-[0.2em] border-b border-[#450a0a] shadow-sm">
+                            <th className="p-4 w-10 text-center">#</th>
+                            <th className="p-4 w-12 text-center">OK</th>
                             <th className="p-4">Data</th>
                             <th className="p-4">Motorista</th>
                             <th className="p-4 text-center">Placa</th>
@@ -718,6 +741,24 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         <tbody className="divide-y divide-[#c0a892]/50 bg-[#fdfaf5]/90 font-serif backdrop-blur-sm">
                           {voltaRows.map((row, i) => (
                             <tr key={i} className="text-xs text-[#4a3623] hover:bg-[#d0a782]/10 transition-all group/row font-bold relative">
+                              <td className="p-3 text-center text-stone-500 font-mono font-bold text-xs w-10">
+                                {i + 1}
+                              </td>
+                              <td className="p-3 text-center w-12">
+                                <button
+                                  type="button"
+                                  onClick={() => updateRowValue(i, 'ok', !row.ok, 'volta')}
+                                  className={cn(
+                                    "w-5 h-5 mx-auto flex items-center justify-center rounded-md border-2 transition-all cursor-pointer",
+                                    row.ok 
+                                      ? "bg-green-600 border-green-700 text-white shadow-sm" 
+                                      : "bg-stone-100 border-stone-300 text-transparent hover:border-green-600/50"
+                                  )}
+                                  title={row.ok ? "Marcar como pendente" : "Marcar como OK"}
+                                >
+                                  <Check size={12} className="stroke-[3]" />
+                                </button>
+                              </td>
                               <td className="p-3">
                                 <input 
                                   type="text"
@@ -894,14 +935,26 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     </div>
                   ))}
                   
-                  <motion.button 
-                    whileHover={{ scale: 1.01, backgroundColor: "rgba(179, 32, 37, 0.05)" }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={addCalcLine}
-                    className="w-full py-5 border-2 border-dashed border-[#3A2414]/20 hover:border-[#B32025] rounded-2xl text-[#3A2414] hover:text-[#B32025] flex items-center justify-center gap-4 transition-all text-[11px] font-black uppercase tracking-[0.25em] bg-transparent cursor-pointer"
-                  >
-                    <Plus size={20} /> Adicionar Linha
-                  </motion.button>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <motion.button 
+                      whileHover={{ scale: 1.01, backgroundColor: "rgba(179, 32, 37, 0.05)" }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={addCalcLine}
+                      className="py-4 border-2 border-dashed border-[#3A2414]/20 hover:border-[#B32025] rounded-xl text-[#3A2414] hover:text-[#B32025] flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
+                    >
+                      <Plus size={16} /> Adicionar Linha
+                    </motion.button>
+
+                    <motion.button 
+                      whileHover={{ scale: 1.01, backgroundColor: "rgba(225, 29, 72, 0.05)" }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => saveCalc([''])}
+                      className="py-4 border-2 border-dashed border-rose-500/20 hover:border-rose-500 text-rose-500/80 hover:text-rose-500 rounded-xl flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
+                      title="Limpar todos os valores adicionados"
+                    >
+                      <Trash2 size={16} /> Limpar Tudo
+                    </motion.button>
+                  </div>
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-[#3A2414]/15 bg-white/50 p-4 rounded-xl shadow-inner">
