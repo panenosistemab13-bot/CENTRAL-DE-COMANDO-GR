@@ -15,10 +15,26 @@ import {
   User,
   Plus,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set, update } from 'firebase/database';
+
+function Screw({ className }: { className?: string }) {
+  return (
+    <div 
+      className={cn(
+        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+        className
+      )}
+    >
+      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+    </div>
+  );
+}
 
 interface Appointment {
   id: string;
@@ -60,6 +76,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   const [newAppTitle, setNewAppTitle] = useState('');
   const [newAppTime, setNewAppTime] = useState('12:00');
   const [newAppType, setNewAppType] = useState<'pessoal' | 'corporativo'>('corporativo');
+  const [showAllAppsDropdown, setShowAllAppsDropdown] = useState(false);
 
   useEffect(() => {
     const presenceRef = ref(db, 'presence_list');
@@ -413,6 +430,15 @@ export default function PresenceList({ onBack }: PresenceListProps) {
 
   const activeHolidaysList = getHolidaysForView();
 
+  const allAppointments = (Object.values(appointments || {}) as Appointment[])
+    .filter(app => app && app.date)
+    .sort((a, b) => {
+      if (a.date !== b.date) {
+        return a.date.localeCompare(b.date);
+      }
+      return a.time.localeCompare(b.time);
+    });
+
   return (
     <div className="w-full relative z-10 max-w-[96rem] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch font-sans">
       
@@ -488,7 +514,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
 
       {/* Right Column (Main App Panel) */}
       <div className="col-span-1 lg:col-span-12 flex flex-col">
-        <div className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-hidden flex flex-col"
+        <div className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col"
              style={{
                backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
              }}
@@ -1343,19 +1369,145 @@ export default function PresenceList({ onBack }: PresenceListProps) {
             </div> {/* Close Bottom 2-Panel Area */}
             
             {/* Very Bottom Text / Return top link inside main container */}
-            <div className="flex items-center justify-between mt-auto opacity-90 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-auto opacity-90 pt-4 border-t border-[#e1ccb0]/50 relative">
               <span className="text-xs font-bold text-[#5c3e29] font-mono">Hoje: {getTodayStr().split('-').reverse().join('/')}</span>
-              <button 
-                onClick={() => window.scrollTo(0,0)}
-                className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[9px] font-bold uppercase tracking-wider py-1.5 px-4 rounded-lg flex items-center gap-1 shadow-sm transition-colors"
-               >
-                Voltar ao topo <ChevronUp size={12} />
-              </button>
+              
+              <div className="flex flex-wrap items-center gap-3 relative">
+                
+                {/* Botão para Toggle do Dropdown */}
+                <button
+                  onClick={() => setShowAllAppsDropdown(true)}
+                  className="text-[9px] font-bold uppercase tracking-wider py-1.5 px-3 rounded-lg flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 border bg-white text-stone-700 border-stone-300 hover:bg-stone-50"
+                >
+                  <Calendar size={12} className="text-stone-500" />
+                  Todos Compromissos ({allAppointments.length})
+                </button>
+
+                <button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[9px] font-bold uppercase tracking-wider py-1.5 px-4 rounded-lg flex items-center gap-1 shadow-sm transition-colors cursor-pointer active:scale-95"
+                >
+                  Voltar ao topo <ChevronUp size={12} />
+                </button>
+              </div>
             </div>
 
           </div>
         </div>
       </div>
+
+      {/* MODAL DE TODOS OS COMPROMISSOS */}
+      <AnimatePresence>
+        {showAllAppsDropdown && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAllAppsDropdown(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+            />
+            
+            {/* Modal Container */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-3xl w-full max-w-lg shadow-[0_25px_60px_rgba(0,0,0,0.55)] p-6 relative flex flex-col gap-4 z-50"
+            >
+              {/* Corner vintage brass screws */}
+              <Screw className="absolute -top-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -top-1.5 -right-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -right-1.5 w-3 h-3" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#B32025] text-white p-2 rounded-xl shadow-md">
+                    <Calendar size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-[#3e2516] font-serif">Todos os Compromissos</h3>
+                    <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-0.5">Total cadastrado: {allAppointments.length}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowAllAppsDropdown(false)}
+                  className="p-1.5 rounded-lg hover:bg-[#5c3e29]/10 text-[#5c3e29]/75 hover:text-[#B32025] transition-all cursor-pointer"
+                  title="Fechar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* List Content */}
+              <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1">
+                {allAppointments.length === 0 ? (
+                  <div className="text-center py-12 text-stone-500 text-xs font-semibold uppercase tracking-wider flex flex-col items-center gap-2">
+                    <Calendar size={32} className="opacity-30 stroke-[1.5]" />
+                    Nenhum compromisso cadastrado.
+                  </div>
+                ) : (
+                  allAppointments.map((app) => (
+                    <div 
+                      key={app.id} 
+                      className="bg-white border-2 border-[#e1ccb0]/60 rounded-2xl p-3 flex items-center justify-between gap-4 shadow-sm hover:shadow-md hover:border-[#dac0a3] transition-all group"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Date & Time Badge */}
+                        <div className="bg-[#FAF6ED] border-2 border-[#d6be9c]/80 rounded-xl px-2.5 py-1.5 flex flex-col items-center justify-center shrink-0 min-w-[80px] shadow-sm">
+                          <span className="text-[10px] font-black text-[#5c3e29] font-mono leading-none tracking-wide">{app.date.split('-').reverse().slice(0, 2).join('/')}</span>
+                          <span className="text-xs font-black text-[#3e2516] font-mono mt-1 tracking-tight">{app.time}</span>
+                        </div>
+
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <span className="text-xs sm:text-sm font-extrabold text-[#3e2516] break-words leading-snug">
+                            {app.title}
+                          </span>
+                          
+                          {app.type === 'pessoal' ? (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/50 flex items-center gap-1 w-max shadow-2xs">
+                              <User size={10} className="stroke-[2.5]" />
+                              Pessoal
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-[#B32025] bg-red-50 px-2 py-0.5 rounded-lg border border-red-200/50 flex items-center gap-1 w-max shadow-2xs">
+                              <Briefcase size={10} className="stroke-[2.5]" />
+                              Corporativo
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={() => deleteAppointment(app.id)}
+                        className="text-stone-400 hover:text-white hover:bg-red-600 p-2 rounded-xl transition-all cursor-pointer shrink-0 opacity-40 group-hover:opacity-100 hover:scale-105 active:scale-95 border border-transparent hover:border-red-700 shadow-2xs"
+                        title="Excluir compromisso"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Footer info/close */}
+              <div className="border-t border-[#e1ccb0] pt-3.5 flex items-center justify-end gap-2.5">
+                <button
+                  onClick={() => setShowAllAppsDropdown(false)}
+                  className="bg-[#5c3e29] hover:bg-[#3e2516] text-[#efdfc6] text-[10px] font-black uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer active:scale-97"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
