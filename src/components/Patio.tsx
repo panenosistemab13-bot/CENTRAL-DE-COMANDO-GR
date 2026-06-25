@@ -15,7 +15,8 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   Copy,
-  Check
+  Check,
+  Cpu
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
@@ -305,11 +306,188 @@ export default function Patio({ onBack }: PatioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
-  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade'>('patio');
+  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas'>('patio');
   const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>('bom dia');
   const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
   const [dispCopied, setDispCopied] = useState(false);
   const [ingestedVehicles, setIngestedVehicles] = useState<IngestedVehicle[]>([]);
+
+  // Iscas states
+  const [iscaInput, setIscaInput] = useState('');
+  const [iscaCopied, setIscaCopied] = useState(false);
+  const [iscaNumbersCopied, setIscaNumbersCopied] = useState(false);
+  const [filterBattery100, setFilterBattery100] = useState(true);
+  const [filterSameDay, setFilterSameDay] = useState(true);
+  const [filterTwoHours, setFilterTwoHours] = useState(true);
+  const [filterSantaLuzia, setFilterSantaLuzia] = useState(true);
+
+  // Interfaces for Isca
+  interface IscaItem {
+    id: string;
+    numero: string;
+    endereco: string;
+    dataPosicao: string;
+    bateria: string;
+    latitude?: string;
+    longitude?: string;
+    ta?: string;
+    db?: string;
+    isValidDate: boolean;
+    isToday: boolean;
+    isWithinTwoHours: boolean;
+    isBattery100: boolean;
+    isSantaLuzia: boolean;
+  }
+
+  const parseIscaDate = (str: string): Date | null => {
+    if (!str) return null;
+    const clean = str.trim();
+    const parts = clean.split(/[\/\s:]/);
+    if (parts.length >= 5) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const hour = parseInt(parts[3], 10);
+      const minute = parseInt(parts[4], 10);
+      const second = parts[5] ? parseInt(parts[5], 10) : 0;
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year) && !isNaN(hour) && !isNaN(minute)) {
+        return new Date(year, month, day, hour, minute, second);
+      }
+    }
+    return null;
+  };
+
+  const parseIscas = (text: string): IscaItem[] => {
+    if (!text.trim()) return [];
+    const { headers, rows } = parseTableData(text);
+    if (!headers.length) return [];
+
+    const normalizedHeaders = headers.map(h => h.trim().toLowerCase());
+    
+    const iscaIdx = normalizedHeaders.findIndex(h => h.includes('isca') || h.includes('nº') || h.includes('dispositivo') || h.includes('número') || h.includes('numero') || h === 'n°' || h === 'no' || h === 'nº da isca');
+    const enderecoIdx = normalizedHeaders.findIndex(h => h.includes('endereço') || h.includes('endereco') || h.includes('localização') || h.includes('localizacao') || h.includes('aproximado'));
+    const dataIdx = normalizedHeaders.findIndex(h => h.includes('data') || h.includes('último') || h.includes('ultimo') || h.includes('posição') || h.includes('posicao'));
+    const bateriaIdx = normalizedHeaders.findIndex(h => h.includes('bateria') || h.includes('bat') || h.includes('rf') || h.includes('isca_rf'));
+    const latIdx = normalizedHeaders.findIndex(h => h === 'latitude' || h === 'lat');
+    const lngIdx = normalizedHeaders.findIndex(h => h === 'longitude' || h === 'lng' || h === 'lon');
+    const taIdx = normalizedHeaders.findIndex(h => h === 'ta');
+    const dbIdx = normalizedHeaders.findIndex(h => h === 'db');
+
+    const items: IscaItem[] = [];
+    const now = new Date();
+
+    rows.forEach((row, rowIndex) => {
+      if (!row || row.length === 0 || row.every(cell => !cell?.trim())) return;
+
+      const numero = (iscaIdx !== -1 ? row[iscaIdx] : row[0])?.trim() || '';
+      const endereco = (enderecoIdx !== -1 ? row[enderecoIdx] : row[1])?.trim() || '';
+      const dataStr = (dataIdx !== -1 ? row[dataIdx] : row[2])?.trim() || '';
+      const bateria = (bateriaIdx !== -1 ? row[bateriaIdx] : row[3])?.trim() || '';
+      const latitude = latIdx !== -1 ? row[latIdx]?.trim() : undefined;
+      const longitude = lngIdx !== -1 ? row[lngIdx]?.trim() : undefined;
+      const ta = taIdx !== -1 ? row[taIdx]?.trim() : undefined;
+      const db = dbIdx !== -1 ? row[dbIdx]?.trim() : undefined;
+
+      const parsedDate = parseIscaDate(dataStr);
+      let isValidDate = false;
+      let isToday = false;
+      let isWithinTwoHours = false;
+
+      if (parsedDate) {
+        isValidDate = true;
+        isToday = parsedDate.getDate() === now.getDate() && 
+                  parsedDate.getMonth() === now.getMonth() && 
+                  parsedDate.getFullYear() === now.getFullYear();
+        
+        const diffMs = now.getTime() - parsedDate.getTime();
+        const twoHoursInMs = 2 * 60 * 60 * 1000;
+        // Permite atraso de até 2 horas. Também tolera até 15 minutos no futuro caso relógios estejam um pouco dessincronizados
+        isWithinTwoHours = diffMs >= -900000 && diffMs <= twoHoursInMs;
+      }
+
+      const isBattery100 = bateria.includes('100');
+      const isSantaLuzia = endereco.toLowerCase().includes('santa luzia') && endereco.toLowerCase().includes('mg');
+
+      items.push({
+        id: `isca_${rowIndex}_${Date.now()}`,
+        numero,
+        endereco,
+        dataPosicao: dataStr,
+        bateria,
+        latitude,
+        longitude,
+        ta,
+        db,
+        isValidDate,
+        isToday,
+        isWithinTwoHours,
+        isBattery100,
+        isSantaLuzia
+      });
+    });
+
+    return items;
+  };
+
+  const getProcessedIscas = (): IscaItem[] => {
+    const parsed = parseIscas(iscaInput);
+    
+    const filtered = parsed.filter(item => {
+      if (filterBattery100 && !item.isBattery100) return false;
+      if (filterSameDay && !item.isToday) return false;
+      if (filterTwoHours && !item.isWithinTwoHours) return false;
+      if (filterSantaLuzia && !item.isSantaLuzia) return false;
+      return true;
+    });
+
+    const getNumericPart = (str: string): number => {
+      const match = str.replace(/[^0-9]/g, '');
+      return match ? parseInt(match, 10) : 0;
+    };
+
+    return [...filtered].sort((a, b) => {
+      const numA = getNumericPart(a.numero);
+      const numB = getNumericPart(b.numero);
+      if (numA !== numB) {
+        return numA - numB;
+      }
+      return a.numero.localeCompare(b.numero);
+    });
+  };
+
+  const generateIscasHtmlAndText = (items: IscaItem[]) => {
+    let html = `<table style="border-collapse: collapse; width: 100%; border: 1px solid #000000; font-family: Calibri, Arial, sans-serif; font-size: 10pt; background-color: #ffffff;">
+      <thead>
+        <tr style="background-color: #000000; color: #ffffff;">
+          <th style="border: 1px solid #000000; padding: 6px 10px; font-weight: bold; text-align: center;">#</th>
+          <th style="border: 1px solid #000000; padding: 6px 10px; font-weight: bold; text-align: left;">Nº da Isca</th>
+          <th style="border: 1px solid #000000; padding: 6px 10px; font-weight: bold; text-align: left;">Endereço aproximado da posição</th>
+          <th style="border: 1px solid #000000; padding: 6px 10px; font-weight: bold; text-align: center;">Data Posição</th>
+          <th style="border: 1px solid #000000; padding: 6px 10px; font-weight: bold; text-align: center;">Bateria Isca_RF</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    
+    items.forEach((item, idx) => {
+      html += `<tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f9f9f9'};">
+        <td style="border: 1px solid #000000; padding: 6px 10px; text-align: center;">${idx + 1}</td>
+        <td style="border: 1px solid #000000; padding: 6px 10px; font-weight: bold;">${item.numero}</td>
+        <td style="border: 1px solid #000000; padding: 6px 10px;">${item.endereco}</td>
+        <td style="border: 1px solid #000000; padding: 6px 10px; text-align: center;">${item.dataPosicao}</td>
+        <td style="border: 1px solid #000000; padding: 6px 10px; text-align: center; color: green; font-weight: bold;">${item.bateria}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>`;
+
+    let text = `| # | Nº da Isca | Endereço aproximado da posição | Data Posição | Bateria Isca_RF |\n`;
+    text += `|---|---|---|---|---|\n`;
+    items.forEach((item, idx) => {
+      text += `| ${idx + 1} | ${item.numero} | ${item.endereco} | ${item.dataPosicao} | ${item.bateria} |\n`;
+    });
+
+    return { html, text };
+  };
 
   useEffect(() => {
     if (!disponibilidadeInput.trim()) {
@@ -1022,6 +1200,18 @@ export default function Patio({ onBack }: PatioProps) {
             <Activity size={14} className="stroke-[2.5]" />
             <span>Disponibilidade</span>
           </button>
+          <button
+            onClick={() => setActiveSubTab('iscas')}
+            className={cn(
+              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              activeSubTab === 'iscas'
+                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+            )}
+          >
+            <Cpu size={14} className="stroke-[2.5]" />
+            <span>Iscas</span>
+          </button>
         </div>
         <div className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider hidden md:block">
           SISTEMA DE CONTROLE DE FLUXO & DISPONIBILIDADE
@@ -1439,7 +1629,7 @@ export default function Patio({ onBack }: PatioProps) {
 
       </div>
         </>
-      ) : (
+      ) : activeSubTab === 'disponibilidade' ? (
         /* ================= DISPONIBILIDADE CONSOLE ================= */
         <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
           
@@ -1658,6 +1848,233 @@ export default function Patio({ onBack }: PatioProps) {
               </div>
             </WoodenPlaque>
             </div>
+          </div>
+
+        </div>
+      ) : (
+        /* ================= ISCAS CONSOLE ================= */
+        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0 animate-fade-in">
+          
+          {/* LEFT COLUMN: CONTROL & INPUT */}
+          <div className="lg:col-span-5 h-full flex flex-col">
+            <WoodenPlaque className="h-full flex-1" screwSize="w-2.5 h-2.5">
+              <div className="flex items-center gap-3 mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
+                <Cpu size={18} className="text-[#ca1a20]" />
+                <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Controle & Filtro de Iscas</h2>
+              </div>
+
+              <div className="space-y-5 flex flex-col justify-between flex-1">
+                
+                {/* Input text area */}
+                <div className="flex-1 flex flex-col gap-2 text-left min-h-[160px]">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">
+                      Colar Dados da Planilha:
+                    </label>
+                    <span className="text-[8px] font-mono text-[#edd9bf]/40 uppercase tracking-widest">
+                      SUPORTA TAB/EXCEL
+                    </span>
+                  </div>
+                  <textarea
+                    value={iscaInput}
+                    onChange={(e) => setIscaInput(e.target.value)}
+                    placeholder="Cole aqui a planilha contendo as colunas: nº da Isca, Endereço aproximado da posição, Data Posição, Bateria Isca_RF, etc."
+                    className="w-full flex-1 min-h-[160px] bg-[#fdfbf7] border-2 border-[#5c3c24]/50 rounded-xl p-4 text-xs font-mono text-[#3a2212] focus:border-[#ca1a20] outline-none transition-all shadow-inner placeholder:text-[#5c3c24]/30 placeholder:font-serif placeholder:italic"
+                  />
+                </div>
+
+                {/* Filters configuration section */}
+                <div className="bg-[#f2e6d9]/60 border-2 border-[#5c3c24]/20 rounded-xl p-4 space-y-3 text-left">
+                  <h3 className="text-[10px] font-black text-[#311f14] uppercase tracking-[0.15em] mb-2 font-serif border-b border-[#5c3c24]/10 pb-1">
+                    Filtros de Segurança (Ativos)
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+                      <input
+                        type="checkbox"
+                        checked={filterBattery100}
+                        onChange={(e) => setFilterBattery100(e.target.checked)}
+                        className="w-4 h-4 rounded border-[#5c3c24]/60 text-[#ca1a20] focus:ring-[#ca1a20] cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-[#5c3c24] group-hover:text-[#ca1a20] transition-colors">
+                        Bateria em 100%
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+                      <input
+                        type="checkbox"
+                        checked={filterSameDay}
+                        onChange={(e) => setFilterSameDay(e.target.checked)}
+                        className="w-4 h-4 rounded border-[#5c3c24]/60 text-[#ca1a20] focus:ring-[#ca1a20] cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-[#5c3c24] group-hover:text-[#ca1a20] transition-colors">
+                        Data Posição Atual
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+                      <input
+                        type="checkbox"
+                        checked={filterTwoHours}
+                        onChange={(e) => setFilterTwoHours(e.target.checked)}
+                        className="w-4 h-4 rounded border-[#5c3c24]/60 text-[#ca1a20] focus:ring-[#ca1a20] cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-[#5c3c24] group-hover:text-[#ca1a20] transition-colors" title="Aceitável com no máximo 2 horas de atraso">
+                        Máx. 2h de atraso
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+                      <input
+                        type="checkbox"
+                        checked={filterSantaLuzia}
+                        onChange={(e) => setFilterSantaLuzia(e.target.checked)}
+                        className="w-4 h-4 rounded border-[#5c3c24]/60 text-[#ca1a20] focus:ring-[#ca1a20] cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-[#5c3c24] group-hover:text-[#ca1a20] transition-colors">
+                        Santa Luzia - MG
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Metrics / Stats Plaque */}
+                <div className="bg-[#edd9bf]/40 border border-[#5c3c24]/20 rounded-xl p-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-[#5c3c24]">Total Importado:</span>
+                    <span className="font-mono font-bold text-xs bg-white/80 px-2 py-0.5 rounded border border-[#5c3c24]/20 text-[#311f14]">
+                      {parseIscas(iscaInput).length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-green-700">Total Filtrado:</span>
+                    <span className="font-mono font-bold text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-200">
+                      {getProcessedIscas().length}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3 pt-2 shrink-0">
+                  <motion.button 
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={async () => {
+                      const processed = getProcessedIscas();
+                      if (processed.length === 0) return;
+                      const text = processed.map(item => item.numero).join('\n');
+                      await navigator.clipboard.writeText(text);
+                      setIscaNumbersCopied(true);
+                      setTimeout(() => setIscaNumbersCopied(false), 2000);
+                    }}
+                    disabled={!iscaInput.trim() || getProcessedIscas().length === 0}
+                    className={cn(
+                      "w-full py-4 font-black text-[11px] uppercase tracking-[0.25em] transition-all flex items-center justify-center gap-2 rounded-xl cursor-pointer shadow-[0_5px_0px_#065f46,0_6px_10px_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-[0_2px_0px_#065f46,0_3px_5px_rgba(0,0,0,0.4)] border-2 border-[#10b981]/30 text-white",
+                      (!iscaInput.trim() || getProcessedIscas().length === 0)
+                        ? "bg-slate-800 text-slate-500 shadow-none border-transparent cursor-not-allowed opacity-50" 
+                        : "bg-gradient-to-b from-[#10b981] to-[#047857] hover:from-[#34d399] hover:to-[#059669]"
+                    )}
+                  >
+                    {iscaNumbersCopied ? <Check size={16} /> : <Copy size={16} />}
+                    <span>{iscaNumbersCopied ? 'Copiado para Google Planilhas!' : 'Copiar para Planilha Google'}</span>
+                  </motion.button>
+
+                  <motion.button 
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={async () => {
+                      const processed = getProcessedIscas();
+                      if (processed.length === 0) return;
+                      const { html, text } = generateIscasHtmlAndText(processed);
+                      try {
+                        const typeHtml = "text/html";
+                        const typeText = "text/plain";
+                        const blobHtml = new Blob([html], { type: typeHtml });
+                        const blobText = new Blob([text], { type: typeText });
+                        const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
+                        await navigator.clipboard.write(data);
+                        setIscaCopied(true);
+                        setTimeout(() => setIscaCopied(false), 2000);
+                      } catch (err) {
+                        await navigator.clipboard.writeText(text);
+                        setIscaCopied(true);
+                        setTimeout(() => setIscaCopied(false), 2000);
+                      }
+                    }}
+                    disabled={!iscaInput.trim() || getProcessedIscas().length === 0}
+                    className={cn(
+                      "w-full py-3.5 font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 rounded-xl cursor-pointer border-2 shadow-sm",
+                      (!iscaInput.trim() || getProcessedIscas().length === 0)
+                        ? "bg-slate-900/10 text-slate-400 border-slate-300/30 cursor-not-allowed opacity-50" 
+                        : "bg-[#fcf8f2] text-[#5c3c24] border-[#5c3c24]/40 hover:bg-[#ebd9c3]/50"
+                    )}
+                  >
+                    {iscaCopied ? <Check size={14} /> : <Copy size={14} />}
+                    <span>{iscaCopied ? 'Tabela Copiada!' : 'Copiar Tabela Formatada'}</span>
+                  </motion.button>
+                </div>
+
+              </div>
+            </WoodenPlaque>
+          </div>
+
+          {/* RIGHT COLUMN: INTERACTIVE PREVIEW */}
+          <div className="lg:col-span-7 h-full flex flex-col min-h-[400px]">
+            <WoodenPlaque className="h-full flex-1 flex flex-col" screwSize="w-2.5 h-2.5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 pb-2 border-b-2 border-[#5c3c24]/10">
+                <div className="flex items-center gap-3 text-left">
+                  <Database size={18} className="text-[#ca1a20]" />
+                  <div>
+                    <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Visualização de Iscas</h2>
+                    <p className="text-[9px] font-bold text-[#5c3c24]/80 uppercase tracking-widest mt-0.5">ORDEM NUMÉRICA CRESCENTE • EXCLUÍDOS: LATITUDE, LONGITUDE, TA, DB</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-hidden flex flex-col bg-[#faf6f0] border-2 border-[#5c3c24]/40 rounded-2xl shadow-inner min-h-0 relative">
+                {getProcessedIscas().length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                    <Cpu className="text-[#5c3c24]/20 mb-3 animate-pulse" size={48} />
+                    <p className="text-xs font-serif italic text-[#5c3c24]/60 font-medium">Nenhum dado de isca correspondente aos filtros.</p>
+                    <p className="text-[10px] uppercase font-bold text-[#5c3c24]/40 tracking-wider mt-1">Cole a planilha do lado esquerdo para analisar.</p>
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-auto flex flex-col items-center py-6 px-4">
+                    {/* Direct Copy Button for Quick Access */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={async () => {
+                        const processed = getProcessedIscas();
+                        if (processed.length === 0) return;
+                        const text = processed.map(item => item.numero).join('\n');
+                        await navigator.clipboard.writeText(text);
+                        setIscaNumbersCopied(true);
+                        setTimeout(() => setIscaNumbersCopied(false), 2000);
+                      }}
+                      className="mb-6 px-6 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#34d399] hover:to-[#10b981] text-white font-black text-[11px] uppercase tracking-widest rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.25)] active:translate-y-0.5 border border-[#10b981]/20 flex items-center gap-2 cursor-pointer transition-all shrink-0"
+                    >
+                      {iscaNumbersCopied ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{iscaNumbersCopied ? 'Números Copiados!' : 'Copiar para Planilha Google'}</span>
+                    </motion.button>
+
+                    {/* Single Column Isca Table identical to image */}
+                    <div className="w-full max-w-[260px] border border-[#be938a] rounded-md overflow-hidden shadow-[0_6px_15px_rgba(0,0,0,0.1)] divide-y divide-[#be938a] bg-[#dfb3ab] shrink-0 mb-6">
+                      {getProcessedIscas().map((item) => (
+                        <div 
+                          key={item.id} 
+                          className="px-4 py-3.5 text-center text-[13px] font-black text-[#1a0a07] tracking-wider hover:bg-[#d5a49c] transition-colors select-all"
+                        >
+                          {item.numero}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </WoodenPlaque>
           </div>
 
         </div>
