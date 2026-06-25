@@ -1871,9 +1871,20 @@ export default function Patio({ onBack }: PatioProps) {
                     <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">
                       Colar Dados da Planilha:
                     </label>
-                    <span className="text-[8px] font-mono text-[#edd9bf]/40 uppercase tracking-widest">
-                      SUPORTA TAB/EXCEL
-                    </span>
+                    <div className="flex items-center gap-3">
+                      {iscaInput.trim() && (
+                        <button
+                          onClick={() => setIscaInput('')}
+                          className="text-[9px] font-black uppercase tracking-wider text-[#ca1a20] hover:text-[#e52229] transition-colors flex items-center gap-1 cursor-pointer select-none"
+                        >
+                          <Trash2 size={10} />
+                          Limpar
+                        </button>
+                      )}
+                      <span className="text-[8px] font-mono text-[#edd9bf]/40 uppercase tracking-widest">
+                        SUPORTA TAB/EXCEL
+                      </span>
+                    </div>
                   </div>
                   <textarea
                     value={iscaInput}
@@ -1984,35 +1995,19 @@ export default function Patio({ onBack }: PatioProps) {
                   <motion.button 
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={async () => {
-                      const processed = getProcessedIscas();
-                      if (processed.length === 0) return;
-                      const { html, text } = generateIscasHtmlAndText(processed);
-                      try {
-                        const typeHtml = "text/html";
-                        const typeText = "text/plain";
-                        const blobHtml = new Blob([html], { type: typeHtml });
-                        const blobText = new Blob([text], { type: typeText });
-                        const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
-                        await navigator.clipboard.write(data);
-                        setIscaCopied(true);
-                        setTimeout(() => setIscaCopied(false), 2000);
-                      } catch (err) {
-                        await navigator.clipboard.writeText(text);
-                        setIscaCopied(true);
-                        setTimeout(() => setIscaCopied(false), 2000);
-                      }
+                    onClick={() => {
+                      setIscaInput('');
                     }}
-                    disabled={!iscaInput.trim() || getProcessedIscas().length === 0}
+                    disabled={!iscaInput.trim()}
                     className={cn(
                       "w-full py-3.5 font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 rounded-xl cursor-pointer border-2 shadow-sm",
-                      (!iscaInput.trim() || getProcessedIscas().length === 0)
+                      (!iscaInput.trim())
                         ? "bg-slate-900/10 text-slate-400 border-slate-300/30 cursor-not-allowed opacity-50" 
-                        : "bg-[#fcf8f2] text-[#5c3c24] border-[#5c3c24]/40 hover:bg-[#ebd9c3]/50"
+                        : "bg-[#fcf8f2] text-[#8c060a] border-[#8c060a]/40 hover:bg-[#ebd9c3]/30 hover:text-[#ca1a20]"
                     )}
                   >
-                    {iscaCopied ? <Check size={14} /> : <Copy size={14} />}
-                    <span>{iscaCopied ? 'Tabela Copiada!' : 'Copiar Tabela Formatada'}</span>
+                    <Trash2 size={14} className="stroke-[2.5]" />
+                    <span>Limpar Informações</span>
                   </motion.button>
                 </div>
 

@@ -10,10 +10,23 @@ import {
   Heart,
   Calendar,
   Camera,
-  LayoutGrid
+  LayoutGrid,
+  Briefcase,
+  User,
+  Plus,
+  Trash2,
+  AlertCircle
 } from 'lucide-react';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set, update } from 'firebase/database';
+
+interface Appointment {
+  id: string;
+  date: string;
+  time: string;
+  title: string;
+  type: 'pessoal' | 'corporativo';
+}
 
 interface PresenceListProps {
   onBack?: () => void;
@@ -43,6 +56,11 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   const [tempHours, setTempHours] = useState('');
   const [tempMins, setTempMins] = useState('');
 
+  const [appointments, setAppointments] = useState<Record<string, Appointment>>({});
+  const [newAppTitle, setNewAppTitle] = useState('');
+  const [newAppTime, setNewAppTime] = useState('12:00');
+  const [newAppType, setNewAppType] = useState<'pessoal' | 'corporativo'>('corporativo');
+
   useEffect(() => {
     const presenceRef = ref(db, 'presence_list');
     const unsubscribe = onValue(presenceRef, (snapshot) => {
@@ -56,6 +74,11 @@ export default function PresenceList({ onBack }: PresenceListProps) {
         }
         if (data.bancoHorasManual !== undefined && typeof data.bancoHorasManual === 'number') {
           setBancoHorasManual(data.bancoHorasManual);
+        }
+        if (data.appointments) {
+          setAppointments(data.appointments);
+        } else {
+          setAppointments({});
         }
       }
     });
@@ -102,6 +125,18 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   const updateProfileImage = (url: string) => {
     setProfileImage(url);
     set(ref(db, 'presence_list/profileImage'), url);
+  };
+
+  const addAppointment = (time: string, title: string, type: 'pessoal' | 'corporativo') => {
+    if (!title.trim() || !time) return;
+    const id = `app_${Date.now()}`;
+    const newApp: Appointment = { id, date: selectedDate, time, title, type };
+    update(ref(db, `presence_list/appointments`), { [id]: newApp });
+    setNewAppTitle('');
+  };
+
+  const deleteAppointment = (id: string) => {
+    update(ref(db, `presence_list/appointments`), { [id]: null });
   };
 
   // Convert time "HH:MM" to minutes from midnight
@@ -686,6 +721,24 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                                 {d.day}
                               </span>
                               
+                              {/* Indicadores de compromisso (pontinhos coloridos) */}
+                              {!d.inactive && (() => {
+                                const dayApps = (Object.values(appointments || {}) as Appointment[]).filter(app => app && app.date === d.dateStr);
+                                const hasPersonal = dayApps.some(app => app && app.type === 'pessoal');
+                                const hasCorporate = dayApps.some(app => app && app.type === 'corporativo');
+                                if (dayApps.length === 0) return null;
+                                return (
+                                  <div className="absolute top-1 right-1 flex gap-0.5">
+                                    {hasPersonal && (
+                                      <span className="w-1.5 h-1.5 bg-amber-600 rounded-full" title="Compromisso Pessoal" />
+                                    )}
+                                    {hasCorporate && (
+                                      <span className="w-1.5 h-1.5 bg-[#B32025] rounded-full" title="Compromisso Corporativo" />
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                              
                               {/* Horizontal green line indicator for work days, red for absence, gold for rest */}
                               {showWorkLine && (
                                 <div className="absolute bottom-[2.5px] w-4.5 h-[3.5px] bg-[#10b981] rounded-full animate-pulse" title="Dia Trabalhado" />
@@ -705,7 +758,183 @@ export default function PresenceList({ onBack }: PresenceListProps) {
               {/* Right Inner: Stats & Interactive Controls */}
               <div className="flex flex-col flex-1 gap-4 relative min-h-[300px] w-full">
                 
+                {/* AGENDA DE COMPROMISSOS (Novo Módulo Solicitado) */}
+                <div className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+                  
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="bg-[#B32025] text-white p-2 rounded-xl shadow-md">
+                        <Calendar size={18} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-[#3e2516] uppercase tracking-widest leading-tight">Agenda de Compromissos</h3>
+                        <p className="text-[11px] text-[#8c6b4e] font-mono leading-none mt-0.5">
+                          Visualizando: <strong className="text-[#3e2516]">{selectedDate.split('-').reverse().join('/')}</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold bg-[#5c3e29] text-[#efdfc6] px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                      Diário
+                    </span>
+                  </div>
+
+                  {/* Form to Add Appointment */}
+                  <div className="bg-[#fcfaf4] border border-[#d6be9c]/75 rounded-xl p-3.5 flex flex-col gap-3">
+                    <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">Novo Compromisso</span>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                      
+                      {/* Name/Title Input */}
+                      <div className="sm:col-span-6">
+                        <input
+                          type="text"
+                          placeholder="Ex: Reunião com gerência, Café, Almoço..."
+                          value={newAppTitle}
+                          onChange={(e) => setNewAppTitle(e.target.value)}
+                          className="w-full bg-white border border-[#dac0a3] text-xs font-semibold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner placeholder-stone-400"
+                        />
+                      </div>
+
+                      {/* Time Input */}
+                      <div className="sm:col-span-3">
+                        <input
+                          type="time"
+                          value={newAppTime}
+                          onChange={(e) => setNewAppTime(e.target.value)}
+                          className="w-full bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                        />
+                      </div>
+
+                      {/* Add Button for mobile/desktop layout flexibility */}
+                      <div className="sm:col-span-3">
+                        <button
+                          onClick={() => addAppointment(newAppTime, newAppTitle, newAppType)}
+                          disabled={!newAppTitle.trim()}
+                          className={`w-full text-[10px] font-black uppercase py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-md transition-all
+                            ${newAppTitle.trim() 
+                              ? 'bg-[#B32025] hover:bg-[#8c060a] text-white active:scale-97 cursor-pointer' 
+                              : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
+                            }`}
+                        >
+                          <Plus size={14} />
+                          Salvar
+                        </button>
+                      </div>
+
+                    </div>
+
+                    {/* Selector for Type: Pessoal vs Corporativo */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1 border-t border-[#f4ebdc]">
+                      <span className="text-[9.5px] font-bold text-[#8c6b4e] uppercase tracking-wider">Tipo do Compromisso:</span>
+                      
+                      <div className="flex gap-2">
+                        {/* Pessoal Button */}
+                        <button
+                          onClick={() => setNewAppType('pessoal')}
+                          type="button"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border
+                            ${newAppType === 'pessoal'
+                              ? 'bg-[#d97706] text-white border-[#d97706] shadow-sm'
+                              : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                            }`}
+                        >
+                          <User size={13} />
+                          <span>Pessoal</span>
+                        </button>
+
+                        {/* Corporativo Button */}
+                        <button
+                          onClick={() => setNewAppType('corporativo')}
+                          type="button"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border
+                            ${newAppType === 'corporativo'
+                              ? 'bg-[#B32025] text-white border-[#B32025] shadow-sm'
+                              : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                            }`}
+                        >
+                          <Briefcase size={13} />
+                          <span>Corporativo</span>
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Appointments List for Selected Date */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">Compromissos Agendados</span>
+                    
+                    {(() => {
+                      const dayApps = (Object.values(appointments || {}) as Appointment[])
+                        .filter(app => app && app.date === selectedDate)
+                        .sort((a, b) => a.time.localeCompare(b.time));
+
+                      if (dayApps.length === 0) {
+                        return (
+                          <div className="bg-[#fcfcf9]/50 border border-dashed border-[#d6be9c]/60 rounded-xl p-6 text-center flex flex-col items-center justify-center gap-2">
+                            <Clock size={24} className="text-[#a27a5d] opacity-50" />
+                            <p className="text-xs font-medium text-stone-500">
+                              Nenhum compromisso agendado para hoje.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                          {dayApps.map((app) => (
+                            <div 
+                              key={app.id} 
+                              className="bg-white border border-[#e1ccb0]/80 rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-200 group"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                {/* Time Badge */}
+                                <div className="bg-[#FAF6ED] border border-[#d6be9c] rounded-lg px-2 py-1 flex items-center gap-1 shrink-0 font-mono text-xs font-bold text-[#3e2516]">
+                                  <Clock size={12} className="text-[#8c6b4e]" />
+                                  {app.time}
+                                </div>
+
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <span className="text-xs font-bold text-[#3e2516] break-words leading-snug">
+                                    {app.title}
+                                  </span>
+                                  {/* Type tag */}
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    {app.type === 'pessoal' ? (
+                                      <span className="text-[8.5px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50 flex items-center gap-1">
+                                        <User size={9} />
+                                        Pessoal
+                                      </span>
+                                    ) : (
+                                      <span className="text-[8.5px] font-bold uppercase tracking-wider text-[#B32025] bg-red-50 px-1.5 py-0.5 rounded border border-red-200/50 flex items-center gap-1">
+                                        <Briefcase size={9} />
+                                        Corporativo
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Delete Action */}
+                              <button
+                                onClick={() => deleteAppointment(app.id)}
+                                className="text-stone-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-all cursor-pointer opacity-80 group-hover:opacity-100 shrink-0"
+                                title="Excluir compromisso"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                </div>
+                
                 {/* 3 Stat Boxes Top row */}
+                {false && (
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
                     <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#2e7d32] uppercase mb-1">Presentes</span>
@@ -804,8 +1033,10 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Painel do Dia Selecionado: Entrada, Saída e Status */}
+                {false && (
                 <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
                   <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3">
                     <div className="flex items-center gap-2">
@@ -961,8 +1192,10 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Configuração da Escala 12x36 */}
+                {false && (
                 <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
                   <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-2.5">
                     <div className="flex items-center gap-2">
@@ -1001,8 +1234,10 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Configuração do Banco de Horas */}
+                {false && (
                 <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
                   <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-2.5">
                     <div className="flex items-center gap-2">
@@ -1065,8 +1300,10 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Quadro explicativo definitivo de Banco de Horas */}
+                {false && (
                 <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
@@ -1099,6 +1336,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                     </div>
                   </div>
                 </div>
+                )}
 
               </div> {/* Close Right Inner */}
 
