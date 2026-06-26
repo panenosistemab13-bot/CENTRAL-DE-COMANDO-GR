@@ -26,7 +26,8 @@ import {
   Package,
   User,
   Briefcase,
-  Calendar
+  Calendar,
+  Sliders
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -48,11 +49,12 @@ import Patio from './components/Patio';
 import Envio from './components/Envio';
 import Checklist from './components/Checklist';
 import Iscas from './components/Iscas';
+import Controle from './components/Controle';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 
-type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist';
+type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -62,7 +64,8 @@ const backgroundImages: Record<Tab, string> = {
   sm_creator: '/images/bg_sm_creator.jpg', // Quality checker analyzing coffee beans
   rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
   patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
-  checklist: '/images/bg_checklist.jpg' // Vintage rustic coffee preparation mockup
+  checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
+  controle: '/images/bg_presence.jpg'
 };
 
 const tabs = [
@@ -73,6 +76,7 @@ const tabs = [
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
   { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
+  { id: 'controle', label: 'Controle', icon: Sliders },
 ];
 
 function Screw({ className }: { className?: string }) {
@@ -143,6 +147,7 @@ export default function App() {
           case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
           case '5': e.preventDefault(); setActiveTab('rotas'); return;
           case '6': e.preventDefault(); setActiveTab('checklist'); return;
+          case '7': e.preventDefault(); setActiveTab('controle'); return;
         }
       }
 
@@ -246,6 +251,8 @@ export default function App() {
         return <Checklist />;
       case 'iscas':
         return <Iscas />;
+      case 'controle':
+        return <Controle onBack={() => setActiveTab('menu')} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-20 text-zinc-500">

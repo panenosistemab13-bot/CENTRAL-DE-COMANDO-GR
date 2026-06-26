@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  Sliders
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -30,6 +31,7 @@ const menuItems: MenuItem[] = [
   { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'text-zinc-300', description: 'Criação e agendamento de solicitações de monitoramento.' },
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
+  { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
 ];
 
 interface InitialMenuProps {
@@ -320,6 +322,45 @@ function ModuleGraphic({ id }: { id: string }) {
           <polyline points="73,115 75,117 79,112" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="drop-shadow(0 0 2px #22c55e)" />
           <polyline points="79,108 81,110 85,105" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="drop-shadow(0 0 2px #22c55e)" />
           <polyline points="85,101 87,103 91,98" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="drop-shadow(0 0 2px #22c55e)" />
+        </svg>
+      );
+
+    case 'controle':
+      return (
+        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
+          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
+          {/* Main Dashboard Panel tilted in 3D */}
+          <polygon points="45,115 100,140 155,115 100,90" fill="#2d1d0f" />
+          <polygon points="45,115 100,140 100,143 45,118" fill="#1e1108" />
+          <polygon points="100,140 155,115 155,118 100,143" fill="#1e1108" />
+
+          {/* Copper base plate */}
+          <polygon points="50,112 100,135 150,112 100,89" fill="#8c5024" />
+          <polygon points="52,110 100,133 148,110 100,87" fill="#b4642d" />
+
+          {/* Brass screws in corners */}
+          <circle cx="56" cy="108" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
+          <circle cx="144" cy="108" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
+          <circle cx="100" cy="129" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
+          <circle cx="100" cy="91" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
+
+          {/* Left vertical slider track */}
+          <polygon points="70,105 74,107 74,117 70,115" fill="#1e1108" />
+          {/* Slider knob (Red) */}
+          <polygon points="68,109 76,113 76,111 68,107" fill="#B32025" />
+          <polygon points="68,107 76,111 76,108 68,104" fill="#e53e3e" />
+
+          {/* Right vertical slider track */}
+          <polygon points="126,105 130,107 130,117 126,115" fill="#1e1108" />
+          {/* Slider knob (Brass/Yellow) */}
+          <polygon points="124,109 132,113 132,111 124,107" fill="#ca8a04" />
+          <polygon points="124,107 132,111 132,108 124,104" fill="#fef08a" />
+
+          {/* Center Gauge dial */}
+          <ellipse cx="100" cy="108" rx="14" ry="10" fill="#1e1108" stroke="#ca8a04" strokeWidth="1" />
+          {/* Indicator needle */}
+          <line x1="100" y1="108" x2="108" y2="101" stroke="#e53e3e" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="100" cy="108" r="2" fill="#fff" />
         </svg>
       );
 
