@@ -16,10 +16,12 @@ import {
   ChevronLeft,
   Copy,
   Check,
-  Cpu
+  Cpu,
+  FileText
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
+import ControleIsca from './ControleIsca';
 
 interface PatioProps {
   onBack?: () => void;
@@ -306,7 +308,7 @@ export default function Patio({ onBack }: PatioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
-  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas'>('patio');
+  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas' | 'controle'>('patio');
   const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>('bom dia');
   const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
   const [dispCopied, setDispCopied] = useState(false);
@@ -1212,6 +1214,18 @@ export default function Patio({ onBack }: PatioProps) {
             <Cpu size={14} className="stroke-[2.5]" />
             <span>Iscas</span>
           </button>
+          <button
+            onClick={() => setActiveSubTab('controle')}
+            className={cn(
+              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              activeSubTab === 'controle'
+                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+            )}
+          >
+            <FileText size={14} className="stroke-[2.5]" />
+            <span>Controle</span>
+          </button>
         </div>
         <div className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider hidden md:block">
           SISTEMA DE CONTROLE DE FLUXO & DISPONIBILIDADE
@@ -1851,7 +1865,7 @@ export default function Patio({ onBack }: PatioProps) {
           </div>
 
         </div>
-      ) : (
+      ) : activeSubTab === 'iscas' ? (
         /* ================= ISCAS CONSOLE ================= */
         <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0 animate-fade-in">
           
@@ -2073,6 +2087,8 @@ export default function Patio({ onBack }: PatioProps) {
           </div>
 
         </div>
+      ) : (
+        <ControleIsca />
       )}
 
       {/* ================= PORTABLE FOOTER METAL PLATE BAR ================= */}
