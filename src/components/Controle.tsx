@@ -70,13 +70,13 @@ const TRANSPORTADORAS = [
 const EMBARQUE_IMAGES = [
   { value: "", label: "Paletizado (Padrão)" },
   {
-    value: "https://i.ibb.co/0y7FD7zQ/CARGA-BATIDA-PADR-O.png",
+    value: "https://drive.google.com/uc?id=10_pdJtVfsdXNsPJ7mX-z56Q73RwIg3fx",
     label: "Carga Batida (Padrão)",
   },
-  { value: "https://i.ibb.co/PvNPRcKT/AMARELIN.png", label: "AMARELIN" },
-  { value: "https://i.ibb.co/JwZL1N8w/SUPERIOR-BATIDO.png", label: "SUPERIOR BATIDO" },
-  { value: "https://i.ibb.co/B51ynrFw/CASTANHA.png", label: "CASTANHA" },
-  { value: "https://i.ibb.co/20k8cPCG/IZOTONICO.png", label: "IZOTONICO" },
+  { value: "https://drive.google.com/uc?id=1RdjcMTVC2ofuxQVzajM0S01VSMAXLaMf", label: "AMARELIN" },
+  { value: "https://drive.google.com/uc?id=17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh", label: "SUPERIOR BATIDO" },
+  { value: "https://drive.google.com/uc?id=1JGe0rvxIMqBpMMxclgFpQj47GqVl1VMX", label: "CASTANHA" },
+  { value: "https://drive.google.com/uc?id=1kI3l33NFrTlqnDveMgKWHfFfU5WA6OTQ", label: "IZOTONICO" },
   { value: "none", label: "Nenhum Embarque" },
 ];
 
