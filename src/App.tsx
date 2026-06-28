@@ -444,7 +444,7 @@ export default function App() {
                </AnimatePresence>
 
                {/* Clock Box */}
-               <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 bg-[#E8D4B0] border-2 border-[#3A2414] rounded-full text-xs font-mono text-[#2D1A10] shadow-md">
+               <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 bg-[#E8D4B0] border-2 border-[#3A2414] rounded-full text-[10px] leading-[14px] font-mono text-[#2D1A10] shadow-md">
                  <Clock size={14} className="text-[#B32025]" />
                  {formatDate(currentDateTime)}
                </div>
@@ -631,8 +631,8 @@ export default function App() {
           activeTab === 'menu' ? "overflow-hidden" : "overflow-y-visible md:overflow-y-auto pb-4 md:pb-8"
         )}>
           <div className={cn(
-            "w-full max-w-[1600px] mx-auto relative z-10 flex flex-col transition-all duration-500",
-            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-4 sm:p-8 md:p-12"
+            "w-full max-w-[102rem] mx-auto relative z-10 flex flex-col transition-all duration-500",
+            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-4 sm:p-6 md:p-8"
           )}>
             {activeTab !== 'menu' && activeTab !== 'patio' && activeTab !== 'presence' && activeTab !== 'averbacao' && (
                <motion.div 
@@ -667,7 +667,10 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className={activeTab === 'menu' ? "h-full" : "w-full origin-top scale-[0.93] md:scale-[0.88] transition-all duration-300"}
+                className={cn(
+                  activeTab === 'menu' ? "h-full" : "w-full transition-all duration-300",
+                  activeTab === 'controle' && "origin-top scale-[0.85] xl:scale-[0.80]"
+                )}
               >
                 {renderContent()}
               </motion.div>
