@@ -70,13 +70,13 @@ const TRANSPORTADORAS = [
 const EMBARQUE_IMAGES = [
   { value: "", label: "Paletizado (Padrão)" },
   {
-    value: "https://drive.google.com/uc?id=10_pdJtVfsdXNsPJ7mX-z56Q73RwIg3fx",
+    value: "https://lh3.googleusercontent.com/d/10_pdJtVfsdXNsPJ7mX-z56Q73RwIg3fx",
     label: "Carga Batida (Padrão)",
   },
-  { value: "https://drive.google.com/uc?id=1RdjcMTVC2ofuxQVzajM0S01VSMAXLaMf", label: "AMARELIN" },
-  { value: "https://drive.google.com/uc?id=17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh", label: "SUPERIOR BATIDO" },
-  { value: "https://drive.google.com/uc?id=1JGe0rvxIMqBpMMxclgFpQj47GqVl1VMX", label: "CASTANHA" },
-  { value: "https://drive.google.com/uc?id=1kI3l33NFrTlqnDveMgKWHfFfU5WA6OTQ", label: "IZOTONICO" },
+  { value: "https://lh3.googleusercontent.com/d/1RdjcMTVC2ofuxQVzajM0S01VSMAXLaMf", label: "AMARELIN" },
+  { value: "https://lh3.googleusercontent.com/d/17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh", label: "SUPERIOR BATIDO" },
+  { value: "https://lh3.googleusercontent.com/d/1JGe0rvxIMqBpMMxclgFpQj47GqVl1VMX", label: "CASTANHA" },
+  { value: "https://lh3.googleusercontent.com/d/1kI3l33NFrTlqnDveMgKWHfFfU5WA6OTQ", label: "IZOTONICO" },
   { value: "none", label: "Nenhum Embarque" },
 ];
 
