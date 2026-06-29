@@ -81,9 +81,14 @@ const EMBARQUE_IMAGES = [
 ];
 
 const DESTINOS_OPCOES = [
-  "SANTA LUZIA/MG x PINHAIS/PR",
-  "SANTA LUZIA/MG x 3 CAFFI",
+  "SANTA LUZIA/MG x RIO DE JANEIRO/RJ",
+  "SANTA LUZIA/MG x GUARULHOS/SP",
   "SANTA LUZIA/MG x BRASÍLIA/DF",
+  "SANTA LUZIA/MG x PINHAIS/PR",
+  "SANTA LUZIA/MG x MONTES CLAROS/MG",
+  "SANTA LUZIA/MG x LONDRINA/PR",
+  "SANTA LUZIA/MG x VIANA/ES",
+  "SANTA LUZIA/MG x 3 CAFFI",
   "SANTA LUZIA/MG x CAMPO GRANDE/MS",
   "SANTA LUZIA/MG x CLIENTE",
   "SANTA LUZIA/MG x CUIABÁ/MT",
@@ -91,23 +96,18 @@ const DESTINOS_OPCOES = [
   "SANTA LUZIA/MG x EXPORTAÇÃO",
   "SANTA LUZIA/MG x GOV. CELSO RAMOS/SC",
   "SANTA LUZIA/MG x GRAVATAÍ/RS",
-  "SANTA LUZIA/MG x GUARULHOS/SP",
   "SANTA LUZIA/MG x JUIZ DE FORA/MG",
-  "SANTA LUZIA/MG x LONDRINA/PR",
   "SANTA LUZIA/MG x MANAUS/AM",
-  "SANTA LUZIA/MG x MONTES CLAROS/MG",
   "SANTA LUZIA/MG x MOSSORÓ/RN",
   "SANTA LUZIA/MG x NATAL/RN",
   "SANTA LUZIA/MG x ARIQUEMES/RO",
   "SANTA LUZIA/MG x RECIFE/PE",
-  "SANTA LUZIA/MG x RIO DE JANEIRO/RJ",
   "SANTA LUZIA/MG x SALVADOR/BA",
   "SANTA LUZIA/MG x SANTA LUZIA/MG",
   "SANTA LUZIA/MG x SMART",
   "SANTA LUZIA/MG x SUMARÉ/SP",
   "SANTA LUZIA/MG x TOTAL SERVICE",
   "SANTA LUZIA/MG x VESPASIANO/MG",
-  "SANTA LUZIA/MG x VIANA/ES",
   "SANTA LUZIA/MG x BEBEDOURO/SP",
   "SANTA LUZIA/MG x CASTRO/PR",
   "SANTA LUZIA/MG x JUNDIAÍ/SP",
@@ -140,6 +140,18 @@ const DESTINOS_OPCOES = [
   "SANTA LUZIA/MG x BELÉM/PA",
 ];
 
+const ORIGEM_OPCOES = [
+  "SANTA LUZIA/MG",
+  "VIANA/ES",
+  "SERRA/ES",
+  "CARIACICA/ES",
+  "MONTES CLAROS/MG",
+  "SMART/MG",
+  "TOTAL SERVICE/MG",
+  "CUIABÁ/MT",
+  "JUIZ DE FORA/MG",
+];
+
 interface ControleProps {
   onBack?: () => void;
 }
@@ -155,29 +167,28 @@ export default function Controle({ onBack }: ControleProps) {
   );
 
   // Routes & Warning lines
-  const [rota1, setRota1] = useState("SANTA LUZIA/MG x GUARULHOS/SP");
-  const [instrucao1, setInstrucao1] = useState(
-    "Favor, acusar o recebimento do pré-alerta;",
-  );
+  const [origem, setOrigem] = useState("SANTA LUZIA/MG");
+  const [rota1, setRota1] = useState("");
+  const [instrucao1, setInstrucao1] = useState("");
 
   // Table information (CCC.PNG layout)
-  const [nfInicio, setNfInicio] = useState("2970815");
-  const [nfFim, setNfFim] = useState("2970843");
-  const [transportadora, setTransportadora] = useState("moedense");
-  const [motorista, setMotorista] = useState("GILDEI FERREIRA DA CUNHA");
-  const [cavalo, setCavalo] = useState("PWD4E25");
+  const [nfInicio, setNfInicio] = useState("");
+  const [nfFim, setNfFim] = useState("");
+  const [transportadora, setTransportadora] = useState("");
+  const [motorista, setMotorista] = useState("");
+  const [cavalo, setCavalo] = useState("");
 
   // Row 1 lists (Carreta 1, Isca 1, Produto 1, UMA 1)
-  const [carreta1, setCarreta1] = useState("FQC2B85");
-  const [carreta2, setCarreta2] = useState("FQG1D53");
-  const [isca1, setIsca1] = useState("R100002195");
-  const [isca2, setIsca2] = useState("R100003797");
-  const [produto1, setProduto1] = useState("12031007");
-  const [produto2, setProduto2] = useState("12031007");
-  const [uma1, setUma1] = useState("013.490.990.005");
-  const [uma2, setUma2] = useState("013.439.400.547");
+  const [carreta1, setCarreta1] = useState("");
+  const [carreta2, setCarreta2] = useState("");
+  const [isca1, setIsca1] = useState("");
+  const [isca2, setIsca2] = useState("");
+  const [produto1, setProduto1] = useState("");
+  const [produto2, setProduto2] = useState("");
+  const [uma1, setUma1] = useState("");
+  const [uma2, setUma2] = useState("");
 
-  const [destino, setDestino] = useState("GUARULHOS/SP");
+  const [destino, setDestino] = useState("");
   const getFormattedDate = () => {
     const now = new Date();
     const day = String(now.getDate()).padStart(2, "0");
@@ -196,6 +207,29 @@ export default function Controle({ onBack }: ControleProps) {
       "dez.",
     ];
     return `${day}-${months[now.getMonth()]}`;
+  };
+
+  const formatUMA = (value: string) => {
+    // Remove all non-numeric characters
+    let digits = value.replace(/\D/g, "");
+
+    // Ensure it always starts with '0'
+    if (digits.length === 0 || digits[0] !== "0") {
+      digits = "0" + digits;
+    }
+
+    // Limit to 12 digits (0XXX.XXX.XXX.XXX pattern)
+    digits = digits.substring(0, 12);
+
+    // Apply dots every 3 characters
+    let formatted = "";
+    for (let i = 0; i < digits.length; i++) {
+      if (i > 0 && i % 3 === 0) {
+        formatted += ".";
+      }
+      formatted += digits[i];
+    }
+    return formatted;
   };
 
   const getInitialGreeting = () => {
@@ -222,16 +256,12 @@ export default function Controle({ onBack }: ControleProps) {
   );
 
   // Isca positions (addresses, times and battery level) matching the image exactly
-  const [isca1Endereco, setIsca1Endereco] = useState(
-    "rod mg-020 – santa luzia - mg - brazil - 0 a 0 - santa luzia - MG",
-  );
-  const [isca2Endereco, setIsca2Endereco] = useState(
-    "r Quarenta E Tres - Santa Luzia - Mg - Brazil - 189 A 278 - santa Luzia - MG",
-  );
-  const [isca1Data, setIsca1Data] = useState("26/06/2026 22:29:59");
-  const [isca2Data, setIsca2Data] = useState("26/06/2026 22:22:53");
-  const [isca1Bateria, setIsca1Bateria] = useState("100%");
-  const [isca2Bateria, setIsca2Bateria] = useState("100%");
+  const [isca1Endereco, setIsca1Endereco] = useState("");
+  const [isca2Endereco, setIsca2Endereco] = useState("");
+  const [isca1Data, setIsca1Data] = useState("");
+  const [isca2Data, setIsca2Data] = useState("");
+  const [isca1Bateria, setIsca1Bateria] = useState("");
+  const [isca2Bateria, setIsca2Bateria] = useState("");
 
   // Interactive ladders for Esquema de Embarque
   const [ladder1, setLadder1] = useState<string[][]>(() => {
@@ -465,8 +495,9 @@ export default function Controle({ onBack }: ControleProps) {
       setSaudacao(getInitialGreeting());
       setAlertaResgate("Favor se atentar ao resgate!");
       setInfoAbaixo("Atentar às informações abaixo:");
-      setRota1("SANTA LUZIA/MG x GUARULHOS/SP");
-      setInstrucao1("Favor, acusar o recebimento do pré-alerta;");
+      setOrigem("SANTA LUZIA/MG");
+      setRota1("");
+      setInstrucao1("");
       setNfInicio("");
       setNfFim("");
       setTransportadora("");
@@ -478,25 +509,21 @@ export default function Controle({ onBack }: ControleProps) {
       setIsca2("");
       setProduto1("");
       setProduto2("");
-      setUma1("");
-      setUma2("");
-      setDestino("GUARULHOS/SP");
+      setUma1(formatUMA("0"));
+      setUma2(formatUMA("0"));
+      setDestino("");
       setDataEnviada(getFormattedDate());
       setParametrizacao("Parametrização das iscas");
       setEsquemaEmbarque(
         "CAVALO: ISCA NO PAINEL / CARRETA 1: ISCA NO MEIO DA CARGA / CARRETA 2: ISCA NO FUNDO DA CARGA",
       );
 
-      setIsca1Endereco(
-        "rod mg-020 – santa luzia - mg - brazil - 0 a 0 - santa luzia - MG",
-      );
-      setIsca2Endereco(
-        "r Quarenta E Tres - Santa Luzia - Mg - Brazil - 189 A 278 - santa Luzia - MG",
-      );
-      setIsca1Data("26/06/2026 22:29:59");
-      setIsca2Data("26/06/2026 22:22:53");
-      setIsca1Bateria("100%");
-      setIsca2Bateria("100%");
+      setIsca1Endereco("");
+      setIsca2Endereco("");
+      setIsca1Data("");
+      setIsca2Data("");
+      setIsca1Bateria("");
+      setIsca2Bateria("");
 
       setLadder1(() => {
         const grid = Array(12)
@@ -824,7 +851,9 @@ Embarque: ${
   };
 
   const handleCopySubject = async () => {
-    const subject = `PRÉ-ALERTA DE ISCA - ${(destino || "GUARULHOS/SP").toUpperCase()} - ${(cavalo || "TYQ-6F51").toUpperCase()}`;
+    const isDefaultOrigem = origem === "SANTA LUZIA/MG";
+    const subjectPrefix = isDefaultOrigem ? "" : `${origem.toUpperCase()} X `;
+    const subject = `PRÉ-ALERTA DE ISCA - ${subjectPrefix}${(destino || "GUARULHOS/SP").toUpperCase()} - ${(cavalo || "TYQ-6F51").toUpperCase()}`;
     try {
       await navigator.clipboard.writeText(subject);
       setCopiedAssunto(true);
@@ -1170,9 +1199,9 @@ Embarque: ${
                         <input
                           type="text"
                           value={uma1}
-                          onChange={(e) => setUma1(e.target.value)}
+                          onChange={(e) => setUma1(formatUMA(e.target.value))}
                           className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
-                          placeholder="UMA 1"
+                          placeholder="0XX.XXX.XXX.XXX"
                         />
                       </td>
 
@@ -1246,9 +1275,9 @@ Embarque: ${
                           <input
                             type="text"
                             value={uma2}
-                            onChange={(e) => setUma2(e.target.value)}
+                            onChange={(e) => setUma2(formatUMA(e.target.value))}
                             className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
-                            placeholder="UMA 2"
+                            placeholder="0XX.XXX.XXX.XXX"
                           />
                         </td>
                       </tr>
@@ -1604,6 +1633,47 @@ Embarque: ${
 
           {/* Form inputs identical to COLUNA.PNG layout */}
           <div className="flex flex-col gap-4">
+            {/* ORIGEM (MENU SUSPENSO) */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3e29] flex items-center gap-1">
+                <MapPin size={12} className="text-[#8c6b4e]" /> ORIGEM
+              </label>
+              <select
+                value={origem}
+                onChange={(e) => {
+                  const newOrigem = e.target.value;
+                  setOrigem(newOrigem);
+                  // Update rota1 if it already has a route to reflect the new origin
+                  if (rota1) {
+                    // Try to replace existing origin patterns or prepend if it's a simple destination
+                    if (rota1.includes(" x ")) {
+                      const parts = rota1.split(/\s*x\s*/i);
+                      // Handle the case where there might be a leading dot or space in the first part
+                      const firstPart = parts[0];
+                      const prefixMatch = firstPart.match(/^(\s*·?\s*)/);
+                      const prefix = prefixMatch ? prefixMatch[1] : "";
+                      const restOfRoute = parts.slice(1).join(" x ");
+                      setRota1(`${prefix}${newOrigem} x ${restOfRoute}`);
+                    } else if (rota1.trim() !== "") {
+                      // If it doesn't have ' x ', it might just be a destination or something else
+                      // We don't want to blindly overwrite it unless it's clearly an origin-destination pair
+                    }
+                  }
+                }}
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+              >
+                {ORIGEM_OPCOES.map((opt) => (
+                  <option
+                    key={opt}
+                    value={opt}
+                    className="text-black uppercase text-xs font-black"
+                  >
+                    {opt.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* SELECIONAR ROTA (MENU SUSPENSO) */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3e29] flex items-center gap-1">
@@ -1635,7 +1705,7 @@ Embarque: ${
               </div>
 
               <select
-                value={DESTINOS_OPCOES.includes(rota1) ? rota1 : ""}
+                value={rota1}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val) {
@@ -1660,15 +1730,18 @@ Embarque: ${
                 </option>
                 {DESTINOS_OPCOES.filter((dest) =>
                   dest.toLowerCase().includes(searchRota.toLowerCase()),
-                ).map((dest) => (
-                  <option
-                    key={dest}
-                    value={dest}
-                    className="text-black uppercase text-xs font-black"
-                  >
-                    {dest.toUpperCase()}
-                  </option>
-                ))}
+                ).map((dest) => {
+                  const displayDest = dest.replace(/^SANTA LUZIA\/MG/i, origem);
+                  return (
+                    <option
+                      key={dest}
+                      value={displayDest}
+                      className="text-black uppercase text-xs font-black"
+                    >
+                      {displayDest.toUpperCase()}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -2101,9 +2174,9 @@ Embarque: ${
                   <input
                     type="text"
                     value={uma1}
-                    onChange={(e) => setUma1(e.target.value.toUpperCase())}
+                    onChange={(e) => setUma1(formatUMA(e.target.value))}
                     className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-lg px-2.5 py-2 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
-                    placeholder="U.M.A. 1"
+                    placeholder="0XX.XXX.XXX.XXX"
                   />
                 </div>
                 {numCarretas === 2 && (
@@ -2114,9 +2187,9 @@ Embarque: ${
                     <input
                       type="text"
                       value={uma2}
-                      onChange={(e) => setUma2(e.target.value.toUpperCase())}
+                      onChange={(e) => setUma2(formatUMA(e.target.value))}
                       className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-lg px-2.5 py-2 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
-                      placeholder="U.M.A. 2"
+                      placeholder="0XX.XXX.XXX.XXX"
                     />
                   </div>
                 )}
