@@ -538,7 +538,6 @@ export default function Controle({ onBack }: ControleProps) {
     ) => {
       return `
         <td style="vertical-align: top; width: 50%; text-align: center; ${extraStyle}">
-          <span style="font-size: 10px; font-weight: bold; color: #9E3636; display: block; margin-bottom: 5px;">${plate}</span>
           
           <table cellpadding="0" cellspacing="0" style="width: 75px; margin: 0 auto; border-collapse: collapse;">
             <tr>
@@ -560,7 +559,7 @@ export default function Controle({ onBack }: ControleProps) {
               .join("")}
           </table>
           
-          <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${label}: ${plate}</p>
+          <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${plate}</p>
         </td>
       `;
     };
@@ -692,7 +691,7 @@ export default function Controle({ onBack }: ControleProps) {
                       </td>
                     </tr>
                   </table>
-                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">CARRETA 1: ${carreta1}</p>
+                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta1}</p>
                 </td>
               `
                 : renderLadderHtml(ladder1, "CARRETA 1", carreta1, "padding-right: 15px; padding-top: 15px;")
@@ -713,7 +712,7 @@ export default function Controle({ onBack }: ControleProps) {
                       </td>
                     </tr>
                   </table>
-                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">CARRETA 2: ${carreta2}</p>
+                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta2}</p>
                 </td>
                 `
                   : renderLadderHtml(ladder2, "CARRETA 2", carreta2, "padding-top: 15px;"))
@@ -836,7 +835,10 @@ Embarque: ${
   };
 
   return (
-    <div className="w-full relative z-10 max-w-[102rem] mx-auto grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start font-sans">
+    <div 
+      className="w-full relative z-10 max-w-[102rem] mx-auto grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start font-sans"
+      style={{ zoom: 0.9 }}
+    >
       {/* LEFT AREA: Template Generator (expanded dynamically) */}
       <div className="col-span-1 xl:col-span-1 flex flex-col">
         <div className="flex-1 rounded-3xl bg-[#fdfbf7] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col p-6 sm:p-8">
@@ -1397,16 +1399,13 @@ Embarque: ${
                               </div>
                               <div className="text-center mt-[15px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  CARRETA 1: {carreta1}
+                                  {carreta1}
                                 </span>
                               </div>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center w-full">
                               <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
-                                <span className="text-[9px] font-black text-[#9E3636] mb-[5px] uppercase text-center block">
-                                  {carreta1 || "PLACA 1"}
-                                </span>
                                 <div className="bg-[#4A131E] text-white font-black text-[9px] uppercase w-[75px] py-[5px] text-center border border-[#4A131E] tracking-normal">
                                   CAVALO
                                 </div>
@@ -1438,7 +1437,7 @@ Embarque: ${
                               </div>
                               <div className="text-center mt-[10px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  CARRETA 1: {carreta1}
+                                  {carreta1}
                                 </span>
                               </div>
                             </div>
@@ -1461,16 +1460,13 @@ Embarque: ${
                               </div>
                               <div className="text-center mt-[15px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  CARRETA 2: {carreta2}
+                                  {carreta2}
                                 </span>
                               </div>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center w-full">
                               <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
-                                <span className="text-[9px] font-black text-[#9E3636] mb-[5px] uppercase text-center block">
-                                  {carreta2 || "PLACA 2"}
-                                </span>
                                 <div className="bg-[#4A131E] text-white font-black text-[9px] uppercase w-[75px] py-[5px] text-center border border-[#4A131E] tracking-normal">
                                   CAVALO
                                 </div>
@@ -1502,7 +1498,7 @@ Embarque: ${
                               </div>
                               <div className="text-center mt-[15px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  CARRETA 2: {carreta2}
+                                  {carreta2}
                                 </span>
                               </div>
                             </div>
