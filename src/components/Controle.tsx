@@ -592,175 +592,171 @@ export default function Controle({ onBack }: ControleProps) {
     };
 
     const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; background-color: #FAF6EE; padding: 20px; color: #333333; max-width: 850px; border-radius: 4px;">
+      <div style="font-family: Arial, sans-serif; background-color: #FAF6EE; padding: 20px; color: #333333; max-width: 800px; border-radius: 4px;">
         
-        <!-- 1. Saudação -->
-        <div style="font-family: 'Georgia', serif; font-weight: 900; font-style: italic; color: #3e2516; font-size: 14px; margin-bottom: 16px; margin-top: 0;">
-          ${saudacao || "Boa tarde,"}
-        </div>
+        <!-- Saudação -->
+        <p style="font-family: 'Georgia', serif; font-weight: bold; font-style: italic; color: #4A1521; font-size: 14px; margin-bottom: 15px; margin-top: 0;">${saudacao || "Boa tarde,"}</p>
         
-        <!-- 2. Alerta Vinho Ribbon Style -->
-        <div style="margin-bottom: 20px; background-color: #7C0623; color: #FFFFFF; font-weight: 900; font-size: 12px; padding: 10px 16px; display: inline-block; border-radius: 0 4px 4px 0; border-left: 10px solid #4D0012; text-transform: uppercase; letter-spacing: 1px;">
+        <!-- Alerta Vinho -->
+        <div style="background-color: #6B0322; color: #FFFFFF; font-weight: bold; padding: 10px 15px; display: inline-block; border-radius: 2px; margin-bottom: 20px; font-size: 14px; text-transform: uppercase;">
           ${alertaResgate || "FAVOR SE ATENTAR AO RESGATE!"}
         </div>
         
-        <!-- 3. Atentar às informações -->
-        <div style="font-weight: 900; font-size: 13px; margin-bottom: 14px; color: #3e2516;">
-          ${infoAbaixo || "Atentar às informações abaixo:"}
-        </div>
+        <p style="font-weight: bold; font-size: 13px; margin-bottom: 10px; color: #222222;">${infoAbaixo || "Atentar às informações abaixo:"}</p>
         
-        <!-- 4. Caixa de Observações (Double Border Style) -->
-        <div style="border: 1px solid #c5ab92; background-color: #FFFDFB; padding: 3px; margin-bottom: 24px; max-width: 580px; border-radius: 2px;">
-          <div style="border: 1px solid #c5ab92; padding: 16px; font-weight: bold; line-height: 1.6; color: #3e2516; font-size: 12px;">
-            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-               <span style="color: #c5ab92; font-size: 18px; margin-right: 8px;">•</span>
-               <span>${rota1}</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-               <span style="color: #c5ab92; font-size: 18px; margin-right: 8px;">•</span>
-               <span>${instrucao1}</span>
-            </div>
-          </div>
+        <!-- Caixa de Observações -->
+        <div style="border: 1px solid #D1C4B4; background-color: #FFFFFF; padding: 12px 20px; margin-bottom: 25px; max-width: 400px;">
+          <ul style="margin: 0; padding-left: 15px; font-size: 13px; font-weight: bold; color: #222222; line-height: 1.6;">
+            <li>${rota1};</li>
+            <li>${instrucao1}</li>
+          </ul>
         </div>
 
-        <!-- 5. TABELA 1: PRÉ-ALERTA DE ISCA EMBARCADA -->
-        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-size: 12px; text-align: center; color: #000000; margin-bottom: 25px; border: 1px solid #c5ab92; table-layout: fixed;">
-          <!-- Row 1: NF and Transportadora -->
-          <tr>
-            <td colspan="2" style="background-color: #2D1C10; color: #efdfc6; font-weight: 900; padding: 10px; border: 1px solid #c5ab92; text-transform: uppercase; font-size: 11px; width: 25%;">NÚMERO DA NF:</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; width: 15%;">${nfInicio}<br>${nfFim}</td>
-            <td style="background-color: #2D1C10; color: #efdfc6; font-weight: 900; padding: 10px; border: 1px solid #c5ab92; text-transform: uppercase; font-size: 11px; width: 18%;">TRANSPORTADORA:</td>
-            <td colspan="2" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; width: 25%;">${transportadora}</td>
-            <td colspan="2" style="background-color: #2D1C10; border: 1px solid #c5ab92; width: 17%;"></td>
+        <!-- TABELA 1: PRÉ-ALERTA DE ISCA EMBARCADA -->
+        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-size: 11px; text-align: center; font-weight: bold; color: #333333; margin-bottom: 25px; border: 1px solid #C4B6A6;">
+          <tr style="background-color: #F0E6D8;">
+            <td colspan="9" style="padding: 8px; border: 1px solid #C4B6A6; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">PRÉ - ALERTA DE ISCA EMBARCADA</td>
           </tr>
-          <!-- Row 2: Headings -->
-          <tr style="background-color: #2D1C10; color: #efdfc6; font-weight: 900; font-size: 10px; text-transform: uppercase;">
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 22%;">MOTORISTA</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 11%;">CAVALO</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 11%;">CARRETAS</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 13%;">N° ISCAS</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 14%;">PRODUTO EMBARCADO</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 15%;">CÓDIGO U.M.A.</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 11%;">DESTINO</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 11%;">DATA ENVIADA</td>
+          <tr style="background-color: #F0E6D8;">
+            <td colspan="2" style="padding: 8px; border: 1px solid #C4B6A6; width: 30%;">NÚMERO DA NF:</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; background-color: #FFFFFF; width: 15%;">${nfInicio}<br>${nfFim}</td>
+            <td colspan="2" style="padding: 8px; border: 1px solid #C4B6A6; width: 15%;">TRANSPORTADORA:</td>
+            <td colspan="4" style="padding: 8px; border: 1px solid #C4B6A6; background-color: #FFFFFF; text-transform: uppercase;">${transportadora}</td>
           </tr>
-          <!-- Data Row 1 -->
+          <tr style="background-color: #F0E6D8; font-size: 10px;">
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 25%;">MOTORISTA</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 10%;">CAVALO</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 12%;">CARRETAS</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 13%;">N° ISCAS</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 12%;">PRODUTO EMBARCADO</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 15%;">CÓDIGO U.M.A.</td>
+            <td colspan="2" style="padding: 8px; border: 1px solid #C4B6A6; width: 13%;">DESTINO</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; width: 10%;">DATA ENVIADA</td>
+          </tr>
           <tr>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase; font-size: 11px;">${motorista}</td>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase;">${cavalo}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase;">${carreta1}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${isca1}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${produto1}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${uma1}</td>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase;">${destino}</td>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold;">${dataEnviada}</td>
+            <td rowspan="${numCarretas}" style="padding: 15px 5px; border: 1px solid #C4B6A6; font-size: 11px; text-transform: uppercase;">${motorista}</td>
+            <td rowspan="${numCarretas}" style="padding: 15px 5px; border: 1px solid #C4B6A6; text-transform: uppercase;">${cavalo}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; text-transform: uppercase;">${carreta1}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; color: #1A542E; text-transform: uppercase;">${isca1}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${produto1}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${uma1}</td>
+            <td colspan="2" rowspan="${numCarretas}" style="padding: 15px 5px; border: 1px solid #C4B6A6; text-transform: uppercase;">${destino}</td>
+            <td rowspan="${numCarretas}" style="padding: 15px 5px; border: 1px solid #C4B6A6;">${dataEnviada}</td>
           </tr>
           ${
             numCarretas === 2
               ? `
           <tr>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase;">${carreta2}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${isca2}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${produto2}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${uma2}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; text-transform: uppercase;">${carreta2}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; color: #1A542E; text-transform: uppercase;">${isca2}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${produto2}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${uma2}</td>
           </tr>
           `
               : ""
           }
         </table>
 
-        <!-- 6. TABELA 2: PARAMETRIZAÇÃO DAS ISCAS -->
-        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-size: 12px; text-align: center; color: #000000; margin-bottom: 30px; border: 1px solid #c5ab92; table-layout: fixed;">
-          <tr style="background-color: #2D1C10; color: #efdfc6; font-size: 11px; font-weight: 900;">
-            <td colspan="4" style="padding: 10px; border: 1px solid #c5ab92; text-transform: uppercase; letter-spacing: 0.5px;">${parametrizacao.toUpperCase()}</td>
+        <!-- TABELA 2: PARAMETRIZAÇÃO DAS ISCAS -->
+        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-size: 11px; text-align: center; font-weight: bold; color: #333333; margin-bottom: 30px; border: 1px solid #C4B6A6;">
+          <tr style="background-color: #2E1A16; color: #FFFFFF; font-size: 12px;">
+            <td colspan="4" style="padding: 8px; border: 1px solid #2E1A16; letter-spacing: 0.5px; text-transform: uppercase;">PARAMETRIZAÇÃO DAS ISCAS</td>
           </tr>
-          <tr style="background-color: #2D1C10; color: #efdfc6; font-size: 10px; font-weight: 900; text-transform: uppercase;">
-            <td style="padding: 4px; border: 1px solid #c5ab92; width: 25%;">
-              <div style="background-color: #FFFFFF; color: #000000; padding: 2px 6px; border-radius: 2px; font-size: 9px; display: inline-block;">
+          <tr style="background-color: #3D2721; color: #FFFFFF; font-size: 10px;">
+            <td style="padding: 8px; border: 1px solid #503831; width: 25%;">
+              <span style="background-color: #FFFFFF; color: #000000; padding: 2px 6px; border-radius: 2px; font-size: 9px; text-transform: uppercase;">
                 ${numCarretas === 2 ? `${isca1} ${isca2}` : isca1}
-              </div>
+              </span>
             </td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 45%;">🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 18%;">🔍 DATA POSIÇÃO ⇅</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; width: 12%;">🔍 BATERIA ISCA_RF ⇅</td>
+            <td style="padding: 8px; border: 1px solid #503831; width: 45%; color: #efdfc6;">🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅</td>
+            <td style="padding: 8px; border: 1px solid #503831; width: 20%; color: #efdfc6;">🔍 DATA POSIÇÃO ⇅</td>
+            <td style="padding: 8px; border: 1px solid #503831; width: 10%; color: #E5C158;">🔍 BATERIA ISCA_RF ⇅</td>
           </tr>
           ${
             numCarretas === 2
               ? `
-          <tr style="background-color: #FAF2E6; color: #3e2516;">
-            <td style="padding: 8px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase;">${isca2}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; text-align: left; font-weight: bold; font-size: 11px;">${isca2Endereco}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; font-weight: bold;">${isca2Data}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; font-weight: bold;">${isca2Bateria || "100%"}</td>
+          <tr style="background-color: #FAF5EE;">
+            <td style="padding: 8px; border: 1px solid #C4B6A6; text-transform: uppercase;">${isca2}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; text-align: left; padding-left: 10px; text-transform: lowercase;">${isca2Endereco}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${isca2Data}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${isca2Bateria || "100%"}</td>
           </tr>
           `
               : ""
           }
-          <tr style="background-color: #FAF2E6; color: #3e2516;">
-            <td style="padding: 8px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase;">${isca1}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; text-align: left; font-weight: bold; font-size: 11px;">${isca1Endereco}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; font-weight: bold;">${isca1Data}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; font-weight: bold;">${isca1Bateria || "100%"}</td>
+          <tr style="background-color: #FAF5EE;">
+            <td style="padding: 8px; border: 1px solid #C4B6A6; text-transform: uppercase;">${isca1}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6; text-align: left; padding-left: 10px; text-transform: lowercase;">${isca1Endereco}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${isca1Data}</td>
+            <td style="padding: 8px; border: 1px solid #C4B6A6;">${isca1Bateria || "100%"}</td>
           </tr>
         </table>
 
-        <!-- 7. SEÇÃO: ESQUEMA DE EMBARQUE -->
+        <!-- SEÇÃO: ESQUEMA DE EMBARQUE -->
         ${
           ocultarNotas
             ? ""
             : `
-        <div style="margin-top: 25px;">
-          <div style="font-weight: 900; font-size: 13px; margin-bottom: 20px; color: #222222; text-transform: uppercase; font-family: sans-serif;">
-            ESQUEMA DE EMBARQUE DAS ISCAS:
-          </div>
-          <table cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; border-collapse: collapse; margin-left: auto; margin-right: auto;">
-            <tr>
-              <!-- Carreta 1 Section -->
-              ${
-                sidebarEmbarque1 === "none"
-                  ? `<td style="width: 50%;"></td>`
-                  : sidebarEmbarque1
-                  ? `
-                  <td style="vertical-align: top; width: 50%; text-align: center; padding-right: 15px;">
-                    <div style="border: 1px solid #D5CBBF; background-color: #FFFFFF; padding: 15px; margin: 0 auto; width: 230px;">
-                      <img src="${sidebarEmbarque1}" alt="Esquema" style="width: 100%; max-width: 230px; display: block; border: 0; margin: 0 auto;">
-                    </div>
-                    <div style="font-size: 11px; font-weight: 900; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta1}</div>
-                  </td>
-                `
-                  : renderLadderHtml(ladder1, "CARRETA 1", carreta1, "padding-right: 15px;")
-              }
+        <table cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; width: 100%; max-width: 600px; border-collapse: collapse; margin-top: 25px;">
+          <tr>
+            <td colspan="2" style="font-weight: bold; font-size: 13px; padding-bottom: 25px; color: #222222; text-transform: uppercase;">
+              ESQUEMA DE EMBARQUE DAS ISCAS:
+            </td>
+          </tr>
+          <tr>
+            <!-- Carreta 1 Section -->
+            ${
+              sidebarEmbarque1 === "none"
+                ? `<td style="width: 50%;"></td>`
+                : sidebarEmbarque1
+                ? `
+                <td style="vertical-align: top; width: 50%; text-align: center; padding-right: 15px;">
+                  <table cellpadding="0" cellspacing="0" style="margin: 0 auto; border-collapse: collapse; border: 1px solid #D5CBBF; background-color: #FFFFFF; width: 260px;">
+                    <tr>
+                      <td style="padding: 15px; text-align: center;">
+                        <img src="${sidebarEmbarque1}" alt="Esquema" style="width: 100%; max-width: 230px; display: block; border: 0; margin: 0 auto;">
+                      </td>
+                    </tr>
+                  </table>
+                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta1}</p>
+                </td>
+              `
+                : renderLadderHtml(ladder1, "CARRETA 1", carreta1, "padding-right: 15px; padding-top: 15px;")
+            }
 
-              <!-- Carreta 2 Section -->
-              ${
-                numCarretas === 2
-                  ? (sidebarEmbarque2 === "none"
-                    ? `<td style="width: 50%;"></td>`
-                    : sidebarEmbarque2
-                    ? `
-                  <td style="vertical-align: top; width: 50%; text-align: center;">
-                    <div style="border: 1px solid #D5CBBF; background-color: #FFFFFF; padding: 15px; margin: 0 auto; width: 230px;">
-                      <img src="${sidebarEmbarque2}" alt="Esquema" style="width: 100%; max-width: 230px; display: block; border: 0; margin: 0 auto;">
-                    </div>
-                    <div style="font-size: 11px; font-weight: 900; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta2}</div>
-                  </td>
-                  `
-                    : renderLadderHtml(ladder2, "CARRETA 2", carreta2, ""))
-                  : `
-                  <td style="width: 50%;"></td>
-                  `
-              }
-            </tr>
-          </table>
-        </div>
+            <!-- Carreta 2 Section -->
+            ${
+              numCarretas === 2
+                ? (sidebarEmbarque2 === "none"
+                  ? `<td style="width: 50%;"></td>`
+                  : sidebarEmbarque2
+                  ? `
+                <td style="vertical-align: top; width: 50%; text-align: center; padding-top: 15px;">
+                  <table cellpadding="0" cellspacing="0" style="margin: 0 auto; border-collapse: collapse; border: 1px solid #D5CBBF; background-color: #FFFFFF; width: 260px;">
+                    <tr>
+                      <td style="padding: 15px; text-align: center;">
+                        <img src="${sidebarEmbarque2}" alt="Esquema" style="width: 100%; max-width: 230px; display: block; border: 0; margin: 0 auto;">
+                      </td>
+                    </tr>
+                  </table>
+                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta2}</p>
+                </td>
+                `
+                  : renderLadderHtml(ladder2, "CARRETA 2", carreta2, "padding-top: 15px;"))
+                : `
+                <td style="width: 50%;"></td>
+                `
+            }
+          </tr>
+        </table>
         `
         }
 
-        <hr style="border: 0; border-top: 1px dashed #c5ab92; margin-top: 30px; margin-bottom: 20px;">
+        <hr style="border: 0; border-top: 1px dashed #D1C4B4; margin-bottom: 15px; clear: both;">
 
-        <!-- 8. Rodapé -->
-        <div style="font-size: 11px; font-weight: 900; color: #4A1521; margin: 0 0 4px 0; text-transform: uppercase;">GERENCIAMENTO DE RISCO</div>
-        <div style="font-size: 11px; color: #667788; margin: 0;">• Agradecemos o apoio</div>
+        <!-- Rodapé -->
+        <p style="font-size: 11px; font-weight: bold; color: #4A1521; margin: 0 0 4px 0; text-transform: uppercase;">GERENCIAMENTO DE RISCO</p>
+        <p style="font-size: 11px; color: #667788; margin: 0;">• Agradecemos o apoio</p>
 
       </div>
     `;
@@ -1047,7 +1043,7 @@ Embarque: ${
                     <tr className="border border-[#c5ab92]">
                       <th
                         colSpan={2}
-                        className="bg-[#2D1C10] border-r border-[#c5ab92] text-[#efdfc6] text-center font-black p-2.5 uppercase text-[11px] align-middle w-[25%]"
+                        className="bg-[#F2E2D2] border-r border-[#c5ab92] text-black text-center font-black p-2.5 uppercase text-[11px] align-middle w-[25%]"
                       >
                         NÚMERO DA NF:
                       </th>
@@ -1075,7 +1071,7 @@ Embarque: ${
                       </th>
                       <th
                         colSpan={1}
-                        className="bg-[#2D1C10] border-r border-[#c5ab92] text-[#efdfc6] text-center font-black p-2.5 uppercase text-[11px] align-middle w-[18%]"
+                        className="bg-[#F2E2D2] border-r border-[#c5ab92] text-black text-center font-black p-2.5 uppercase text-[11px] align-middle w-[18%]"
                       >
                         TRANSPORTADORA:
                       </th>
@@ -1102,11 +1098,11 @@ Embarque: ${
                           ))}
                         </select>
                       </th>
-                      <th colSpan={2} className="w-[17%] bg-[#2D1C10]"></th>
+                      <th colSpan={2} className="w-[17%] bg-[#F2E2D2]"></th>
                     </tr>
 
                     {/* Row 2: Standard Columns Headings */}
-                    <tr className="border-b border-[#c5ab92] bg-[#2D1C10] text-[#efdfc6] text-center font-black uppercase text-[10px] h-[34px]">
+                    <tr className="border-b border-[#c5ab92] bg-[#F2E2D2] text-black text-center font-black uppercase text-[10px] h-[34px]">
                       <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[22%]">
                         MOTORISTA
                       </th>
