@@ -242,11 +242,6 @@ export default function Controle({ onBack }: ControleProps) {
   const [dataEnviada, setDataEnviada] = useState(getFormattedDate());
   const [saudacao, setSaudacao] = useState(getInitialGreeting());
 
-  useEffect(() => {
-    setDataEnviada(getFormattedDate());
-    setSaudacao(getInitialGreeting());
-  }, []);
-
   // Parametrização and Esquema de Embarque
   const [parametrizacao, setParametrizacao] = useState(
     "Parametrização das Iscas",
@@ -300,6 +295,92 @@ export default function Controle({ onBack }: ControleProps) {
   const [copied, setCopied] = useState(false);
   const [copiedAssunto, setCopiedAssunto] = useState(false);
   const [ocultarNotas, setOcultarNotas] = useState(false);
+
+  // --- PERSISTENCE LOGIC ---
+  const STORAGE_KEY = "controle_app_state_v1";
+
+  // Load state on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.numCarretas !== undefined) setNumCarretas(data.numCarretas);
+        if (data.alertaResgate !== undefined) setAlertaResgate(data.alertaResgate);
+        if (data.infoAbaixo !== undefined) setInfoAbaixo(data.infoAbaixo);
+        if (data.origem !== undefined) setOrigem(data.origem);
+        if (data.rota1 !== undefined) setRota1(data.rota1);
+        if (data.instrucao1 !== undefined) setInstrucao1(data.instrucao1);
+        if (data.nfInicio !== undefined) setNfInicio(data.nfInicio);
+        if (data.nfFim !== undefined) setNfFim(data.nfFim);
+        if (data.transportadora !== undefined) setTransportadora(data.transportadora);
+        if (data.motorista !== undefined) setMotorista(data.motorista);
+        if (data.cavalo !== undefined) setCavalo(data.cavalo);
+        if (data.carreta1 !== undefined) setCarreta1(data.carreta1);
+        if (data.carreta2 !== undefined) setCarreta2(data.carreta2);
+        if (data.isca1 !== undefined) setIsca1(data.isca1);
+        if (data.isca2 !== undefined) setIsca2(data.isca2);
+        if (data.produto1 !== undefined) setProduto1(data.produto1);
+        if (data.produto2 !== undefined) setProduto2(data.produto2);
+        if (data.uma1 !== undefined) setUma1(data.uma1);
+        if (data.uma2 !== undefined) setUma2(data.uma2);
+        if (data.destino !== undefined) setDestino(data.destino);
+        if (data.dataEnviada !== undefined) setDataEnviada(data.dataEnviada);
+        if (data.saudacao !== undefined) setSaudacao(data.saudacao);
+        if (data.parametrizacao !== undefined) setParametrizacao(data.parametrizacao);
+        if (data.esquemaEmbarque !== undefined) setEsquemaEmbarque(data.esquemaEmbarque);
+        if (data.isca1Endereco !== undefined) setIsca1Endereco(data.isca1Endereco);
+        if (data.isca2Endereco !== undefined) setIsca2Endereco(data.isca2Endereco);
+        if (data.isca1Data !== undefined) setIsca1Data(data.isca1Data);
+        if (data.isca2Data !== undefined) setIsca2Data(data.isca2Data);
+        if (data.isca1Bateria !== undefined) setIsca1Bateria(data.isca1Bateria);
+        if (data.isca2Bateria !== undefined) setIsca2Bateria(data.isca2Bateria);
+        if (data.ladder1 !== undefined) setLadder1(data.ladder1);
+        if (data.ladder2 !== undefined) setLadder2(data.ladder2);
+        if (data.sidebarTransportadora !== undefined) setSidebarTransportadora(data.sidebarTransportadora);
+        if (data.sidebarTecnologia !== undefined) setSidebarTecnologia(data.sidebarTecnologia);
+        if (data.sidebarMotorista !== undefined) setSidebarMotorista(data.sidebarMotorista);
+        if (data.sidebarEmbarque1 !== undefined) setSidebarEmbarque1(data.sidebarEmbarque1);
+        if (data.sidebarEmbarque2 !== undefined) setSidebarEmbarque2(data.sidebarEmbarque2);
+        if (data.searchRota !== undefined) setSearchRota(data.searchRota);
+        if (data.iscaPrefix1 !== undefined) setIscaPrefix1(data.iscaPrefix1);
+        if (data.iscaPrefix2 !== undefined) setIscaPrefix2(data.iscaPrefix2);
+        if (data.iscaSuffix1 !== undefined) setIscaSuffix1(data.iscaSuffix1);
+        if (data.iscaSuffix2 !== undefined) setIscaSuffix2(data.iscaSuffix2);
+        if (data.ocultarNotas !== undefined) setOcultarNotas(data.ocultarNotas);
+      } catch (e) {
+        console.error("Failed to load state", e);
+      }
+    } else {
+      // If no saved state, set current date/greeting (only on first ever run)
+      setDataEnviada(getFormattedDate());
+      setSaudacao(getInitialGreeting());
+    }
+  }, []);
+
+  // Save state on change
+  useEffect(() => {
+    const stateToSave = {
+      numCarretas, alertaResgate, infoAbaixo, origem, rota1, instrucao1,
+      nfInicio, nfFim, transportadora, motorista, cavalo,
+      carreta1, carreta2, isca1, isca2, produto1, produto2, uma1, uma2,
+      destino, dataEnviada, saudacao, parametrizacao, esquemaEmbarque,
+      isca1Endereco, isca2Endereco, isca1Data, isca2Data, isca1Bateria, isca2Bateria,
+      ladder1, ladder2, sidebarTransportadora, sidebarTecnologia, sidebarMotorista,
+      sidebarEmbarque1, sidebarEmbarque2, searchRota, iscaPrefix1, iscaPrefix2,
+      iscaSuffix1, iscaSuffix2, ocultarNotas
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [
+    numCarretas, alertaResgate, infoAbaixo, origem, rota1, instrucao1,
+    nfInicio, nfFim, transportadora, motorista, cavalo,
+    carreta1, carreta2, isca1, isca2, produto1, produto2, uma1, uma2,
+    destino, dataEnviada, saudacao, parametrizacao, esquemaEmbarque,
+    isca1Endereco, isca2Endereco, isca1Data, isca2Data, isca1Bateria, isca2Bateria,
+    ladder1, ladder2, sidebarTransportadora, sidebarTecnologia, sidebarMotorista,
+    sidebarEmbarque1, sidebarEmbarque2, searchRota, iscaPrefix1, iscaPrefix2,
+    iscaSuffix1, iscaSuffix2, ocultarNotas
+  ]);
 
   // Sync transportadora and motorista states when either updates, keeping both sections intuitive
   const handleSidebarTranspChange = (val: string) => {
@@ -592,7 +673,7 @@ export default function Controle({ onBack }: ControleProps) {
     };
 
     const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; background-color: #FAF6EE; padding: 20px; color: #333333; max-width: 800px; border-radius: 4px;">
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333333; max-width: 800px; border-radius: 4px;">
         
         <!-- Saudação -->
         <p style="font-family: 'Georgia', serif; font-weight: bold; font-style: italic; color: #4A1521; font-size: 14px; margin-bottom: 15px; margin-top: 0;">${saudacao || "Boa tarde,"}</p>
@@ -958,7 +1039,7 @@ Embarque: ${
             </div>
 
             {/* PREVIEW CONTAINER - LOOKS EXACTLY LIKE THE OUTLOOK EMAIL / CCC.PNG */}
-            <div className="bg-[#FAF5EC] border-3 border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl overflow-x-auto relative">
+            <div className="bg-white border-3 border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl overflow-x-auto relative">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#8c6b4e] block mb-5 border-b border-[#dac0a3] pb-1.5">
                 Visualização do Pré-Alerta (Template do E-mail)
               </span>
