@@ -628,9 +628,9 @@ export default function Controle({ onBack }: ControleProps) {
           <!-- Row 1: NF and Transportadora -->
           <tr>
             <td colspan="2" style="background-color: #2D1C10; color: #efdfc6; font-weight: 900; padding: 10px; border: 1px solid #c5ab92; text-transform: uppercase; font-size: 11px; width: 25%;">NÚMERO DA NF:</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFFFF; font-weight: bold; width: 15%;">${nfInicio}<br>${nfFim}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; width: 15%;">${nfInicio}<br>${nfFim}</td>
             <td style="background-color: #2D1C10; color: #efdfc6; font-weight: 900; padding: 10px; border: 1px solid #c5ab92; text-transform: uppercase; font-size: 11px; width: 18%;">TRANSPORTADORA:</td>
-            <td colspan="2" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFFFF; font-weight: 900; text-transform: uppercase; width: 25%;">${transportadora}</td>
+            <td colspan="2" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; width: 25%;">${transportadora}</td>
             <td colspan="2" style="background-color: #2D1C10; border: 1px solid #c5ab92; width: 17%;"></td>
           </tr>
           <!-- Row 2: Headings -->
@@ -646,23 +646,23 @@ export default function Controle({ onBack }: ControleProps) {
           </tr>
           <!-- Data Row 1 -->
           <tr>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; font-weight: bold; text-transform: uppercase; font-size: 11px;">${motorista}</td>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase;">${cavalo}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: bold; text-transform: uppercase;">${carreta1}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase; font-size: 13px;">${isca1}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase; font-size: 13px;">${produto1}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase; font-size: 13px;">${uma1}</td>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; font-weight: bold; text-transform: uppercase;">${destino}</td>
-            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; font-weight: bold;">${dataEnviada}</td>
+            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase; font-size: 11px;">${motorista}</td>
+            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase;">${cavalo}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase;">${carreta1}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${isca1}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${produto1}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${uma1}</td>
+            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase;">${destino}</td>
+            <td rowspan="${numCarretas}" style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold;">${dataEnviada}</td>
           </tr>
           ${
             numCarretas === 2
               ? `
           <tr>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: bold; text-transform: uppercase;">${carreta2}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase; font-size: 13px;">${isca2}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase; font-size: 13px;">${produto2}</td>
-            <td style="padding: 6px; border: 1px solid #c5ab92; font-weight: 900; text-transform: uppercase; font-size: 13px;">${uma2}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: bold; text-transform: uppercase;">${carreta2}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${isca2}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${produto2}</td>
+            <td style="padding: 6px; border: 1px solid #c5ab92; background-color: #FFFDFB; font-weight: 900; text-transform: uppercase; font-size: 13px;">${uma2}</td>
           </tr>
           `
               : ""
