@@ -435,7 +435,7 @@ export default function Iscas() {
                       <p>Atentar às informações abaixo:</p>
                       <div className="border border-zinc-300 p-2 flex flex-col gap-1 items-start">
                          <span className="bg-zinc-100 px-2 py-0.5 rounded">• SANTA LUZIA/MG x {group.rows[0].destino || 'DESTINO INDEFINIDO'}</span>
-                         <span>• Favor, acusar o recebimento do pré-alerta;</span>
+                         <span>* Favor, acusar o recebimento do pré-alerta;</span>
                       </div>
                     </div>
 

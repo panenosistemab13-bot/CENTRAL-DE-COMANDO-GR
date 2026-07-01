@@ -455,7 +455,7 @@ export default function Envio() {
                     </li>
                     <li style={{ marginTop: '2px' }}>
                        <span style={{ border: '1px solid black', padding: '1px 3px' }}>
-                         Favor, acusar o recebimento do pré-alerta;
+                         * Favor, acusar o recebimento do pré-alerta;
                        </span>
                     </li>
                   </ul>
