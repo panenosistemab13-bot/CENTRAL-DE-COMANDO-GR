@@ -69,9 +69,9 @@ const TRANSPORTADORAS = [
 ];
 
 const EMBARQUE_IMAGES = [
-  { value: "", label: "Paletizado (Padrão)" },
+  { value: "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF", label: "Paletizado (Padrão)" },
   {
-    value: "https://lh3.googleusercontent.com/d/10_pdJtVfsdXNsPJ7mX-z56Q73RwIg3fx",
+    value: "https://lh3.googleusercontent.com/d/1L3oKNxekiqIQ_Uy8L9a7q8qZwx772qmH",
     label: "Carga Batida (Padrão)",
   },
   { value: "https://lh3.googleusercontent.com/d/1RdjcMTVC2ofuxQVzajM0S01VSMAXLaMf", label: "AMARELIN" },
@@ -287,8 +287,8 @@ export default function Controle({ onBack }: ControleProps) {
   const [sidebarMotorista, setSidebarMotorista] = useState(
     "MARISON REZENDE LEMOS",
   );
-  const [sidebarEmbarque1, setSidebarEmbarque1] = useState("");
-  const [sidebarEmbarque2, setSidebarEmbarque2] = useState("");
+  const [sidebarEmbarque1, setSidebarEmbarque1] = useState("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
+  const [sidebarEmbarque2, setSidebarEmbarque2] = useState("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
   const [searchRota, setSearchRota] = useState("");
   const [pastePlanilha, setPastePlanilha] = useState("");
 
@@ -680,8 +680,8 @@ export default function Controle({ onBack }: ControleProps) {
       setSidebarTransportadora("");
       setSidebarTecnologia("");
       setSidebarMotorista("");
-      setSidebarEmbarque1("");
-      setSidebarEmbarque2("");
+      setSidebarEmbarque1("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
+      setSidebarEmbarque2("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
       setPastePlanilha("");
 
       setIscaPrefix1("R10000");
@@ -861,18 +861,18 @@ export default function Controle({ onBack }: ControleProps) {
           <p style="font-weight: 900; font-size: 13px; margin-bottom: 25px; color: #3e2516; text-transform: uppercase; border-bottom: 1px solid #dac0a3; padding-bottom: 6px;">
             ESQUEMA DE EMBARQUE DAS ISCAS:
           </p>
-          <div style="display: flex; justify-content: center; align-items: flex-start; max-width: 600px; margin: 0 auto; gap: ${(!sidebarEmbarque1 && !sidebarEmbarque2) ? '10px' : '30px'};">
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; max-width: 720px; margin: 0 auto; gap: ${(!sidebarEmbarque1 && !sidebarEmbarque2) ? '10px' : '30px'};">
             <!-- Carreta 1 Section -->
             ${
               sidebarEmbarque1 === "none"
                 ? ""
                 : sidebarEmbarque1
                 ? `
-                <div style="text-align: center; width: 250px;">
-                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: 15px; margin-bottom: 15px; min-height: 350px; display: flex; align-items: center; justify-content: center;">
-                    <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 100%; display: block;">
+                <div style="text-align: center; width: 320px;">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: 12px; margin-bottom: 15px; width: 320px; height: 420px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
-                  <p style="font-size: 11px; font-weight: 900; color: #3e2516; text-transform: uppercase; margin: 0;">${carreta1}</p>
+                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta1}</p>
                 </div>
               `
                 : `<div style="text-align: center; width: 100px;">
@@ -887,11 +887,11 @@ export default function Controle({ onBack }: ControleProps) {
                   ? ""
                   : sidebarEmbarque2
                   ? `
-                <div style="text-align: center; width: 250px;">
-                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: 15px; margin-bottom: 15px; min-height: 350px; display: flex; align-items: center; justify-content: center;">
-                    <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 100%; display: block;">
+                <div style="text-align: center; width: 320px;">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: 12px; margin-bottom: 15px; width: 320px; height: 420px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
-                  <p style="font-size: 11px; font-weight: 900; color: #3e2516; text-transform: uppercase; margin: 0;">${carreta2}</p>
+                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta2}</p>
                 </div>
                 `
                   : `<div style="text-align: center; width: 100px;">
@@ -1583,28 +1583,28 @@ Embarque: ${
                     </p>
 
                     <div className={cn(
-                      "flex flex-wrap justify-center items-start max-w-[600px] mx-auto transition-all duration-300",
+                      "flex flex-wrap justify-center items-start max-w-[720px] mx-auto transition-all duration-300",
                       (!sidebarEmbarque1 && !sidebarEmbarque2) ? "gap-[10px]" : "gap-[30px]"
                     )}>
                       {/* Carreta 1 Section */}
                       {sidebarEmbarque1 !== "none" && (
                         <div className={cn(
                           "flex flex-col items-center transition-all duration-300",
-                          sidebarEmbarque1 ? "w-[250px] pr-[15px]" : "w-[100px]"
+                          sidebarEmbarque1 ? "w-[320px]" : "w-[100px]"
                         )}>
                           {sidebarEmbarque1 ? (
                             <div className="w-full flex flex-col">
-                              <div className="bg-white border border-[#D5CBBF] px-3 py-[15px] text-center shadow-sm h-[350px] flex flex-col items-center justify-center">
+                              <div className="bg-white border border-[#D5CBBF] p-2.5 text-center shadow-sm w-[320px] h-[420px] flex items-center justify-center box-border">
                                 <img
                                   src={sidebarEmbarque1}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
-                                  className="w-full max-w-[230px] h-auto object-contain bg-white mx-auto block border-0"
+                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
                                 />
                               </div>
                               <div className="text-center mt-[15px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  {carreta1}
+                                  CARRETA 1: {carreta1}
                                 </span>
                               </div>
                             </div>
@@ -1642,7 +1642,7 @@ Embarque: ${
                               </div>
                               <div className="text-center mt-[10px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  {carreta1}
+                                  CARRETA 1: {carreta1}
                                 </span>
                               </div>
                             </div>
@@ -1654,21 +1654,21 @@ Embarque: ${
                       {numCarretas === 2 && sidebarEmbarque2 !== "none" && (
                         <div className={cn(
                           "flex flex-col items-center transition-all duration-300",
-                          sidebarEmbarque2 ? "w-[250px]" : "w-[100px]"
+                          sidebarEmbarque2 ? "w-[320px]" : "w-[100px]"
                         )}>
                           {sidebarEmbarque2 ? (
-                            <div className="w-full flex flex-col pt-[15px]">
-                              <div className="bg-white border border-[#D5CBBF] px-3 py-[15px] text-center shadow-sm h-[350px] flex flex-col items-center justify-center">
+                            <div className="w-full flex flex-col">
+                              <div className="bg-white border border-[#D5CBBF] p-2.5 text-center shadow-sm w-[320px] h-[420px] flex items-center justify-center box-border">
                                 <img
                                   src={sidebarEmbarque2}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
-                                  className="w-full max-w-[230px] h-auto object-contain bg-white mx-auto block border-0"
+                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
                                 />
                               </div>
                               <div className="text-center mt-[15px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  {carreta2}
+                                  CARRETA 2: {carreta2}
                                 </span>
                               </div>
                             </div>
@@ -1706,7 +1706,7 @@ Embarque: ${
                               </div>
                               <div className="text-center mt-[15px]">
                                 <span className="text-[11px] font-black text-[#521521] uppercase">
-                                  {carreta2}
+                                  CARRETA 2: {carreta2}
                                 </span>
                               </div>
                             </div>
@@ -2122,13 +2122,16 @@ Embarque: ${
                 </select>
 
                 {sidebarEmbarque1 && (
-                  <div className="mt-1 p-2 bg-white/70 border border-[#5c3e29]/20 rounded-xl flex items-center justify-center shadow-3xs">
+                  <div className="mt-1 p-2 bg-white/70 border border-[#5c3e29]/20 rounded-xl flex flex-col items-center justify-center shadow-3xs">
                     <img
                       src={sidebarEmbarque1}
                       alt="Preview 1"
                       referrerPolicy="no-referrer"
                       className="max-h-[70px] object-contain rounded border border-[#5c3e29]/10"
                     />
+                    <span className="text-[9px] font-black text-[#521521] mt-1.5 uppercase">
+                      CARRETA 1: {carreta1 || "NÃO INFORMADA"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -2156,13 +2159,16 @@ Embarque: ${
                   </select>
 
                   {sidebarEmbarque2 && (
-                    <div className="mt-1 p-2 bg-white/70 border border-[#5c3e29]/20 rounded-xl flex items-center justify-center shadow-3xs">
+                    <div className="mt-1 p-2 bg-white/70 border border-[#5c3e29]/20 rounded-xl flex flex-col items-center justify-center shadow-3xs">
                       <img
                         src={sidebarEmbarque2}
                         alt="Preview 2"
                         referrerPolicy="no-referrer"
                         className="max-h-[70px] object-contain rounded border border-[#5c3e29]/10"
                       />
+                      <span className="text-[9px] font-black text-[#521521] mt-1.5 uppercase">
+                        CARRETA 2: {carreta2 || "NÃO INFORMADA"}
+                      </span>
                     </div>
                   )}
                 </div>
