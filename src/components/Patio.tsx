@@ -295,6 +295,17 @@ interface IngestedVehicle {
   hasAssinou: string;
 }
 
+const getAutoGreeting = (): 'bom dia' | 'boa tarde' | 'boa noite' => {
+  const hour = new Date().getHours();
+  if (hour >= 12 && hour < 18) {
+    return 'boa tarde';
+  } else if (hour >= 18) {
+    return 'boa noite';
+  } else {
+    return 'bom dia';
+  }
+};
+
 export default function Patio({ onBack }: PatioProps) {
   const principle = useCurrentPrinciple();
   const [patioData, setPatioData] = useState<PatioItem[]>([]);
@@ -307,8 +318,14 @@ export default function Patio({ onBack }: PatioProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
   const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas'>('patio');
-  const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>('bom dia');
+  const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>(getAutoGreeting);
   const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
+
+  useEffect(() => {
+    if (activeSubTab === 'disponibilidade') {
+      setDisponibilidadeGreeting(getAutoGreeting());
+    }
+  }, [activeSubTab]);
   const [dispCopied, setDispCopied] = useState(false);
   const [ingestedVehicles, setIngestedVehicles] = useState<IngestedVehicle[]>([]);
 
@@ -1645,7 +1662,7 @@ export default function Patio({ onBack }: PatioProps) {
                 
                 {/* Greeting Dropdown Selector */}
                 <div className="flex flex-col gap-2 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">Saudação Inicial (Menu Suspenso):</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">Saudação Inicial (Automática):</label>
                   <div className="relative inline-block w-full">
                     <select 
                       value={disponibilidadeGreeting} 
