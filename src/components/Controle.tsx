@@ -214,8 +214,8 @@ export default function Controle({ onBack }: ControleProps) {
     // Remove all non-numeric characters
     let digits = value.replace(/\D/g, "");
 
-    // Ensure it always starts with '0'
-    if (digits.length === 0 || digits[0] !== "0") {
+    // Only add '0' automatically if there are 11 digits and it doesn't start with '0' (meaning 1 digit is missing out of 12)
+    if (digits.length === 11 && digits[0] !== "0") {
       digits = "0" + digits;
     }
 
@@ -759,7 +759,10 @@ export default function Controle({ onBack }: ControleProps) {
           <thead>
             <tr style="border: 1px solid #c5ab92;">
               <th colspan="2" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; border-right: 1px solid #c5ab92; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 25%;">NÚMERO DA NF:</th>
-              <th colspan="1" style="border-right: 1px solid #c5ab92; padding: 6px; width: 15%; background-color: #EFE3CD;">${nfInicio} - ${nfFim}</th>
+              <th colspan="1" style="border-right: 1px solid #c5ab92; padding: 6px; width: 15%; background-color: #EFE3CD; text-align: center; font-family: sans-serif; font-size: 11px; line-height: 1.2;">
+                <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
+                <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfFim.replace(/-/g, '') || nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
+              </th>
               <th colspan="1" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; border-right: 1px solid #c5ab92; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 18%;">TRANSPORTADORA:</th>
               <th colspan="2" style="border-right: 1px solid #c5ab92; padding: 6px; width: 25%; background-color: #EFE3CD; text-transform: uppercase; font-weight: 900;">${transportadora}</th>
               <th colspan="2" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; width: 17%;"></th>
@@ -778,7 +781,7 @@ export default function Controle({ onBack }: ControleProps) {
           <tbody>
             <tr style="border-bottom: 1px solid #c5ab92; text-align: center; background-color: #EFE3CD;">
               <td rowspan="${numCarretas}" style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; text-transform: uppercase; font-size: 11px;">${motorista}</td>
-              <td rowspan="${numCarretas}" style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: 900; text-transform: uppercase; font-size: 13px; text-decoration: underline;">${cavalo}</td>
+              <td rowspan="${numCarretas}" style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: 900; text-transform: uppercase; font-size: 13px; text-decoration: underline;">${cavalo.replace(/-/g, '')}</td>
               <td style="border-right: 1px solid #c5ab92; padding: 10px; text-transform: uppercase; font-weight: bold;">${carreta1}</td>
               <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px; color: #FF0000;">${isca1}</td>
               <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px;">${produto1}</td>
@@ -924,10 +927,10 @@ ${infoAbaixo}
 · ${instrucao1}
 
 -----------------------------------------------------------------------------------------------------------------
-NÚMERO DA NF: ${nfInicio} - ${nfFim} | TRANSPORTADORA: ${transportadora}
+NÚMERO DA NF: ${[nfInicio, nfFim].filter(Boolean).map(v => v.replace(/-/g, '')).join(' ')} | TRANSPORTADORA: ${transportadora}
 -----------------------------------------------------------------------------------------------------------------
 MOTORISTA: ${motorista}
-CAVALO: ${cavalo}
+CAVALO: ${cavalo.replace(/-/g, '')}
 DESTINO: ${destino}
 DATA ENVIADA: ${dataEnviada}
 -----------------------------------------------------------------------------------------------------------------
@@ -1005,7 +1008,7 @@ Embarque: ${
   const handleCopySubject = async () => {
     const isDefaultOrigem = origem === "SANTA LUZIA/MG";
     const subjectPrefix = isDefaultOrigem ? "" : `${origem.toUpperCase()} X `;
-    const subject = `PRÉ-ALERTA DE ISCA - ${subjectPrefix}${(destino || "GUARULHOS/SP").toUpperCase()} - ${(cavalo || "TYQ-6F51").toUpperCase()}`;
+    const subject = `PRÉ-ALERTA DE ISCA - ${subjectPrefix}${(destino || "GUARULHOS/SP").toUpperCase()} - ${(cavalo.replace(/-/g, "") || "TYQ6F51").toUpperCase()}`;
     try {
       await navigator.clipboard.writeText(subject);
       setCopiedAssunto(true);
@@ -1085,7 +1088,7 @@ Embarque: ${
                 </span>
                 <h1 className="text-lg font-sans font-black text-[#631C24] uppercase tracking-tight m-0 select-all">
                   PRÉ-ALERTA DE ISCA - {destino || "BRASÍLIA"} -{" "}
-                  {cavalo || "TYQ-6F51"}
+                  {cavalo.replace(/-/g, "") || "TYQ6F51"}
                 </h1>
               </div>
               <button
@@ -1203,21 +1206,20 @@ Embarque: ${
                         colSpan={1}
                         className="border-r border-[#c5ab92] p-1.5 align-middle w-[15%] bg-[#EFE3CD]"
                       >
-                        <div className="flex items-center gap-1">
+                        <div className="flex flex-col items-center gap-0 w-full">
                           <input
                             type="text"
                             value={nfInicio}
-                            onChange={(e) => setNfInicio(e.target.value)}
-                            className="w-full text-center font-bold bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-black"
-                            placeholder="2970815"
+                            onChange={(e) => setNfInicio(e.target.value.replace(/-/g, ""))}
+                            className="w-full text-center font-black bg-transparent border-none outline-none focus:ring-0 p-0 text-[11px] text-black"
+                            placeholder="INÍCIO"
                           />
-                          <span className="text-black font-bold">-</span>
                           <input
                             type="text"
                             value={nfFim}
-                            onChange={(e) => setNfFim(e.target.value)}
-                            className="w-full text-center font-bold bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-black"
-                            placeholder="2970843"
+                            onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
+                            className="w-full text-center font-black bg-transparent border-none outline-none focus:ring-0 p-0 text-[11px] text-black"
+                            placeholder="FIM"
                           />
                         </div>
                       </th>
@@ -1307,7 +1309,7 @@ Embarque: ${
                         <input
                           type="text"
                           value={cavalo}
-                          onChange={(e) => setCavalo(e.target.value)}
+                          onChange={(e) => setCavalo(e.target.value.replace(/-/g, ""))}
                           className="w-full text-center font-black uppercase bg-transparent border-none outline-none focus:ring-0 p-0 text-[15px] text-black"
                           placeholder="PLACA"
                         />
@@ -2259,7 +2261,7 @@ Embarque: ${
               <input
                 type="text"
                 value={cavalo}
-                onChange={(e) => setCavalo(e.target.value.toUpperCase())}
+                onChange={(e) => setCavalo(e.target.value.replace(/-/g, "").toUpperCase())}
                 className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
                 placeholder="PLACA DO CAVALO"
               />
@@ -2313,7 +2315,7 @@ Embarque: ${
                   <input
                     type="text"
                     value={nfInicio}
-                    onChange={(e) => setNfInicio(e.target.value.toUpperCase())}
+                    onChange={(e) => setNfInicio(e.target.value.replace(/-/g, "").toUpperCase())}
                     className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
                     placeholder="INÍCIO"
                   />
@@ -2370,7 +2372,7 @@ Embarque: ${
                     <input
                       type="text"
                       value={nfFim}
-                      onChange={(e) => setNfFim(e.target.value.toUpperCase())}
+                      onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
                       className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
                       placeholder="FIM"
                     />
@@ -2388,7 +2390,7 @@ Embarque: ${
                 <input
                   type="text"
                   value={nfFim}
-                  onChange={(e) => setNfFim(e.target.value.toUpperCase())}
+                  onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
                   className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
                   placeholder="FIM (OPCIONAL)"
                 />
