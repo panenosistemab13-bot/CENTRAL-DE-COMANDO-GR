@@ -214,6 +214,11 @@ export default function Controle({ onBack }: ControleProps) {
     // Remove all non-numeric characters
     let digits = value.replace(/\D/g, "");
 
+    // If first digit is '9' or '6', do not add leading '0' nor any dots
+    if (digits.length > 0 && (digits[0] === "9" || digits[0] === "6")) {
+      return digits.substring(0, 12);
+    }
+
     // Only add '0' automatically if there are 11 digits and it doesn't start with '0' (meaning 1 digit is missing out of 12)
     if (digits.length === 11 && digits[0] !== "0") {
       digits = "0" + digits;
