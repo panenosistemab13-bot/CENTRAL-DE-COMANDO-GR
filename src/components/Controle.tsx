@@ -1136,7 +1136,7 @@ Embarque: ${
                     type="text"
                     value={alertaResgate}
                     onChange={(e) => setAlertaResgate(e.target.value)}
-                    className="bg-transparent border-none text-white w-full outline-none font-black text-xs uppercase p-0 focus:ring-0 min-w-[280px]"
+                    className="bg-transparent border-none text-white w-full outline-none font-black text-xs uppercase p-0.5 focus:ring-1 focus:ring-white/40 hover:bg-white/10 rounded px-1.5 transition-all min-w-[280px]"
                     placeholder="ALERTA RESGATE"
                   />
                 </div>
@@ -1147,7 +1147,7 @@ Embarque: ${
                     type="text"
                     value={infoAbaixo}
                     onChange={(e) => setInfoAbaixo(e.target.value)}
-                    className="bg-transparent border-b border-transparent hover:border-dashed hover:border-[#c5ab92] focus:border-[#5c3e29] w-full outline-none font-black py-0.5"
+                    className="bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 w-full font-black text-[#3e2516] transition-all"
                   />
                 </div>
 
@@ -1159,7 +1159,7 @@ Embarque: ${
                       type="text"
                       value={rota1}
                       onChange={(e) => setRota1(e.target.value)}
-                      className="bg-transparent border-none w-full outline-none font-bold py-0 text-xs text-[#3e2516]"
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-black/5 focus:bg-black/10 rounded text-xs text-[#3e2516] transition-all"
                       placeholder="· SANTA LUZIA/MG x GUARULHOS/SP;"
                     />
                   </div>
@@ -1169,7 +1169,7 @@ Embarque: ${
                       type="text"
                       value={instrucao1}
                       onChange={(e) => setInstrucao1(e.target.value)}
-                      className="bg-transparent border-none w-full outline-none font-bold py-0 text-xs text-[#3e2516]"
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-black/5 focus:bg-black/10 rounded text-xs text-[#3e2516] transition-all"
                       placeholder="· * Favor, acusar o recebimento do pré-alerta;"
                     />
                   </div>
@@ -1216,14 +1216,14 @@ Embarque: ${
                             type="text"
                             value={nfInicio}
                             onChange={(e) => setNfInicio(e.target.value.replace(/-/g, ""))}
-                            className="w-full text-center font-black bg-transparent border-none outline-none focus:ring-0 p-0 text-[11px] text-black"
+                            className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
                             placeholder="INÍCIO"
                           />
                           <input
                             type="text"
                             value={nfFim}
                             onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
-                            className="w-full text-center font-black bg-transparent border-none outline-none focus:ring-0 p-0 text-[11px] text-black"
+                            className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
                             placeholder="FIM"
                           />
                         </div>
@@ -1243,7 +1243,7 @@ Embarque: ${
                           onChange={(e) =>
                             handleTableTranspChange(e.target.value)
                           }
-                          className="w-full text-center font-black uppercase bg-transparent border-none outline-none focus:ring-0 p-0 text-xs cursor-pointer text-black"
+                          className="w-full text-center font-black uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs cursor-pointer text-black transition-all duration-200"
                         >
                           <option value="">SELECIONE...</option>
                           {TRANSPORTADORAS.map((t) => (
@@ -1301,7 +1301,7 @@ Embarque: ${
                           onChange={(e) =>
                             handleTableMotoristaChange(e.target.value)
                           }
-                          className="w-full h-full min-h-[48px] text-center font-bold uppercase bg-transparent border-none outline-none focus:ring-0 resize-none p-0.5 text-xs leading-snug text-black"
+                          className="w-full h-full min-h-[48px] text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded resize-none p-1 text-xs leading-snug text-black transition-all duration-200"
                           placeholder="NOME MOTORISTA"
                         />
                       </td>
@@ -1315,7 +1315,7 @@ Embarque: ${
                           type="text"
                           value={cavalo}
                           onChange={(e) => setCavalo(e.target.value.replace(/-/g, ""))}
-                          className="w-full text-center font-black uppercase bg-transparent border-none outline-none focus:ring-0 p-0 text-[15px] text-black"
+                          className="w-full text-center font-black uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[15px] text-black transition-all duration-200"
                           placeholder="PLACA"
                         />
                       </td>
@@ -1326,7 +1326,7 @@ Embarque: ${
                           type="text"
                           value={carreta1}
                           onChange={(e) => setCarreta1(e.target.value)}
-                          className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-xs text-black"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-xs text-black transition-all duration-200"
                           placeholder="CARRETA 1"
                         />
                       </td>
@@ -1337,7 +1337,7 @@ Embarque: ${
                           type="text"
                           value={isca1}
                           onChange={(e) => handleIsca1Change(e.target.value)}
-                          className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                           placeholder="ISCA 1"
                         />
                       </td>
@@ -1348,7 +1348,7 @@ Embarque: ${
                           type="text"
                           value={produto1}
                           onChange={(e) => setProduto1(e.target.value)}
-                          className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                           placeholder="PROD 1"
                         />
                       </td>
@@ -1359,7 +1359,7 @@ Embarque: ${
                           type="text"
                           value={uma1}
                           onChange={(e) => setUma1(formatUMA(e.target.value))}
-                          className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                           placeholder="0XX.XXX.XXX.XXX"
                         />
                       </td>
@@ -1373,7 +1373,7 @@ Embarque: ${
                           type="text"
                           value={destino}
                           onChange={(e) => setDestino(e.target.value)}
-                          className="w-full text-center font-normal uppercase bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-black"
+                          className="w-full text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs text-black transition-all duration-200"
                           placeholder="DESTINO"
                         />
                       </td>
@@ -1387,7 +1387,7 @@ Embarque: ${
                           type="text"
                           value={dataEnviada}
                           onChange={(e) => setDataEnviada(e.target.value)}
-                          className="w-full text-center font-bold bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-black"
+                          className="w-full text-center font-bold bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs text-black transition-all duration-200"
                           placeholder="DATA"
                         />
                       </td>
@@ -1402,7 +1402,7 @@ Embarque: ${
                             type="text"
                             value={carreta2}
                             onChange={(e) => setCarreta2(e.target.value)}
-                            className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-xs text-black"
+                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-xs text-black transition-all duration-200"
                             placeholder="CARRETA 2"
                           />
                         </td>
@@ -1413,7 +1413,7 @@ Embarque: ${
                             type="text"
                             value={isca2}
                             onChange={(e) => handleIsca2Change(e.target.value)}
-                            className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
+                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                             placeholder="ISCA 2"
                           />
                         </td>
@@ -1424,7 +1424,7 @@ Embarque: ${
                             type="text"
                             value={produto2}
                             onChange={(e) => setProduto2(e.target.value)}
-                            className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
+                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                             placeholder="PROD 2"
                           />
                         </td>
@@ -1435,7 +1435,7 @@ Embarque: ${
                             type="text"
                             value={uma2}
                             onChange={(e) => setUma2(formatUMA(e.target.value))}
-                            className="w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 uppercase font-bold text-[13px] text-black"
+                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                             placeholder="0XX.XXX.XXX.XXX"
                           />
                         </td>
@@ -1457,7 +1457,7 @@ Embarque: ${
                           type="text"
                           value={parametrizacao}
                           onChange={(e) => setParametrizacao(e.target.value)}
-                          className="w-full text-center font-black bg-transparent border-none outline-none focus:ring-0 p-0 text-[11px] uppercase text-white"
+                          className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-white/10 focus:bg-white/20 rounded px-1 py-0.5 text-[11px] uppercase text-white transition-all duration-200"
                         />
                       </td>
                     </tr>
@@ -1499,7 +1499,7 @@ Embarque: ${
                             value={isca2Endereco}
                             onChange={(e) => setIsca2Endereco(e.target.value)}
                             rows={1}
-                            className="w-full bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-[#3e2516] resize-y leading-tight font-bold"
+                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-[#3e2516] resize-y leading-tight font-bold transition-all duration-200"
                             placeholder="Endereço da Isca 2..."
                           />
                         </td>
@@ -1508,7 +1508,7 @@ Embarque: ${
                             type="text"
                             value={isca2Data}
                             onChange={(e) => setIsca2Data(e.target.value)}
-                            className="w-full bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-center text-[#3e2516] font-bold"
+                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-center text-[#3e2516] font-bold transition-all duration-200"
                             placeholder="Data/Hora..."
                           />
                         </td>
@@ -1518,7 +1518,7 @@ Embarque: ${
                               type="text"
                               value={isca2Bateria}
                               onChange={(e) => setIsca2Bateria(e.target.value)}
-                              className="w-10 bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-right text-[#3e2516] font-bold"
+                              className="w-10 bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1 py-0.5 text-xs text-right text-[#3e2516] font-bold transition-all duration-200"
                               placeholder="100%"
                             />
                             <div className="relative flex items-center">
@@ -1542,7 +1542,7 @@ Embarque: ${
                           value={isca1Endereco}
                           onChange={(e) => setIsca1Endereco(e.target.value)}
                           rows={1}
-                          className="w-full bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-[#3e2516] resize-y leading-tight font-bold"
+                          className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-[#3e2516] resize-y leading-tight font-bold transition-all duration-200"
                           placeholder="Endereço da Isca 1..."
                         />
                       </td>
@@ -1551,7 +1551,7 @@ Embarque: ${
                           type="text"
                           value={isca1Data}
                           onChange={(e) => setIsca1Data(e.target.value)}
-                          className="w-full bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-center text-[#3e2516] font-bold"
+                          className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-center text-[#3e2516] font-bold transition-all duration-200"
                           placeholder="Data/Hora..."
                         />
                       </td>
@@ -1561,7 +1561,7 @@ Embarque: ${
                             type="text"
                             value={isca1Bateria}
                             onChange={(e) => setIsca1Bateria(e.target.value)}
-                            className="w-10 bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-right text-[#3e2516] font-bold"
+                            className="w-10 bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1 py-0.5 text-xs text-right text-[#3e2516] font-bold transition-all duration-200"
                             placeholder="100%"
                           />
                           <div className="relative flex items-center">
@@ -1846,7 +1846,7 @@ Embarque: ${
                     }
                   }
                 }}
-                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 {ORIGEM_OPCOES.map((opt) => (
                   <option
@@ -1876,7 +1876,7 @@ Embarque: ${
                   type="text"
                   value={searchRota}
                   onChange={(e) => setSearchRota(e.target.value)}
-                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl pl-9 pr-4 py-2 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-3xs placeholder:text-[#8c6b4e]/50"
+                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl pl-9 pr-4 py-2 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-3xs placeholder:text-[#8c6b4e]/50"
                   placeholder="PESQUISAR ROTA..."
                 />
                 {searchRota && (
@@ -1907,7 +1907,7 @@ Embarque: ${
                     setDestino("");
                   }
                 }}
-                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 <option value="">
                   {searchRota
@@ -1939,7 +1939,7 @@ Embarque: ${
               <select
                 value={sidebarTransportadora}
                 onChange={(e) => handleSidebarTranspChange(e.target.value)}
-                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 <option value="">SELECIONE...</option>
                 {TRANSPORTADORAS.map((t) => (
@@ -1964,7 +1964,7 @@ Embarque: ${
                 value={pastePlanilha}
                 onChange={(e) => handlePastePlanilhaChange(e.target.value)}
                 rows={3}
-                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2 text-xs font-bold text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs resize-none"
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2 text-xs font-bold text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs resize-none"
                 placeholder="Cole as linhas da planilha de iscas aqui..."
               />
             </div>
@@ -1978,7 +1978,7 @@ Embarque: ${
                 type="text"
                 value={sidebarMotorista}
                 onChange={(e) => handleSidebarMotoristaChange(e.target.value)}
-                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs"
                 placeholder="NOME COMPLETO"
               />
             </div>
@@ -2008,7 +2008,7 @@ Embarque: ${
                           setIscaPrefix1(newPrefix);
                           setIsca1(newPrefix + iscaSuffix1);
                         }}
-                        className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#3e2516] focus:border-[#B32025] outline-none cursor-pointer transition-all"
+                        className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#3e2516] focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 hover:border-[#5c3e29]/50 outline-none cursor-pointer transition-all"
                       >
                         <option value="R100000">R100000</option>
                         <option value="R10000">R10000</option>
@@ -2027,7 +2027,7 @@ Embarque: ${
                           setIscaSuffix1(val);
                           setIsca1(iscaPrefix1 + val);
                         }}
-                        className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] uppercase focus:border-[#B32025] outline-none transition-all"
+                        className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] uppercase focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 hover:border-[#5c3e29]/50 outline-none transition-all"
                         placeholder="RESTO..."
                       />
                     </div>
@@ -2039,7 +2039,7 @@ Embarque: ${
                         type="text"
                         value={isca1Bateria}
                         onChange={(e) => setIsca1Bateria(e.target.value)}
-                        className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] focus:border-[#B32025] outline-none transition-all"
+                        className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 hover:border-[#5c3e29]/50 outline-none transition-all"
                         placeholder="100%"
                       />
                     </div>
@@ -2064,7 +2064,7 @@ Embarque: ${
                             setIscaPrefix2(newPrefix);
                             setIsca2(newPrefix + iscaSuffix2);
                           }}
-                          className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#3e2516] focus:border-[#B32025] outline-none cursor-pointer transition-all"
+                          className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#3e2516] focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 hover:border-[#5c3e29]/50 outline-none cursor-pointer transition-all"
                         >
                           <option value="R100000">R100000</option>
                           <option value="R10000">R10000</option>
@@ -2083,7 +2083,7 @@ Embarque: ${
                             setIscaSuffix2(val);
                             setIsca2(iscaPrefix2 + val);
                           }}
-                          className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] uppercase focus:border-[#B32025] outline-none transition-all"
+                          className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] uppercase focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 hover:border-[#5c3e29]/50 outline-none transition-all"
                           placeholder="RESTO..."
                         />
                       </div>
@@ -2095,7 +2095,7 @@ Embarque: ${
                           type="text"
                           value={isca2Bateria}
                           onChange={(e) => setIsca2Bateria(e.target.value)}
-                          className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] focus:border-[#B32025] outline-none transition-all"
+                          className="w-full bg-[#fdfbf7] border-2 border-[#5c3e29]/25 rounded-lg px-1.5 py-1.5 text-[10px] font-black text-[#3e2516] focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 hover:border-[#5c3e29]/50 outline-none transition-all"
                           placeholder="100%"
                         />
                       </div>
@@ -2115,7 +2115,7 @@ Embarque: ${
                 <select
                   value={sidebarEmbarque1}
                   onChange={(e) => setSidebarEmbarque1(e.target.value)}
-                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none cursor-pointer transition-all shadow-2xs"
+                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none cursor-pointer transition-all shadow-2xs"
                 >
                   {EMBARQUE_IMAGES.map((img) => (
                     <option
@@ -2152,7 +2152,7 @@ Embarque: ${
                   <select
                     value={sidebarEmbarque2}
                     onChange={(e) => setSidebarEmbarque2(e.target.value)}
-                    className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none cursor-pointer transition-all shadow-2xs"
+                    className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none cursor-pointer transition-all shadow-2xs"
                   >
                     {EMBARQUE_IMAGES.map((img) => (
                       <option
@@ -2267,7 +2267,7 @@ Embarque: ${
                 type="text"
                 value={cavalo}
                 onChange={(e) => setCavalo(e.target.value.replace(/-/g, "").toUpperCase())}
-                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
+                className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs"
                 placeholder="PLACA DO CAVALO"
               />
             </div>
@@ -2283,7 +2283,7 @@ Embarque: ${
                     type="text"
                     value={carreta1}
                     onChange={(e) => setCarreta1(e.target.value.toUpperCase())}
-                    className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                     placeholder="CARRETA 1"
                   />
                 </div>
@@ -2295,7 +2295,7 @@ Embarque: ${
                     type="text"
                     value={produto1}
                     onChange={(e) => setProduto1(e.target.value.toUpperCase())}
-                    className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                     placeholder="PRODUTO 1"
                   />
                 </div>
@@ -2309,7 +2309,7 @@ Embarque: ${
                     type="text"
                     value={uma1}
                     onChange={(e) => setUma1(formatUMA(e.target.value))}
-                    className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                     placeholder="0XX.XXX.XXX.XXX"
                   />
                 </div>
@@ -2321,7 +2321,7 @@ Embarque: ${
                     type="text"
                     value={nfInicio}
                     onChange={(e) => setNfInicio(e.target.value.replace(/-/g, "").toUpperCase())}
-                    className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                     placeholder="INÍCIO"
                   />
                 </div>
@@ -2340,7 +2340,7 @@ Embarque: ${
                       type="text"
                       value={carreta2}
                       onChange={(e) => setCarreta2(e.target.value.toUpperCase())}
-                      className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                      className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                       placeholder="CARRETA 2"
                     />
                   </div>
@@ -2352,7 +2352,7 @@ Embarque: ${
                       type="text"
                       value={produto2}
                       onChange={(e) => setProduto2(e.target.value.toUpperCase())}
-                      className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                      className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                       placeholder="PRODUTO 2"
                     />
                   </div>
@@ -2366,7 +2366,7 @@ Embarque: ${
                       type="text"
                       value={uma2}
                       onChange={(e) => setUma2(formatUMA(e.target.value))}
-                      className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                      className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                       placeholder="0XX.XXX.XXX.XXX"
                     />
                   </div>
@@ -2378,7 +2378,7 @@ Embarque: ${
                       type="text"
                       value={nfFim}
                       onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
-                      className="w-full bg-white border border-[#5c3e29]/20 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] outline-none transition-all shadow-2xs"
+                      className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
                       placeholder="FIM"
                     />
                   </div>
@@ -2396,7 +2396,7 @@ Embarque: ${
                   type="text"
                   value={nfFim}
                   onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
-                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:bg-white outline-none transition-all shadow-2xs"
+                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs"
                   placeholder="FIM (OPCIONAL)"
                 />
               </div>
