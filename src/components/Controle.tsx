@@ -306,6 +306,11 @@ export default function Controle({ onBack }: ControleProps) {
   const [copied, setCopied] = useState(false);
   const [copiedAssunto, setCopiedAssunto] = useState(false);
   const [ocultarNotas, setOcultarNotas] = useState(false);
+  const [customTransportadoras, setCustomTransportadoras] = useState<string[]>([]);
+  const [newTranspName, setNewTranspName] = useState("");
+  const [isAddingTransp, setIsAddingTransp] = useState(false);
+
+  const allTransportadoras = [...TRANSPORTADORAS, ...customTransportadoras];
 
   // Sync transportadora and motorista states when either updates, keeping both sections intuitive
   const handleSidebarTranspChange = (val: string) => {
@@ -326,6 +331,26 @@ export default function Controle({ onBack }: ControleProps) {
   const handleTableMotoristaChange = (val: string) => {
     setMotorista(val);
     setSidebarMotorista(val);
+  };
+
+  const handleAddCustomTransp = () => {
+    const trimmed = newTranspName.trim();
+    if (!trimmed) return;
+    
+    const exists = allTransportadoras.some(
+      (t) => t.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      alert("Esta transportadora já está cadastrada!");
+      return;
+    }
+
+    const updated = [...customTransportadoras, trimmed];
+    setCustomTransportadoras(updated);
+    setSidebarTransportadora(trimmed);
+    setTransportadora(trimmed);
+    setNewTranspName("");
+    setIsAddingTransp(false);
   };
 
   const handleIsca1Change = (val: string) => {
@@ -532,6 +557,7 @@ export default function Controle({ onBack }: ControleProps) {
         if (data.iscaPrefix2 !== undefined) setIscaPrefix2(data.iscaPrefix2);
         if (data.iscaSuffix1 !== undefined) setIscaSuffix1(data.iscaSuffix1);
         if (data.iscaSuffix2 !== undefined) setIscaSuffix2(data.iscaSuffix2);
+        if (data.customTransportadoras !== undefined) setCustomTransportadoras(data.customTransportadoras);
       } catch (e) {
         console.error("Erro ao carregar dados do localStorage", e);
       }
@@ -583,6 +609,7 @@ export default function Controle({ onBack }: ControleProps) {
       iscaPrefix2,
       iscaSuffix1,
       iscaSuffix2,
+      customTransportadoras,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
   }, [
@@ -625,6 +652,7 @@ export default function Controle({ onBack }: ControleProps) {
     iscaPrefix2,
     iscaSuffix1,
     iscaSuffix2,
+    customTransportadoras,
   ]);
 
   const handleClear = () => {
@@ -817,7 +845,7 @@ export default function Controle({ onBack }: ControleProps) {
           <tr style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; font-size: 10px;">
             <td style="padding: 8px; border: 1px solid #c5ab92; width: 25%;">
               <span style="background-color: #FFFFFF; color: #000000; padding: 2px 6px; border-radius: 2px; font-size: 9px; text-transform: uppercase; font-weight: 900;">
-                ${numCarretas === 2 ? `${isca1} ${isca2}` : isca1}
+                ${numCarretas === 2 && isca2 !== "SEM ISCA" ? `${isca1} ${isca2}` : isca1}
               </span>
             </td>
             <td style="padding: 8px; border: 1px solid #c5ab92; width: 45%; color: #FFFFFF;">🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅</td>
@@ -828,14 +856,14 @@ export default function Controle({ onBack }: ControleProps) {
             numCarretas === 2
               ? `
           <tr style="background-color: #EFE3CD;">
-            <td style="padding: 8px; border: 1px solid #c5ab92; text-transform: uppercase; font-weight: 900; color: #FF0000;">${isca2}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92; text-align: left; padding-left: 10px; text-transform: lowercase; font-weight: 500;">${isca2Endereco}</td>
-            <td style="padding: 8px; border: 1px solid #c5ab92;">${isca2Data}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; text-transform: uppercase; font-weight: 900; color: #FF0000;">${isca2 === "SEM ISCA" ? "" : isca2}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; text-align: left; padding-left: 10px; text-transform: lowercase; font-weight: 500;">${isca2 === "SEM ISCA" ? "" : isca2Endereco}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92;">${isca2 === "SEM ISCA" ? "" : isca2Data}</td>
             <td style="padding: 8px; border: 1px solid #c5ab92;">
               <div style="display: flex; align-items: center; justify-content: center;">
-                <span style="margin-right: 5px;">${isca2Bateria || "100%"}</span>
+                ${isca2 !== "SEM ISCA" ? `<span style="margin-right: 5px;">${isca2Bateria || "100%"}</span>` : ""}
                 <div style="width: 18px; height: 9px; border: 1px solid #22c55e; border-radius: 1px; padding: 1px; display: inline-block; position: relative; vertical-align: middle;">
-                  <div style="width: ${Math.min(100, parseInt(isca2Bateria) || 100)}%; height: 100%; background-color: #22c55e;"></div>
+                  <div style="width: ${isca2 === "SEM ISCA" ? 0 : Math.min(100, parseInt(isca2Bateria) || 100)}%; height: 100%; background-color: #22c55e;"></div>
                   <div style="position: absolute; right: -2px; top: 2px; width: 1.5px; height: 4px; background-color: #22c55e; border-radius: 0 1px 1px 0;"></div>
                 </div>
               </div>
@@ -915,8 +943,11 @@ export default function Controle({ onBack }: ControleProps) {
         <hr style="border: 0; border-top: 1px dashed #c5ab92; margin: 25px 0; clear: both;">
 
         <!-- Rodapé -->
-        <p style="font-size: 11px; font-weight: 900; color: #7C0623; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px;">GERENCIAMENTO DE RISCO</p>
-        <p style="font-size: 11px; color: #3e2516; margin: 0; font-weight: 500;">• Agradecemos o apoio</p>
+        <p style="font-size: 11px; font-weight: 900; color: #7C0623; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px;">GERENCIAMENTO DE RISCO</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0 0 5px 0; font-weight: 500; line-height: 1.4;">-Ressalto a importância de encaminhar todas as iscas resgatadas para suas respectivas unidades de origem.</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0 0 5px 0; font-weight: 500; line-height: 1.4;">Agradeço antecipadamente pelo compromisso em assegurar que esses envios sejam efetuados via veículos dedicados ou postagem de maneira a evitar qualquer inconveniente em nossa operação.</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0 0 5px 0; font-weight: 500; line-height: 1.4;">A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0; font-weight: 500; line-height: 1.4;">Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.</p>
 
       </div>
     `;
@@ -1176,25 +1207,62 @@ Embarque: ${
                 </div>
 
                 {/* 5. BIG INTERACTIVE SPREADSHEET TABLE 1 */}
-                <div className="flex justify-end mb-2">
+                <div className="flex justify-end gap-2 mb-2">
                   {numCarretas === 1 ? (
                     <button
                       type="button"
-                      onClick={() => setNumCarretas(2)}
+                      onClick={() => {
+                        setNumCarretas(2);
+                        if (isca2 === "SEM ISCA") {
+                          setIsca2("");
+                          setProduto2("");
+                          setUma2("");
+                        }
+                      }}
                       className="flex items-center gap-1 bg-[#B32025] hover:bg-[#8c060a] text-white font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
                     >
                       <Plus size={10} className="stroke-[3]" /> Adicionar
                       Segunda Carreta
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setNumCarretas(1)}
-                      className="flex items-center gap-1 bg-[#3e2516] hover:bg-[#2d1a10] text-[#efdfc6] border border-[#5c3e29]/30 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
-                    >
-                      <Minus size={10} className="stroke-[3]" /> Remover Segunda
-                      Carreta
-                    </button>
+                    <>
+                      {isca2 === "SEM ISCA" ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsca2("");
+                            setProduto2("");
+                            setUma2("");
+                          }}
+                          className="flex items-center gap-1 bg-[#B32025] hover:bg-[#8c060a] text-white font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
+                        >
+                          <Plus size={10} className="stroke-[3]" /> Adicionar Isca
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsca2("SEM ISCA");
+                            setProduto2("---");
+                            setUma2("---");
+                            if (!carreta2 && carreta1) {
+                              setCarreta2(carreta1);
+                            }
+                          }}
+                          className="flex items-center gap-1 bg-[#B32025] hover:bg-[#8c060a] text-white font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
+                        >
+                          <Minus size={10} className="stroke-[3]" /> Sem Isca
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setNumCarretas(1)}
+                        className="flex items-center gap-1 bg-[#3e2516] hover:bg-[#2d1a10] text-[#efdfc6] border border-[#5c3e29]/30 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
+                      >
+                        <Minus size={10} className="stroke-[3]" /> Remover Segunda
+                        Carreta
+                      </button>
+                    </>
                   )}
                 </div>
                 <table className="w-full border-collapse border border-[#c5ab92] text-xs font-sans text-black table-fixed">
@@ -1246,7 +1314,7 @@ Embarque: ${
                           className="w-full text-center font-black uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs cursor-pointer text-black transition-all duration-200"
                         >
                           <option value="">SELECIONE...</option>
-                          {TRANSPORTADORAS.map((t) => (
+                          {allTransportadoras.map((t) => (
                             <option
                               key={t}
                               value={t}
@@ -1413,7 +1481,10 @@ Embarque: ${
                             type="text"
                             value={isca2}
                             onChange={(e) => handleIsca2Change(e.target.value)}
-                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
+                            className={cn(
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-red-600 font-black" : "text-black"
+                            )}
                             placeholder="ISCA 2"
                           />
                         </td>
@@ -1424,7 +1495,10 @@ Embarque: ${
                             type="text"
                             value={produto2}
                             onChange={(e) => setProduto2(e.target.value)}
-                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
+                            className={cn(
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-stone-500 font-black" : "text-black"
+                            )}
                             placeholder="PROD 2"
                           />
                         </td>
@@ -1435,7 +1509,10 @@ Embarque: ${
                             type="text"
                             value={uma2}
                             onChange={(e) => setUma2(formatUMA(e.target.value))}
-                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
+                            className={cn(
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-stone-500 font-black" : "text-black"
+                            )}
                             placeholder="0XX.XXX.XXX.XXX"
                           />
                         </td>
@@ -1468,7 +1545,7 @@ Embarque: ${
                           <input
                             type="text"
                             value={
-                              numCarretas === 2 ? `${isca1} ${isca2}` : isca1
+                              numCarretas === 2 && isca2 !== "SEM ISCA" ? `${isca1} ${isca2}` : isca1
                             }
                             readOnly
                             className="bg-transparent border-none text-black font-black text-[9px] uppercase p-0 focus:ring-0 w-full text-center outline-none select-all"
@@ -1492,40 +1569,43 @@ Embarque: ${
                     {numCarretas === 2 && (
                       <tr className="bg-[#EFE3CD] text-center font-semibold text-[#3e2516] h-[44px] border-b border-[#c5ab92]">
                         <td className="border-r border-[#c5ab92] p-1.5 font-black uppercase text-[11px] text-center bg-[#EFE3CD] align-middle">
-                          {isca2}
+                          {isca2 === "SEM ISCA" ? "" : isca2}
                         </td>
                         <td className="border-r border-[#c5ab92] p-1.5 text-left font-medium text-xs bg-[#EFE3CD] align-middle">
                           <textarea
-                            value={isca2Endereco}
+                            value={isca2 === "SEM ISCA" ? "" : isca2Endereco}
                             onChange={(e) => setIsca2Endereco(e.target.value)}
+                            disabled={isca2 === "SEM ISCA"}
                             rows={1}
-                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-[#3e2516] resize-y leading-tight font-bold transition-all duration-200"
-                            placeholder="Endereço da Isca 2..."
+                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-[#3e2516] resize-y leading-tight font-bold transition-all duration-200 disabled:opacity-50"
+                            placeholder={isca2 === "SEM ISCA" ? "" : "Endereço da Isca 2..."}
                           />
                         </td>
                         <td className="border-r border-[#c5ab92] p-1.5 text-center font-bold text-xs bg-[#EFE3CD] align-middle">
                           <input
                             type="text"
-                            value={isca2Data}
+                            value={isca2 === "SEM ISCA" ? "" : isca2Data}
                             onChange={(e) => setIsca2Data(e.target.value)}
-                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-center text-[#3e2516] font-bold transition-all duration-200"
-                            placeholder="Data/Hora..."
+                            disabled={isca2 === "SEM ISCA"}
+                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-center text-[#3e2516] font-bold transition-all duration-200 disabled:opacity-50"
+                            placeholder={isca2 === "SEM ISCA" ? "" : "Data/Hora..."}
                           />
                         </td>
                         <td className="p-1.5 text-center font-bold text-xs bg-[#EFE3CD] align-middle">
                           <div className="flex items-center justify-center gap-1.5">
                             <input
                               type="text"
-                              value={isca2Bateria}
+                              value={isca2 === "SEM ISCA" ? "" : isca2Bateria}
                               onChange={(e) => setIsca2Bateria(e.target.value)}
-                              className="w-10 bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1 py-0.5 text-xs text-right text-[#3e2516] font-bold transition-all duration-200"
-                              placeholder="100%"
+                              disabled={isca2 === "SEM ISCA"}
+                              className="w-10 bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1 py-0.5 text-xs text-right text-[#3e2516] font-bold transition-all duration-200 disabled:opacity-50"
+                              placeholder={isca2 === "SEM ISCA" ? "" : "100%"}
                             />
                             <div className="relative flex items-center">
                               <Battery className="w-5 h-5 text-green-600 fill-green-600/20" />
                               <div 
                                 className="absolute left-[3px] top-[6.5px] h-[7px] bg-green-500 rounded-[1px]"
-                                style={{ width: `${Math.min(100, parseInt(isca2Bateria) || 100) * 0.11}px` }}
+                                style={{ width: `${(isca2 === "SEM ISCA" ? 0 : Math.min(100, parseInt(isca2Bateria) || 100)) * 0.11}px` }}
                               />
                             </div>
                           </div>
@@ -1942,7 +2022,7 @@ Embarque: ${
                 className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 <option value="">SELECIONE...</option>
-                {TRANSPORTADORAS.map((t) => (
+                {allTransportadoras.map((t) => (
                   <option
                     key={t}
                     value={t}
@@ -1952,6 +2032,51 @@ Embarque: ${
                   </option>
                 ))}
               </select>
+
+              {!isAddingTransp ? (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingTransp(true)}
+                  className="self-start text-[10px] font-black text-[#B32025] hover:text-[#7A0C22] flex items-center gap-1 mt-0.5 transition-colors uppercase tracking-wider"
+                >
+                  <Plus size={12} /> Adicionar Transportadora
+                </button>
+              ) : (
+                <div className="flex flex-col gap-1.5 p-2 bg-white/50 rounded-lg border border-[#dac0a3]/50 mt-0.5 shadow-3xs">
+                  <input
+                    type="text"
+                    placeholder="NOME DA TRANSPORTADORA"
+                    value={newTranspName}
+                    onChange={(e) => setNewTranspName(e.target.value)}
+                    className="w-full bg-[#fdfbf7] border border-[#5c3e29]/30 rounded-lg px-2.5 py-1.5 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-1 focus:ring-[#B32025]/20 outline-none transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomTransp();
+                      }
+                    }}
+                  />
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingTransp(false);
+                        setNewTranspName("");
+                      }}
+                      className="px-2 py-0.5 text-[10px] font-extrabold text-[#5c3e29] hover:bg-black/5 rounded uppercase transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomTransp}
+                      className="px-2.5 py-0.5 text-[10px] font-black text-white bg-[#B32025] hover:bg-[#7A0C22] rounded uppercase shadow-xs transition-colors"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* COLAR DA PLANILHA (PARAMETRIZAÇÃO) textarea */}
