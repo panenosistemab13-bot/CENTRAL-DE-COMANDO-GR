@@ -214,9 +214,9 @@ export default function Controle({ onBack }: ControleProps) {
     // Remove all non-numeric characters
     let digits = value.replace(/\D/g, "");
 
-    // If first digit is '9' or '6', do not add leading '0' nor any dots
+    // If first digit is '9' or '6', do not add leading '0' nor any dots, and allow up to 14 digits
     if (digits.length > 0 && (digits[0] === "9" || digits[0] === "6")) {
-      return digits.substring(0, 12);
+      return digits.substring(0, 14);
     }
 
     // Only add '0' automatically if there are 11 digits and it doesn't start with '0' (meaning 1 digit is missing out of 12)
@@ -794,7 +794,9 @@ export default function Controle({ onBack }: ControleProps) {
               <th colspan="2" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; border-right: 1px solid #c5ab92; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 25%;">NÚMERO DA NF:</th>
               <th colspan="1" style="border-right: 1px solid #c5ab92; padding: 6px; width: 15%; background-color: #EFE3CD; text-align: center; font-family: sans-serif; font-size: 11px; line-height: 1.2;">
                 <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
-                <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfFim.replace(/-/g, '') || nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
+                ${numCarretas === 2 && isca2 !== "SEM ISCA" ? `
+                  <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfFim.replace(/-/g, '') || nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
+                ` : ''}
               </th>
               <th colspan="1" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; border-right: 1px solid #c5ab92; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 18%;">TRANSPORTADORA:</th>
               <th colspan="2" style="border-right: 1px solid #c5ab92; padding: 6px; width: 25%; background-color: #EFE3CD; text-transform: uppercase; font-weight: 900;">${transportadora}</th>
@@ -963,7 +965,7 @@ ${infoAbaixo}
 · ${instrucao1}
 
 -----------------------------------------------------------------------------------------------------------------
-NÚMERO DA NF: ${[nfInicio, nfFim].filter(Boolean).map(v => v.replace(/-/g, '')).join(' ')} | TRANSPORTADORA: ${transportadora}
+NÚMERO DA NF: ${[nfInicio, (numCarretas === 2 && isca2 !== "SEM ISCA" ? nfFim : "")].filter(Boolean).map(v => v.replace(/-/g, '')).join(' ')} | TRANSPORTADORA: ${transportadora}
 -----------------------------------------------------------------------------------------------------------------
 MOTORISTA: ${motorista}
 CAVALO: ${cavalo.replace(/-/g, '')}
@@ -1245,6 +1247,7 @@ Embarque: ${
                             setIsca2("SEM ISCA");
                             setProduto2("---");
                             setUma2("---");
+                            setNfFim("");
                             if (!carreta2 && carreta1) {
                               setCarreta2(carreta1);
                             }
@@ -1256,7 +1259,10 @@ Embarque: ${
                       )}
                       <button
                         type="button"
-                        onClick={() => setNumCarretas(1)}
+                        onClick={() => {
+                          setNumCarretas(1);
+                          setNfFim("");
+                        }}
                         className="flex items-center gap-1 bg-[#3e2516] hover:bg-[#2d1a10] text-[#efdfc6] border border-[#5c3e29]/30 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
                       >
                         <Minus size={10} className="stroke-[3]" /> Remover Segunda
@@ -1287,13 +1293,15 @@ Embarque: ${
                             className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
                             placeholder="INÍCIO"
                           />
-                          <input
-                            type="text"
-                            value={nfFim}
-                            onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
-                            className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
-                            placeholder="FIM"
-                          />
+                          {numCarretas === 2 && isca2 !== "SEM ISCA" && (
+                            <input
+                              type="text"
+                              value={nfFim}
+                              onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
+                              className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
+                              placeholder="FIM"
+                            />
+                          )}
                         </div>
                       </th>
                       <th
@@ -2482,8 +2490,8 @@ Embarque: ${
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
+                 <div className="grid grid-cols-2 gap-2">
+                  <div className={isca2 === "SEM ISCA" ? "col-span-2 flex flex-col gap-1" : "flex flex-col gap-1"}>
                     <label className="text-[8px] font-black uppercase tracking-wider text-[#5c3e29] flex items-center gap-1">
                       <Hash size={10} className="text-[#8c6b4e]" /> U.M.A. 2
                     </label>
@@ -2495,35 +2503,21 @@ Embarque: ${
                       placeholder="0XX.XXX.XXX.XXX"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[8px] font-black uppercase tracking-wider text-[#5c3e29] flex items-center gap-1">
-                      <FileText size={10} className="text-[#8c6b4e]" /> NF Fim
-                    </label>
-                    <input
-                      type="text"
-                      value={nfFim}
-                      onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
-                      className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
-                      placeholder="FIM"
-                    />
-                  </div>
+                  {isca2 !== "SEM ISCA" && (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] font-black uppercase tracking-wider text-[#5c3e29] flex items-center gap-1">
+                        <FileText size={10} className="text-[#8c6b4e]" /> NF Fim
+                      </label>
+                      <input
+                        type="text"
+                        value={nfFim}
+                        onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
+                        className="w-full bg-white border border-[#5c3e29]/30 rounded-lg px-2.5 py-2 text-[11px] font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 outline-none transition-all shadow-2xs"
+                        placeholder="FIM"
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {/* NF Range if single trailer (optional) */}
-            {numCarretas === 1 && (
-              <div className="flex flex-col gap-1.5 px-1">
-                <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3e29] flex items-center gap-1">
-                  <FileText size={12} className="text-[#8c6b4e]" /> NF Fim (Opcional)
-                </label>
-                <input
-                  type="text"
-                  value={nfFim}
-                  onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
-                  className="w-full bg-[#fdfbf7]/80 border-2 border-[#5c3e29]/25 rounded-xl px-4 py-2.5 text-xs font-black uppercase text-[#3e2516] focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 hover:border-[#5c3e29]/50 focus:bg-white outline-none transition-all shadow-2xs"
-                  placeholder="FIM (OPCIONAL)"
-                />
               </div>
             )}
           </div>
