@@ -73,17 +73,43 @@ const WoodenPlaque: React.FC<{
 };
 
 // High-fidelity Mercosul Licence Plate displays
-const LicensePlate: React.FC<{ plate: string }> = ({ plate }) => {
+const LicensePlate: React.FC<{ 
+  plate: string; 
+  type?: 'cavalo' | 'carreta'; 
+}> = ({ plate, type }) => {
   if (!plate || plate === '-') return <span className="text-[#5c3c24] font-mono font-bold">-</span>;
   
   const cleanPlate = plate.trim().toUpperCase();
+  const isCarreta = type === 'carreta';
+  const isCavalo = type === 'cavalo';
   
+  // Custom headers based on plate type
+  const headerText = isCavalo ? 'CAVALO' : isCarreta ? 'CARRETA' : 'BRASIL';
+  
+  // Outer container color & border classes
+  const plateContainerClasses = cn(
+    "inline-flex flex-col items-center justify-center overflow-hidden select-none font-mono tracking-wider w-[120px] h-[40px] shrink-0 transform transition-transform hover:scale-105 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.35)]",
+    isCarreta 
+      ? "bg-[#fffde7] border-2 border-[#e6b800]" 
+      : "bg-[#f7f4ed] border-2 border-[#5c3c24]/80"
+  );
+
+  // Character container gradient classes
+  const charBgClasses = cn(
+    "w-full flex-1 flex items-center justify-center px-2",
+    isCarreta 
+      ? "bg-gradient-to-b from-[#fff176] to-[#fbc02d]" 
+      : "bg-gradient-to-b from-[#ffffff] to-[#e8e4db]"
+  );
+
   return (
-    <div className="inline-flex flex-col items-center justify-center bg-[#f7f4ed] border-2 border-[#5c3c24]/80 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.35)] overflow-hidden select-none font-mono tracking-wider w-[120px] h-[40px] shrink-0 transform transition-transform hover:scale-105">
+    <div className={plateContainerClasses}>
       {/* Blue Mercosul Header */}
       <div className="w-full bg-[#0051A2] h-[10px] flex items-center justify-between px-1.5 leading-none relative">
         <span className="text-[5px] text-white font-sans font-bold scale-95">BR</span>
-        <span className="text-[6.5px] text-white font-sans font-black tracking-widest uppercase absolute left-1/2 -translate-x-1/2">BRASIL</span>
+        <span className="text-[6.5px] text-white font-sans font-black tracking-widest uppercase absolute left-1/2 -translate-x-1/2">
+          {headerText}
+        </span>
         {/* Tiny Brazil Flag */}
         <div className="w-[8px] h-[5.5px] bg-[#009b3a] border border-white/20 flex items-center justify-center relative rounded-[1px] overflow-hidden">
           <div className="w-[4.5px] h-[3px] bg-yellow-400 rotate-45 transform flex items-center justify-center">
@@ -92,8 +118,8 @@ const LicensePlate: React.FC<{ plate: string }> = ({ plate }) => {
         </div>
       </div>
       {/* License plate characters */}
-      <div className="w-full flex-1 flex items-center justify-center bg-gradient-to-b from-[#ffffff] to-[#e8e4db] px-2">
-        <span className="text-[#1a1c1d] font-black text-[15px] tracking-wide leading-none select-all animate-fade-in" style={{ textShadow: '0.5px 0.5px 0px rgba(255, 255, 255, 0.8)' }}>
+      <div className={charBgClasses}>
+        <span className="text-[#1a1c1d] font-black text-[15px] tracking-wide leading-none select-all animate-fade-in" style={{ textShadow: isCarreta ? '0.5px 0.5px 0px rgba(255, 255, 255, 0.4)' : '0.5px 0.5px 0px rgba(255, 255, 255, 0.8)' }}>
           {cleanPlate}
         </span>
       </div>
@@ -382,6 +408,9 @@ export default function Patio({ onBack }: PatioProps) {
   const [manualCarreta, setManualCarreta] = useState('');
   const [manualM3, setManualM3] = useState('');
   const [cubagemPasteText, setCubagemPasteText] = useState('');
+  const [parsedPreviewItems, setParsedPreviewItems] = useState<{ cavalo: string; carreta: string; m3: string; status: 'ready' | 'duplicate' | 'invalid' }[]>([]);
+  const [isShowingPreview, setIsShowingPreview] = useState(false);
+  const [lastImportedIds, setLastImportedIds] = useState<string[]>([]);
 
   // Inline edit states
   const [editingCubagemId, setEditingCubagemId] = useState<string | null>(null);
@@ -777,7 +806,7 @@ export default function Patio({ onBack }: PatioProps) {
           const carreta = (row.carreta || '').replace(/[\s-]/g, '').toUpperCase();
           const m3 = (row.m3 || '').trim();
 
-          if (!carreta) {
+          if (!carreta || !m3 || m3 === '---') {
             skippedCount++;
             continue;
           }
@@ -829,16 +858,15 @@ export default function Patio({ onBack }: PatioProps) {
     return false;
   };
 
-  const handleImportPastedData = async () => {
+  const handleParsePastedData = () => {
     if (!cubagemPasteText.trim()) {
       setCubagemStatusMsg({ type: 'error', text: 'Por favor, cole as informações da planilha no campo de texto.' });
       return;
     }
 
     const lines = cubagemPasteText.split(/\r?\n/);
-    let addedCount = 0;
+    const previewList: { cavalo: string; carreta: string; m3: string; status: 'ready' | 'duplicate' | 'invalid' }[] = [];
     let skippedCount = 0;
-    const cubagemRef = ref(db, 'patio/cubagem');
 
     // First, scan for a header row to see if we can map columns dynamically
     let cavaloColIndex = -1;
@@ -934,17 +962,22 @@ export default function Patio({ onBack }: PatioProps) {
       let m3Value = '';
 
       // CASE A: We mapped a valid m3ColIndex from the header
-      if (m3ColIndex !== -1 && m3ColIndex < finalWords.length) {
-        const targetWord = finalWords[m3ColIndex];
-        const cleanWordForNum = targetWord.replace(/[^0-9.,]/g, '').replace(',', '.');
-        const num = parseFloat(cleanWordForNum);
-        if (!isNaN(num)) {
-          m3Value = cleanWordForNum;
+      if (m3ColIndex !== -1) {
+        if (m3ColIndex < finalWords.length) {
+          const targetWord = finalWords[m3ColIndex];
+          const cleanWordForNum = targetWord.replace(/[^0-9.,]/g, '').replace(',', '.');
+          const num = parseFloat(cleanWordForNum);
+          if (!isNaN(num) && num > 0) {
+            m3Value = cleanWordForNum;
+          }
         }
-      }
-
-      // CASE B: Fallback heuristic (no header, or mapped index invalid)
-      if (!m3Value) {
+        // If m3ColIndex was identified but the value is empty/invalid, skip this row! Do not fallback or import.
+        if (!m3Value) {
+          skippedCount++;
+          continue;
+        }
+      } else {
+        // CASE B: Fallback heuristic (no header, or mapped index invalid)
         // Collect all numeric candidates in the line
         const candidates: { val: number; strVal: string }[] = [];
         for (const word of finalWords) {
@@ -968,39 +1001,107 @@ export default function Patio({ onBack }: PatioProps) {
         }
       }
 
-      // If we got a valid plate (carreta) and we successfully found an m3Value
+      // Requer pelo menos 1 placa (carreta) e um valor de cubagem não-vazio
+      // Se a coluna m3Value estiver vazia, não importamos a placa! (Regra solicitada pelo usuário)
       if (carreta && m3Value) {
         // Verify duplicates
         const existsInDb = cubagemData.some(item => item.carreta.replace(/[\s-]/g, '').toUpperCase() === carreta);
         if (existsInDb) {
-          skippedCount++;
-          continue;
-        }
-
-        try {
-          const newItemRef = push(cubagemRef);
-          await set(newItemRef, {
-            cavalo: cavalo,
-            carreta: carreta,
-            m3: m3Value,
-            inseridoEm: new Date().toISOString()
-          });
-          addedCount++;
-        } catch (err) {
-          console.error("Erro ao inserir linha colada:", err);
-          skippedCount++;
+          previewList.push({ cavalo, carreta, m3: m3Value, status: 'duplicate' });
+        } else {
+          previewList.push({ cavalo, carreta, m3: m3Value, status: 'ready' });
         }
       } else {
         skippedCount++;
       }
     }
 
-    setCubagemPasteText('');
+    if (previewList.length === 0) {
+      setCubagemStatusMsg({
+        type: 'error',
+        text: 'Nenhum dado válido de cubagem (com placa e volume M³ preenchido) pôde ser encontrado.'
+      });
+      setTimeout(() => setCubagemStatusMsg(null), 5000);
+      return;
+    }
+
+    setParsedPreviewItems(previewList);
+    setIsShowingPreview(true);
     setCubagemStatusMsg({
       type: 'success',
-      text: `Importação de planilha concluída! Adicionados: ${addedCount} | Ignorados (duplicidade/sem cubagem): ${skippedCount}`
+      text: `Análise finalizada! ${previewList.filter(p => p.status === 'ready').length} itens prontos para salvar. Revise e confirme ou pare a importação.`
     });
     setTimeout(() => setCubagemStatusMsg(null), 5000);
+  };
+
+  const handleConfirmImport = async () => {
+    const cubagemRef = ref(db, 'patio/cubagem');
+    let addedCount = 0;
+    const newlyAddedIds: string[] = [];
+
+    const itemsToImport = parsedPreviewItems.filter(item => item.status === 'ready');
+
+    for (const item of itemsToImport) {
+      try {
+        const newItemRef = push(cubagemRef);
+        const newId = newItemRef.key;
+        if (newId) {
+          await set(newItemRef, {
+            cavalo: item.cavalo,
+            carreta: item.carreta,
+            m3: item.m3,
+            inseridoEm: new Date().toISOString()
+          });
+          newlyAddedIds.push(newId);
+          addedCount++;
+        }
+      } catch (err) {
+        console.error("Erro ao salvar cubagem na base:", err);
+      }
+    }
+
+    setLastImportedIds(newlyAddedIds);
+    setParsedPreviewItems([]);
+    setIsShowingPreview(false);
+    setCubagemPasteText('');
+
+    setCubagemStatusMsg({
+      type: 'success',
+      text: `Importação concluída! ${addedCount} registros de cubagem adicionados com sucesso!`
+    });
+    setTimeout(() => setCubagemStatusMsg(null), 6000);
+  };
+
+  const handleCancelImport = () => {
+    setParsedPreviewItems([]);
+    setIsShowingPreview(false);
+    setCubagemPasteText('');
+    setCubagemStatusMsg({
+      type: 'error',
+      text: 'Importação interrompida. Nenhum dado foi salvo no banco de dados.'
+    });
+    setTimeout(() => setCubagemStatusMsg(null), 4000);
+  };
+
+  const handleUndoLastImport = async () => {
+    if (lastImportedIds.length === 0) return;
+    if (window.confirm(`Deseja realmente desmarcar/remover as últimas ${lastImportedIds.length} cubagens importadas recentemente?`)) {
+      let undoneCount = 0;
+      for (const id of lastImportedIds) {
+        try {
+          await remove(ref(db, `patio/cubagem/${id}`));
+          undoneCount++;
+        } catch (error) {
+          console.error(`Erro ao remover item importado ${id}:`, error);
+        }
+      }
+      setCubagemStatusMsg({
+        type: 'success',
+        text: `Desfazer bem-sucedido! ${undoneCount} cubagens importadas foram retiradas.`
+      });
+      setLastImportedIds([]);
+      setTimeout(() => setCubagemStatusMsg(null), 5000);
+    }
   };
 
   useEffect(() => {
@@ -2524,176 +2625,393 @@ export default function Patio({ onBack }: PatioProps) {
       ) : (
         /* ================= CUBAGEM CONSOLE ================= */
         <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0 animate-fade-in text-left">
-          {/* LEFT COLUMN: IMPORT PDF & ADD MANUAL */}
-          <div className="lg:col-span-5 h-full flex flex-col">
-            <WoodenPlaque className="h-full flex-1 flex flex-col" screwSize="w-2.5 h-2.5">
-              <div className="flex items-center gap-3 mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
-                <Database size={18} className="text-[#ca1a20]" />
-                <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Ações de Cubagem</h2>
+          
+          {/* LEFT COLUMN: CONTROLS & IMPORT PROGRESS */}
+          <div className="lg:col-span-5 h-full flex flex-col gap-6">
+            {/* WoodenPlaque for Cubagem Controls */}
+            <WoodenPlaque className="flex flex-col gap-5 p-6 h-full" screwSize="w-2.5 h-2.5">
+              
+              {/* Header inside the console */}
+              <div className="flex items-center justify-between pb-3.5 border-b border-[#5c3c24]/30 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#ca1a20]/10 border border-[#ca1a20]/20 rounded-2xl flex items-center justify-center text-[#ca1a20]">
+                    <Database size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-[#311f14] uppercase tracking-widest">Painel de Cubagem</h2>
+                    <p className="text-[10px] font-bold text-[#5c3c24]/80 uppercase tracking-wider mt-0.5">Importação e Entrada de Dados</p>
+                  </div>
+                </div>
+                
+                <span className="px-2.5 py-1 bg-[#ca1a20]/10 border border-[#ca1a20]/20 rounded-full text-[9px] font-black uppercase text-[#ca1a20] tracking-wider">
+                  M³ CONSOLE
+                </span>
               </div>
 
-              <div className="space-y-6 flex-1 flex flex-col">
+              {/* Console Body scrollable area */}
+              <div className="space-y-5 flex-1 overflow-y-auto pr-1 max-h-[48rem]">
+                
                 {cubagemStatusMsg && (
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
-                      "p-4 rounded-xl text-xs font-bold border-2 text-center",
+                      "p-3.5 rounded-2xl text-xs font-semibold border text-center shadow-lg transition-all",
                       cubagemStatusMsg.type === 'success' 
-                        ? "bg-[#edf7ee] border-[#b4dfb6] text-[#22662c]" 
-                        : "bg-[#fdeeed] border-[#f4b3b0] text-[#8c060a]"
+                        ? "bg-emerald-100 border-emerald-300 text-emerald-800" 
+                        : "bg-rose-100 border-rose-300 text-rose-800"
                     )}
                   >
                     {cubagemStatusMsg.text}
                   </motion.div>
                 )}
 
-                {/* PDF IMPORT BOX */}
-                <div className="border-2 border-dashed border-[#5c3c24]/40 hover:border-[#ca1a20]/60 transition-colors rounded-xl p-6 bg-[#fcf9f2] flex flex-col items-center justify-center text-center relative group min-h-[12rem]">
-                  {isProcessingCubagem ? (
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <Loader2 className="animate-spin text-[#ca1a20] stroke-[2.5]" size={36} />
-                      <span className="text-xs font-black uppercase tracking-wider text-[#311f14]">Processando PDF com IA...</span>
-                      <span className="text-[10px] text-[#5c3c24]/70 font-semibold max-w-xs">Extraindo colunas cavalo, carreta e M³</span>
+                {/* SPREADSHEET PASTE & PREVIEW TOGGLE BLOCK */}
+                {!isShowingPreview ? (
+                  <>
+                    {/* PDF IMPORT BOX */}
+                    <div className="border border-dashed border-[#5c3c24]/40 hover:border-[#ca1a20] transition-all rounded-2xl p-5 bg-[#f0dfcc]/30 hover:bg-[#f0dfcc]/60 flex flex-col items-center justify-center text-center relative group min-h-[9rem] shadow-inner">
+                      {isProcessingCubagem ? (
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <Loader2 className="animate-spin text-[#ca1a20] stroke-[2.5]" size={32} />
+                          <span className="text-xs font-black uppercase tracking-wider text-[#311f14]">Analisando PDF...</span>
+                          <span className="text-[10px] text-[#5c3c24]/80 font-semibold max-w-xs leading-relaxed">Extraindo dados estruturados do manifesto</span>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer flex flex-col items-center w-full h-full justify-center space-y-3 py-2">
+                          <div className="w-11 h-11 bg-[#e4cbab] group-hover:bg-[#ca1a20]/10 text-[#5c3c24] group-hover:text-[#ca1a20] rounded-2xl flex items-center justify-center transition-colors shadow-sm">
+                            <UploadCloud size={20} className="stroke-[2.5]" />
+                          </div>
+                          <div className="flex flex-col space-y-0.5">
+                            <span className="text-xs font-black uppercase tracking-wider text-[#311f14]">Importar Cubagem via PDF</span>
+                            <span className="text-[9px] text-[#5c3c24]/80 font-bold">Arraste ou clique para selecionar</span>
+                          </div>
+                          <input 
+                            type="file" 
+                            accept="application/pdf" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleProcessCubagemPdf(file);
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
                     </div>
-                  ) : (
-                    <label className="cursor-pointer flex flex-col items-center w-full h-full justify-center space-y-3">
-                      <div className="w-12 h-12 bg-[#5c3c24]/5 group-hover:bg-[#ca1a20]/5 text-[#5c3c24] group-hover:text-[#ca1a20] rounded-full flex items-center justify-center transition-colors">
-                        <UploadCloud size={24} className="stroke-[2]" />
+
+                    {/* MANUAL ADDITION SECTION */}
+                    <form onSubmit={handleAddCubagemManual} className="bg-[#faf6f0] border-2 border-[#5c3c24]/30 rounded-2xl p-5 space-y-4 text-left shadow-lg relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ca1a20]" />
+                      <div className="text-xs font-black uppercase tracking-wider text-[#311f14] border-b border-[#5c3c24]/20 pb-2 flex items-center gap-1.5">
+                        <Plus size={14} className="text-[#ca1a20] stroke-[3]" />
+                        <span>Inserir Manualmente</span>
                       </div>
-                      <div className="flex flex-col space-y-1">
-                        <span className="text-xs font-black uppercase tracking-wider text-[#311f14]">Importar Cubagem em PDF</span>
-                        <span className="text-[10px] text-[#5c3c24]/70 font-bold">Arraste ou clique para selecionar o arquivo</span>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[9px] font-bold uppercase tracking-wider text-[#5c3c24]">Placa Cavalo:</label>
+                          <input 
+                            type="text" 
+                            placeholder="Ex: ABC1234"
+                            value={manualCavalo}
+                            onChange={(e) => setManualCavalo(e.target.value)}
+                            className="w-full bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] text-xs font-black uppercase rounded-xl py-2.5 px-3.5 shadow-inner outline-none focus:ring-2 focus:ring-[#ca1a20]/20 focus:border-[#ca1a20] transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[9px] font-bold uppercase tracking-wider text-[#5c3c24]">Placa Carreta:</label>
+                          <input 
+                            type="text" 
+                            placeholder="Ex: XYZ9D87"
+                            value={manualCarreta}
+                            onChange={(e) => setManualCarreta(e.target.value)}
+                            className="w-full bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] text-xs font-black uppercase rounded-xl py-2.5 px-3.5 shadow-inner outline-none focus:ring-2 focus:ring-[#ca1a20]/20 focus:border-[#ca1a20] transition-colors"
+                          />
+                        </div>
                       </div>
-                      <input 
-                        type="file" 
-                        accept="application/pdf" 
-                        className="hidden" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleProcessCubagemPdf(file);
-                          }
-                        }}
-                      />
-                    </label>
-                  )}
-                </div>
 
-                {/* MANUAL ADDITION SECTION */}
-                <form onSubmit={handleAddCubagemManual} className="bg-[#fcf9f2] border-2 border-[#5c3c24]/20 rounded-xl p-5 space-y-4 text-left shadow-sm">
-                  <div className="text-xs font-black uppercase tracking-wider text-[#311f14] border-b border-[#5c3c24]/10 pb-1.5 flex items-center gap-1.5">
-                    <Plus size={14} className="text-[#ca1a20]" />
-                    Adicionar Manualmente
-                  </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[9px] font-bold uppercase tracking-wider text-[#5c3c24]">Volume Cubado (M³):</label>
+                        <input 
+                          type="text" 
+                          placeholder="Ex: 94"
+                          value={manualM3}
+                          onChange={(e) => setManualM3(e.target.value)}
+                          className="w-full bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] text-xs font-black rounded-xl py-2.5 px-3.5 shadow-inner outline-none focus:ring-2 focus:ring-[#ca1a20]/20 focus:border-[#ca1a20] transition-colors"
+                        />
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3c24]/80">Placa Cavalo:</label>
-                      <input 
-                        type="text" 
-                        placeholder="Ex: ABC1234"
-                        value={manualCavalo}
-                        onChange={(e) => setManualCavalo(e.target.value)}
-                        className="w-full bg-white border border-[#5c3c24]/40 text-[#311f14] text-xs font-bold uppercase rounded-lg py-2 px-3 shadow-inner outline-none focus:border-[#ca1a20] transition-colors"
-                      />
+                      {/* Live Mercosul Plate Preview inside the card */}
+                      {(manualCavalo.trim() || manualCarreta.trim()) && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="bg-[#f0dfcc]/50 border-2 border-[#5c3c24]/20 rounded-xl p-3 flex flex-col items-center justify-center gap-2 mt-3 select-none shadow-inner"
+                        >
+                          <span className="text-[8.5px] font-black uppercase tracking-widest text-[#5c3c24]">Placas Digitadas (Padrão Mercosul)</span>
+                          <div className="flex gap-4 flex-wrap justify-center items-center">
+                            {manualCavalo.trim() && (
+                              <div className="flex flex-col items-center gap-1 shrink-0">
+                                <span className="text-[7.5px] font-bold uppercase tracking-wider text-[#5c3c24]/80">Cavalo</span>
+                                <LicensePlate plate={manualCavalo} type="cavalo" />
+                              </div>
+                            )}
+                            {manualCarreta.trim() && (
+                              <div className="flex flex-col items-center gap-1 shrink-0">
+                                <span className="text-[7.5px] font-bold uppercase tracking-wider text-[#5c3c24]/80">Carreta</span>
+                                <LicensePlate plate={manualCarreta} type="carreta" />
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+
+                      <button 
+                        type="submit"
+                        className="w-full py-2.5 px-4 bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e4252c] hover:to-[#990a0d] text-[#fdefd1] text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md border border-[#ff3e47]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Plus size={13} className="stroke-[3]" />
+                        ADICIONAR CUBAGEM
+                      </button>
+                    </form>
+
+                    {/* SPREADSHEET PASTE SECTION */}
+                    <div className="bg-[#faf6f0] border-2 border-[#5c3c24]/30 rounded-2xl p-5 space-y-4 text-left shadow-lg relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#5c3c24]" />
+                      <div className="text-xs font-black uppercase tracking-wider text-[#311f14] border-b border-[#5c3c24]/20 pb-2 flex items-center gap-1.5">
+                        <Database size={14} className="text-[#5c3c24]" />
+                        <span>Colar Dados do Excel / Planilha</span>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[9px] font-bold uppercase tracking-wider text-[#5c3c24]">
+                          Cole as colunas (Será ignorado se M³ estiver vazio):
+                        </label>
+                        <textarea 
+                          rows={4}
+                          placeholder="Exemplo:&#10;ABC1234  XYZ9D87  112.5&#10;KJH4D21  72.0"
+                          value={cubagemPasteText}
+                          onChange={(e) => setCubagemPasteText(e.target.value)}
+                          className="w-full bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] text-xs font-semibold rounded-xl py-2.5 px-3.5 shadow-inner outline-none focus:ring-2 focus:ring-[#ca1a20]/20 focus:border-[#ca1a20] transition-colors font-mono resize-none placeholder:font-sans placeholder:text-[10px] placeholder:text-[#5c3c24]/50"
+                        />
+                      </div>
+
+                      <button 
+                        type="button"
+                        onClick={handleParsePastedData}
+                        className="w-full py-2.5 px-4 bg-[#5c3c24] hover:bg-[#442e1d] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Database size={13} />
+                        ANALISAR PLANILHA
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  /* STEP-BY-STEP CONFIRMATION / STOP PANEL (PREVIEW SCREEN) */
+                  <div className="bg-[#faf6f0] border-[4px] border-[#ca1a20]/40 rounded-2xl p-5 space-y-4 text-left shadow-2xl relative overflow-hidden animate-fade-in">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ca1a20]" />
+                    
+                    <div className="flex items-center justify-between border-b border-[#5c3c24]/20 pb-2.5">
+                      <div className="text-xs font-black uppercase tracking-wider text-[#ca1a20] flex items-center gap-1.5">
+                        <Loader2 className="animate-spin" size={13} />
+                        <span>Revisão do Lote de Importação</span>
+                      </div>
+                      <span className="text-[9px] bg-[#e4cbab] border border-[#5c3c24]/20 text-[#311f14] font-bold px-2 py-0.5 rounded">
+                        {parsedPreviewItems.length} Itens Encontrados
+                      </span>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3c24]/80">Placa Carreta:</label>
-                      <input 
-                        type="text" 
-                        placeholder="Ex: XYZ9D87"
-                        value={manualCarreta}
-                        onChange={(e) => setManualCarreta(e.target.value)}
-                        className="w-full bg-white border border-[#5c3c24]/40 text-[#311f14] text-xs font-bold uppercase rounded-lg py-2 px-3 shadow-inner outline-none focus:border-[#ca1a20] transition-colors"
-                      />
+                    <p className="text-[10px] font-bold text-[#5c3c24]/80 leading-relaxed uppercase">
+                      Abaixo está a lista de veículos identificados. Verifique se as colunas foram mapeadas corretamente. Duplicidades conhecidas serão identificadas.
+                    </p>
+
+                    {/* Compact Scrollable Preview List */}
+                    <div className="max-h-[16rem] overflow-y-auto divide-y divide-[#5c3c24]/10 border border-[#5c3c24]/30 rounded-xl bg-[#fcfaf7] p-2 space-y-1">
+                      {parsedPreviewItems.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between py-2 px-2.5 rounded-lg hover:bg-[#f0dfcc]/30 transition-colors text-[11px] font-semibold font-mono">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-[9px] text-[#5c3c24]/60 font-bold font-sans">#{index+1}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[#5c3c24]/80 uppercase text-[9.5px]">Cav:</span>
+                              <span className="text-[#311f14] uppercase font-bold">{item.cavalo}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[#5c3c24]/80 uppercase text-[9.5px]">Car:</span>
+                              <span className="text-[#311f14] uppercase font-bold">{item.carreta}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <span className="text-[#ca1a20] font-black">{item.m3} M³</span>
+                            {item.status === 'duplicate' ? (
+                              <span className="text-[8px] bg-rose-100 border border-rose-300 text-rose-800 font-bold px-1.5 py-0.5 rounded uppercase font-sans">Duplicado</span>
+                            ) : (
+                              <span className="text-[8px] bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold px-1.5 py-0.5 rounded uppercase font-sans">Pronto</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Preview Warning */}
+                    <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-[9px] text-amber-800 leading-relaxed font-bold uppercase tracking-wider">
+                      * Nota: Placas sem cubagem (M³ vazia) foram ignoradas automaticamente conforme as regras do aplicativo.
+                    </div>
+
+                    {/* Double Control Buttons for STOP/CANCEL vs IMPORT */}
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <button 
+                        type="button"
+                        onClick={handleCancelImport}
+                        className="py-3 px-4 bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <X size={13} className="stroke-[3]" />
+                        PARAR IMPORTAÇÃO
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={handleConfirmImport}
+                        className="py-3 px-4 bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e4252c] hover:to-[#990a0d] text-[#fdefd1] text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg border border-[#ff3e47]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Check size={13} className="stroke-[3]" />
+                        CONFIRMAR E SALVAR
+                      </button>
                     </div>
                   </div>
+                )}
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3c24]/80">Volume (M³):</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ex: 94"
-                      value={manualM3}
-                      onChange={(e) => setManualM3(e.target.value)}
-                      className="w-full bg-white border border-[#5c3c24]/40 text-[#311f14] text-xs font-bold rounded-lg py-2 px-3 shadow-inner outline-none focus:border-[#ca1a20] transition-colors"
-                    />
-                  </div>
-
-                  <button 
-                    type="submit"
-                    className="w-full mt-2 py-2.5 px-4 bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e4252c] hover:to-[#990a0d] text-[#fdefd1] text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer border border-[#ff3e47]/10"
+                {/* Batch Undo Widget if applicable */}
+                {lastImportedIds.length > 0 && !isShowingPreview && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-4 bg-[#f0dfcc]/50 border-2 border-[#5c3c24]/30 rounded-2xl flex flex-col gap-2.5 text-left"
                   >
-                    ADICIONAR CUBAGEM
-                  </button>
-                </form>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9.5px] font-bold text-[#5c3c24] uppercase tracking-wider font-sans">Lote Importado Anteriormente</span>
+                      <span className="text-[9.5px] bg-[#e4cbab] border border-[#5c3c24]/20 text-[#311f14] px-2 py-0.5 rounded font-black font-mono">{lastImportedIds.length} Itens</span>
+                    </div>
+                    <p className="text-[9px] font-bold text-[#5c3c24]/80 leading-relaxed uppercase font-sans">
+                      Detectou que importou o lote errado e quer desfazer? Você pode apagar as cubagens recém-gravadas com um clique.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleUndoLastImport}
+                      className="py-2 px-3 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-800 text-[9px] font-black uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Trash2 size={12} />
+                      DESFAZER ÚLTIMA IMPORTAÇÃO
+                    </button>
+                  </motion.div>
+                )}
 
-                {/* SPREADSHEET PASTE SECTION */}
-                <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/20 rounded-xl p-5 space-y-4 text-left shadow-sm">
-                  <div className="text-xs font-black uppercase tracking-wider text-[#311f14] border-b border-[#5c3c24]/10 pb-1.5 flex items-center gap-1.5">
-                    <Database size={14} className="text-[#ca1a20]" />
-                    Colar Dados de Planilha
-                  </div>
-                  
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3c24]/80">Cole as colunas/linhas com placa e cubagem:</label>
-                    <textarea 
-                      rows={4}
-                      placeholder="Exemplo:&#10;ABC1234 XYZ9D87 94.0&#10;KJH4D21 82.5"
-                      value={cubagemPasteText}
-                      onChange={(e) => setCubagemPasteText(e.target.value)}
-                      className="w-full bg-white border border-[#5c3c24]/40 text-[#311f14] text-xs font-semibold rounded-lg py-2 px-3 shadow-inner outline-none focus:border-[#ca1a20] transition-colors font-mono resize-none"
-                    />
-                  </div>
-
-                  <button 
-                    type="button"
-                    onClick={handleImportPastedData}
-                    className="w-full py-2.5 px-4 bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e4252c] hover:to-[#990a0d] text-[#fdefd1] text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer border border-[#ff3e47]/10"
-                  >
-                    IMPORTAR DADOS DA PLANILHA
-                  </button>
-                </div>
               </div>
             </WoodenPlaque>
           </div>
 
-          {/* RIGHT COLUMN: DATABASE LIST */}
+          {/* RIGHT COLUMN: MODERN DATABASE TABLE */}
           <div className="lg:col-span-7 h-full flex flex-col">
-            <WoodenPlaque className="h-full flex-1 flex flex-col" screwSize="w-2.5 h-2.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-2 border-b-2 border-[#5c3c24]/10 text-left">
+            
+            {/* WoodenPlaque Table Container */}
+            <WoodenPlaque className="flex flex-col p-6 h-full" screwSize="w-2.5 h-2.5">
+              
+              {/* Header with Search and Clear Database */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-3 border-b border-[#5c3c24]/30 text-left">
                 <div className="flex items-center gap-3">
-                  <FileText size={18} className="text-[#ca1a20]" />
-                  <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Lista de Cubagem</h2>
+                  <div className="w-10 h-10 bg-[#ca1a20]/10 border border-[#ca1a20]/20 rounded-2xl flex items-center justify-center text-[#ca1a20]">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-[#311f14] uppercase tracking-widest">Base de Cubagens</h2>
+                    <p className="text-[10px] font-bold text-[#5c3c24]/80 uppercase tracking-wider mt-0.5">Veículos e cubagem salvos no sistema</p>
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+
+                <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                   {cubagemData.length > 0 && (
                     <button
                       type="button"
                       onClick={handleClearAllCubagem}
-                      className="py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5 border border-red-800/10"
+                      className="py-2.5 px-3 bg-rose-100 hover:bg-rose-600 border border-rose-300 text-rose-800 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 h-9 shrink-0"
                     >
                       <Trash2 size={12} />
-                      Limpar Tudo
+                      Limpar Base
                     </button>
                   )}
-                  <div className="relative max-w-xs w-full flex-1">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c3c24]/60" />
+                  
+                  <div className="relative max-w-xs w-full flex-1 min-w-[160px]">
+                    <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5c3c24]" />
                     <input 
                       type="text" 
-                      placeholder="PESQUISAR PLACA..."
+                      placeholder="PROCURAR PLACA..."
                       value={cubagemSearch}
                       onChange={(e) => setCubagemSearch(e.target.value)}
-                      className="w-full bg-[#fcf9f2] border-2 border-[#5c3c24]/30 text-[#311f14] placeholder-[#5c3c24]/50 font-black text-[10px] uppercase tracking-wider rounded-xl py-2 pl-9 pr-4 shadow-inner outline-none focus:border-[#ca1a20]/70 transition-colors"
+                      className="w-full h-9 bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] placeholder-[#5c3c24]/50 font-bold text-[10px] uppercase tracking-widest rounded-xl py-2 pl-9 pr-4 shadow-inner outline-none focus:ring-2 focus:ring-[#ca1a20]/20 focus:border-[#ca1a20] transition-all"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* METRICS PANEL (TOTAL PLACAS / CUBAGENS / VOLUME TOTAL ACUMULADO) */}
+              {(() => {
+                const uniquePlatesSet = new Set<string>();
+                cubagemData.forEach(item => {
+                  if (item.carreta) {
+                    const cleanCarreta = item.carreta.replace(/[\s-]/g, '').toUpperCase();
+                    if (cleanCarreta) uniquePlatesSet.add(cleanCarreta);
+                  }
+                  if (item.cavalo && item.cavalo !== '---') {
+                    const cleanCavalo = item.cavalo.replace(/[\s-]/g, '').toUpperCase();
+                    if (cleanCavalo) uniquePlatesSet.add(cleanCavalo);
+                  }
+                });
+                const totalPlacasUnicas = uniquePlatesSet.size;
+                const totalCarretas = cubagemData.length;
+                const totalCavalos = cubagemData.filter(item => item.cavalo && item.cavalo !== '---').length;
+                const totalVolume = cubagemData.reduce((acc, item) => {
+                  const val = parseFloat(item.m3.replace(',', '.'));
+                  return acc + (isNaN(val) ? 0 : val);
+                }, 0);
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                    
+                    <div className="bg-[#faf6f0] border-2 border-[#5c3c24]/20 rounded-2xl p-3 text-left shadow-md flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-blue-600" />
+                      <span className="text-[8.5px] font-black uppercase tracking-wider text-[#5c3c24]/80">Placas Únicas</span>
+                      <span className="text-base sm:text-lg font-black text-blue-800 font-mono leading-none mt-1.5">{totalPlacasUnicas}</span>
+                    </div>
+
+                    <div className="bg-[#faf6f0] border-2 border-[#5c3c24]/20 rounded-2xl p-3 text-left shadow-md flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-emerald-600" />
+                      <span className="text-[8.5px] font-black uppercase tracking-wider text-[#5c3c24]/80">Reboques (Carreta)</span>
+                      <span className="text-base sm:text-lg font-black text-emerald-800 font-mono leading-none mt-1.5">{totalCarretas}</span>
+                    </div>
+
+                    <div className="bg-[#faf6f0] border-2 border-[#5c3c24]/20 rounded-2xl p-3 text-left shadow-md flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-purple-600" />
+                      <span className="text-[8.5px] font-black uppercase tracking-wider text-[#5c3c24]/80">Cavalos</span>
+                      <span className="text-base sm:text-lg font-black text-purple-800 font-mono leading-none mt-1.5">{totalCavalos}</span>
+                    </div>
+
+                    <div className="bg-[#faf6f0] border-2 border-[#5c3c24]/20 rounded-2xl p-3 text-left shadow-md flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all col-span-2 sm:col-span-1">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-amber-600" />
+                      <span className="text-[8.5px] font-black uppercase tracking-wider text-[#5c3c24]/80">Cubagem Acumulada</span>
+                      <span className="text-base sm:text-lg font-black text-amber-800 font-mono leading-none mt-1.5">
+                        {totalVolume.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} M³
+                      </span>
+                    </div>
+
+                  </div>
+                );
+              })()}
+
               {/* LIST TABLE CONTAINER */}
-              <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[36rem] border-2 border-[#5c3c24]/20 rounded-xl bg-[#fcf9f2]">
+              <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[38rem] border border-[#5c3c24]/30 rounded-2xl bg-[#faf6f0]/50 shadow-inner">
                 {(() => {
                   const filtered = cubagemData.filter(item => {
                     const search = cubagemSearch.replace(/[\s-]/g, '').toUpperCase();
@@ -2704,9 +3022,10 @@ export default function Patio({ onBack }: PatioProps) {
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="flex flex-col items-center justify-center p-12 text-center text-[#5c3c24]/60">
-                        <Database size={32} className="stroke-[1.5] mb-2 opacity-60" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Nenhum registro de cubagem encontrado</span>
+                      <div className="flex flex-col items-center justify-center p-14 text-center text-[#5c3c24]/60">
+                        <Database size={36} className="stroke-[1.5] mb-2.5 opacity-40 animate-pulse text-[#ca1a20]" />
+                        <span className="text-xs font-black uppercase tracking-widest text-[#311f14]">Nenhum veículo cubado</span>
+                        <p className="text-[9px] text-[#5c3c24]/80 uppercase tracking-widest mt-1">Realize a importação ou busca para filtrar</p>
                       </div>
                     );
                   }
@@ -2714,62 +3033,62 @@ export default function Patio({ onBack }: PatioProps) {
                   return (
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-[#eddaba]/40 border-b border-[#5c3c24]/20">
-                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider">Cavalo</th>
-                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider">Carreta</th>
-                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider">M³</th>
-                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider hidden sm:table-cell">Data/hora</th>
-                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider text-center">Ações</th>
+                        <tr className="bg-[#f0dfcc]/50 border-b border-[#5c3c24]/30">
+                          <th className="px-5 py-3.5 text-[9px] font-black text-[#5c3c24] uppercase tracking-wider">Cavalo (Placa)</th>
+                          <th className="px-5 py-3.5 text-[9px] font-black text-[#5c3c24] uppercase tracking-wider">Carreta (Placa)</th>
+                          <th className="px-5 py-3.5 text-[9px] font-black text-[#5c3c24] uppercase tracking-wider">Cubagem (M³)</th>
+                          <th className="px-5 py-3.5 text-[9px] font-black text-[#5c3c24] uppercase tracking-wider hidden md:table-cell">Registrado Em</th>
+                          <th className="px-5 py-3.5 text-[9px] font-black text-[#5c3c24] uppercase tracking-wider text-center">Ações</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#5c3c24]/10">
+                      <tbody className="divide-y divide-[#5c3c24]/10 bg-[#fcfaf7]/40">
                         {filtered.map(item => {
                           const isEditing = editingCubagemId === item.id;
                           return (
-                            <tr key={item.id} className="hover:bg-[#eddaba]/10 transition-colors">
+                            <tr key={item.id} className="hover:bg-[#f0dfcc]/25 transition-colors">
                               {isEditing ? (
                                 <>
-                                  <td className="px-4 py-2.5">
+                                  <td className="px-4 py-3">
                                     <input 
                                       type="text"
                                       value={editingCavalo}
                                       onChange={(e) => setEditingCavalo(e.target.value)}
-                                      className="w-full bg-white border border-[#5c3c24]/50 rounded px-2 py-1 text-xs font-bold uppercase outline-none focus:border-[#ca1a20]"
+                                      className="w-full max-w-[120px] bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] rounded-lg px-2.5 py-1 text-xs font-black uppercase outline-none focus:ring-2 focus:ring-[#ca1a20]/20"
                                     />
                                   </td>
-                                  <td className="px-4 py-2.5">
+                                  <td className="px-4 py-3">
                                     <input 
                                       type="text"
                                       value={editingCarreta}
                                       onChange={(e) => setEditingCarreta(e.target.value)}
-                                      className="w-full bg-white border border-[#5c3c24]/50 rounded px-2 py-1 text-xs font-bold uppercase outline-none focus:border-[#ca1a20]"
+                                      className="w-full max-w-[120px] bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] rounded-lg px-2.5 py-1 text-xs font-black uppercase outline-none focus:ring-2 focus:ring-[#ca1a20]/20"
                                     />
                                   </td>
-                                  <td className="px-4 py-2.5">
+                                  <td className="px-4 py-3">
                                     <input 
                                       type="text"
                                       value={editingM3}
                                       onChange={(e) => setEditingM3(e.target.value)}
-                                      className="w-full bg-white border border-[#5c3c24]/50 rounded px-2 py-1 text-xs font-bold outline-none focus:border-[#ca1a20]"
+                                      className="w-full max-w-[80px] bg-[#fcfaf7] border border-[#5c3c24]/40 text-[#1c1109] rounded-lg px-2.5 py-1 text-xs font-black outline-none focus:ring-2 focus:ring-[#ca1a20]/20"
                                     />
                                   </td>
-                                  <td className="px-4 py-2.5 hidden sm:table-cell text-[10px] font-bold text-[#5c3c24]/75">
+                                  <td className="px-4 py-3 hidden md:table-cell text-[10px] font-bold text-[#5c3c24]/70">
                                     Em edição...
                                   </td>
-                                  <td className="px-4 py-2.5">
+                                  <td className="px-4 py-3 text-center">
                                     <div className="flex items-center justify-center gap-1.5">
                                       <button 
                                         type="button"
                                         onClick={() => handleSaveEditCubagem(item.id)}
-                                        className="w-7 h-7 flex items-center justify-center bg-[#22662c] text-white hover:bg-[#1a4e21] rounded-lg transition-colors border border-black/10 shadow-sm cursor-pointer"
-                                        title="Salvar alterações"
+                                        className="w-8 h-8 flex items-center justify-center bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e4252c] hover:to-[#990a0d] text-[#fdefd1] rounded-lg transition-colors shadow-sm cursor-pointer border border-[#ff3e47]/20"
+                                        title="Salvar"
                                       >
                                         <Save size={14} />
                                       </button>
                                       <button 
                                         type="button"
                                         onClick={handleCancelEditCubagem}
-                                        className="w-7 h-7 flex items-center justify-center bg-[#ca1a20] text-white hover:bg-[#8c060a] rounded-lg transition-colors border border-black/10 shadow-sm cursor-pointer"
+                                        className="w-8 h-8 flex items-center justify-center bg-gradient-to-b from-[#5c3c24] to-[#3a2517] hover:from-[#734c2f] hover:to-[#4e321e] text-white rounded-lg transition-colors shadow-sm cursor-pointer border border-white/10"
                                         title="Cancelar"
                                       >
                                         <X size={14} />
@@ -2779,20 +3098,18 @@ export default function Patio({ onBack }: PatioProps) {
                                 </>
                               ) : (
                                 <>
-                                  <td className="px-4 py-3.5">
-                                    <span className="inline-block rounded border border-slate-400 bg-white px-2 py-0.5 font-mono text-[11px] font-bold text-slate-800 uppercase shadow-sm tracking-wider">
-                                      {item.cavalo}
-                                    </span>
+                                  <td className="px-5 py-3">
+                                    <LicensePlate plate={item.cavalo} type="cavalo" />
                                   </td>
-                                  <td className="px-4 py-3.5">
-                                    <span className="inline-block rounded border border-slate-400 bg-white px-2 py-0.5 font-mono text-[11px] font-bold text-slate-800 uppercase shadow-sm tracking-wider">
-                                      {item.carreta}
-                                    </span>
+                                  <td className="px-5 py-3">
+                                    <LicensePlate plate={item.carreta} type="carreta" />
                                   </td>
-                                  <td className="px-4 py-3.5 font-serif italic text-sm font-black text-[#311f14]">
-                                    {item.m3} M³
+                                  <td className="px-5 py-3">
+                                    <div className="inline-flex items-center px-3.5 py-1 bg-emerald-100 border border-emerald-300 rounded-full text-emerald-800 font-bold font-mono text-xs sm:text-sm shadow-inner">
+                                      {item.m3} M³
+                                    </div>
                                   </td>
-                                  <td className="px-4 py-3.5 hidden sm:table-cell text-[10px] font-bold text-[#5c3c24]/80">
+                                  <td className="px-5 py-3 hidden md:table-cell text-[10px] font-bold text-[#5c3c24]/80">
                                     {new Date(item.inseridoEm).toLocaleString('pt-BR', {
                                       day: '2-digit',
                                       month: '2-digit',
@@ -2801,8 +3118,8 @@ export default function Patio({ onBack }: PatioProps) {
                                       minute: '2-digit'
                                     })}
                                   </td>
-                                  <td className="px-4 py-3.5">
-                                    <div className="flex items-center justify-center gap-1.5">
+                                  <td className="px-5 py-3 text-center">
+                                    <div className="flex items-center justify-center gap-2">
                                       <button 
                                         type="button"
                                         onClick={() => {
@@ -2811,7 +3128,7 @@ export default function Patio({ onBack }: PatioProps) {
                                           setEditingCarreta(item.carreta);
                                           setEditingM3(item.m3);
                                         }}
-                                        className="w-7 h-7 flex items-center justify-center bg-white text-[#5c3c24] hover:bg-[#5c3c24] hover:text-white rounded-lg transition-colors border border-[#5c3c24]/20 shadow-sm cursor-pointer"
+                                        className="w-8 h-8 flex items-center justify-center bg-white text-[#5c3c24] hover:bg-[#ca1a20]/10 hover:text-[#ca1a20] rounded-lg transition-all border border-[#5c3c24]/30 shadow-sm cursor-pointer hover:scale-105"
                                         title="Editar Registro"
                                       >
                                         <Edit size={13} />
@@ -2819,7 +3136,7 @@ export default function Patio({ onBack }: PatioProps) {
                                       <button 
                                         type="button"
                                         onClick={() => handleDeleteCubagem(item.id)}
-                                        className="w-7 h-7 flex items-center justify-center bg-white text-[#ca1a20] hover:bg-[#ca1a20] hover:text-white rounded-lg transition-colors border border-[#ca1a20]/20 shadow-sm cursor-pointer"
+                                        className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all border border-rose-300 shadow-sm cursor-pointer hover:scale-105"
                                         title="Excluir Registro"
                                       >
                                         <Trash2 size={13} />
