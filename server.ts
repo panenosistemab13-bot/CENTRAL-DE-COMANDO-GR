@@ -113,7 +113,7 @@ async function startServer() {
 
         // 2. Correção do modelo para a versão existente
         const genResponse = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts },
             config: config
         });
@@ -165,18 +165,20 @@ async function startServer() {
         const apenasBase64 = pdfBase64.replace(/^data:[^;]+;base64,/, "");
 
         const genResponse = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
-            contents: [
-                {
-                    inlineData: {
-                        mimeType: "application/pdf",
-                        data: apenasBase64
+            model: "gemini-3.5-flash",
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            mimeType: "application/pdf",
+                            data: apenasBase64
+                        }
+                    },
+                    {
+                        text: "Por favor, extraia as informações de cubagem de veículos deste PDF. Localize as colunas correspondentes a 'cavalo' (placa principal), 'carreta' (placa do reboque) e 'M³' (ou cubagem, volume em metros cúbicos). Retorne um array de objetos JSON onde cada objeto representa uma linha da tabela, contendo os campos: 'cavalo' (limpo, em maiúsculas, sem hifens ou espaços, ex: 'ABC1D23' ou 'ABC1234'), 'carreta' (limpo, em maiúsculas, sem hifens ou espaços) e 'm3' (número da cubagem como string). Certifique-se de extrair todos os registros da tabela e de retornar APENAS o JSON válido sem formatações extras de markdown."
                     }
-                },
-                {
-                    text: "Por favor, extraia as informações de cubagem de veículos deste PDF. Localize as colunas correspondentes a 'cavalo' (placa principal), 'carreta' (placa do reboque) e 'M³' (ou cubagem, volume em metros cúbicos). Retorne um array de objetos JSON onde cada objeto representa uma linha da tabela, contendo os campos: 'cavalo' (limpo, em maiúsculas, sem hifens ou espaços, ex: 'ABC1D23' ou 'ABC1234'), 'carreta' (limpo, em maiúsculas, sem hifens ou espaços) e 'm3' (número da cubagem como string). Certifique-se de extrair todos os registros da tabela e de retornar APENAS o JSON válido sem formatações extras de markdown."
-                }
-            ],
+                ]
+            },
             config: {
                 responseMimeType: "application/json",
                 temperature: 0.1,
