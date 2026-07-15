@@ -140,6 +140,76 @@ async function startServer() {
     }
   });
 
+  app.post("/api/extract-pdf", async (req, res) => {
+    try {
+        const { pdfBase64 } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({ error: "Chave API do Gemini não configurada." });
+        }
+
+        if (!pdfBase64) {
+            return res.status(400).json({ error: "O arquivo PDF em base64 é obrigatório." });
+        }
+
+        const ai = new GoogleGenAI({
+            apiKey: apiKey,
+            httpOptions: {
+                headers: {
+                    'User-Agent': 'aistudio-build',
+                }
+            }
+        });
+
+        const apenasBase64 = pdfBase64.replace(/^data:[^;]+;base64,/, "");
+
+        const genResponse = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: [
+                {
+                    inlineData: {
+                        mimeType: "application/pdf",
+                        data: apenasBase64
+                    }
+                },
+                {
+                    text: "Por favor, extraia as informações de cubagem de veículos deste PDF. Localize as colunas correspondentes a 'cavalo' (placa principal), 'carreta' (placa do reboque) e 'M³' (ou cubagem, volume em metros cúbicos). Retorne um array de objetos JSON onde cada objeto representa uma linha da tabela, contendo os campos: 'cavalo' (limpo, em maiúsculas, sem hifens ou espaços, ex: 'ABC1D23' ou 'ABC1234'), 'carreta' (limpo, em maiúsculas, sem hifens ou espaços) e 'm3' (número da cubagem como string). Certifique-se de extrair todos os registros da tabela e de retornar APENAS o JSON válido sem formatações extras de markdown."
+                }
+            ],
+            config: {
+                responseMimeType: "application/json",
+                temperature: 0.1,
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            cavalo: { type: Type.STRING, description: "Placa limpa do cavalo (ex: ABC1D23)" },
+                            carreta: { type: Type.STRING, description: "Placa limpa da carreta (ex: XYZ9D87)" },
+                            m3: { type: Type.STRING, description: "Valor de cubagem M³ (ex: 94)" }
+                        },
+                        required: ["cavalo", "carreta", "m3"]
+                    }
+                }
+            }
+        });
+
+        let textoJSON = genResponse.text;
+        if (!textoJSON) {
+            return res.status(500).json({ error: "A IA não retornou uma resposta válida." });
+        }
+
+        textoJSON = textoJSON.replace(/```json\n?|```/g, "").trim();
+        const parsedData = JSON.parse(textoJSON);
+        return res.status(200).json({ success: true, data: parsedData });
+
+    } catch (error) {
+        console.error("Erro ao processar PDF no Gemini:", error);
+        return res.status(500).json({ error: "Erro interno ao processar o PDF com Inteligência Artificial." });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
