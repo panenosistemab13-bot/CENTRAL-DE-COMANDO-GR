@@ -800,6 +800,7 @@ export default function Patio({ onBack }: PatioProps) {
         let skippedCount = 0;
 
         const cubagemRef = ref(db, 'patio/cubagem');
+        const processedCarretasInBatch = new Set<string>();
 
         for (const row of dataArray) {
           const cavalo = (row.cavalo || '').replace(/[\s-]/g, '').toUpperCase();
@@ -813,11 +814,14 @@ export default function Patio({ onBack }: PatioProps) {
 
           // Verificar duplicidade da carreta tanto no que já existe quanto no que acabou de ser inserido
           const existsInDb = cubagemData.some(item => item.carreta.replace(/[\s-]/g, '').toUpperCase() === carreta);
+          const isDuplicateInBatch = processedCarretasInBatch.has(carreta);
           
-          if (existsInDb) {
+          if (existsInDb || isDuplicateInBatch) {
             skippedCount++;
             continue;
           }
+
+          processedCarretasInBatch.add(carreta);
 
           const newItemRef = push(cubagemRef);
           await set(newItemRef, {
@@ -866,6 +870,7 @@ export default function Patio({ onBack }: PatioProps) {
 
     const lines = cubagemPasteText.split(/\r?\n/);
     const previewList: { cavalo: string; carreta: string; m3: string; status: 'ready' | 'duplicate' | 'invalid' }[] = [];
+    const processedCarretasInBatch = new Set<string>();
     let skippedCount = 0;
 
     // First, scan for a header row to see if we can map columns dynamically
@@ -1005,11 +1010,15 @@ export default function Patio({ onBack }: PatioProps) {
       // Se a coluna m3Value estiver vazia, não importamos a placa! (Regra solicitada pelo usuário)
       if (carreta && m3Value) {
         // Verify duplicates
-        const existsInDb = cubagemData.some(item => item.carreta.replace(/[\s-]/g, '').toUpperCase() === carreta);
-        if (existsInDb) {
+        const cleanCarreta = carreta.replace(/[\s-]/g, '').toUpperCase();
+        const existsInDb = cubagemData.some(item => item.carreta.replace(/[\s-]/g, '').toUpperCase() === cleanCarreta);
+        const isDuplicateInBatch = processedCarretasInBatch.has(cleanCarreta);
+
+        if (existsInDb || isDuplicateInBatch) {
           previewList.push({ cavalo, carreta, m3: m3Value, status: 'duplicate' });
         } else {
           previewList.push({ cavalo, carreta, m3: m3Value, status: 'ready' });
+          processedCarretasInBatch.add(cleanCarreta);
         }
       } else {
         skippedCount++;
