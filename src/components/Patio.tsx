@@ -381,6 +381,7 @@ export default function Patio({ onBack }: PatioProps) {
   const [manualCavalo, setManualCavalo] = useState('');
   const [manualCarreta, setManualCarreta] = useState('');
   const [manualM3, setManualM3] = useState('');
+  const [cubagemPasteText, setCubagemPasteText] = useState('');
 
   // Inline edit states
   const [editingCubagemId, setEditingCubagemId] = useState<string | null>(null);
@@ -801,6 +802,111 @@ export default function Patio({ onBack }: PatioProps) {
     } finally {
       setIsProcessingCubagem(false);
     }
+  };
+
+  const isPlate = (str: string): boolean => {
+    const clean = str.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (clean.length !== 7) return false;
+    const letters = clean.slice(0, 3);
+    if (!/^[A-Z]{3}$/.test(letters)) return false;
+    if (!/^[0-9]$/.test(clean[3])) return false;
+    if (/^[A-Z]{3}[0-9]{4}$/.test(clean)) return true;
+    if (/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(clean)) return true;
+    return false;
+  };
+
+  const handleImportPastedData = async () => {
+    if (!cubagemPasteText.trim()) {
+      setCubagemStatusMsg({ type: 'error', text: 'Por favor, cole as informações da planilha no campo de texto.' });
+      return;
+    }
+
+    const lines = cubagemPasteText.split(/\r?\n/);
+    let addedCount = 0;
+    let skippedCount = 0;
+    const cubagemRef = ref(db, 'patio/cubagem');
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+
+      // Dividir a linha por tabulações, ponto e vírgula, vírgulas, barras verticais ou espaços múltiplos
+      const words = line.split(/[\t;,|]+/).map(w => w.trim()).filter(Boolean);
+      let finalWords = words;
+      if (words.length <= 1) {
+        finalWords = line.split(/\s+/).map(w => w.trim()).filter(Boolean);
+      }
+
+      const platesInLine: string[] = [];
+      let m3Value = '';
+
+      // Localizar placas válidas na linha
+      for (const word of finalWords) {
+        const cleanWord = word.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        if (isPlate(cleanWord)) {
+          if (!platesInLine.includes(cleanWord)) {
+            platesInLine.push(cleanWord);
+          }
+        }
+      }
+
+      // Localizar o valor da cubagem/M³ na linha (um número que não seja placa)
+      for (const word of finalWords) {
+        const cleanWordForNum = word.replace(/[^0-9.,]/g, '').replace(',', '.');
+        const num = parseFloat(cleanWordForNum);
+        const cleanWordUpper = word.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        const isAPlate = platesInLine.includes(cleanWordUpper);
+
+        if (!isNaN(num) && num > 0 && num < 500 && !isAPlate) {
+          if (!word.includes('/') && !word.includes(':') && word.length < 8) {
+            m3Value = cleanWordForNum;
+            break;
+          }
+        }
+      }
+
+      // Requer pelo menos 1 placa e um valor de cubagem não-vazio
+      if (platesInLine.length >= 1 && m3Value) {
+        let cavalo = '---';
+        let carreta = '';
+
+        if (platesInLine.length >= 2) {
+          cavalo = platesInLine[0];
+          carreta = platesInLine[1];
+        } else {
+          carreta = platesInLine[0];
+        }
+
+        // Verificar duplicados na base atual
+        const existsInDb = cubagemData.some(item => item.carreta.replace(/[\s-]/g, '').toUpperCase() === carreta);
+        if (existsInDb) {
+          skippedCount++;
+          continue;
+        }
+
+        try {
+          const newItemRef = push(cubagemRef);
+          await set(newItemRef, {
+            cavalo: cavalo,
+            carreta: carreta,
+            m3: m3Value,
+            inseridoEm: new Date().toISOString()
+          });
+          addedCount++;
+        } catch (err) {
+          console.error("Erro ao inserir linha colada:", err);
+          skippedCount++;
+        }
+      } else {
+        skippedCount++;
+      }
+    }
+
+    setCubagemPasteText('');
+    setCubagemStatusMsg({
+      type: 'success',
+      text: `Importação de planilha concluída! Adicionados: ${addedCount} | Ignorados (duplicidade/sem cubagem): ${skippedCount}`
+    });
+    setTimeout(() => setCubagemStatusMsg(null), 5000);
   };
 
   useEffect(() => {
@@ -2429,6 +2535,33 @@ export default function Patio({ onBack }: PatioProps) {
                     ADICIONAR CUBAGEM
                   </button>
                 </form>
+
+                {/* SPREADSHEET PASTE SECTION */}
+                <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/20 rounded-xl p-5 space-y-4 text-left shadow-sm">
+                  <div className="text-xs font-black uppercase tracking-wider text-[#311f14] border-b border-[#5c3c24]/10 pb-1.5 flex items-center gap-1.5">
+                    <Database size={14} className="text-[#ca1a20]" />
+                    Colar Dados de Planilha
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3c24]/80">Cole as colunas/linhas com placa e cubagem:</label>
+                    <textarea 
+                      rows={4}
+                      placeholder="Exemplo:&#10;ABC1234 XYZ9D87 94.0&#10;KJH4D21 82.5"
+                      value={cubagemPasteText}
+                      onChange={(e) => setCubagemPasteText(e.target.value)}
+                      className="w-full bg-white border border-[#5c3c24]/40 text-[#311f14] text-xs font-semibold rounded-lg py-2 px-3 shadow-inner outline-none focus:border-[#ca1a20] transition-colors font-mono resize-none"
+                    />
+                  </div>
+
+                  <button 
+                    type="button"
+                    onClick={handleImportPastedData}
+                    className="w-full py-2.5 px-4 bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e4252c] hover:to-[#990a0d] text-[#fdefd1] text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer border border-[#ff3e47]/10"
+                  >
+                    IMPORTAR DADOS DA PLANILHA
+                  </button>
+                </div>
               </div>
             </WoodenPlaque>
           </div>
@@ -2479,7 +2612,7 @@ export default function Patio({ onBack }: PatioProps) {
                           <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider">Cavalo</th>
                           <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider">Carreta</th>
                           <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider">M³</th>
-                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider hidden sm:table-cell">Ingestão</th>
+                          <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider hidden sm:table-cell">Data/hora</th>
                           <th className="px-4 py-3 text-[10px] font-black text-[#311f14] uppercase tracking-wider text-center">Ações</th>
                         </tr>
                       </thead>

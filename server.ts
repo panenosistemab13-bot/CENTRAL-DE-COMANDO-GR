@@ -3,6 +3,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const pdf = require("pdf-parse");
 
 const app = express();
 const PORT = 3000;
@@ -143,72 +147,96 @@ async function startServer() {
   app.post("/api/extract-pdf", async (req, res) => {
     try {
         const { pdfBase64 } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY;
-
-        if (!apiKey) {
-            return res.status(500).json({ error: "Chave API do Gemini não configurada." });
-        }
 
         if (!pdfBase64) {
             return res.status(400).json({ error: "O arquivo PDF em base64 é obrigatório." });
         }
 
-        const ai = new GoogleGenAI({
-            apiKey: apiKey,
-            httpOptions: {
-                headers: {
-                    'User-Agent': 'aistudio-build',
-                }
-            }
-        });
-
         const apenasBase64 = pdfBase64.replace(/^data:[^;]+;base64,/, "");
+        const buffer = Buffer.from(apenasBase64, 'base64');
 
-        const genResponse = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
-            contents: {
-                parts: [
-                    {
-                        inlineData: {
-                            mimeType: "application/pdf",
-                            data: apenasBase64
-                        }
-                    },
-                    {
-                        text: "Por favor, extraia as informações de cubagem de veículos deste PDF. Localize as colunas correspondentes a 'cavalo' (placa principal), 'carreta' (placa do reboque) e 'M³' (ou cubagem, volume em metros cúbicos). Retorne um array de objetos JSON onde cada objeto representa uma linha da tabela, contendo os campos: 'cavalo' (limpo, em maiúsculas, sem hifens ou espaços, ex: 'ABC1D23' ou 'ABC1234'), 'carreta' (limpo, em maiúsculas, sem hifens ou espaços) e 'm3' (número da cubagem como string). Certifique-se de extrair todos os registros da tabela e de retornar APENAS o JSON válido sem formatações extras de markdown."
-                    }
-                ]
-            },
-            config: {
-                responseMimeType: "application/json",
-                temperature: 0.1,
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            cavalo: { type: Type.STRING, description: "Placa limpa do cavalo (ex: ABC1D23)" },
-                            carreta: { type: Type.STRING, description: "Placa limpa da carreta (ex: XYZ9D87)" },
-                            m3: { type: Type.STRING, description: "Valor de cubagem M³ (ex: 94)" }
-                        },
-                        required: ["cavalo", "carreta", "m3"]
-                    }
-                }
-            }
-        });
+        // Parse PDF locally
+        const data = await pdf(buffer);
+        const text = data.text;
 
-        let textoJSON = genResponse.text;
-        if (!textoJSON) {
-            return res.status(500).json({ error: "A IA não retornou uma resposta válida." });
+        if (!text) {
+            return res.status(400).json({ error: "Não foi possível extrair texto do PDF." });
         }
 
-        textoJSON = textoJSON.replace(/```json\n?|```/g, "").trim();
-        const parsedData = JSON.parse(textoJSON);
-        return res.status(200).json({ success: true, data: parsedData });
+        const lines = text.split(/\r?\n/);
+        const results = [];
+
+        // Plate Regex for standard and Mercosul Brazilian formats
+        const platePattern = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
+
+        for (const line of lines) {
+            if (!line.trim()) continue;
+
+            const matches = line.match(platePattern) || [];
+            
+            // Standardize matches to clean 7-character uppercase plates
+            const uniquePlates: string[] = Array.from(new Set(
+                matches.map((p: string) => p.replace(/[\s-]/g, '').toUpperCase())
+            ));
+
+            // A valid truck row must contain at least 2 distinct plates (cavalo and carreta)
+            if (uniquePlates.length >= 2) {
+                const cavalo = uniquePlates[0];
+                const carreta = uniquePlates[1];
+
+                const words = line.split(/\s+/);
+                
+                // Find index of the second plate in the words array to look for M³ right after it
+                let plate2Index = -1;
+                for (let i = 0; i < words.length; i++) {
+                    const normalizedWord = words[i].replace(/[|()\[\]\s-]/g, '').toUpperCase();
+                    if (normalizedWord.includes(carreta)) {
+                        plate2Index = i;
+                        break;
+                    }
+                }
+
+                let m3Value = '';
+                if (plate2Index !== -1) {
+                    // Check words after the carreta plate for the volume
+                    for (let i = plate2Index + 1; i < words.length; i++) {
+                        const cleanWord = words[i].replace(/[|()\[\]\s]/g, '').replace(/,/, '.');
+                        const num = parseFloat(cleanWord);
+                        if (!isNaN(num) && num > 0 && num < 400 && !cleanWord.includes('/') && !cleanWord.includes(':')) {
+                            m3Value = cleanWord;
+                            break;
+                        }
+                    }
+                }
+
+                // Fallback: If no M³ found right after the second plate, scan the entire line
+                if (!m3Value) {
+                    for (let i = 0; i < words.length; i++) {
+                        const cleanWord = words[i].replace(/[|()\[\]\s]/g, '').replace(/,/, '.');
+                        const num = parseFloat(cleanWord);
+                        if (!isNaN(num) && num >= 15 && num <= 200 && !cleanWord.includes('/') && !cleanWord.includes(':')) {
+                            const isPlate = uniquePlates.some(p => p.includes(cleanWord) || cleanWord.includes(p));
+                            if (!isPlate) {
+                                m3Value = cleanWord;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                results.push({
+                    cavalo,
+                    carreta,
+                    m3: m3Value || '---'
+                });
+            }
+        }
+
+        return res.status(200).json({ success: true, data: results });
 
     } catch (error) {
-        console.error("Erro ao processar PDF no Gemini:", error);
-        return res.status(500).json({ error: "Erro interno ao processar o PDF com Inteligência Artificial." });
+        console.error("Erro ao extrair PDF localmente:", error);
+        return res.status(500).json({ error: "Erro interno ao ler e extrair os dados do PDF." });
     }
   });
 
