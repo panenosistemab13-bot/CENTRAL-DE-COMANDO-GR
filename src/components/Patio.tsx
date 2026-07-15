@@ -807,7 +807,7 @@ export default function Patio({ onBack }: PatioProps) {
           const carreta = (row.carreta || '').replace(/[\s-]/g, '').toUpperCase();
           const m3 = (row.m3 || '').trim();
 
-          if (!carreta || !m3 || m3 === '---') {
+          if (!cavalo || cavalo === '---' || !carreta || carreta === '---' || !m3 || m3 === '---') {
             skippedCount++;
             continue;
           }
@@ -825,9 +825,9 @@ export default function Patio({ onBack }: PatioProps) {
 
           const newItemRef = push(cubagemRef);
           await set(newItemRef, {
-            cavalo: cavalo || '---',
+            cavalo: cavalo,
             carreta: carreta,
-            m3: m3 || '---',
+            m3: m3,
             inseridoEm: new Date().toISOString()
           });
           addedCount++;
@@ -949,20 +949,13 @@ export default function Patio({ onBack }: PatioProps) {
         }
       }
 
-      if (platesInLine.length === 0) {
+      if (platesInLine.length < 2) {
         skippedCount++;
         continue;
       }
 
-      let cavalo = '---';
-      let carreta = '';
-
-      if (platesInLine.length >= 2) {
-        cavalo = platesInLine[0];
-        carreta = platesInLine[1];
-      } else {
-        carreta = platesInLine[0];
-      }
+      const cavalo = platesInLine[0];
+      const carreta = platesInLine[1];
 
       let m3Value = '';
 
