@@ -727,6 +727,20 @@ export default function Patio({ onBack }: PatioProps) {
     }
   };
 
+  const handleClearAllCubagem = async () => {
+    if (window.confirm("Tem certeza que deseja apagar TODAS as informações salvas na aba de cubagem? Esta ação não pode ser desfeita.")) {
+      try {
+        await remove(ref(db, 'patio/cubagem'));
+        setCubagemStatusMsg({ type: 'success', text: 'Todas as cubagens foram apagadas com sucesso!' });
+        setTimeout(() => setCubagemStatusMsg(null), 3000);
+      } catch (error) {
+        console.error("Erro ao apagar todas as cubagens:", error);
+        setCubagemStatusMsg({ type: 'error', text: 'Erro ao apagar todas as cubagens.' });
+        setTimeout(() => setCubagemStatusMsg(null), 3000);
+      }
+    }
+  };
+
   const handleProcessCubagemPdf = async (file: File) => {
     setIsProcessingCubagem(true);
     setCubagemStatusMsg({ type: 'success', text: 'Lendo PDF e extraindo cubagem com IA...' });
@@ -826,20 +840,73 @@ export default function Patio({ onBack }: PatioProps) {
     let skippedCount = 0;
     const cubagemRef = ref(db, 'patio/cubagem');
 
+    // First, scan for a header row to see if we can map columns dynamically
+    let cavaloColIndex = -1;
+    let carretaColIndex = -1;
+    let m3ColIndex = -1;
+    let palletsColIndex = -1;
+    let pbtColIndex = -1;
+
+    for (let i = 0; i < Math.min(10, lines.length); i++) {
+      const line = lines[i].trim().toLowerCase();
+      if (!line) continue;
+      
+      const words = line.split(/[\t;|]+/).map(w => w.trim()).filter(Boolean);
+      let finalWords = words;
+      if (words.length <= 1) {
+        finalWords = line.split(/\s{2,}/).map(w => w.trim()).filter(Boolean);
+        if (finalWords.length <= 1) {
+          finalWords = line.split(/\s+/).map(w => w.trim()).filter(Boolean);
+        }
+      }
+
+      const hasCavalo = finalWords.some(w => w.includes('cavalo') || w.includes('placa'));
+      const hasCarreta = finalWords.some(w => w.includes('carreta') || w.includes('reboque'));
+      const hasM3 = finalWords.some(w => w.includes('m³') || w.includes('m3') || w.includes('cubagem') || w.includes('vol') || w.includes('volume'));
+      const hasPallets = finalWords.some(w => w.includes('palet') || w.includes('pallet') || w.includes('plts'));
+      const hasPbt = finalWords.some(w => w.includes('pbt') || w.includes('ton'));
+
+      if (hasCavalo || hasCarreta || hasM3 || hasPallets || hasPbt) {
+        for (let j = 0; j < finalWords.length; j++) {
+          const w = finalWords[j];
+          if (w.includes('cavalo') || (w.includes('placa') && !w.includes('carreta') && !w.includes('reboque'))) {
+            cavaloColIndex = j;
+          } else if (w.includes('carreta') || w.includes('reboque') || w.includes('semi')) {
+            carretaColIndex = j;
+          } else if (w.includes('m³') || w.includes('m3') || w.includes('cubagem') || w.includes('vol') || w.includes('volume')) {
+            m3ColIndex = j;
+          } else if (w.includes('palet') || w.includes('pallet') || w.includes('plt') || w.includes('n°')) {
+            palletsColIndex = j;
+          } else if (w.includes('pbt') || w.includes('ton') || w.includes('peso')) {
+            pbtColIndex = j;
+          }
+        }
+        break; // Found header, stop scanning
+      }
+    }
+
     for (const line of lines) {
       if (!line.trim()) continue;
 
-      // Dividir a linha por tabulações, ponto e vírgula, vírgulas, barras verticais ou espaços múltiplos
-      const words = line.split(/[\t;,|]+/).map(w => w.trim()).filter(Boolean);
+      // Note: do NOT split by comma to preserve decimal floats (e.g. 41,5)
+      const words = line.split(/[\t;|]+/).map(w => w.trim()).filter(Boolean);
       let finalWords = words;
       if (words.length <= 1) {
-        finalWords = line.split(/\s+/).map(w => w.trim()).filter(Boolean);
+        finalWords = line.split(/\s{2,}/).map(w => w.trim()).filter(Boolean);
+        if (finalWords.length <= 1) {
+          finalWords = line.split(/\s+/).map(w => w.trim()).filter(Boolean);
+        }
+      }
+
+      // If it's a header line, skip it
+      const lineLower = line.toLowerCase();
+      if (lineLower.includes('cavalo') || lineLower.includes('carreta') || lineLower.includes('cubagem') || lineLower.includes('pallet') || lineLower.includes('pbt')) {
+        continue;
       }
 
       const platesInLine: string[] = [];
-      let m3Value = '';
 
-      // Localizar placas válidas na linha
+      // Find valid plates on this line
       for (const word of finalWords) {
         const cleanWord = word.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
         if (isPlate(cleanWord)) {
@@ -849,34 +916,61 @@ export default function Patio({ onBack }: PatioProps) {
         }
       }
 
-      // Localizar o valor da cubagem/M³ na linha (um número que não seja placa)
-      for (const word of finalWords) {
-        const cleanWordForNum = word.replace(/[^0-9.,]/g, '').replace(',', '.');
-        const num = parseFloat(cleanWordForNum);
-        const cleanWordUpper = word.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-        const isAPlate = platesInLine.includes(cleanWordUpper);
+      if (platesInLine.length === 0) {
+        skippedCount++;
+        continue;
+      }
 
-        if (!isNaN(num) && num > 0 && num < 500 && !isAPlate) {
-          if (!word.includes('/') && !word.includes(':') && word.length < 8) {
-            m3Value = cleanWordForNum;
-            break;
-          }
+      let cavalo = '---';
+      let carreta = '';
+
+      if (platesInLine.length >= 2) {
+        cavalo = platesInLine[0];
+        carreta = platesInLine[1];
+      } else {
+        carreta = platesInLine[0];
+      }
+
+      let m3Value = '';
+
+      // CASE A: We mapped a valid m3ColIndex from the header
+      if (m3ColIndex !== -1 && m3ColIndex < finalWords.length) {
+        const targetWord = finalWords[m3ColIndex];
+        const cleanWordForNum = targetWord.replace(/[^0-9.,]/g, '').replace(',', '.');
+        const num = parseFloat(cleanWordForNum);
+        if (!isNaN(num)) {
+          m3Value = cleanWordForNum;
         }
       }
 
-      // Requer pelo menos 1 placa e um valor de cubagem não-vazio
-      if (platesInLine.length >= 1 && m3Value) {
-        let cavalo = '---';
-        let carreta = '';
+      // CASE B: Fallback heuristic (no header, or mapped index invalid)
+      if (!m3Value) {
+        // Collect all numeric candidates in the line
+        const candidates: { val: number; strVal: string }[] = [];
+        for (const word of finalWords) {
+          const cleanWordForNum = word.replace(/[^0-9.,]/g, '').replace(',', '.');
+          const num = parseFloat(cleanWordForNum);
+          const cleanWordUpper = word.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+          const isAPlate = platesInLine.includes(cleanWordUpper);
 
-        if (platesInLine.length >= 2) {
-          cavalo = platesInLine[0];
-          carreta = platesInLine[1];
-        } else {
-          carreta = platesInLine[0];
+          // Standard volume, pallet count, or pbt range: 1 to 500
+          if (!isNaN(num) && num > 0 && num < 500 && !isAPlate) {
+            if (!word.includes('/') && !word.includes(':') && word.length < 8) {
+              candidates.push({ val: num, strVal: cleanWordForNum });
+            }
+          }
         }
 
-        // Verificar duplicados na base atual
+        if (candidates.length > 0) {
+          // Sort descending: M³ is always the largest of pallets/pbt/cubagem
+          candidates.sort((a, b) => b.val - a.val);
+          m3Value = candidates[0].strVal;
+        }
+      }
+
+      // If we got a valid plate (carreta) and we successfully found an m3Value
+      if (carreta && m3Value) {
+        // Verify duplicates
         const existsInDb = cubagemData.some(item => item.carreta.replace(/[\s-]/g, '').toUpperCase() === carreta);
         if (existsInDb) {
           skippedCount++;
@@ -2574,15 +2668,27 @@ export default function Patio({ onBack }: PatioProps) {
                   <FileText size={18} className="text-[#ca1a20]" />
                   <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">Lista de Cubagem</h2>
                 </div>
-                <div className="relative max-w-xs w-full">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c3c24]/60" />
-                  <input 
-                    type="text" 
-                    placeholder="PESQUISAR PLACA..."
-                    value={cubagemSearch}
-                    onChange={(e) => setCubagemSearch(e.target.value)}
-                    className="w-full bg-[#fcf9f2] border-2 border-[#5c3c24]/30 text-[#311f14] placeholder-[#5c3c24]/50 font-black text-[10px] uppercase tracking-wider rounded-xl py-2 pl-9 pr-4 shadow-inner outline-none focus:border-[#ca1a20]/70 transition-colors"
-                  />
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                  {cubagemData.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllCubagem}
+                      className="py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5 border border-red-800/10"
+                    >
+                      <Trash2 size={12} />
+                      Limpar Tudo
+                    </button>
+                  )}
+                  <div className="relative max-w-xs w-full flex-1">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c3c24]/60" />
+                    <input 
+                      type="text" 
+                      placeholder="PESQUISAR PLACA..."
+                      value={cubagemSearch}
+                      onChange={(e) => setCubagemSearch(e.target.value)}
+                      className="w-full bg-[#fcf9f2] border-2 border-[#5c3c24]/30 text-[#311f14] placeholder-[#5c3c24]/50 font-black text-[10px] uppercase tracking-wider rounded-xl py-2 pl-9 pr-4 shadow-inner outline-none focus:border-[#ca1a20]/70 transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -198,29 +198,36 @@ async function startServer() {
 
                 let m3Value = '';
                 if (plate2Index !== -1) {
+                    const candidates: { val: number; strVal: string }[] = [];
                     // Check words after the carreta plate for the volume
                     for (let i = plate2Index + 1; i < words.length; i++) {
                         const cleanWord = words[i].replace(/[|()\[\]\s]/g, '').replace(/,/, '.');
                         const num = parseFloat(cleanWord);
-                        if (!isNaN(num) && num > 0 && num < 400 && !cleanWord.includes('/') && !cleanWord.includes(':')) {
-                            m3Value = cleanWord;
-                            break;
+                        const isPlate = uniquePlates.some(p => p.includes(cleanWord) || cleanWord.includes(p));
+                        if (!isNaN(num) && num > 0 && num < 500 && !isPlate && !cleanWord.includes('/') && !cleanWord.includes(':')) {
+                            candidates.push({ val: num, strVal: cleanWord });
                         }
+                    }
+                    if (candidates.length > 0) {
+                        candidates.sort((a, b) => b.val - a.val);
+                        m3Value = candidates[0].strVal;
                     }
                 }
 
                 // Fallback: If no M³ found right after the second plate, scan the entire line
                 if (!m3Value) {
+                    const candidates: { val: number; strVal: string }[] = [];
                     for (let i = 0; i < words.length; i++) {
                         const cleanWord = words[i].replace(/[|()\[\]\s]/g, '').replace(/,/, '.');
                         const num = parseFloat(cleanWord);
-                        if (!isNaN(num) && num >= 15 && num <= 200 && !cleanWord.includes('/') && !cleanWord.includes(':')) {
-                            const isPlate = uniquePlates.some(p => p.includes(cleanWord) || cleanWord.includes(p));
-                            if (!isPlate) {
-                                m3Value = cleanWord;
-                                break;
-                            }
+                        const isPlate = uniquePlates.some(p => p.includes(cleanWord) || cleanWord.includes(p));
+                        if (!isNaN(num) && num >= 15 && num <= 500 && !isPlate && !cleanWord.includes('/') && !cleanWord.includes(':')) {
+                            candidates.push({ val: num, strVal: cleanWord });
                         }
+                    }
+                    if (candidates.length > 0) {
+                        candidates.sort((a, b) => b.val - a.val);
+                        m3Value = candidates[0].strVal;
                     }
                 }
 
