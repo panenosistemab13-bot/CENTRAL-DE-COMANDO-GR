@@ -655,6 +655,18 @@ export default function Controle({ onBack }: ControleProps) {
     customTransportadoras,
   ]);
 
+  const handleClearVeiculo = () => {
+    setCavalo("");
+    setCarreta1("");
+    setCarreta2("");
+    setIsca1("");
+    setIsca2("");
+    setProduto1("");
+    setProduto2("");
+    setUma1(formatUMA("0"));
+    setUma2(formatUMA("0"));
+  };
+
   const handleClear = () => {
     if (
       window.confirm(
@@ -727,6 +739,9 @@ export default function Controle({ onBack }: ControleProps) {
 
   // Function to build and copy HTML template for Email pasting
   const handleCopyToEmail = async () => {
+    const isPaletizado1 = sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
+    const isPaletizado2 = sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
+
     // Helper to render ladder visual grid inside email HTML matching the provided style
     const renderLadderHtml = (
       grid: string[][],
@@ -906,11 +921,11 @@ export default function Controle({ onBack }: ControleProps) {
                 ? ""
                 : sidebarEmbarque1
                 ? `
-                <div style="text-align: center; width: 320px;">
-                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: 12px; margin-bottom: 15px; width: 320px; height: 420px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                <div style="text-align: center; width: ${isPaletizado1 ? '150px' : '320px'};">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado1 ? '6px' : '12px'}; margin-bottom: ${isPaletizado1 ? '8px' : '15px'}; width: ${isPaletizado1 ? '150px' : '320px'}; height: ${isPaletizado1 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                     <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
-                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta1}</p>
+                  <p style="font-size: ${isPaletizado1 ? '8px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado1 ? '6px' : '15px'}; text-transform: uppercase;">${carreta1}</p>
                 </div>
               `
                 : `<div style="text-align: center; width: 100px;">
@@ -925,11 +940,11 @@ export default function Controle({ onBack }: ControleProps) {
                   ? ""
                   : sidebarEmbarque2
                   ? `
-                <div style="text-align: center; width: 320px;">
-                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: 12px; margin-bottom: 15px; width: 320px; height: 420px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                <div style="text-align: center; width: ${isPaletizado2 ? '150px' : '320px'};">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado2 ? '6px' : '12px'}; margin-bottom: ${isPaletizado2 ? '8px' : '15px'}; width: ${isPaletizado2 ? '150px' : '320px'}; height: ${isPaletizado2 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                     <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
-                  <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${carreta2}</p>
+                  <p style="font-size: ${isPaletizado2 ? '8px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado2 ? '6px' : '15px'}; text-transform: uppercase;">${carreta2}</p>
                 </div>
                 `
                   : `<div style="text-align: center; width: 100px;">
@@ -1706,10 +1721,10 @@ Embarque: ${
                           ) : (
                             <div className="flex flex-col items-center w-full">
                               <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
-                                <div className="bg-[#4A131E] text-white font-black text-[9px] uppercase w-[75px] py-[5px] text-center border border-[#4A131E] tracking-normal">
+                                <div className="bg-[#4A131E] text-white font-black text-[8px] uppercase w-[50px] py-[3px] text-center border border-[#4A131E] tracking-normal">
                                   ESCALA 01
                                 </div>
-                                <div className="grid grid-cols-2 gap-0 border border-[#5A5A5A] bg-white w-[75px]">
+                                <div className="grid grid-cols-2 gap-0 border border-[#5A5A5A] bg-white w-[50px]">
                                   {ladder1.map((row, rIndex) =>
                                     row.map((cell, cIndex) => (
                                       <button
@@ -1723,7 +1738,7 @@ Embarque: ${
                                           setLadder1(copy);
                                         }}
                                         className={cn(
-                                          "w-full h-[18px] border-[0.5px] border-[#5A5A5A] font-black text-[10px] flex items-center justify-center transition-all cursor-pointer select-none",
+                                          "w-full h-[12px] border-[0.5px] border-[#5A5A5A] font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
                                           cell === "P"
                                             ? "bg-[#6C061D] text-white"
                                             : "bg-white hover:bg-stone-50",
@@ -1787,7 +1802,7 @@ Embarque: ${
                                           setLadder2(copy);
                                         }}
                                         className={cn(
-                                          "w-full h-[18px] border-[0.5px] border-[#5A5A5A] font-black text-[10px] flex items-center justify-center transition-all cursor-pointer select-none",
+                                          "w-full h-[12px] border-[0.5px] border-[#5A5A5A] font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
                                           cell === "P"
                                             ? "bg-[#6C061D] text-white"
                                             : "bg-white hover:bg-stone-50",
@@ -1899,10 +1914,20 @@ Embarque: ${
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8c6b4e] block">
               Painel Lateral
             </span>
-            <h3 className="text-base font-serif font-black text-[#3e2516] uppercase tracking-tight mt-0.5 flex items-center gap-2">
-              <Sliders size={18} className="text-[#B32025]" /> Formulário de
-              Controle
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-serif font-black text-[#3e2516] uppercase tracking-tight mt-0.5 flex items-center gap-2">
+                <Sliders size={18} className="text-[#B32025]" /> Formulário de
+                Controle
+              </h3>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="p-2 text-[#B32025] hover:bg-[#B32025]/10 rounded-lg transition-colors cursor-pointer"
+                title="Limpar formulário"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Form inputs identical to COLUNA.PNG layout */}
@@ -2380,13 +2405,23 @@ Embarque: ${
           <Screw className="absolute -bottom-1.5 -right-1.5 w-3 h-3" />
 
           {/* Form Header */}
-          <div className="border-b border-[#dac0a3] pb-4 mb-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8c6b4e] block">
-              Painel de Viagem
-            </span>
-            <h3 className="text-base font-serif font-black text-[#3e2516] uppercase tracking-tight mt-0.5 flex items-center gap-2">
-              <Truck size={18} className="text-[#B32025]" /> Veículo & Carga
-            </h3>
+          <div className="border-b border-[#dac0a3] pb-4 mb-5 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8c6b4e] block">
+                Painel de Viagem
+              </span>
+              <h3 className="text-base font-serif font-black text-[#3e2516] uppercase tracking-tight mt-0.5 flex items-center gap-2">
+                <Truck size={18} className="text-[#B32025]" /> Veículo & Carga
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearVeiculo}
+              className="p-2 text-[#B32025] hover:bg-[#B32025]/10 rounded-lg transition-colors cursor-pointer"
+              title="Limpar formulário de Veículo & Carga"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
 
           {/* Form inputs */}

@@ -120,7 +120,47 @@ const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
 };
 
 export default function Checklist() {
+  const [pasteData, setPasteData] = useState('');
   const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
+
+  const handleImportData = async () => {
+    const lines = pasteData.trim().split('\n').slice(1);
+    const updates: Record<string, any> = {};
+
+    for (const line of lines) {
+      const match = line.match(/^(\S+)\s+(.*?)\s+(APROVADO|NEGATIVADO|REPROVADO)\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})/);
+      if (match) {
+        const [_, cavalo, carretas, status, dataTeste, dataVencimento] = match;
+        
+        const existing = items.find(item => item.cavalo === cavalo);
+        if (existing) {
+          const fmtDate = (d: string) => {
+             const [dd, mm, yyyy] = d.split('/');
+             return `${yyyy}-${mm}-${dd}`;
+          };
+          
+          updates[`checklist_veiculos/${existing.id}`] = {
+            ...existing,
+            carretas,
+            statusOverride: status as ChecklistItem['statusOverride'],
+            dataTeste: fmtDate(dataTeste),
+            dataVencimento: fmtDate(dataVencimento)
+          };
+        }
+      }
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      try {
+        await update(ref(rtdb), updates);
+        alert('Checklist atualizado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao atualizar:', error);
+        alert('Erro ao atualizar checklist.');
+      }
+    }
+    setPasteData('');
+  };
 
   const handlePdfAction = (e: React.MouseEvent, base64Url: string, name: string, action: 'view' | 'download') => {
     e.preventDefault();
@@ -685,21 +725,42 @@ export default function Checklist() {
         /* MONITORAMENTO LIST VIEW */
         <>
           {/* Active Filtering Tag row */}
-          <div className="flex flex-wrap items-center gap-2 relative z-10">
-            {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cn(
-                  "px-4.5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold font-serif uppercase tracking-widest transition-all",
-                  filter === f 
-                    ? "bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white shadow-lg border border-[#C41C24]" 
-                    : "bg-[#180d07] text-[#8c7465] hover:text-[#d8c3a5] border border-[#2b180d]"
-                )}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex flex-col gap-4 relative z-10">
+            <div className="flex flex-wrap items-center gap-2">
+              {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    "px-4.5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold font-serif uppercase tracking-widest transition-all",
+                    filter === f 
+                      ? "bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white shadow-lg border border-[#C41C24]" 
+                      : "bg-[#180d07] text-[#8c7465] hover:text-[#d8c3a5] border border-[#2b180d]"
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            
+            {/* Import Data Section */}
+            <div className="bg-[#180d07] p-4 rounded-xl border border-[#2b180d] w-full">
+              <label className="text-[10px] font-black text-[#8c7465] uppercase mb-2 block tracking-wider">Atualizar Checklist via Colagem (Tabela):</label>
+              <div className="flex gap-2">
+                <textarea
+                  value={pasteData}
+                  onChange={(e) => setPasteData(e.target.value)}
+                  placeholder="Cole aqui os dados da planilha..."
+                  className="w-full h-20 bg-[#110703] border border-[#2e180d] rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#B58A4C]"
+                />
+                <button 
+                  onClick={handleImportData}
+                  className="px-6 bg-gradient-to-b from-[#55a360] to-[#3a7542] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:brightness-110 active:scale-95"
+                >
+                  Atualizar
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* MAIN CHECKLIST VINTAGE WOOD CONTAINER CARDS */}
