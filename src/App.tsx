@@ -775,18 +775,14 @@ export default function App() {
               <h3 className="text-2xl font-serif font-black uppercase tracking-tight text-[#2D1A10] mb-2">
                 Acesso Restrito
               </h3>
-              
-              <div className="bg-[#2D1A10] text-[#E8D4B0] px-4 py-2 rounded-xl mb-4 border border-[#bfa27a]/30 font-mono text-xs shadow-inner">
-                Senha de Desbloqueio: <strong className="text-yellow-400">pgr123</strong>
-              </div>
 
               <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Digite a senha acima para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença</strong> no menu principal.
+                Digite a senha de administrador para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença</strong> no menu principal.
               </p>
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                if (passwordInput === 'pgr123' || passwordInput === '1234') {
+                if (passwordInput === '#trescafe27') {
                   const newShowValue = !showPresenceList;
                   setShowPresenceList(newShowValue);
                   localStorage.setItem('show_presence_list', String(newShowValue));
