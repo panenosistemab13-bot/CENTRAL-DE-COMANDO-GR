@@ -27,10 +27,7 @@ import {
   User,
   Briefcase,
   Calendar,
-  Sliders,
-  Lock,
-  Unlock,
-  Key
+  Sliders
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -98,62 +95,6 @@ function Screw({ className }: { className?: string }) {
 export default function App() {
   const principle = useCurrentPrinciple();
   const [activeTab, setActiveTab] = useState<Tab>('menu');
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
-    return localStorage.getItem('pgr_unlocked') === 'true';
-  });
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [pendingTab, setPendingTab] = useState<Tab | null>(null);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
-
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (showPasswordModal) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [showPasswordModal]);
-
-  const isTabProtected = (tabId: string) => {
-    return ['presence', 'controle', 'averbacao', 'sm_creator'].includes(tabId);
-  };
-
-  const handleTabSelect = (tabId: Tab) => {
-    if (isTabProtected(tabId) && !isUnlocked) {
-      setPendingTab(tabId);
-      setShowPasswordModal(true);
-      setPasswordInput('');
-      setPasswordError(false);
-    } else {
-      setActiveTab(tabId);
-    }
-  };
-
-  const handleLockModules = () => {
-    setIsUnlocked(false);
-    localStorage.removeItem('pgr_unlocked');
-  };
-
-  const handleVerifyPassword = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (passwordInput === '#trescafe27') {
-      setIsUnlocked(true);
-      localStorage.setItem('pgr_unlocked', 'true');
-      setShowPasswordModal(false);
-      setPasswordError(false);
-      if (pendingTab) {
-        setActiveTab(pendingTab);
-        setPendingTab(null);
-      }
-    } else {
-      setPasswordError(true);
-      setPasswordInput('');
-      inputRef.current?.focus();
-    }
-  };
-
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
   const [smCreatorView, setSmCreatorView] = useState<'generator' | 'codes'>('generator');
@@ -200,13 +141,13 @@ export default function App() {
       // Global shortcuts (Ctrl + Number)
       if (e.ctrlKey) {
         switch (e.key) {
-          case '1': e.preventDefault(); handleTabSelect('patio'); return;
-          case '2': e.preventDefault(); handleTabSelect('presence'); return;
-          case '3': e.preventDefault(); handleTabSelect('averbacao'); return;
-          case '4': e.preventDefault(); handleTabSelect('sm_creator'); return;
-          case '5': e.preventDefault(); handleTabSelect('rotas'); return;
-          case '6': e.preventDefault(); handleTabSelect('checklist'); return;
-          case '7': e.preventDefault(); handleTabSelect('controle'); return;
+          case '1': e.preventDefault(); setActiveTab('patio'); return;
+          case '2': e.preventDefault(); setActiveTab('presence'); return;
+          case '3': e.preventDefault(); setActiveTab('averbacao'); return;
+          case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
+          case '5': e.preventDefault(); setActiveTab('rotas'); return;
+          case '6': e.preventDefault(); setActiveTab('checklist'); return;
+          case '7': e.preventDefault(); setActiveTab('controle'); return;
         }
       }
 
@@ -245,14 +186,14 @@ export default function App() {
           const currentIdx = tabs.findIndex(t => t.id === activeTab);
           if (currentIdx !== -1) {
             const prevIdx = (currentIdx - 1 + tabs.length) % tabs.length;
-            handleTabSelect(tabs[prevIdx].id as Tab);
+            setActiveTab(tabs[prevIdx].id as Tab);
           }
         } else if (e.key === 'ArrowRight') {
           e.preventDefault();
           const currentIdx = tabs.findIndex(t => t.id === activeTab);
           if (currentIdx !== -1) {
             const nextIdx = (currentIdx + 1) % tabs.length;
-            handleTabSelect(tabs[nextIdx].id as Tab);
+            setActiveTab(tabs[nextIdx].id as Tab);
           }
         }
       }
@@ -260,7 +201,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, isUnlocked]);
+  }, [activeTab]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -282,26 +223,16 @@ export default function App() {
 
   const renderContent = () => {
     if (isMobile && activeTab === 'menu') {
-      return (
-        <MobileMenu 
-          onSelect={(id) => handleTabSelect(id as Tab)} 
-          isUnlocked={isUnlocked}
-          onOpenUnlockModal={() => { setPendingTab(null); setShowPasswordModal(true); setPasswordInput(''); setPasswordError(false); }}
-          onLockModules={handleLockModules}
-        />
-      );
+      return <MobileMenu onSelect={(id) => setActiveTab(id as Tab)} />;
     }
 
     switch (activeTab) {
       case 'menu':
         return (
           <InitialMenu 
-            onSelect={(id) => handleTabSelect(id as Tab)} 
+            onSelect={(id) => { setActiveTab(id as Tab); }} 
             focusedIndex={focusedCardIndex}
             setFocusedIndex={setFocusedCardIndex}
-            isUnlocked={isUnlocked}
-            onOpenUnlockModal={() => { setPendingTab(null); setShowPasswordModal(true); setPasswordInput(''); setPasswordError(false); }}
-            onLockModules={handleLockModules}
           />
         );
       case 'presence':
@@ -469,7 +400,7 @@ export default function App() {
                         key={tab.id}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => handleTabSelect(tab.id as Tab)}
+                        onClick={() => setActiveTab(tab.id as Tab)}
                         className={cn(
                           "relative p-2.5 rounded-xl transition-all duration-300 group",
                           isActive 
@@ -802,102 +733,6 @@ export default function App() {
         )}
 
       </div>
-
-      {/* Password Modal */}
-      <AnimatePresence>
-        {showPasswordModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1c0f0a]/85 backdrop-blur-md p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 15 }}
-              animate={passwordError ? { scale: 1, y: 0, x: [-10, 10, -10, 10, -5, 5, 0] } : { scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              transition={{ type: "spring", duration: 0.4 }}
-              className="w-full max-w-md rounded-[2rem] bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-[0_25px_60px_rgba(0,0,0,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.45)] p-6 sm:p-8 flex flex-col items-center relative ring-4 ring-[#1c1109]/30"
-            >
-              {/* Corner screws */}
-              <Screw className="absolute top-3 left-3" />
-              <Screw className="absolute top-3 right-3" />
-              <Screw className="absolute bottom-3 left-3" />
-              <Screw className="absolute bottom-3 right-3" />
-
-              {/* Padlock Icon */}
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-b from-[#ca1a20] to-[#800609] border border-[#ff3e47]/30 text-white flex items-center justify-center shadow-lg shadow-black/40 mb-5 relative overflow-hidden">
-                <Lock size={32} className="stroke-[2]" />
-                <div className="absolute inset-0 bg-white/5 pointer-events-none" />
-              </div>
-
-              <h3 className="text-2xl font-serif font-black text-[#2e190e] tracking-tight uppercase text-center mb-1">
-                Área Restrita
-              </h3>
-              
-              <p className="text-center text-[#4e2f1c] text-xs font-bold max-w-[260px] leading-relaxed mb-6">
-                Este módulo é protegido por senha de segurança de entrega de iscas.
-              </p>
-
-              <form onSubmit={handleVerifyPassword} className="w-full flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5 w-full">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3e29] pl-1">
-                    Senha de Segurança
-                  </label>
-                  <div className="relative flex items-center w-full">
-                    <Key size={16} className="absolute left-4 text-[#5c3e29]/70" />
-                    <input
-                      ref={inputRef}
-                      type="password"
-                      placeholder="Insira a senha"
-                      value={passwordInput}
-                      onChange={(e) => {
-                        setPasswordInput(e.target.value);
-                        setPasswordError(false);
-                      }}
-                      className={cn(
-                        "w-full h-12 pl-12 pr-4 bg-gradient-to-b from-[#fcfbf9] to-[#f5f1ea] border-2 rounded-xl text-sm font-bold text-[#2d1a10] placeholder-[#5c3e29]/45 outline-none transition-all",
-                        passwordError 
-                          ? "border-[#B32025] focus:border-[#B32025] shadow-[0_0_8px_rgba(179,32,37,0.3)]" 
-                          : "border-[#4a2e1b]/40 focus:border-[#ca8a04] shadow-sm"
-                      )}
-                    />
-                  </div>
-                  {passwordError && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-[10px] text-[#B32025] font-black uppercase tracking-wider pl-1 mt-1 flex items-center gap-1"
-                    >
-                      ⚠️ Senha incorreta. Tente novamente!
-                    </motion.p>
-                  )}
-                </div>
-
-                <div className="flex gap-3 w-full mt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPasswordModal(false);
-                      setPendingTab(null);
-                      setPasswordError(false);
-                    }}
-                    className="flex-1 h-11 rounded-xl border-2 border-[#5c3e29]/60 text-[#5c3e29] hover:bg-[#5c3e29]/10 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 h-11 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e53e3e] hover:to-[#B32025] border border-[#ff3e47]/20 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-red-950/20 active:scale-98 transition-all cursor-pointer"
-                  >
-                    Desbloquear
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

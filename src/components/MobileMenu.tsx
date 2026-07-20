@@ -7,11 +7,7 @@ import {
   CalendarDays, 
   Route, 
   ClipboardCheck,
-  Heart,
-  Sliders,
-  Lock,
-  Unlock,
-  Key
+  Heart
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -72,30 +68,14 @@ const menuItems: MenuItem[] = [
     icon: ClipboardCheck,
     styleClass: "leather-button bg-gradient-to-r from-[#4d301b] to-[#2d1a0e] border-[1.5px] border-[#5c3e29] shadow-[inset_0_2px_3px_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.7)] text-[#dac2ad] transition-all duration-300 relative",
     iconStyle: "border-[#dac2ad]/30 text-[#dac2ad]"
-  },
-  { 
-    id: 'controle', 
-    subtitle: 'GERAIS', 
-    title: 'CONTROLE', 
-    icon: Sliders,
-    styleClass: "wood-button bg-gradient-to-r from-[#211611] via-[#4d3024] to-[#211611] border-y border-[#6e4433] shadow-[inset_0_1px_3px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.6)] text-[#e8cbb0] transition-all duration-300",
-    iconStyle: "border-[#e8cbb0]/35 text-[#e8cbb0]"
   }
 ];
 
 interface MobileMenuProps {
   onSelect: (id: string) => void;
-  isUnlocked: boolean;
-  onOpenUnlockModal: () => void;
-  onLockModules: () => void;
 }
 
-export default function MobileMenu({ 
-  onSelect,
-  isUnlocked,
-  onOpenUnlockModal,
-  onLockModules
-}: MobileMenuProps) {
+export default function MobileMenu({ onSelect }: MobileMenuProps) {
   return (
     <div className="w-full min-h-screen bg-transparent relative flex flex-col items-center justify-between overflow-hidden select-none pb-8">
       
@@ -139,28 +119,9 @@ export default function MobileMenu({
           <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
           <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
         </div>
-        <div className="flex items-center justify-center gap-3">
-          <h2 className="text-[34px] sm:text-4xl font-extrabold text-[#F5EFE6] tracking-[0.22em] uppercase leading-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)] pr-[-0.22em]">
-            MÓDULOS
-          </h2>
-          <button
-            onClick={() => {
-              if (isUnlocked) {
-                onLockModules();
-              } else {
-                onOpenUnlockModal();
-              }
-            }}
-            className="p-1.5 rounded-full bg-white/5 border border-white/10 text-[#C7A26A] hover:text-white transition-all cursor-pointer shadow-lg relative z-20"
-            title={isUnlocked ? "Bloquear Módulos Restritos" : "Área Restrita - Inserir Senha"}
-          >
-            {isUnlocked ? (
-              <Unlock size={14} className="text-green-400" />
-            ) : (
-              <Lock size={14} className="text-amber-500 animate-pulse" />
-            )}
-          </button>
-        </div>
+        <h2 className="text-[34px] sm:text-4xl font-extrabold text-[#F5EFE6] tracking-[0.22em] uppercase leading-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)] pr-[-0.22em]">
+          MÓDULOS
+        </h2>
         <p className="text-[#E8DCCB] text-[9.5px] font-black uppercase tracking-[0.18em] mt-2.5 opacity-90 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.85)]">
           SELECIONE UMA CATEGORIA PARA INICIAR
         </p>
@@ -236,12 +197,9 @@ export default function MobileMenu({
                 {/* TEXT CONTAINER (Subtitle & Module Title) */}
                 <div className="flex flex-col items-start text-left">
                   <span className={cn(
-                    "font-mono text-[7px] tracking-[0.25em] font-black uppercase mb-0.5 opacity-90 flex items-center gap-1",
+                    "font-mono text-[7px] tracking-[0.25em] font-black uppercase mb-0.5 opacity-90",
                     item.id === 'averbacao' ? "text-[#B32025]" : ""
                   )}>
-                    {['presence', 'controle', 'averbacao', 'sm_creator'].includes(item.id) && !isUnlocked && (
-                      <Lock size={8} className="text-amber-500 shrink-0 animate-pulse" />
-                    )}
                     {item.subtitle}
                   </span>
                   <span className="font-serif text-[15px] font-extrabold uppercase tracking-wide leading-none filter drop-shadow-[0_0.8px_0.8px_rgba(255,255,255,0.1)]">

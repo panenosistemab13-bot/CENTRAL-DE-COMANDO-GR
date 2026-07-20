@@ -9,10 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
-  Sliders,
-  Lock,
-  Unlock,
-  Key
+  Sliders
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -41,9 +38,6 @@ interface InitialMenuProps {
   onSelect: (id: string) => void;
   focusedIndex: number;
   setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
-  isUnlocked: boolean;
-  onOpenUnlockModal: () => void;
-  onLockModules: () => void;
 }
 
 // Slotted Vintage Flat-head Screw Component for authentic industrial look
@@ -375,14 +369,7 @@ function ModuleGraphic({ id }: { id: string }) {
   }
 }
 
-export default function InitialMenu({ 
-  onSelect, 
-  focusedIndex, 
-  setFocusedIndex,
-  isUnlocked,
-  onOpenUnlockModal,
-  onLockModules
-}: InitialMenuProps) {
+export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
   const paginate = useCallback((newDirection: number) => {
@@ -444,24 +431,6 @@ export default function InitialMenu({
               </motion.h1>
             </AnimatePresence>
           </div>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isUnlocked) {
-                onLockModules();
-              } else {
-                onOpenUnlockModal();
-              }
-            }}
-            className="p-1.5 rounded-full hover:bg-white/10 text-[#C7A26A] hover:text-white transition-all cursor-pointer ml-1 shadow-inner relative z-50 self-center"
-            title={isUnlocked ? "Bloquear Módulos Restritos" : "Área Restrita - Clique para Desbloquear"}
-          >
-            {isUnlocked ? (
-              <Unlock size={14} className="text-green-400" />
-            ) : (
-              <Lock size={14} className="text-amber-500 animate-pulse" />
-            )}
-          </button>
         </div>
 
         {/* TOP RIGHT BRAND PLATE: "Feito com paixão. Feito para entregar." */}
@@ -547,10 +516,7 @@ export default function InitialMenu({
               <div className="flex flex-col items-center text-center w-full mt-0.5">
                 
                 {/* Dynamic Red Category Badge Ribbon */}
-                <span className="bg-gradient-to-b from-[#ca1a20] to-[#800609] border border-[#ff3e47]/30 text-white text-[9px] font-black px-4 py-1 uppercase tracking-widest rounded-full shadow-[0_3px_8px_rgba(179,32,37,0.4)] transform translate-y-[-2px] select-none scale-100 flex items-center gap-1.5">
-                  {['presence', 'controle', 'averbacao', 'sm_creator'].includes(activeItem.id) && !isUnlocked && (
-                    <Lock size={10} className="text-amber-400 animate-pulse shrink-0" />
-                  )}
+                <span className="bg-gradient-to-b from-[#ca1a20] to-[#800609] border border-[#ff3e47]/30 text-white text-[9px] font-black px-4 py-1 uppercase tracking-widest rounded-full shadow-[0_3px_8px_rgba(179,32,37,0.4)] transform translate-y-[-2px] select-none scale-100">
                   {activeItem.buttonLabel}
                 </span>
  
