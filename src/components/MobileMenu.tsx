@@ -7,7 +7,9 @@ import {
   CalendarDays, 
   Route, 
   ClipboardCheck,
-  Heart
+  Heart,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -73,9 +75,12 @@ const menuItems: MenuItem[] = [
 
 interface MobileMenuProps {
   onSelect: (id: string) => void;
+  showPresenceList: boolean;
+  onUnlockPresenceList: () => void;
 }
 
-export default function MobileMenu({ onSelect }: MobileMenuProps) {
+export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenceList }: MobileMenuProps) {
+  const visibleMenuItems = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
   return (
     <div className="w-full min-h-screen bg-transparent relative flex flex-col items-center justify-between overflow-hidden select-none pb-8">
       
@@ -114,10 +119,19 @@ export default function MobileMenu({ onSelect }: MobileMenuProps) {
 
       {/* HEADER: Bold, rustic, premium branding focused on Café 3 Corações aesthetic */}
       <div className="w-full text-center px-6 relative z-10 my-4">
-        <div className="flex items-center justify-center gap-1.5 mb-1.5 opacity-90 animate-fade-in">
+        <div className="flex items-center justify-center gap-1.5 mb-1.5 opacity-90 animate-fade-in relative max-w-[12rem] mx-auto">
           <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
           <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
           <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+          {/* Secret unlock button */}
+          <button
+            type="button"
+            onClick={onUnlockPresenceList}
+            className="absolute -right-10 top-1/2 -translate-y-1/2 p-1 text-[#cca07d]/40 active:text-white transition-colors cursor-pointer"
+            title="Acesso Secreto"
+          >
+            {showPresenceList ? <Unlock size={11} className="text-green-500" /> : <Lock size={11} />}
+          </button>
         </div>
         <h2 className="text-[34px] sm:text-4xl font-extrabold text-[#F5EFE6] tracking-[0.22em] uppercase leading-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)] pr-[-0.22em]">
           MÓDULOS
@@ -130,7 +144,7 @@ export default function MobileMenu({ onSelect }: MobileMenuProps) {
 
       {/* CENTER STACK: 6 uniquely textured realistic rectangular buttons */}
       <div className="w-full max-w-[390px] px-5 flex flex-col gap-[14px] relative z-10 my-4 flex-1 justify-center">
-        {menuItems.map((item, index) => {
+        {visibleMenuItems.map((item, index) => {
           const IconComponent = item.icon;
           return (
             <motion.button

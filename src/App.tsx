@@ -27,7 +27,9 @@ import {
   User,
   Briefcase,
   Calendar,
-  Sliders
+  Sliders,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -94,6 +96,15 @@ function Screw({ className }: { className?: string }) {
 
 export default function App() {
   const principle = useCurrentPrinciple();
+  const [showPresenceList, setShowPresenceList] = useState<boolean>(() => {
+    return localStorage.getItem('show_presence_list') === 'true';
+  });
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<boolean>(false);
+
+  const visibleTabs = tabs.filter(tab => tab.id !== 'presence' || showPresenceList);
+
   const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
@@ -142,7 +153,7 @@ export default function App() {
       if (e.ctrlKey) {
         switch (e.key) {
           case '1': e.preventDefault(); setActiveTab('patio'); return;
-          case '2': e.preventDefault(); setActiveTab('presence'); return;
+          case '2': e.preventDefault(); if (showPresenceList) setActiveTab('presence'); return;
           case '3': e.preventDefault(); setActiveTab('averbacao'); return;
           case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
           case '5': e.preventDefault(); setActiveTab('rotas'); return;
@@ -183,17 +194,17 @@ export default function App() {
       if (activeTab !== 'menu') {
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          const currentIdx = tabs.findIndex(t => t.id === activeTab);
+          const currentIdx = visibleTabs.findIndex(t => t.id === activeTab);
           if (currentIdx !== -1) {
-            const prevIdx = (currentIdx - 1 + tabs.length) % tabs.length;
-            setActiveTab(tabs[prevIdx].id as Tab);
+            const prevIdx = (currentIdx - 1 + visibleTabs.length) % visibleTabs.length;
+            setActiveTab(visibleTabs[prevIdx].id as Tab);
           }
         } else if (e.key === 'ArrowRight') {
           e.preventDefault();
-          const currentIdx = tabs.findIndex(t => t.id === activeTab);
+          const currentIdx = visibleTabs.findIndex(t => t.id === activeTab);
           if (currentIdx !== -1) {
-            const nextIdx = (currentIdx + 1) % tabs.length;
-            setActiveTab(tabs[nextIdx].id as Tab);
+            const nextIdx = (currentIdx + 1) % visibleTabs.length;
+            setActiveTab(visibleTabs[nextIdx].id as Tab);
           }
         }
       }
@@ -201,7 +212,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab]);
+  }, [activeTab, showPresenceList, visibleTabs]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -219,11 +230,17 @@ export default function App() {
     return `${day} de ${month}. de ${year} • ${time}`;
   };
 
-  const activeTabInfo = tabs.find(t => t.id === activeTab);
+  const activeTabInfo = visibleTabs.find(t => t.id === activeTab);
 
   const renderContent = () => {
     if (isMobile && activeTab === 'menu') {
-      return <MobileMenu onSelect={(id) => setActiveTab(id as Tab)} />;
+      return (
+        <MobileMenu 
+          onSelect={(id) => setActiveTab(id as Tab)} 
+          showPresenceList={showPresenceList}
+          onUnlockPresenceList={() => setShowPasswordModal(true)}
+        />
+      );
     }
 
     switch (activeTab) {
@@ -233,6 +250,8 @@ export default function App() {
             onSelect={(id) => { setActiveTab(id as Tab); }} 
             focusedIndex={focusedCardIndex}
             setFocusedIndex={setFocusedCardIndex}
+            showPresenceList={showPresenceList}
+            onUnlockPresenceList={() => setShowPasswordModal(true)}
           />
         );
       case 'presence':
@@ -393,7 +412,7 @@ export default function App() {
                   
                   <div className="w-[1px] h-6 bg-[#C7A26A]/20 mx-1" />
 
-                  {tabs.filter(t => t.id !== 'menu').map((tab) => {
+                  {visibleTabs.filter(t => t.id !== 'menu').map((tab) => {
                     const isActive = activeTab === tab.id;
                     return (
                       <motion.button
@@ -733,6 +752,98 @@ export default function App() {
         )}
 
       </div>
+
+      {/* Global Password Modal Overlay */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[999] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-sm bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-2xl rounded-3xl p-6 relative ring-4 ring-[#1c1109]/30 text-[#2D1A10]"
+          >
+            {/* Corner rivets */}
+            <div className="absolute top-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute top-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute bottom-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute bottom-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+
+            <div className="flex flex-col items-center text-center mt-2">
+              <div className="w-14 h-14 rounded-full bg-[#311f14] flex items-center justify-center mb-4 border-2 border-[#bfa27a] text-[#fdefd1] shadow-lg">
+                <Lock size={24} className="stroke-[2.5]" />
+              </div>
+              
+              <h3 className="text-2xl font-serif font-black uppercase tracking-tight text-[#2D1A10] mb-2">
+                Acesso Restrito
+              </h3>
+              
+              <div className="bg-[#2D1A10] text-[#E8D4B0] px-4 py-2 rounded-xl mb-4 border border-[#bfa27a]/30 font-mono text-xs shadow-inner">
+                Senha de Desbloqueio: <strong className="text-yellow-400">pgr123</strong>
+              </div>
+
+              <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
+                Digite a senha acima para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença</strong> no menu principal.
+              </p>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (passwordInput === 'pgr123' || passwordInput === '1234') {
+                  const newShowValue = !showPresenceList;
+                  setShowPresenceList(newShowValue);
+                  localStorage.setItem('show_presence_list', String(newShowValue));
+                  setShowPasswordModal(false);
+                  setPasswordInput('');
+                  setPasswordError(false);
+                } else {
+                  setPasswordError(true);
+                }
+              }} className="w-full">
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  placeholder="Digite a senha..."
+                  className={cn(
+                    "w-full bg-[#1c1109] text-[#fdefd1] placeholder-[#8c6039]/60 border-2 rounded-xl px-4 py-3 text-center font-mono tracking-widest focus:outline-none transition-colors",
+                    passwordError 
+                      ? "border-[#B32025] text-red-400" 
+                      : "border-[#8c6039] focus:border-[#B32025]"
+                  )}
+                  autoFocus
+                />
+                
+                {passwordError && (
+                  <p className="text-red-700 text-[10px] font-black uppercase tracking-wider mt-1.5 animate-pulse">
+                    ⚠️ Senha Incorreta! Tente novamente.
+                  </p>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setPasswordInput('');
+                      setPasswordError(false);
+                    }}
+                    className="flex-1 py-3 px-4 rounded-xl bg-black/10 hover:bg-black/20 text-[#2D1A10] font-black uppercase text-xs tracking-wider transition-colors border border-[#311f14]/20 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,7 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
-  Sliders
+  Sliders,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -38,6 +40,8 @@ interface InitialMenuProps {
   onSelect: (id: string) => void;
   focusedIndex: number;
   setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
+  showPresenceList: boolean;
+  onUnlockPresenceList: () => void;
 }
 
 // Slotted Vintage Flat-head Screw Component for authentic industrial look
@@ -369,32 +373,39 @@ function ModuleGraphic({ id }: { id: string }) {
   }
 }
 
-export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex }: InitialMenuProps) {
+export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, onUnlockPresenceList }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
+
+  const filteredMenuItems = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
+  const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);
+  const activeItem = filteredMenuItems[safeFocusedIndex] || filteredMenuItems[0];
 
   const paginate = useCallback((newDirection: number) => {
     setDirection(newDirection);
     setFocusedIndex((prev) => {
+      const items = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
       let next = prev + newDirection;
-      if (next < 0) next = menuItems.length - 1;
-      if (next >= menuItems.length) next = 0;
+      if (next < 0) next = items.length - 1;
+      if (next >= items.length) next = 0;
       return next;
     });
-  }, [setFocusedIndex]);
+  }, [setFocusedIndex, showPresenceList]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
 
+      const items = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
       if (e.key === 'ArrowRight') paginate(1);
       if (e.key === 'ArrowLeft') paginate(-1);
-      if (e.key === 'Enter') onSelect(menuItems[focusedIndex].id);
+      if (e.key === 'Enter') {
+        const currentItem = items[focusedIndex] || items[0];
+        if (currentItem) onSelect(currentItem.id);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, paginate, onSelect]);
-
-  const activeItem = menuItems[focusedIndex];
+  }, [focusedIndex, paginate, onSelect, showPresenceList]);
 
   return (
     <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">
@@ -439,7 +450,17 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex }:
         >
           {/* Metal plate screws */}
           <Screw className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5" />
-          <Screw className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5" />
+          
+          {/* Top Right Secret Button Screw */}
+          <button 
+            type="button"
+            onClick={onUnlockPresenceList} 
+            className="absolute -top-1.5 -right-1.5 focus:outline-none cursor-pointer transition-transform active:scale-95"
+            title="Acesso Secreto"
+          >
+            <Screw className="w-2.5 h-2.5" />
+          </button>
+
           <Screw className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5" />
           <Screw className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5" />
 
@@ -459,15 +480,24 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex }:
               <div className="w-7 h-[2px] bg-[#e6cfb5] rounded-full mt-[1px]" />
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col pr-4">
               <p className="font-serif italic text-[11px] tracking-wide text-[#fdefd1] font-semibold leading-none">
                 Feito com paixão.
               </p>
               <p className="font-serif italic text-[10px] text-[#cca07d] font-semibold tracking-wide leading-none mt-1">
                 Feito para entregar.
               </p>
-              <div className="flex justify-center gap-1 mt-1 text-red-500 text-[7px] animate-pulse">
+              <div className="flex justify-center gap-1 mt-1 text-red-500 text-[7px] animate-pulse relative">
                 <span>♥</span><span>♥</span><span>♥</span>
+                {/* Secret padlock toggle */}
+                <button
+                  type="button"
+                  onClick={onUnlockPresenceList}
+                  className="absolute -right-5 top-1/2 -translate-y-1/2 text-[#bfa27a]/60 hover:text-[#fdefd1] transition-colors cursor-pointer"
+                  title="Acesso Administrador"
+                >
+                  {showPresenceList ? <Unlock size={8} className="text-green-500" /> : <Lock size={8} />}
+                </button>
               </div>
             </div>
           </div>
