@@ -782,7 +782,7 @@ export default function App() {
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                if (passwordInput === '#trescafe27') {
+                if (passwordInput === '#trescafe2027') {
                   const newShowValue = !showPresenceList;
                   setShowPresenceList(newShowValue);
                   localStorage.setItem('show_presence_list', String(newShowValue));
