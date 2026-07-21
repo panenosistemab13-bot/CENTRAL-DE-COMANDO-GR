@@ -312,9 +312,6 @@ export default function Controle({ onBack }: ControleProps) {
 
   const allTransportadoras = [...TRANSPORTADORAS, ...customTransportadoras];
 
-  const isPaletizado1 = sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
-  const isPaletizado2 = sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
-
   // Sync transportadora and motorista states when either updates, keeping both sections intuitive
   const handleSidebarTranspChange = (val: string) => {
     setSidebarTransportadora(val);
@@ -742,6 +739,8 @@ export default function Controle({ onBack }: ControleProps) {
 
   // Function to build and copy HTML template for Email pasting
   const handleCopyToEmail = async () => {
+    const isPaletizado1 = sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
+    const isPaletizado2 = sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
 
     // Helper to render ladder visual grid inside email HTML matching the provided style
     const renderLadderHtml = (
@@ -753,9 +752,9 @@ export default function Controle({ onBack }: ControleProps) {
       return `
         <td style="vertical-align: top; width: 50%; text-align: center; ${extraStyle}">
           
-          <table cellpadding="0" cellspacing="0" style="width: 70px; margin: 0 auto; border-collapse: collapse;">
+          <table cellpadding="0" cellspacing="0" style="width: 75px; margin: 0 auto; border-collapse: collapse;">
             <tr>
-              <td colspan="2" style="background-color: #1E3A8A; color: #FFFFFF; font-size: 8px; font-weight: 700; padding: 4px 0; border: 1px solid #1E3A8A; text-transform: uppercase; text-align: center; border-radius: 3px 3px 0 0;">${label}</td>
+              <td colspan="2" style="background-color: #4A131E; color: #FFFFFF; font-size: 9px; font-weight: bold; padding: 5px 0; border: 1px solid #4A131E; text-transform: uppercase; text-align: center;">${label}</td>
             </tr>
             ${grid
               .map((row) => {
@@ -763,9 +762,9 @@ export default function Controle({ onBack }: ControleProps) {
                 <tr>
                   ${row
                     .map((cell) => {
-                      const bg = cell === "P" ? "#2563EB" : "#FFFFFF";
-                      const color = cell === "P" ? "#FFFFFF" : "#94A3B8";
-                      return `<td style="border: 1px solid #E2E8F0; background-color: ${bg}; color: ${color}; font-size: 9px; font-weight: bold; width: 50%; height: 14px; text-align: center; vertical-align: middle;">${cell === "P" ? "P" : ""}</td>`;
+                      const bg = cell === "P" ? "#6C061D" : "#FFFFFF";
+                      const color = cell === "P" ? "#FFFFFF" : "#000000";
+                      return `<td style="border: 1px solid #5A5A5A; background-color: ${bg}; color: ${color}; font-size: 10px; font-weight: bold; width: 50%; height: 18px; text-align: center; vertical-align: middle;">${cell === "P" ? "P" : ""}</td>`;
                     })
                     .join("")}
                 </tr>`;
@@ -773,131 +772,81 @@ export default function Controle({ onBack }: ControleProps) {
               .join("")}
           </table>
           
-          <p style="font-size: 10px; font-weight: 700; color: #2563EB; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px;">${plate}</p>
+          <p style="font-size: 11px; font-weight: bold; color: #521521; margin-top: 15px; text-transform: uppercase;">${plate}</p>
         </td>
       `;
     };
 
     const htmlEmail = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #FFFFFF; padding: 35px; color: #334155; max-width: 800px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+      <div style="font-family: Arial, sans-serif; background-color: #FFFFFF; padding: 20px; color: #3e2516; max-width: 850px; border-radius: 4px;">
         
-        <!-- Top bar/header branding -->
-        <table cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #EFF6FF; margin-bottom: 22px;">
-          <tr>
-            <td style="font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 1.5px; padding-bottom: 12px;">• PRÉ-ALERTA DE SEGURANÇA •</td>
-            <td style="font-size: 10px; font-weight: 500; color: #64748B; text-align: right; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 12px;">GERENCIAMENTO DE RISCO</td>
-          </tr>
-        </table>
-
         <!-- Saudação -->
-        <p style="font-size: 14px; font-weight: 500; color: #1E293B; margin-top: 0; margin-bottom: 16px; line-height: 1.5;">${saudacao || "Boa tarde,"}</p>
+        <p style="font-family: 'Georgia', serif; font-weight: 900; font-style: italic; color: #3e2516; font-size: 14px; margin-bottom: 15px; margin-top: 0; padding: 0;">${saudacao || "Boa tarde,"}</p>
         
-        <!-- Alerta Azul Banner (Delicado e Sofisticado) -->
-        <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-left: 4px solid #2563EB; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px;">
-          <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-            <tr>
-              <td style="vertical-align: middle; width: 18px; font-size: 14px;">🔔</td>
-              <td style="vertical-align: middle; padding-left: 8px; font-size: 12px; font-weight: 600; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.5px;">
-                ${alertaResgate || "FAVOR SE ATENTAR AO RESGATE!"}
-              </td>
-            </tr>
-          </table>
+        <!-- Alerta Vinho Banner -->
+        <div style="background-color: #7A0C22; color: #FFFFFF; font-weight: 900; padding: 10px 15px; display: inline-block; margin-bottom: 20px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+          ${alertaResgate || "FAVOR SE ATENTAR AO RESGATE!"}
         </div>
         
-        <p style="font-weight: 600; font-size: 13px; margin-bottom: 14px; color: #1E293B;">${infoAbaixo || "Atentar às informações abaixo:"}</p>
+        <p style="font-weight: 900; font-size: 13px; margin-bottom: 14px; color: #3e2516;">${infoAbaixo || "Atentar às informações abaixo:"}</p>
         
-        <!-- Caixa de Observações (Delicate Blue Border Left) -->
-        <div style="border: 1px solid #E2E8F0; border-left: 3px solid #3B82F6; background-color: #F8FAFC; padding: 14px; margin-bottom: 24px; border-radius: 0 6px 6px 0;">
-          <div style="font-size: 12px; color: #475569; line-height: 1.6; font-weight: 500;">
-            <div style="margin-bottom: 6px;"><span style="color: #2563EB; font-weight: bold; margin-right: 6px;">&bull;</span> <strong>Rota:</strong> ${rota1}</div>
-            <div><span style="color: #2563EB; font-weight: bold; margin-right: 6px;">&bull;</span> <strong>Instrução:</strong> ${instrucao1}</div>
+        <!-- Caixa de Observações (Double Border effect) -->
+        <div style="border: 1px solid #c5ab92; background-color: #EFE3CD; padding: 3px; margin-bottom: 24px; max-width: 580px;">
+          <div style="border: 1px solid #c5ab92; padding: 12px; font-size: 12px; font-weight: bold; color: #3e2516; line-height: 1.6; background-color: #EFE3CD;">
+            <div style="margin-bottom: 8px;">
+              <span style="color: #c5ab92; margin-right: 8px;">•</span> ${rota1}
+            </div>
+            <div>
+              <span style="color: #c5ab92; margin-right: 8px;">•</span> ${instrucao1}
+            </div>
           </div>
         </div>
 
-        <!-- METADATA SUMMARY CARD (NF & Transportadora) -->
-        <table cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-bottom: 16px; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; background-color: #F8FAFC;">
-          <tr>
-            <td style="width: 15%; padding: 10px 14px; font-size: 10px; font-weight: bold; color: #475569; border-right: 1px solid #E2E8F0; text-transform: uppercase; letter-spacing: 0.5px;">NÚMERO DA NF</td>
-            <td style="width: 35%; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #1E3A8A; border-right: 1px solid #E2E8F0; background-color: #FFFFFF;">
-              ${nfInicio.replace(/-/g, '') || '&nbsp;'}
-              ${numCarretas === 2 && isca2 !== "SEM ISCA" && nfFim ? ` <span style="color: #94A3B8; font-weight: 400; margin: 0 4px;">a</span> ${nfFim.replace(/-/g, '')}` : ''}
-            </td>
-            <td style="width: 15%; padding: 10px 14px; font-size: 10px; font-weight: bold; color: #475569; border-right: 1px solid #E2E8F0; text-transform: uppercase; letter-spacing: 0.5px;">TRANSPORTADORA</td>
-            <td style="width: 35%; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #1E3A8A; background-color: #FFFFFF; text-transform: uppercase;">
-              ${transportadora || '&nbsp;'}
-            </td>
-          </tr>
-        </table>
-
-        <!-- TABELA 1: DETALHES DO TRANSPORTE -->
-        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-family: -apple-system, sans-serif; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <!-- TABELA 1: PRÉ-ALERTA DE ISCA EMBARCADA -->
+        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-size: 12px; text-align: center; font-weight: bold; color: #000000; margin-bottom: 25px; border: 1px solid #c5ab92;">
           <thead>
-            <tr style="background-color: #1E3A8A; color: #FFFFFF; text-transform: uppercase; font-size: 9px; font-weight: 700; letter-spacing: 0.5px;">
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 20%; text-align: left;">MOTORISTA</th>
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 10%; text-align: center;">CAVALO</th>
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 10%; text-align: center;">CARRETA</th>
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 11%; text-align: center;">N° ISCA</th>
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 17%; text-align: left;">PRODUTO EMBARCADO</th>
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 16%; text-align: center;">CÓDIGO U.M.A.</th>
-              <th style="border-right: 1px solid #2563EB; padding: 8px; width: 11%; text-align: center;">DESTINO</th>
-              <th style="padding: 8px; width: 11%; text-align: center;">DATA PARTIDA</th>
+            <tr style="border: 1px solid #c5ab92;">
+              <th colspan="2" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; border-right: 1px solid #c5ab92; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 25%;">NÚMERO DA NF:</th>
+              <th colspan="1" style="border-right: 1px solid #c5ab92; padding: 6px; width: 15%; background-color: #EFE3CD; text-align: center; font-family: sans-serif; font-size: 11px; line-height: 1.2;">
+                <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
+                ${numCarretas === 2 && isca2 !== "SEM ISCA" ? `
+                  <div style="font-weight: 900; color: #000000; text-align: center; width: 100%;">${nfFim.replace(/-/g, '') || nfInicio.replace(/-/g, '') || '&nbsp;'}</div>
+                ` : ''}
+              </th>
+              <th colspan="1" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; border-right: 1px solid #c5ab92; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 18%;">TRANSPORTADORA:</th>
+              <th colspan="2" style="border-right: 1px solid #c5ab92; padding: 6px; width: 25%; background-color: #EFE3CD; text-transform: uppercase; font-weight: 900;">${transportadora}</th>
+              <th colspan="2" style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; width: 17%;"></th>
+            </tr>
+            <tr style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; text-transform: uppercase; font-size: 10px; font-weight: 900;">
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 22%;">MOTORISTA</th>
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 11%;">CAVALO</th>
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 11%;">CARRETAS</th>
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 13%;">N° ISCA</th>
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 14%;">PRODUTO EMBARCADO</th>
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 15%;">CÓDIGO U.M.A.</th>
+              <th style="border-right: 1px solid #c5ab92; border-bottom: 1px solid #c5ab92; padding: 8px; width: 11%;">DESTINO</th>
+              <th style="border-bottom: 1px solid #c5ab92; padding: 8px; width: 11%;">DATA PARTIDA</th>
             </tr>
           </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid #E2E8F0; font-size: 11px;">
-              <!-- Motorista - Span rowspan -->
-              <td rowspan="${numCarretas}" style="border-right: 1px solid #E2E8F0; padding: 8px; font-weight: 600; text-transform: uppercase; color: #334155; text-align: left;">
-                ${motorista}
-              </td>
-              <!-- Cavalo - Span rowspan -->
-              <td rowspan="${numCarretas}" style="border-right: 1px solid #E2E8F0; padding: 8px; font-weight: 700; text-transform: uppercase; color: #2563EB; background-color: #EFF6FF; text-align: center; font-size: 11px;">
-                ${cavalo.replace(/-/g, '')}
-              </td>
-              <!-- Carreta Row 1 -->
-              <td style="border-right: 1px solid #E2E8F0; border-bottom: ${numCarretas === 2 ? '1px solid #E2E8F0' : 'none'}; padding: 8px; text-transform: uppercase; font-weight: 500; color: #475569; text-align: center;">
-                ${carreta1}
-              </td>
-              <!-- N Iscas Row 1 -->
-              <td style="border-right: 1px solid #E2E8F0; border-bottom: ${numCarretas === 2 ? '1px solid #E2E8F0' : 'none'}; padding: 8px; font-weight: 700; color: #1E40AF; background-color: #EFF6FF; text-align: center;">
-                ${isca1}
-              </td>
-              <!-- Produto Row 1 -->
-              <td style="border-right: 1px solid #E2E8F0; border-bottom: ${numCarretas === 2 ? '1px solid #E2E8F0' : 'none'}; padding: 8px; font-weight: 500; color: #475569; text-align: left;">
-                ${produto1}
-              </td>
-              <!-- UMA Row 1 -->
-              <td style="border-right: 1px solid #E2E8F0; border-bottom: ${numCarretas === 2 ? '1px solid #E2E8F0' : 'none'}; padding: 8px; font-weight: 500; color: #475569; text-align: center; font-size: 10px;">
-                ${uma1}
-              </td>
-              <!-- Destino - Span rowspan -->
-              <td rowspan="${numCarretas}" style="border-right: 1px solid #E2E8F0; padding: 8px; font-weight: 600; text-transform: uppercase; color: #334155; text-align: center;">
-                ${destino}
-              </td>
-              <!-- Data Enviada - Span rowspan -->
-              <td rowspan="${numCarretas}" style="padding: 8px; font-weight: 600; color: #334155; text-align: center;">
-                ${dataEnviada}
-              </td>
+            <tr style="border-bottom: 1px solid #c5ab92; text-align: center; background-color: #EFE3CD;">
+              <td rowspan="${numCarretas}" style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; text-transform: uppercase; font-size: 11px;">${motorista}</td>
+              <td rowspan="${numCarretas}" style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: 900; text-transform: uppercase; font-size: 13px; text-decoration: underline;">${cavalo.replace(/-/g, '')}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; text-transform: uppercase; font-weight: bold;">${carreta1}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px; color: #FF0000;">${isca1}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px;">${produto1}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px;">${uma1}</td>
+              <td rowspan="${numCarretas}" style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; text-transform: uppercase; font-size: 11px;">${destino}</td>
+              <td rowspan="${numCarretas}" style="padding: 10px; font-weight: bold; font-size: 12px;">${dataEnviada}</td>
             </tr>
             ${
               numCarretas === 2
                 ? `
-            <tr style="font-size: 11px;">
-              <!-- Carreta Row 2 -->
-              <td style="border-right: 1px solid #E2E8F0; padding: 8px; text-transform: uppercase; font-weight: 500; color: #475569; text-align: center;">
-                ${carreta2}
-              </td>
-              <!-- Isca Row 2 -->
-              <td style="border-right: 1px solid #E2E8F0; padding: 8px; font-weight: 700; color: #1E40AF; background-color: #EFF6FF; text-align: center;">
-                ${isca2}
-              </td>
-              <!-- Produto Row 2 -->
-              <td style="border-right: 1px solid #E2E8F0; padding: 8px; font-weight: 500; color: #475569; text-align: left;">
-                ${produto2}
-              </td>
-              <!-- UMA Row 2 -->
-              <td style="border-right: 1px solid #E2E8F0; padding: 8px; font-weight: 500; color: #475569; text-align: center; font-size: 10px;">
-                ${uma2}
-              </td>
+            <tr style="border-bottom: 1px solid #c5ab92; text-align: center; background-color: #EFE3CD;">
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; text-transform: uppercase; font-weight: bold;">${carreta2}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px; color: #FF0000;">${isca2}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px;">${produto2}</td>
+              <td style="border-right: 1px solid #c5ab92; padding: 10px; font-weight: bold; font-size: 13px;">${uma2}</td>
             </tr>
             `
                 : ""
@@ -906,68 +855,54 @@ export default function Controle({ onBack }: ControleProps) {
         </table>
 
         <!-- TABELA 2: PARAMETRIZAÇÃO DAS ISCAS -->
-        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-family: -apple-system, sans-serif; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-          <thead>
-            <tr style="background-color: #1E3A8A; color: #FFFFFF;">
-              <th colspan="4" style="padding: 10px; font-size: 11px; font-weight: bold; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">
-                PARAMETRIZAÇÃO DAS ISCAS
-              </th>
-            </tr>
-            <tr style="background-color: #EFF6FF; color: #1E40AF; font-size: 9px; font-weight: bold; border-bottom: 1px solid #DBEAFE; text-transform: uppercase;">
-              <th style="padding: 8px; border-right: 1px solid #DBEAFE; width: 22%; text-align: center;">N° ISCA</th>
-              <th style="padding: 8px; border-right: 1px solid #DBEAFE; width: 48%; text-align: left; padding-left: 12px;">🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅</th>
-              <th style="padding: 8px; border-right: 1px solid #DBEAFE; width: 18%; text-align: center;">🔍 DATA POSIÇÃO ⇅</th>
-              <th style="padding: 8px; width: 12%; text-align: center;">BATERIA</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${
-              numCarretas === 2
-                ? `
-            <tr style="border-bottom: 1px solid #E2E8F0; font-size: 11px;">
-              <td style="padding: 8px; border-right: 1px solid #E2E8F0; font-weight: 700; color: #1E40AF; background-color: #F8FAFC; text-align: center; text-transform: uppercase;">
-                ${isca2 === "SEM ISCA" ? "" : isca2}
-              </td>
-              <td style="padding: 8px; border-right: 1px solid #E2E8F0; text-align: left; padding-left: 12px; color: #475569; font-weight: 500;">
-                ${isca2 === "SEM ISCA" ? "" : isca2Endereco}
-              </td>
-              <td style="padding: 8px; border-right: 1px solid #E2E8F0; font-weight: 600; color: #334155; text-align: center;">
-                ${isca2 === "SEM ISCA" ? "" : isca2Data}
-              </td>
-              <td style="padding: 8px; text-align: center;">
-                ${isca2 !== "SEM ISCA" ? `
-                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-                  <span style="font-weight: bold; color: #059669; font-size: 10px;">${isca2Bateria || "100%"}</span>
-                  <div style="width: 16px; height: 8px; border: 1px solid #A7F3D0; background-color: #ECFDF5; border-radius: 2px; padding: 1px; display: inline-block; position: relative; vertical-align: middle;">
-                    <div style="width: ${Math.min(100, parseInt(isca2Bateria) || 100)}%; height: 100%; background-color: #10B981; border-radius: 1px;"></div>
-                  </div>
+        <table style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; font-size: 11px; text-align: center; font-weight: bold; color: #333333; margin-bottom: 30px; border: 1px solid #c5ab92;">
+          <tr style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; font-size: 12px;">
+            <td colspan="4" style="padding: 10px; border: 1px solid #c5ab92; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;">PARAMETRIZAÇÃO DAS ISCAS</td>
+          </tr>
+          <tr style="background: linear-gradient(to bottom, #7A0C22, #44030E); background-color: #7A0C22; color: #FFFFFF; font-size: 10px;">
+            <td style="padding: 8px; border: 1px solid #c5ab92; width: 25%;">
+              <span style="background-color: #FFFFFF; color: #000000; padding: 2px 6px; border-radius: 2px; font-size: 9px; text-transform: uppercase; font-weight: 900;">
+                ${numCarretas === 2 && isca2 !== "SEM ISCA" ? `${isca1} ${isca2}` : isca1}
+              </span>
+            </td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; width: 45%; color: #FFFFFF;">🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; width: 20%; color: #FFFFFF;">🔍 DATA POSIÇÃO ⇅</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; width: 10%; color: #FFFFFF;">🔍 BATERIA ISCA_RF ⇅</td>
+          </tr>
+          ${
+            numCarretas === 2
+              ? `
+          <tr style="background-color: #EFE3CD;">
+            <td style="padding: 8px; border: 1px solid #c5ab92; text-transform: uppercase; font-weight: 900; color: #FF0000;">${isca2 === "SEM ISCA" ? "" : isca2}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; text-align: left; padding-left: 10px; text-transform: lowercase; font-weight: 500;">${isca2 === "SEM ISCA" ? "" : isca2Endereco}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92;">${isca2 === "SEM ISCA" ? "" : isca2Data}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92;">
+              <div style="display: flex; align-items: center; justify-content: center;">
+                ${isca2 !== "SEM ISCA" ? `<span style="margin-right: 5px;">${isca2Bateria || "100%"}</span>` : ""}
+                <div style="width: 18px; height: 9px; border: 1px solid #22c55e; border-radius: 1px; padding: 1px; display: inline-block; position: relative; vertical-align: middle;">
+                  <div style="width: ${isca2 === "SEM ISCA" ? 0 : Math.min(100, parseInt(isca2Bateria) || 100)}%; height: 100%; background-color: #22c55e;"></div>
+                  <div style="position: absolute; right: -2px; top: 2px; width: 1.5px; height: 4px; background-color: #22c55e; border-radius: 0 1px 1px 0;"></div>
                 </div>
-                ` : ""}
-              </td>
-            </tr>
-            `
-                : ""
-            }
-            <tr style="font-size: 11px;">
-              <td style="padding: 8px; border-right: 1px solid #E2E8F0; font-weight: 700; color: #1E40AF; background-color: #F8FAFC; text-align: center; text-transform: uppercase;">
-                ${isca1}
-              </td>
-              <td style="padding: 8px; border-right: 1px solid #E2E8F0; text-align: left; padding-left: 12px; color: #475569; font-weight: 500;">
-                ${isca1Endereco}
-              </td>
-              <td style="padding: 8px; border-right: 1px solid #E2E8F0; font-weight: 600; color: #334155; text-align: center;">
-                ${isca1Data}
-              </td>
-              <td style="padding: 8px; text-align: center;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
-                  <span style="font-weight: bold; color: #059669; font-size: 10px;">${isca1Bateria || "100%"}</span>
-                  <div style="width: 16px; height: 8px; border: 1px solid #A7F3D0; background-color: #ECFDF5; border-radius: 2px; padding: 1px; display: inline-block; position: relative; vertical-align: middle;">
-                    <div style="width: ${Math.min(100, parseInt(isca1Bateria) || 100)}%; height: 100%; background-color: #10B981; border-radius: 1px;"></div>
-                  </div>
+              </div>
+            </td>
+          </tr>
+          `
+              : ""
+          }
+          <tr style="background-color: #EFE3CD;">
+            <td style="padding: 8px; border: 1px solid #c5ab92; text-transform: uppercase; font-weight: 900; color: #FF0000;">${isca1}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92; text-align: left; padding-left: 10px; text-transform: lowercase; font-weight: 500;">${isca1Endereco}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92;">${isca1Data}</td>
+            <td style="padding: 8px; border: 1px solid #c5ab92;">
+              <div style="display: flex; align-items: center; justify-content: center;">
+                <span style="margin-right: 5px;">${isca1Bateria || "100%"}</span>
+                <div style="width: 18px; height: 9px; border: 1px solid #22c55e; border-radius: 1px; padding: 1px; display: inline-block; position: relative; vertical-align: middle;">
+                  <div style="width: ${Math.min(100, parseInt(isca1Bateria) || 100)}%; height: 100%; background-color: #22c55e;"></div>
+                  <div style="position: absolute; right: -2px; top: 2px; width: 1.5px; height: 4px; background-color: #22c55e; border-radius: 0 1px 1px 0;"></div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
+              </div>
+            </td>
+          </tr>
         </table>
 
         <!-- SEÇÃO: ESQUEMA DE EMBARQUE -->
@@ -976,85 +911,60 @@ export default function Controle({ onBack }: ControleProps) {
             ? ""
             : `
         <div style="margin-top: 25px;">
-          <p style="font-weight: bold; font-size: 12px; margin-bottom: 20px; color: #1E3A8A; text-transform: uppercase; border-bottom: 2px solid #EFF6FF; padding-bottom: 6px; font-family: -apple-system, sans-serif;">
+          <p style="font-weight: 900; font-size: 13px; margin-bottom: 25px; color: #3e2516; text-transform: uppercase; border-bottom: 1px solid #dac0a3; padding-bottom: 6px;">
             ESQUEMA DE EMBARQUE DAS ISCAS:
           </p>
-          <table cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-            <tr>
-              <!-- Carreta 1 -->
-              ${
-                sidebarEmbarque1 === "none"
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; max-width: 720px; margin: 0 auto; gap: ${(!sidebarEmbarque1 && !sidebarEmbarque2) ? '10px' : '30px'};">
+            <!-- Carreta 1 Section -->
+            ${
+              sidebarEmbarque1 === "none"
+                ? ""
+                : sidebarEmbarque1
+                ? `
+                <div style="text-align: center; width: ${isPaletizado1 ? '150px' : '320px'};">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado1 ? '6px' : '12px'}; margin-bottom: ${isPaletizado1 ? '8px' : '15px'}; width: ${isPaletizado1 ? '150px' : '320px'}; height: ${isPaletizado1 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
+                  </div>
+                  <p style="font-size: ${isPaletizado1 ? '8px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado1 ? '6px' : '15px'}; text-transform: uppercase;">${carreta1}</p>
+                </div>
+              `
+                : `<div style="text-align: center; width: 100px;">
+                    ${renderLadderHtml(ladder1, "ESCALA 01", carreta1, "").replace('padding-right: 15px; padding-top: 15px;', '')}
+                  </div>`
+            }
+
+            <!-- Carreta 2 Section -->
+            ${
+              numCarretas === 2
+                ? (sidebarEmbarque2 === "none"
                   ? ""
-                  : `
-                  <td style="vertical-align: top; width: 50%; text-align: center;">
-                    ${
-                      sidebarEmbarque1
-                        ? `
-                        <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: ${isPaletizado1 ? '6px' : '10px'}; margin: 0 auto 10px auto; width: ${isPaletizado1 ? '140px' : '300px'}; height: ${isPaletizado1 ? '180px' : '380px'}; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                          <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: ${isPaletizado1 ? '35%' : '95%'}; max-height: ${isPaletizado1 ? '35%' : '95%'}; width: auto; height: auto; object-fit: contain;">
-                        </div>
-                        `
-                        : `${renderLadderHtml(ladder1, "ESCALA 01", carreta1, "").replace('padding-right: 15px; padding-top: 15px;', '')}`
-                    }
-                    <p style="font-size: 11px; font-weight: bold; color: #1E40AF; margin-top: 8px; text-transform: uppercase;">CARRETA 1: ${carreta1}</p>
-                  </td>
-                  `
-              }
-              <!-- Carreta 2 -->
-              ${
-                numCarretas === 2 && sidebarEmbarque2 !== "none"
+                  : sidebarEmbarque2
                   ? `
-                  <td style="vertical-align: top; width: 50%; text-align: center;">
-                    ${
-                      sidebarEmbarque2
-                        ? `
-                        <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: ${isPaletizado2 ? '6px' : '10px'}; margin: 0 auto 10px auto; width: ${isPaletizado2 ? '140px' : '300px'}; height: ${isPaletizado2 ? '180px' : '380px'}; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                          <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: ${isPaletizado2 ? '35%' : '95%'}; max-height: ${isPaletizado2 ? '35%' : '95%'}; width: auto; height: auto; object-fit: contain;">
-                        </div>
-                        `
-                        : `${renderLadderHtml(ladder2, "ESCALA 02", carreta2, "").replace('padding-top: 15px;', '')}`
-                    }
-                    <p style="font-size: 11px; font-weight: bold; color: #1E40AF; margin-top: 8px; text-transform: uppercase;">CARRETA 2: ${carreta2}</p>
-                  </td>
-                  `
-                  : ""
-              }
-            </tr>
-          </table>
+                <div style="text-align: center; width: ${isPaletizado2 ? '150px' : '320px'};">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado2 ? '6px' : '12px'}; margin-bottom: ${isPaletizado2 ? '8px' : '15px'}; width: ${isPaletizado2 ? '150px' : '320px'}; height: ${isPaletizado2 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
+                  </div>
+                  <p style="font-size: ${isPaletizado2 ? '8px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado2 ? '6px' : '15px'}; text-transform: uppercase;">${carreta2}</p>
+                </div>
+                `
+                  : `<div style="text-align: center; width: 100px;">
+                      ${renderLadderHtml(ladder2, "ESCALA 02", carreta2, "").replace('padding-top: 15px;', '')}
+                    </div>`)
+                : ""
+            }
+          </div>
         </div>
         `
         }
 
-        <hr style="border: 0; border-top: 1px dashed #E2E8F0; margin: 25px 0; clear: both;">
+        <hr style="border: 0; border-top: 1px dashed #c5ab92; margin: 25px 0; clear: both;">
 
         <!-- Rodapé -->
-        <table cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-top: 25px;">
-          <tr>
-            <td style="font-size: 11px; font-weight: 700; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 8px;">
-              GERENCIAMENTO DE RISCO
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size: 11px; color: #64748B; font-weight: 500; line-height: 1.6; padding-bottom: 6px;">
-              &bull; Ressalto a importância de encaminhar todas as iscas resgatadas para suas respectivas unidades de origem.
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size: 11px; color: #64748B; font-weight: 500; line-height: 1.6; padding-bottom: 6px;">
-              &bull; Agradeço antecipadamente pelo compromisso em assegurar que esses envios sejam efetuados via veículos dedicados ou postagem de maneira a evitar qualquer inconveniente em nossa operação.
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size: 11px; color: #64748B; font-weight: 500; line-height: 1.6; padding-bottom: 6px;">
-              &bull; A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size: 11px; color: #64748B; font-weight: 500; line-height: 1.6;">
-              &bull; Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.
-            </td>
-          </tr>
-        </table>
+        <p style="font-size: 11px; font-weight: 900; color: #7C0623; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px;">GERENCIAMENTO DE RISCO</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0 0 5px 0; font-weight: 500; line-height: 1.4;">-Ressalto a importância de encaminhar todas as iscas resgatadas para suas respectivas unidades de origem.</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0 0 5px 0; font-weight: 500; line-height: 1.4;">Agradeço antecipadamente pelo compromisso em assegurar que esses envios sejam efetuados via veículos dedicados ou postagem de maneira a evitar qualquer inconveniente em nossa operação.</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0 0 5px 0; font-weight: 500; line-height: 1.4;">A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.</p>
+        <p style="font-size: 11px; color: #3e2516; margin: 0; font-weight: 500; line-height: 1.4;">Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.</p>
 
       </div>
     `;
@@ -1257,58 +1167,57 @@ Embarque: ${
             </div>
 
             {/* PREVIEW CONTAINER - LOOKS EXACTLY LIKE THE OUTLOOK EMAIL / CCC.PNG */}
-            <div className="bg-[#FAFDFE] border-3 border-blue-900 rounded-3xl p-6 sm:p-7 shadow-xl overflow-x-auto relative">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#1E3A8A] block mb-5 border-b border-blue-200 pb-1.5">
+            <div className="bg-[#FAF5EC] border-3 border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl overflow-x-auto relative">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#8c6b4e] block mb-5 border-b border-[#dac0a3] pb-1.5">
                 Visualização do Pré-Alerta (Template do E-mail)
               </span>
 
-              <div className="min-w-[850px] font-sans text-xs text-[#1E293B]">
+              <div className="min-w-[850px] font-sans text-xs text-[#3e2516]">
                 {/* 1. Greeting Output */}
-                <div className="mb-4 font-sans font-bold text-sm text-[#0F172A] ml-0 pl-0">
+                <div className="mb-4 font-serif font-black italic text-sm text-[#3e2516] ml-0 pl-0">
                   {saudacao}
                 </div>
 
-                {/* 2. Elegant Blue Alert Banner */}
-                <div className="mb-5 bg-blue-50 border border-blue-200 border-l-4 border-l-blue-600 rounded-r-lg p-3.5 max-w-max flex items-center gap-3">
-                  <span className="text-sm">🔔</span>
+                {/* 2. Beautiful Maroon Ribbon Fold */}
+                <div className="mb-5 bg-[#7C0623] text-white font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-sm flex items-center rounded-r border-l-[10px] border-[#4D0012] max-w-max ml-0">
                   <input
                     type="text"
                     value={alertaResgate}
                     onChange={(e) => setAlertaResgate(e.target.value)}
-                    className="bg-transparent border-none text-[#1E40AF] w-full outline-none font-bold text-xs uppercase p-0.5 focus:ring-1 focus:ring-blue-300 hover:bg-blue-100/30 rounded px-1.5 transition-all min-w-[280px]"
+                    className="bg-transparent border-none text-white w-full outline-none font-black text-xs uppercase p-0.5 focus:ring-1 focus:ring-white/40 hover:bg-white/10 rounded px-1.5 transition-all min-w-[280px]"
                     placeholder="ALERTA RESGATE"
                   />
                 </div>
 
                 {/* 3. Atentar às informações */}
-                <div className="mb-3 font-bold text-[#1E293B] text-[13px] ml-0 pl-0">
+                <div className="mb-3.5 font-black text-[#3e2516] text-[13px] ml-0 pl-0">
                   <input
                     type="text"
                     value={infoAbaixo}
                     onChange={(e) => setInfoAbaixo(e.target.value)}
-                    className="bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 w-full font-bold text-[#1E293B] transition-all"
+                    className="bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 w-full font-black text-[#3e2516] transition-all"
                   />
                 </div>
 
-                {/* 4. Routes and Instructions Selector Box with delicate blue border styling */}
-                <div className="border border-slate-200 border-l-4 border-l-blue-500 p-4 mb-6 bg-slate-50/50 max-w-xl rounded-r-lg">
+                {/* 4. Routes and Instructions Selector Box with double border styling */}
+                <div className="border border-[#c5ab92] outline outline-1 outline-[#c5ab92] outline-offset-[-3.5px] p-4 mb-6 font-bold leading-relaxed bg-[#EFE3CD] max-w-xl rounded-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-blue-600 text-sm">•</span>
+                    <span className="text-[#c5ab92] text-sm">•</span>
                     <input
                       type="text"
                       value={rota1}
                       onChange={(e) => setRota1(e.target.value)}
-                      className="bg-transparent border-none w-full outline-none font-medium py-0.5 px-1.5 hover:bg-blue-50/50 focus:bg-blue-100/50 rounded text-xs text-slate-700 transition-all"
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-black/5 focus:bg-black/10 rounded text-xs text-[#3e2516] transition-all"
                       placeholder="· SANTA LUZIA/MG x GUARULHOS/SP;"
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-blue-600 text-sm">•</span>
+                    <span className="text-[#c5ab92] text-sm">•</span>
                     <input
                       type="text"
                       value={instrucao1}
                       onChange={(e) => setInstrucao1(e.target.value)}
-                      className="bg-transparent border-none w-full outline-none font-medium py-0.5 px-1.5 hover:bg-blue-50/50 focus:bg-blue-100/50 rounded text-xs text-slate-700 transition-all"
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-black/5 focus:bg-black/10 rounded text-xs text-[#3e2516] transition-all"
                       placeholder="· * Favor, acusar o recebimento do pré-alerta;"
                     />
                   </div>
@@ -1377,80 +1286,92 @@ Embarque: ${
                     </>
                   )}
                 </div>
-
-                {/* METADATA SUMMARY CARD (NF & Transportadora) */}
-                <div className="grid grid-cols-[15%_35%_15%_35%] border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 text-xs font-sans text-slate-700 mb-4 items-center">
-                  <div className="bg-slate-100/80 p-2.5 font-bold text-center border-r border-slate-200 h-full flex items-center justify-center text-[10px] uppercase tracking-wider">
-                    NÚMERO DA NF:
-                  </div>
-                  <div className="bg-white p-2 border-r border-slate-200 h-full flex flex-col justify-center">
-                    <div className="flex flex-col items-center gap-0.5 w-full">
-                      <input
-                        type="text"
-                        value={nfInicio}
-                        onChange={(e) => setNfInicio(e.target.value.replace(/-/g, ""))}
-                        className="w-full text-center font-bold bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 text-xs text-[#1E3A8A] transition-all duration-200"
-                        placeholder="INÍCIO"
-                      />
-                      {numCarretas === 2 && isca2 !== "SEM ISCA" && (
-                        <input
-                          type="text"
-                          value={nfFim}
-                          onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
-                          className="w-full text-center font-bold bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 text-xs text-[#1E3A8A] transition-all duration-200 border-t border-dashed border-slate-100 mt-1"
-                          placeholder="FIM"
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="bg-slate-100/80 p-2.5 font-bold text-center border-r border-slate-200 h-full flex items-center justify-center text-[10px] uppercase tracking-wider">
-                    TRANSPORTADORA:
-                  </div>
-                  <div className="bg-white p-2 h-full flex items-center">
-                    <select
-                      value={transportadora}
-                      onChange={(e) =>
-                        handleTableTranspChange(e.target.value)
-                      }
-                      className="w-full text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-1 text-xs cursor-pointer text-[#1E3A8A] transition-all duration-200"
-                    >
-                      <option value="">SELECIONE...</option>
-                      {allTransportadoras.map((t) => (
-                        <option
-                          key={t}
-                          value={t}
-                          className="text-slate-800 uppercase text-xs font-bold"
-                        >
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* TABLE 1: DETALHES DO TRANSPORTE */}
-                <table className="w-full border-collapse border border-slate-200 text-xs font-sans text-slate-800 table-fixed rounded-xl overflow-hidden shadow-xs">
+                <table className="w-full border-collapse border border-[#c5ab92] text-xs font-sans text-black table-fixed">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-[#1E3A8A] text-white text-center font-bold uppercase text-[9px] tracking-wider h-[32px]">
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[20%]">
+                    {/* Row 1: NF and Transportadora */}
+                    <tr className="border border-[#c5ab92]">
+                      <th
+                        colSpan={2}
+                        className="bg-linear-to-b from-[#7A0C22] to-[#44030E] border-r border-[#c5ab92] text-white text-center font-black p-2.5 uppercase text-[11px] align-middle w-[25%]"
+                      >
+                        NÚMERO DA NF:
+                      </th>
+                      <th
+                        colSpan={1}
+                        className="border-r border-[#c5ab92] p-1.5 align-middle w-[15%] bg-[#EFE3CD]"
+                      >
+                        <div className="flex flex-col items-center gap-0 w-full">
+                          <input
+                            type="text"
+                            value={nfInicio}
+                            onChange={(e) => setNfInicio(e.target.value.replace(/-/g, ""))}
+                            className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
+                            placeholder="INÍCIO"
+                          />
+                          {numCarretas === 2 && isca2 !== "SEM ISCA" && (
+                            <input
+                              type="text"
+                              value={nfFim}
+                              onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
+                              className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[11px] text-black transition-all duration-200"
+                              placeholder="FIM"
+                            />
+                          )}
+                        </div>
+                      </th>
+                      <th
+                        colSpan={1}
+                        className="bg-linear-to-b from-[#7A0C22] to-[#44030E] border-r border-[#c5ab92] text-white text-center font-black p-2.5 uppercase text-[11px] align-middle w-[18%]"
+                      >
+                        TRANSPORTADORA:
+                      </th>
+                      <th
+                        colSpan={2}
+                        className="p-1.5 border-r border-[#c5ab92] align-middle w-[25%] bg-[#EFE3CD]"
+                      >
+                        <select
+                          value={transportadora}
+                          onChange={(e) =>
+                            handleTableTranspChange(e.target.value)
+                          }
+                          className="w-full text-center font-black uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs cursor-pointer text-black transition-all duration-200"
+                        >
+                          <option value="">SELECIONE...</option>
+                          {allTransportadoras.map((t) => (
+                            <option
+                              key={t}
+                              value={t}
+                              className="text-black uppercase text-xs font-black"
+                            >
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </th>
+                      <th colSpan={2} className="w-[17%] bg-linear-to-b from-[#7A0C22] to-[#44030E]"></th>
+                    </tr>
+
+                    {/* Row 2: Standard Columns Headings */}
+                    <tr className="border-b border-[#c5ab92] bg-linear-to-b from-[#7A0C22] to-[#44030E] text-white text-center font-black uppercase text-[10px] h-[34px]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[22%]">
                         MOTORISTA
                       </th>
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[10%]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[11%]">
                         CAVALO
                       </th>
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[10%]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[11%]">
                         CARRETAS
                       </th>
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[11%]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[13%]">
                         N° ISCA
                       </th>
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[17%]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[14%]">
                         PRODUTO EMBARCADO
                       </th>
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[16%]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[15%]">
                         CÓDIGO U.M.A.
                       </th>
-                      <th className="border-r border-blue-500/30 p-1.5 align-middle w-[11%]">
+                      <th className="border-r border-[#c5ab92] p-1.5 align-middle w-[11%]">
                         DESTINO
                       </th>
                       <th className="p-1.5 align-middle w-[11%]">
@@ -1459,97 +1380,105 @@ Embarque: ${
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-slate-200 text-center text-xs bg-white">
+                    {/* Rows of data */}
+                    <tr className="border-b border-[#c5ab92] text-center text-xs h-[42px] bg-[#EFE3CD]">
                       {/* Motorista - Span rowspan */}
                       <td
                         rowSpan={numCarretas}
-                        className="border-r border-slate-200 p-1 font-medium uppercase text-[11px] align-middle"
+                        className="border-r border-[#c5ab92] p-1.5 font-bold uppercase text-[11px] align-middle"
                       >
                         <textarea
                           value={motorista}
                           onChange={(e) =>
                             handleTableMotoristaChange(e.target.value)
                           }
-                          className="w-full h-full min-h-[42px] text-center font-semibold uppercase bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded resize-none p-1 text-[11px] leading-snug text-slate-700 transition-all duration-200"
+                          className="w-full h-full min-h-[48px] text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded resize-none p-1 text-xs leading-snug text-black transition-all duration-200"
                           placeholder="NOME MOTORISTA"
                         />
                       </td>
+
                       {/* Cavalo - Span rowspan */}
                       <td
                         rowSpan={numCarretas}
-                        className="border-r border-slate-200 p-1 font-bold uppercase text-[11px] align-middle bg-blue-50/20"
+                        className="border-r border-[#c5ab92] p-1.5 font-bold uppercase text-[11px] align-middle"
                       >
                         <input
                           type="text"
                           value={cavalo}
                           onChange={(e) => setCavalo(e.target.value.replace(/-/g, ""))}
-                          className="w-full text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 text-xs text-[#1D4ED8] transition-all duration-200"
+                          className="w-full text-center font-black uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-[15px] text-black transition-all duration-200"
                           placeholder="PLACA"
                         />
                       </td>
+
                       {/* Carreta Row 1 */}
-                      <td className="border-r border-slate-200 p-1 align-middle">
+                      <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                         <input
                           type="text"
                           value={carreta1}
                           onChange={(e) => setCarreta1(e.target.value)}
-                          className="w-full text-center bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 uppercase font-medium text-xs text-slate-600 transition-all duration-200"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-xs text-black transition-all duration-200"
                           placeholder="CARRETA 1"
                         />
                       </td>
+
                       {/* N Iscas Row 1 */}
-                      <td className="border-r border-slate-200 p-1 align-middle bg-blue-50/20">
+                      <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                         <input
                           type="text"
                           value={isca1}
                           onChange={(e) => handleIsca1Change(e.target.value)}
-                          className="w-full text-center bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 uppercase font-bold text-xs text-[#1E40AF] transition-all duration-200"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
                           placeholder="ISCA 1"
                         />
                       </td>
+
                       {/* Produto Row 1 */}
-                      <td className="border-r border-slate-200 p-1 align-middle">
+                      <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                         <input
                           type="text"
                           value={produto1}
                           onChange={(e) => setProduto1(e.target.value)}
-                          className="w-full text-left bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 uppercase font-medium text-[11px] text-slate-600 transition-all duration-200"
-                          placeholder="PRODUTO 1"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
+                          placeholder="PROD 1"
                         />
                       </td>
+
                       {/* UMA Row 1 */}
-                      <td className="border-r border-slate-200 p-1 align-middle">
+                      <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                         <input
                           type="text"
                           value={uma1}
                           onChange={(e) => setUma1(formatUMA(e.target.value))}
-                          className="w-full text-center bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 uppercase font-mono text-[10px] text-slate-500 transition-all duration-200"
-                          placeholder="0XX.XXX.XXX"
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-black transition-all duration-200"
+                          placeholder="0XX.XXX.XXX.XXX"
                         />
                       </td>
+
                       {/* Destino - Span rowspan */}
                       <td
                         rowSpan={numCarretas}
-                        className="border-r border-slate-200 p-1 font-medium uppercase text-[11px] align-middle"
+                        className="border-r border-[#c5ab92] p-1.5 font-bold uppercase text-[11px] align-middle"
                       >
                         <input
                           type="text"
                           value={destino}
                           onChange={(e) => setDestino(e.target.value)}
-                          className="w-full text-center font-semibold uppercase bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 text-xs text-slate-700 transition-all duration-200"
+                          className="w-full text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs text-black transition-all duration-200"
                           placeholder="DESTINO"
                         />
                       </td>
+
                       {/* Data Enviada - Span rowspan */}
                       <td
                         rowSpan={numCarretas}
-                        className="p-1 font-medium text-slate-600 text-xs align-middle"
+                        className="p-1.5 font-bold text-black text-xs align-middle"
                       >
                         <input
                           type="text"
                           value={dataEnviada}
                           onChange={(e) => setDataEnviada(e.target.value)}
-                          className="w-full text-center font-semibold bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 text-xs text-slate-700 transition-all duration-200"
+                          className="w-full text-center font-bold bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 text-xs text-black transition-all duration-200"
                           placeholder="DATA"
                         />
                       </td>
@@ -1557,56 +1486,57 @@ Embarque: ${
 
                     {/* Second row of sub-items (Carreta 2, Isca 2, Prod 2, UMA 2) */}
                     {numCarretas === 2 && (
-                      <tr className="border-b border-slate-200 text-center text-xs bg-white">
+                      <tr className="border-b border-[#c5ab92] text-center text-xs h-[42px] bg-[#EFE3CD]">
                         {/* Carreta Row 2 */}
-                        <td className="border-r border-slate-200 p-1 align-middle">
+                        <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                           <input
                             type="text"
                             value={carreta2}
                             onChange={(e) => setCarreta2(e.target.value)}
-                            className="w-full text-center bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 uppercase font-medium text-xs text-slate-600 transition-all duration-200"
+                            className="w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-xs text-black transition-all duration-200"
                             placeholder="CARRETA 2"
                           />
                         </td>
+
                         {/* Isca Row 2 */}
-                        <td className="border-r border-slate-200 p-1 align-middle bg-blue-50/20">
+                        <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                           <input
                             type="text"
                             value={isca2}
                             onChange={(e) => handleIsca2Change(e.target.value)}
                             className={cn(
-                              "w-full text-center bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 uppercase font-bold text-xs transition-all duration-200",
-                              isca2 === "SEM ISCA" ? "text-red-500 font-bold" : "text-[#1E40AF]"
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-red-600 font-black" : "text-black"
                             )}
                             placeholder="ISCA 2"
                           />
                         </td>
 
                         {/* Produto Row 2 */}
-                        <td className="border-r border-slate-200 p-1 align-middle">
+                        <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                           <input
                             type="text"
                             value={produto2}
                             onChange={(e) => setProduto2(e.target.value)}
                             className={cn(
-                              "w-full text-left bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 uppercase font-medium text-[11px] transition-all duration-200",
-                              isca2 === "SEM ISCA" ? "text-slate-400" : "text-slate-600"
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-stone-500 font-black" : "text-black"
                             )}
                             placeholder="PROD 2"
                           />
                         </td>
 
                         {/* UMA Row 2 */}
-                        <td className="border-r border-slate-200 p-1 align-middle">
+                        <td className="border-r border-[#c5ab92] p-1.5 align-middle">
                           <input
                             type="text"
                             value={uma2}
                             onChange={(e) => setUma2(formatUMA(e.target.value))}
                             className={cn(
-                              "w-full text-center bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 uppercase font-mono text-[10px] transition-all duration-200",
-                              isca2 === "SEM ISCA" ? "text-slate-400" : "text-slate-500"
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-[#B32025]/5 focus:bg-[#B32025]/10 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-stone-500 font-black" : "text-black"
                             )}
-                            placeholder="0XX.XXX.XXX"
+                            placeholder="0XX.XXX.XXX.XXX"
                           />
                         </td>
                       </tr>
@@ -1615,113 +1545,132 @@ Embarque: ${
                 </table>
 
                 {/* TABLE 2: PARAMETRIZAÇÃO DAS ISCAS */}
-                <table className="w-full border-collapse border border-slate-200 text-xs font-sans text-slate-800 table-fixed mt-4 rounded-xl overflow-hidden shadow-xs">
-                  <thead>
-                    <tr className="bg-[#1E3A8A] text-center font-bold text-white text-[11px] tracking-wide h-[36px]">
-                      <th colSpan={4} className="p-2 uppercase">
-                        PARAMETRIZAÇÃO DAS ISCAS
-                      </th>
-                    </tr>
-                    <tr className="bg-[#EFF6FF] text-center font-bold text-[#1E40AF] text-[9px] uppercase tracking-wider h-[30px] border-b border-blue-100">
-                      <th className="border-r border-blue-100 p-1 w-[22%] align-middle text-center">
-                        N° ISCA
-                      </th>
-                      <th className="border-r border-blue-100 p-1 w-[48%] text-left pl-3.5 tracking-wider align-middle">
-                        🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅
-                      </th>
-                      <th className="border-r border-blue-100 p-1 w-[18%] tracking-wider align-middle">
-                        🔍 DATA POSIÇÃO ⇅
-                      </th>
-                      <th className="p-1 w-[12%] tracking-wider align-middle">
-                        BATERIA
-                      </th>
-                    </tr>
-                  </thead>
+                <table className="w-full border-collapse border border-[#c5ab92] text-xs font-sans text-black table-fixed mt-0">
                   <tbody>
+                    {/* Header bar */}
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="bg-linear-to-b from-[#7A0C22] to-[#44030E] text-center font-black text-white p-2.5 uppercase text-[11px] tracking-wide border-b border-[#c5ab92]"
+                      >
+                        <input
+                          type="text"
+                          value={parametrizacao}
+                          onChange={(e) => setParametrizacao(e.target.value)}
+                          className="w-full text-center font-black bg-transparent border-none outline-none hover:bg-white/10 focus:bg-white/20 rounded px-1 py-0.5 text-[11px] uppercase text-white transition-all duration-200"
+                        />
+                      </td>
+                    </tr>
+                    {/* Subheaders Row */}
+                    <tr className="bg-linear-to-b from-[#7A0C22] to-[#44030E] text-center font-black text-white text-[10px] h-[34px] border-b border-[#c5ab92]">
+                      <td className="border-r border-[#c5ab92] p-1 w-[25%] align-middle text-center">
+                        <div className="flex items-center bg-white border border-[#c5ab92]/50 rounded px-2 py-0.5 max-w-[150px] mx-auto shadow-inner">
+                          <input
+                            type="text"
+                            value={
+                              numCarretas === 2 && isca2 !== "SEM ISCA" ? `${isca1} ${isca2}` : isca1
+                            }
+                            readOnly
+                            className="bg-transparent border-none text-black font-black text-[9px] uppercase p-0 focus:ring-0 w-full text-center outline-none select-all"
+                          />
+                          <span className="text-stone-400 font-bold text-[8px] cursor-pointer ml-1 select-none">
+                            ⇅
+                          </span>
+                        </div>
+                      </td>
+                      <td className="border-r border-[#c5ab92] p-1 w-[45%] uppercase tracking-wider text-white text-[10px] align-middle">
+                        🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅
+                      </td>
+                      <td className="border-r border-[#c5ab92] p-1 w-[18%] uppercase tracking-wider text-white text-[10px] align-middle">
+                        🔍 DATA POSIÇÃO ⇅
+                      </td>
+                      <td className="p-1 w-[12%] uppercase tracking-wider text-white text-[10px] align-middle">
+                        🔍 BATERIA ISCA_RF ⇅
+                      </td>
+                    </tr>
                     {/* Row 1 (Isca 2) */}
                     {numCarretas === 2 && (
-                      <tr className="bg-white text-center font-medium text-slate-700 h-[38px] border-b border-slate-200 text-xs">
-                        <td className="border-r border-slate-200 p-1.5 font-bold uppercase text-[11px] text-center bg-slate-50/50 text-[#1E40AF] align-middle">
+                      <tr className="bg-[#EFE3CD] text-center font-semibold text-[#3e2516] h-[44px] border-b border-[#c5ab92]">
+                        <td className="border-r border-[#c5ab92] p-1.5 font-black uppercase text-[11px] text-center bg-[#EFE3CD] align-middle">
                           {isca2 === "SEM ISCA" ? "" : isca2}
                         </td>
-                        <td className="border-r border-slate-200 p-1 text-left font-normal text-xs align-middle">
+                        <td className="border-r border-[#c5ab92] p-1.5 text-left font-medium text-xs bg-[#EFE3CD] align-middle">
                           <textarea
                             value={isca2 === "SEM ISCA" ? "" : isca2Endereco}
                             onChange={(e) => setIsca2Endereco(e.target.value)}
                             disabled={isca2 === "SEM ISCA"}
                             rows={1}
-                            className="w-full bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 text-xs text-slate-600 resize-y leading-tight transition-all duration-200 disabled:opacity-50"
+                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-[#3e2516] resize-y leading-tight font-bold transition-all duration-200 disabled:opacity-50"
                             placeholder={isca2 === "SEM ISCA" ? "" : "Endereço da Isca 2..."}
                           />
                         </td>
-                        <td className="border-r border-slate-200 p-1 text-center font-semibold text-xs align-middle">
+                        <td className="border-r border-[#c5ab92] p-1.5 text-center font-bold text-xs bg-[#EFE3CD] align-middle">
                           <input
                             type="text"
                             value={isca2 === "SEM ISCA" ? "" : isca2Data}
                             onChange={(e) => setIsca2Data(e.target.value)}
                             disabled={isca2 === "SEM ISCA"}
-                            className="w-full bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 text-xs text-center text-slate-600 font-semibold transition-all duration-200 disabled:opacity-50"
+                            className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-center text-[#3e2516] font-bold transition-all duration-200 disabled:opacity-50"
                             placeholder={isca2 === "SEM ISCA" ? "" : "Data/Hora..."}
                           />
                         </td>
-                        <td className="p-1 text-center font-bold text-xs align-middle">
-                          {isca2 !== "SEM ISCA" && (
-                            <div className="flex items-center justify-center gap-1.5">
-                              <input
-                                type="text"
-                                value={isca2Bateria}
-                                onChange={(e) => setIsca2Bateria(e.target.value)}
-                                className="w-8 bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 text-xs text-right text-slate-600 font-bold transition-all duration-200"
-                                placeholder="100%"
+                        <td className="p-1.5 text-center font-bold text-xs bg-[#EFE3CD] align-middle">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <input
+                              type="text"
+                              value={isca2 === "SEM ISCA" ? "" : isca2Bateria}
+                              onChange={(e) => setIsca2Bateria(e.target.value)}
+                              disabled={isca2 === "SEM ISCA"}
+                              className="w-10 bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1 py-0.5 text-xs text-right text-[#3e2516] font-bold transition-all duration-200 disabled:opacity-50"
+                              placeholder={isca2 === "SEM ISCA" ? "" : "100%"}
+                            />
+                            <div className="relative flex items-center">
+                              <Battery className="w-5 h-5 text-green-600 fill-green-600/20" />
+                              <div 
+                                className="absolute left-[3px] top-[6.5px] h-[7px] bg-green-500 rounded-[1px]"
+                                style={{ width: `${(isca2 === "SEM ISCA" ? 0 : Math.min(100, parseInt(isca2Bateria) || 100)) * 0.11}px` }}
                               />
-                              <div className="relative flex items-center">
-                                <Battery className="w-5 h-5 text-emerald-500 fill-emerald-100" />
-                                <div 
-                                  className="absolute left-[3px] top-[6.5px] h-[7px] bg-emerald-500 rounded-[1px]"
-                                  style={{ width: `${Math.min(100, parseInt(isca2Bateria) || 100) * 0.11}px` }}
-                                />
-                              </div>
                             </div>
-                          )}
+                          </div>
                         </td>
                       </tr>
                     )}
                     {/* Row 2 (Isca 1) */}
-                    <tr className="bg-white text-center font-medium text-slate-700 h-[38px] border-b border-slate-200 text-xs">
-                      <td className="border-r border-slate-200 p-1.5 font-bold uppercase text-[11px] text-center bg-slate-50/50 text-[#1E40AF] align-middle">
+                    <tr className="bg-[#EFE3CD] text-center font-semibold text-[#3e2516] h-[44px] border-b border-[#c5ab92]">
+                      <td className="border-r border-[#c5ab92] p-1.5 font-black uppercase text-[11px] text-center bg-[#EFE3CD] align-middle">
                         {isca1}
                       </td>
-                      <td className="border-r border-slate-200 p-1 text-left font-normal text-xs align-middle">
+                      <td className="border-r border-[#c5ab92] p-1.5 text-left font-medium text-xs bg-[#EFE3CD] align-middle">
                         <textarea
                           value={isca1Endereco}
                           onChange={(e) => setIsca1Endereco(e.target.value)}
                           rows={1}
-                          className="w-full bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 text-xs text-slate-600 resize-y leading-tight transition-all duration-200"
+                          className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-[#3e2516] resize-y leading-tight font-bold transition-all duration-200"
                           placeholder="Endereço da Isca 1..."
                         />
                       </td>
-                      <td className="border-r border-slate-200 p-1 text-center font-semibold text-xs align-middle">
+                      <td className="border-r border-[#c5ab92] p-1.5 text-center font-bold text-xs bg-[#EFE3CD] align-middle">
                         <input
                           type="text"
                           value={isca1Data}
                           onChange={(e) => setIsca1Data(e.target.value)}
-                          className="w-full bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1.5 py-0.5 text-xs text-center text-slate-600 font-semibold transition-all duration-200"
+                          className="w-full bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1.5 py-0.5 text-xs text-center text-[#3e2516] font-bold transition-all duration-200"
                           placeholder="Data/Hora..."
                         />
                       </td>
-                      <td className="p-1 text-center font-bold text-xs align-middle">
+                      <td className="p-1.5 text-center font-bold text-xs bg-[#EFE3CD] align-middle">
                         <div className="flex items-center justify-center gap-1.5">
                           <input
                             type="text"
                             value={isca1Bateria}
                             onChange={(e) => setIsca1Bateria(e.target.value)}
-                            className="w-8 bg-transparent border-none outline-none hover:bg-blue-50/50 focus:bg-blue-100/50 rounded px-1 py-0.5 text-xs text-right text-slate-600 font-bold transition-all duration-200"
+                            className="w-10 bg-transparent border-none outline-none hover:bg-black/5 focus:bg-black/10 rounded px-1 py-0.5 text-xs text-right text-[#3e2516] font-bold transition-all duration-200"
                             placeholder="100%"
                           />
                           <div className="relative flex items-center">
-                            <Battery className="w-5 h-5 text-emerald-500 fill-emerald-100" />
+                            <Battery className="w-5 h-5 text-green-600 fill-green-600/20" />
                             <div 
-                              className="absolute left-[3px] top-[6.5px] h-[7px] bg-emerald-500 rounded-[1px]"
+                              className="absolute left-[3px] top-[6.5px] h-[7px] bg-green-500 rounded-[1px]"
                               style={{ width: `${Math.min(100, parseInt(isca1Bateria) || 100) * 0.11}px` }}
                             />
                           </div>
@@ -1733,11 +1682,11 @@ Embarque: ${
 
                 {/* 6. INTERACTIVE ESQUEMA DE EMBARQUE (LADDERS) */}
                 {!ocultarNotas && (
-                  <div className="mt-6 border-t border-slate-200 pt-5">
-                    <span className="text-[13px] font-bold uppercase block mt-[25px] mb-[20px] text-[#1E3A8A] font-sans">
+                  <div className="mt-6 border-t border-[#c5ab92]/50 pt-5">
+                    <span className="text-[13px] font-bold uppercase block mt-[25px] mb-[20px] text-[#222222] font-sans">
                       ESQUEMA DE EMBARQUE DAS ISCAS:
                     </span>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-4">
+                    <p className="text-[10px] text-[#8c6b4e] font-black uppercase tracking-wider mb-4">
                       {sidebarEmbarque1 || sidebarEmbarque2
                         ? "Imagem do esquema de embarque selecionada! Ela será incluída no e-mail."
                         : 'Clique nas células para marcar/desmarcar a isca ("P"). Esse esquema será copiado visualmente para o e-mail!'}
@@ -1755,19 +1704,16 @@ Embarque: ${
                         )}>
                           {sidebarEmbarque1 ? (
                             <div className="w-full flex flex-col">
-                              <div className="bg-white border border-slate-200 p-2.5 text-center shadow-xs w-[320px] h-[420px] flex items-center justify-center box-border">
+                              <div className="bg-white border border-[#D5CBBF] p-2.5 text-center shadow-sm w-[320px] h-[420px] flex items-center justify-center box-border">
                                 <img
                                   src={sidebarEmbarque1}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
-                                  className={cn(
-                                    "w-auto h-auto object-contain bg-white mx-auto block border-0 transition-all duration-300",
-                                    isPaletizado1 ? "max-w-[35%] max-h-[35%]" : "max-w-[95%] max-h-[95%]"
-                                  )}
+                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
                                 />
                               </div>
                               <div className="text-center mt-[15px]">
-                                <span className="text-[11px] font-bold text-[#1E40AF] uppercase">
+                                <span className="text-[11px] font-black text-[#521521] uppercase">
                                   CARRETA 1: {carreta1}
                                 </span>
                               </div>
@@ -1775,10 +1721,10 @@ Embarque: ${
                           ) : (
                             <div className="flex flex-col items-center w-full">
                               <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
-                                <div className="bg-[#1E3A8A] text-white font-bold text-[8px] uppercase w-[50px] py-[3px] text-center border border-[#1E3A8A] tracking-normal rounded-t-xs">
+                                <div className="bg-[#4A131E] text-white font-black text-[8px] uppercase w-[50px] py-[3px] text-center border border-[#4A131E] tracking-normal">
                                   ESCALA 01
                                 </div>
-                                <div className="grid grid-cols-2 gap-0 border border-slate-400 bg-white w-[50px]">
+                                <div className="grid grid-cols-2 gap-0 border border-[#5A5A5A] bg-white w-[50px]">
                                   {ladder1.map((row, rIndex) =>
                                     row.map((cell, cIndex) => (
                                       <button
@@ -1792,10 +1738,10 @@ Embarque: ${
                                           setLadder1(copy);
                                         }}
                                         className={cn(
-                                          "w-full h-[12px] border-[0.5px] border-slate-300 font-bold text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
+                                          "w-full h-[12px] border-[0.5px] border-[#5A5A5A] font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
                                           cell === "P"
-                                            ? "bg-[#1D4ED8] text-white"
-                                            : "bg-white hover:bg-blue-50/50",
+                                            ? "bg-[#6C061D] text-white"
+                                            : "bg-white hover:bg-stone-50",
                                         )}
                                       >
                                         {cell}
@@ -1805,7 +1751,7 @@ Embarque: ${
                                 </div>
                               </div>
                               <div className="text-center mt-[10px]">
-                                <span className="text-[11px] font-bold text-[#1E40AF] uppercase">
+                                <span className="text-[11px] font-black text-[#521521] uppercase">
                                   CARRETA 1: {carreta1}
                                 </span>
                               </div>
@@ -1822,19 +1768,16 @@ Embarque: ${
                         )}>
                           {sidebarEmbarque2 ? (
                             <div className="w-full flex flex-col">
-                              <div className="bg-white border border-slate-200 p-2.5 text-center shadow-xs w-[320px] h-[420px] flex items-center justify-center box-border">
+                              <div className="bg-white border border-[#D5CBBF] p-2.5 text-center shadow-sm w-[320px] h-[420px] flex items-center justify-center box-border">
                                 <img
                                   src={sidebarEmbarque2}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
-                                  className={cn(
-                                    "w-auto h-auto object-contain bg-white mx-auto block border-0 transition-all duration-300",
-                                    isPaletizado2 ? "max-w-[35%] max-h-[35%]" : "max-w-[95%] max-h-[95%]"
-                                  )}
+                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
                                 />
                               </div>
                               <div className="text-center mt-[15px]">
-                                <span className="text-[11px] font-bold text-[#1E40AF] uppercase">
+                                <span className="text-[11px] font-black text-[#521521] uppercase">
                                   CARRETA 2: {carreta2}
                                 </span>
                               </div>
@@ -1842,10 +1785,10 @@ Embarque: ${
                           ) : (
                             <div className="flex flex-col items-center w-full">
                               <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
-                                <div className="bg-[#1E3A8A] text-white font-bold text-[9px] uppercase w-[75px] py-[5px] text-center border border-[#1E3A8A] tracking-normal rounded-t-xs">
+                                <div className="bg-[#4A131E] text-white font-black text-[9px] uppercase w-[75px] py-[5px] text-center border border-[#4A131E] tracking-normal">
                                   ESCALA 02
                                 </div>
-                                <div className="grid grid-cols-2 gap-0 border border-slate-400 bg-white w-[75px]">
+                                <div className="grid grid-cols-2 gap-0 border border-[#5A5A5A] bg-white w-[75px]">
                                   {ladder2.map((row, rIndex) =>
                                     row.map((cell, cIndex) => (
                                       <button
@@ -1859,10 +1802,10 @@ Embarque: ${
                                           setLadder2(copy);
                                         }}
                                         className={cn(
-                                          "w-full h-[12px] border-[0.5px] border-slate-300 font-bold text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
+                                          "w-full h-[12px] border-[0.5px] border-[#5A5A5A] font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
                                           cell === "P"
-                                            ? "bg-[#1D4ED8] text-white"
-                                            : "bg-white hover:bg-blue-50/50",
+                                            ? "bg-[#6C061D] text-white"
+                                            : "bg-white hover:bg-stone-50",
                                         )}
                                       >
                                         {cell}
@@ -1872,7 +1815,7 @@ Embarque: ${
                                 </div>
                               </div>
                               <div className="text-center mt-[15px]">
-                                <span className="text-[11px] font-bold text-[#1E40AF] uppercase">
+                                <span className="text-[11px] font-black text-[#521521] uppercase">
                                   CARRETA 2: {carreta2}
                                 </span>
                               </div>
@@ -1933,13 +1876,13 @@ Embarque: ${
             </div>
 
             {/* Quick action helper card inside main container */}
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3 items-start mt-2">
-              <Info className="text-[#1E40AF] shrink-0 mt-0.5" size={16} />
+            <div className="bg-[#FAF6ED] border border-[#e1ccb0] rounded-2xl p-4 flex gap-3 items-start mt-2">
+              <Info className="text-[#B32025] shrink-0 mt-0.5" size={16} />
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-[#1E3A8A] uppercase tracking-wide">
+                <span className="text-xs font-black text-[#5c3e29] uppercase tracking-wide">
                   Dica do Gerador
                 </span>
-                <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
                   Você pode clicar diretamente nos campos da tabela acima para
                   preenchê-los manualmente de forma ágil, ou utilizar a coluna
                   de preenchimento rápido ao lado para carregar dados
