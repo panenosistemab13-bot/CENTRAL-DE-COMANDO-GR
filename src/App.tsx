@@ -687,8 +687,7 @@ export default function App() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className={cn(
-                  activeTab === 'menu' ? "h-full" : "w-full transition-all duration-300",
-                  activeTab === 'controle' && "origin-top scale-[0.85] xl:scale-[0.80]"
+                  activeTab === 'menu' ? "h-full" : "w-full transition-all duration-300"
                 )}
               >
                 {renderContent()}
