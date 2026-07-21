@@ -64,69 +64,54 @@ interface SMCreatorProps {
 
 const generateStyledTableHtml = (rows: SMRow[], isIda: boolean) => {
   if (rows.length === 0) return '';
-  const primaryColor = isIda ? '#1E3A8A' : '#B91C1C';
-  const lightBg = isIda ? '#F0F5FF' : '#FEF2F2';
-  const borderCol = isIda ? '#DBEAFE' : '#FEE2E2';
-  const accentText = isIda ? '#1E40AF' : '#B91C1C';
-
+  const color = isIda ? '#14325c' : '#7f1d1d';
+  const gradientStart = isIda ? '#14325c' : '#7f1d1d';
+  const gradientEnd = isIda ? '#0f2a4a' : '#991b1b';
+  const textColor = isIda ? '#e2e8f0' : '#fdfaf5';
+  
   let rowsHtml = '';
-  rows.forEach((r, idx) => {
-    const rowBg = idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+  rows.forEach(r => {
     rowsHtml += `
-      <tr style="background-color: ${rowBg}; height: 44px;">
-        <td style="width: 11%; padding: 8px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <span style="color: #475569; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px;">
-            ${r.dataSaida || '-'}
-          </span>
+      <tr style="height: 42px;">
+        <td style="width: 11%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.dataSaida || '-'}</div>
         </td>
-        <td style="width: 25%; padding: 8px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <span style="color: #0F172A; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.02em;">
-            ${r.motorista || '-'}
-          </span>
+        <td style="width: 25%; padding: 4px 2px; text-align: left; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 8px; color: #4a3623; font-weight: bold; font-family: Arial, sans-serif; font-size: 11px; display: block; text-transform: uppercase; text-align: left; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.motorista || '-'}</div>
         </td>
-        <td style="width: 12%; padding: 8px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <div style="background-color: ${lightBg}; border: 1.5px solid ${borderCol}; border-radius: 6px; padding: 4px 6px; color: ${accentText}; font-weight: 700; font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 11px; display: inline-block; text-transform: uppercase; text-align: center; letter-spacing: 0.05em; min-width: 65px;">
-            ${r.placa || '-'}
-          </div>
+        <td style="width: 12%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.placa || '-'}</div>
         </td>
-        <td style="width: 11%; padding: 8px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <div style="background-color: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 6px; padding: 4px 6px; color: #475569; font-weight: 600; font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 10.5px; display: inline-block; min-width: 55px;">
-            ${r.bau1 || '-'}
-          </div>
+        <td style="width: 11%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.bau1 || '-'}</div>
         </td>
-        <td style="width: 11%; padding: 8px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <div style="background-color: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 6px; padding: 4px 6px; color: #475569; font-weight: 600; font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 10.5px; display: inline-block; min-width: 55px;">
-            ${r.bau2 || '-'}
-          </div>
+        <td style="width: 11%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 2px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.bau2 || '-'}</div>
         </td>
-        <td style="width: 18%; padding: 8px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <span style="color: #334155; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10.5px; text-transform: uppercase;">
-            ${r.trecho || '-'}
-          </span>
+        <td style="width: 18%; padding: 4px 2px; text-align: center; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 4px; color: #4a3623; font-weight: bold; font-family: Arial, sans-serif; font-size: 11px; display: block; text-transform: uppercase; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.trecho || '-'}</div>
         </td>
-        <td style="width: 12%; padding: 8px 12px; text-align: right; vertical-align: middle; border-bottom: 1px solid #E2E8F0;">
-          <span style="font-family: 'SF Mono', Consolas, Monaco, monospace; font-weight: 750; color: #059669; font-size: 11.5px; letter-spacing: -0.02em;">
-            R$ ${r.valorNf || '0,00'}
-          </span>
+        <td style="width: 12%; padding: 4px 2px; text-align: right; vertical-align: middle; border-bottom: 1px solid rgba(192, 168, 146, 0.25);">
+          <div style="background-color: #d2c2b2; border: 1px solid #c0a892; border-radius: 6px; padding: 6px 8px; color: #4a3623; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 11px; display: block; text-align: right; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); margin: 0 1px;">${r.valorNf || '0,00'}</div>
         </td>
       </tr>`;
   });
 
   return `
-    <div style="width: 100%; max-width: 1000px; box-sizing: border-box; background-color: #FFFFFF; border: 1px solid #E2E8F0; border-left: 5px solid ${primaryColor}; border-radius: 12px; padding: 6px; display: block; text-align: left; margin: 12px 0; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.03);">
-      <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div style="width: 100%; max-width: 1000px; box-sizing: border-box; background-color: #e6d5c3;  border: 6px solid #c79165; border-radius: 12px; padding: 4px; display: block; text-align: left; margin: 10px 0;">
+      <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; background-color: rgba(253, 250, 245, 0.95); border-radius: 6px; overflow: hidden; font-family: 'Georgia', serif; font-size: 12px;">
         <thead>
-          <tr style="background-color: ${primaryColor}; color: #FFFFFF; height: 38px;">
-            <th style="width: 11%; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 4px; text-transform: uppercase;">DATA</th>
-            <th style="width: 25%; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 12px; text-transform: uppercase;">MOTORISTA</th>
-            <th style="width: 12%; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 4px; text-transform: uppercase;">PLACA</th>
-            <th style="width: 11%; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 4px; text-transform: uppercase;">BAÚ 1</th>
-            <th style="width: 11%; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 4px; text-transform: uppercase;">BAÚ 2</th>
-            <th style="width: 18%; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 4px; text-transform: uppercase;">TRECHO</th>
-            <th style="width: 12%; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 10px 12px; text-transform: uppercase;">VALOR NF</th>
+          <tr style="background-color: ${color}; background-image: linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%); color: ${textColor}; height: 42px;">
+            <th style="width: 11%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">DATA</th>
+            <th style="width: 25%; text-align: left; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 12px; border-bottom: 2px solid #c0a892;">MOTORISTA</th>
+            <th style="width: 12%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">PLACA</th>
+            <th style="width: 11%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">BAÚ 1</th>
+            <th style="width: 11%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">BAÚ 2</th>
+            <th style="width: 18%; text-align: center; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 4px; border-bottom: 2px solid #c0a892;">TRECHO</th>
+            <th style="width: 12%; text-align: right; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; letter-spacing: 0.15em; padding: 8px 12px; border-bottom: 2px solid #c0a892;">VALOR NF</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style="background-color: rgba(253, 250, 245, 0.95);">
           ${rowsHtml}
         </tbody>
       </table>
@@ -345,69 +330,30 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     };
 
     const htmlContent = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1E293B; max-width: 1000px; padding: 24px; background-color: #FAFDFE; border: 1px solid #E2E8F0; border-radius: 16px; box-shadow: 0 10px 25px rgba(30, 41, 59, 0.05); margin: 15px auto;">
+      <div style="font-family: sans-serif; color: #333;">
+        <p>${greeting}!</p>
+        <p>Segue relatórios de SM - Ida e Volta.</p>
         
-        <div style="border-bottom: 2px solid #EFF6FF; padding-bottom: 16px; margin-bottom: 20px; display: table; width: 100%;">
-          <div style="display: table-cell; vertical-align: middle;">
-            <span style="font-size: 20px; vertical-align: middle; margin-right: 6px;">☕</span>
-            <span style="font-size: 15px; font-weight: 800; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.05em;">Três Corações Alimentos</span>
-          </div>
-          <div style="display: table-cell; text-align: right; vertical-align: middle;">
-            <div style="background-color: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 20px; padding: 4px 12px; display: inline-block;">
-              <span style="font-size: 11px; font-weight: 700; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.05em;">SM - Relatório Consolidado</span>
-            </div>
-          </div>
-        </div>
-
-        <p style="font-size: 14px; color: #334155; margin: 0 0 4px 0; line-height: 1.5; font-weight: 600;">
-          ${greeting}!
-        </p>
-        <p style="font-size: 14px; color: #475569; margin: 0 0 24px 0; line-height: 1.5;">
-          Seguem abaixo os relatórios de SM consolidados de Ida e Volta.
-        </p>
-        
-        <div style="margin-top: 24px; margin-bottom: 28px;">
-          <div style="margin-bottom: 8px;">
-            <span style="font-size: 16px; margin-right: 6px; vertical-align: middle;">📈</span>
-            <h3 style="color: #1E3A8A; margin: 0; font-family: sans-serif; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; display: inline-block; vertical-align: middle;">ROTA IDA</h3>
-          </div>
-          <p style="font-size: 13px; color: #475569; margin: 0 0 12px 0;">
-            Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: <strong style="color: #1E3A8A;">${getJourneyDate(idaRows)}</strong>!
-          </p>
+        <div style="margin-top: 20px;">
+          <h3 style="color: #14325c; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA IDA ---</h3>
+          <p style="font-size: 13px;">${greeting},</p>
+          <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: <strong>${getJourneyDate(idaRows)}</strong>!</p>
           ${generateStyledTableHtml(idaRows, true)}
         </div>
 
-        <div style="margin-top: 28px; margin-bottom: 28px; border-top: 1px dashed #E2E8F0; padding-top: 24px;">
-          <div style="margin-bottom: 8px;">
-            <span style="font-size: 16px; margin-right: 6px; vertical-align: middle;">📉</span>
-            <h3 style="color: #B91C1C; margin: 0; font-family: sans-serif; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; display: inline-block; vertical-align: middle;">ROTA VOLTA</h3>
-          </div>
-          <p style="font-size: 13px; color: #475569; margin: 0 0 12px 0;">
-            Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: <strong style="color: #B91C1C;">${getJourneyDate(voltaRows)}</strong>!
-          </p>
+        <div style="margin-top: 30px;">
+          <h3 style="color: #7f1d1d; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA VOLTA ---</h3>
+          <p style="font-size: 13px;">${greeting},</p>
+          <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: <strong>${getJourneyDate(voltaRows)}</strong>!</p>
           ${generateStyledTableHtml(voltaRows, false)}
         </div>
 
-        <div style="background-color: #F8FAFC; border-left: 4px solid #10B981; border-radius: 8px; padding: 14px 18px; margin: 24px 0; display: table; width: 100%;">
-          <div style="display: table-cell; text-align: left; vertical-align: middle;">
-            <span style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.03em;">Total Consolidado das NF's</span>
-          </div>
-          <div style="display: table-cell; text-align: right; vertical-align: middle;">
-            <span style="font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 16px; font-weight: 800; color: #059669;">
-              R$ ${calculateTotal()}
-            </span>
-          </div>
-        </div>
-
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; font-size: 13px; color: #64748B;">
-          <p style="margin: 0 0 4px 0; font-weight: 600; color: #475569;">Atenciosamente,</p>
-          <p style="margin: 0; font-weight: 500; color: #1E3A8A;">Equipe de Monitoramento e Logística</p>
-          <p style="margin: 6px 0 0 0; font-size: 11px; color: #94A3B8;">Este e-mail contém relatórios automáticos gerados pelo sistema.</p>
-        </div>
+        <p style="margin-top: 20px;"><strong>Total Calculado: ${calculateTotal()}</strong></p>
+        <p>Att,</p>
       </div>
     `;
 
-    const textContent = `${greeting}!\n\nSegue relatórios de SM - Ida e Volta.\n\nROTA IDA\n${greeting}, Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: ${getJourneyDate(idaRows)}!\n${formatRowsText(idaRows, '')}\nROTA VOLTA\n${greeting}, Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${getJourneyDate(voltaRows)}!\n${formatRowsText(voltaRows, '')}\nTotal Calculado: R$ ${calculateTotal()}\n\nAtt,`;
+    const textContent = `${greeting}!\n\nSegue relatórios de SM - Ida e Volta.\n\nROTA IDA\n${greeting}, Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: ${getJourneyDate(idaRows)}!\n${formatRowsText(idaRows, '')}\nROTA VOLTA\n${greeting}, Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${getJourneyDate(voltaRows)}!\n${formatRowsText(voltaRows, '')}\nTotal Calculado: ${calculateTotal()}\n\nAtt,`;
 
     try {
       const typeHtml = "text/html";
@@ -428,12 +374,8 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   const copySection = async (rows: SMRow[], title: string, setCopiedStatus: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (rows.length === 0) return;
     
+    const color = title.includes('IDA') ? '#14325c' : '#7f1d1d';
     const isIda = title.includes('IDA');
-    const color = isIda ? '#1E3A8A' : '#B91C1C';
-    const badgeBg = isIda ? '#EFF6FF' : '#FEF2F2';
-    const badgeBorder = isIda ? '#BFDBFE' : '#FEE2E2';
-    const badgeText = isIda ? '#1E40AF' : '#B91C1C';
-    const signatureColor = isIda ? '#1E3A8A' : '#B91C1C';
     const greeting = getGreeting();
     const date = getJourneyDate(rows);
     
@@ -441,30 +383,12 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       ? `Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: ${date}!`
       : `Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${date}!`;
 
-    let html = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1E293B; max-width: 1000px; padding: 24px; background-color: #FAFDFE; border: 1px solid #E2E8F0; border-radius: 16px; box-shadow: 0 10px 25px rgba(30, 41, 59, 0.05); margin: 15px auto;">
-        <div style="background-color: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 20px; padding: 4px 12px; margin-bottom: 16px; display: inline-block;">
-          <span style="font-size: 11px; font-weight: 700; color: ${badgeText}; text-transform: uppercase; letter-spacing: 0.05em;">📊 Relatório de Escala</span>
-        </div>
-        
-        <h2 style="color: ${color}; margin: 0 0 12px 0; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">
-          ${title}
-        </h2>
-        
-        <p style="font-size: 14px; color: #334155; margin: 0 0 4px 0; line-height: 1.5; font-weight: 600;">
-          ${greeting},
-        </p>
-        <p style="font-size: 14px; color: #475569; margin: 0 0 18px 0; line-height: 1.5;">
-          ${phrase}
-        </p>
-        
-        ${generateStyledTableHtml(rows, isIda)}
-        
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; font-size: 12px; color: #64748B;">
-          <p style="margin: 0 0 4px 0; font-weight: 600; color: #475569;">Atenciosamente,</p>
-          <p style="margin: 0; font-weight: 500; color: ${signatureColor};">Equipe de Monitoramento e Logística • Três Corações Alimentos</p>
-        </div>
-      </div>`;
+    let html = `<div style="font-family: sans-serif; color: #333;">
+      <h3 style="color: ${color}; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ${title} ---</h3>
+      <p style="font-size: 13px;">${greeting},</p>
+      <p style="font-size: 13px;">${phrase}</p>
+      ${generateStyledTableHtml(rows, isIda)}
+    </div>`;
 
     let text = `--- ${title} ---\n${greeting},\n${phrase}\n\n`;
     text += `| DATA | MOTORISTA | PLACA | BAÚ 1 | BAÚ 2 | TRECHO | VALOR NF |\n`;
@@ -565,508 +489,496 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
             {/* Main Work Area */}
             <div className="xl:col-span-3 space-y-8">
               
-              {/* ROTA IDA (Delicate Blue Theme) */}
+              {/* ROTA IDA (Green Theme) */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
-                      <TrendingUp size={14} className="stroke-[2.5]" />
-                    </span>
-                    <span>Rota Ida</span>
+                  <h3 className="text-sm font-black text-[#3A2414] font-serif uppercase tracking-widest drop-shadow-sm flex items-center gap-2">
+                    <TrendingUp size={16} className="text-[#B32025]" /> Rota Ida
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('ida')}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-[#B32025] hover:brightness-110 text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
                     >
-                      <Plus size={12} className="stroke-[3]" /> Add Linha
+                      <Plus size={12} /> Add Linha
                     </button>
                     {idaRows.length > 0 && (
                       <button 
                         onClick={() => copySection(idaRows, 'ROTA IDA', setIdaCopied)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm hover:shadow-md",
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border-b-2",
                           idaCopied 
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white" 
-                            : "bg-slate-800 hover:bg-slate-900 text-white"
+                            ? "bg-green-600 text-white border-green-800" 
+                            : "bg-[#3A2414] text-white border-black/30 hover:brightness-110"
                         )}
                       >
-                        {idaCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} />}
+                        {idaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {idaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => saveIda([])} className="text-[10px] font-bold text-rose-500 hover:text-rose-600 transition-colors uppercase tracking-wider cursor-pointer pl-1">Limpar Tudo</button>
+                    <button onClick={() => saveIda([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden relative">
-                  <div className="relative z-10 w-full overflow-hidden p-1">
-                    {idaRows.length === 0 ? (
-                      <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50/40 h-full border border-dashed border-slate-200 rounded-xl shadow-inner">
-                        <div className="p-4 bg-blue-50 rounded-full mb-4 border border-blue-100">
-                          <Clipboard className="text-blue-500 w-8 h-8" />
-                        </div>
-                        <p className="text-sm text-slate-600 mb-4 font-sans font-medium">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
-                        <div className="flex flex-col gap-3 w-full max-w-md">
-                          <textarea 
-                            onPaste={(e) => handlePaste(e, 'ida')}
-                            placeholder="Pressione Ctrl+V aqui para colar..."
-                            className="w-full h-24 bg-white border border-slate-200 shadow-sm rounded-xl p-4 text-xs font-mono text-slate-700 outline-none placeholder-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 resize-none transition-all"
-                          />
-                          <button 
-                            onClick={() => addNewRow('ida')}
-                            className="w-full py-3 border border-dashed border-blue-300 hover:border-blue-500 rounded-xl text-blue-600 hover:text-blue-700 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all bg-white"
-                          >
-                            <Plus size={16} className="stroke-[2.5]" /> Adicionar manualmente
-                          </button>
-                        </div>
+                <div className="bg-white/40 border-4 border-[#3A2414] rounded-2xl shadow-sm overflow-hidden relative"><div className="relative z-10 w-full overflow-hidden p-1.5">
+                  {idaRows.length === 0 ? (
+                    <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fdfaf5] h-full border border-[#c0a892]/50 shadow-inner">
+                      <div className="p-4 bg-[#7a4b31]/10 rounded-full mb-4 border border-[#7a4b31]/20">
+                        <Clipboard className="text-[#a57045] w-8 h-8" />
                       </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                          <thead>
-                            <tr className="bg-gradient-to-r from-blue-900 to-blue-700 text-white text-[10px] uppercase font-bold tracking-widest border-b border-blue-950/25 shadow-sm">
-                              <th className="p-4 w-10 text-center">#</th>
-                              <th className="p-4 w-12 text-center">OK</th>
-                              <th className="p-4">Data</th>
-                              <th className="p-4">Motorista</th>
-                              <th className="p-4 text-center">Placa</th>
-                              <th className="p-4 text-center">Baú 1</th>
-                              <th className="p-4 text-center">Baú 2</th>
-                              <th className="p-4">Trecho</th>
-                              <th className="p-4 text-right">Valor NF</th>
-                              <th className="p-4 w-12 text-center">Ações</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 bg-white font-sans">
-                            {idaRows.map((row, i) => (
-                              <tr key={i} className="text-xs text-slate-800 hover:bg-blue-50/20 transition-all group/row font-sans relative">
-                                <td className="p-3 text-center text-slate-400 font-mono font-bold text-xs w-10">
-                                  {i + 1}
-                                </td>
-                                <td className="p-3 text-center w-12">
-                                  <button
-                                    type="button"
-                                    onClick={() => updateRowValue(i, 'ok', !row.ok, 'ida')}
-                                    className={cn(
-                                      "w-5 h-5 mx-auto flex items-center justify-center rounded-md border-2 transition-all cursor-pointer",
-                                      row.ok 
-                                        ? "bg-blue-600 border-blue-700 text-white shadow-sm" 
-                                        : "bg-slate-50 border-slate-200 text-transparent hover:border-blue-500/50"
-                                    )}
-                                    title={row.ok ? "Marcar como pendente" : "Marcar como OK"}
-                                  >
-                                    <Check size={12} className="stroke-[3]" />
-                                  </button>
-                                </td>
-                                <td className="p-3">
+                      <p className="text-sm text-[#4a3623] mb-4 font-serif">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
+                      <div className="flex flex-col gap-3 w-full max-w-md">
+                        <textarea 
+                          onPaste={(e) => handlePaste(e, 'ida')}
+                          placeholder="Ctrl+V aqui..."
+                          className="w-full h-24 bg-white/5 border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)]  bg-[#d2c2b2] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-green-500/50 resize-none"
+                        />
+                        <button 
+                          onClick={() => addNewRow('ida')}
+                          className="w-full py-3 border border-dashed border-[#14325c]/50 rounded-xl text-[#14325c] hover:text-[#1e3a8a] flex items-center justify-center gap-2 text-xs font-bold uppercase"
+                        >
+                          <Plus size={16} /> Adicionar manualmente
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gradient-to-b from-[#14325c] to-[#0f2a4a] text-[#e2e8f0] text-[10px] uppercase font-bold tracking-[0.2em] border-b border-[#1e3a8a] shadow-sm">
+                            <th className="p-4 w-10 text-center">#</th>
+                            <th className="p-4 w-12 text-center">OK</th>
+                            <th className="p-4">Data</th>
+                            <th className="p-4">Motorista</th>
+                            <th className="p-4 text-center">Placa</th>
+                            <th className="p-4 text-center">Baú 1</th>
+                            <th className="p-4 text-center">Baú 2</th>
+                            <th className="p-4">Trecho</th>
+                            <th className="p-4 text-right">Valor NF</th>
+                            <th className="p-4 w-12 text-center">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#c0a892]/50 bg-[#fdfaf5]/90 font-serif backdrop-blur-sm">
+                          {idaRows.map((row, i) => (
+                            <tr key={i} className="text-xs text-[#4a3623] hover:bg-[#d0a782]/10 transition-all group/row font-bold relative">
+                              <td className="p-3 text-center text-stone-500 font-mono font-bold text-xs w-10">
+                                {i + 1}
+                              </td>
+                              <td className="p-3 text-center w-12">
+                                <button
+                                  type="button"
+                                  onClick={() => updateRowValue(i, 'ok', !row.ok, 'ida')}
+                                  className={cn(
+                                    "w-5 h-5 mx-auto flex items-center justify-center rounded-md border-2 transition-all cursor-pointer",
+                                    row.ok 
+                                      ? "bg-green-600 border-green-700 text-white shadow-sm" 
+                                      : "bg-stone-100 border-stone-300 text-transparent hover:border-green-600/50"
+                                  )}
+                                  title={row.ok ? "Marcar como pendente" : "Marcar como OK"}
+                                >
+                                  <Check size={12} className="stroke-[3]" />
+                                </button>
+                              </td>
+                              <td className="p-3">
+                                <input 
+                                  type="text"
+                                  value={row.dataSaida}
+                                  onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'ida')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                />
+                              </td>
+                              <td className="p-3 font-bold group/cell">
+                                <div className="flex items-center gap-2">
                                   <input 
                                     type="text"
-                                    value={row.dataSaida}
-                                    onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'ida')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-mono"
+                                    value={row.motorista}
+                                    onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'ida')}
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
                                   />
-                                </td>
-                                <td className="p-3 font-bold group/cell">
-                                  <div className="flex items-center gap-2">
-                                    <input 
-                                      type="text"
-                                      value={row.motorista}
-                                      onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'ida')}
-                                      className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all uppercase font-medium"
-                                    />
-                                    <button 
-                                      onClick={() => navigator.clipboard.writeText(row.motorista)}
-                                      className="opacity-0 group-hover/cell:opacity-100 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-600 transition-all shrink-0"
-                                      title="Copiar Motorista"
-                                    >
-                                      <Copy size={12} />
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="p-3 text-center">
-                                  <input 
-                                    type="text"
-                                    value={row.placa}
-                                    onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'ida')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold tracking-widest uppercase font-mono"
-                                  />
-                                </td>
-                                <td className="p-3 text-center">
-                                  <input 
-                                    type="text"
-                                    value={row.bau1}
-                                    onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'ida')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-mono"
-                                  />
-                                </td>
-                                <td className="p-3 text-center">
-                                  <input 
-                                    type="text"
-                                    value={row.bau2}
-                                    onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'ida')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-mono"
-                                  />
-                                </td>
-                                <td className="p-3">
-                                  <input 
-                                    type="text"
-                                    value={row.trecho}
-                                    onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'ida')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all uppercase font-medium"
-                                  />
-                                </td>
-                                <td className="p-3 text-right font-bold text-emerald-600 group/cell">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button 
-                                      onClick={() => navigator.clipboard.writeText(row.valorNf)}
-                                      className="opacity-0 group-hover/cell:opacity-100 p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-emerald-600 transition-all shrink-0"
-                                      title="Copiar Valor"
-                                    >
-                                      <Copy size={12} />
-                                    </button>
-                                    <input 
-                                      type="text"
-                                      value={row.valorNf}
-                                      onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'ida')}
-                                      className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-emerald-600 font-bold shadow-sm rounded-lg py-1.5 px-3 text-right focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all font-mono"
-                                    />
-                                  </div>
-                                </td>
-                                <td className="p-3 text-center">
                                   <button 
-                                    onClick={() => saveIda(idaRows.filter((_, idx) => idx !== i))} 
-                                    className="p-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all shadow-sm"
+                                    onClick={() => navigator.clipboard.writeText(row.motorista)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-green-500/10 hover:bg-green-500/30 rounded-lg text-green-500 transition-all shrink-0"
+                                    title="Copiar Motorista"
                                   >
-                                    <Trash2 size={14} />
+                                    <Copy size={12} />
                                   </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.placa}
+                                  onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'ida')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-black tracking-widest uppercase"
+                                />
+                              </td>
+                              <td className="p-3 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.bau1}
+                                  onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'ida')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                />
+                              </td>
+                              <td className="p-3 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.bau2}
+                                  onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'ida')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                />
+                              </td>
+                              <td className="p-3">
+                                <input 
+                                  type="text"
+                                  value={row.trecho}
+                                  onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'ida')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
+                                />
+                              </td>
+                              <td className="p-3 text-right font-black text-green-500 group/cell">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button 
+                                    onClick={() => navigator.clipboard.writeText(row.valorNf)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-green-500/10 hover:bg-green-500/30 rounded-lg text-green-500 transition-all shrink-0"
+                                    title="Copiar Valor"
+                                  >
+                                    <Copy size={12} />
+                                  </button>
+                                  <input 
+                                    type="text"
+                                    value={row.valorNf}
+                                    onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'ida')}
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all font-mono"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <button 
+                                  onClick={() => saveIda(idaRows.filter((_, idx) => idx !== i))} 
+                                  className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-lg shadow-rose-500/10"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div></div></section>
 
-              {/* ROTA VOLTA (Delicate Indigo Theme) */}
+              {/* ROTA VOLTA (Sky Theme) */}
               <section className="space-y-4 animate-fade-in">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
-                      <Download size={14} className="rotate-180 stroke-[2.5]" />
-                    </span>
-                    <span>Rota Volta</span>
+                  <h3 className="text-sm font-black text-[#3A2414] font-serif uppercase tracking-widest flex items-center gap-2 drop-shadow-sm">
+                    <Download size={16} className="rotate-180 text-[#B32025]" /> Rota Volta
                   </h3>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => addNewRow('volta')}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-[#B32025] hover:brightness-110 text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
                     >
-                      <Plus size={12} className="stroke-[3]" /> Add Linha
+                      <Plus size={12} /> Add Linha
                     </button>
                     {voltaRows.length > 0 && (
                       <button 
                         onClick={() => copySection(voltaRows, 'ROTA VOLTA', setVoltaCopied)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm hover:shadow-md",
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border-b-2",
                           voltaCopied 
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white" 
-                            : "bg-slate-800 hover:bg-slate-900 text-white"
+                            ? "bg-green-600 text-white border-green-800" 
+                            : "bg-[#3A2414] text-white border-black/30 hover:brightness-110"
                         )}
                       >
-                        {voltaCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} />}
+                        {voltaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {voltaCopied ? 'Copiado!' : 'Copiar Planilha'}
                       </button>
                     )}
-                    <button onClick={() => saveVolta([])} className="text-[10px] font-bold text-rose-500 hover:text-rose-600 transition-colors uppercase tracking-wider cursor-pointer pl-1">Limpar Tudo</button>
+                    <button onClick={() => saveVolta([])} className="text-[10px] font-black text-[#B32025] hover:underline uppercase tracking-tighter cursor-pointer pl-1">Limpar Tudo</button>
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden relative">
-                  <div className="relative z-10 w-full overflow-hidden p-1">
-                    {voltaRows.length === 0 ? (
-                      <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50/40 h-full border border-dashed border-slate-200 rounded-xl shadow-inner">
-                        <div className="p-4 bg-indigo-50 rounded-full mb-4 border border-indigo-100">
-                          <Clipboard className="text-indigo-500 w-8 h-8" />
-                        </div>
-                        <p className="text-sm text-slate-600 mb-4 font-sans font-medium">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
-                        <div className="flex flex-col gap-3 w-full max-w-md">
-                          <textarea 
-                            onPaste={(e) => handlePaste(e, 'volta')}
-                            placeholder="Pressione Ctrl+V aqui para colar..."
-                            className="w-full h-24 bg-white border border-slate-200 shadow-sm rounded-xl p-4 text-xs font-mono text-slate-700 outline-none placeholder-slate-400 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 resize-none transition-all"
-                          />
-                          <button 
-                            onClick={() => addNewRow('volta')}
-                            className="w-full py-3 border border-dashed border-indigo-300 hover:border-indigo-500 rounded-xl text-indigo-600 hover:text-indigo-700 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all bg-white"
-                          >
-                            <Plus size={16} className="stroke-[2.5]" /> Adicionar manualmente
-                          </button>
-                        </div>
+                <div className="bg-white/40 border-4 border-[#3A2414] rounded-2xl shadow-sm overflow-hidden relative"><div className="relative z-10 w-full overflow-hidden p-1.5">
+                  {voltaRows.length === 0 ? (
+                    <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fdfaf5] h-full border border-[#c0a892]/50 shadow-inner">
+                      <div className="p-4 bg-[#b91c1c]/10 rounded-full mb-4 border border-[#b91c1c]/20">
+                        <Clipboard className="text-[#b91c1c] w-8 h-8" />
                       </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                          <thead>
-                            <tr className="bg-gradient-to-r from-indigo-900 to-indigo-700 text-white text-[10px] uppercase font-bold tracking-widest border-b border-indigo-950/25 shadow-sm">
-                              <th className="p-4 w-10 text-center">#</th>
-                              <th className="p-4 w-12 text-center">OK</th>
-                              <th className="p-4">Data</th>
-                              <th className="p-4">Motorista</th>
-                              <th className="p-4 text-center">Placa</th>
-                              <th className="p-4 text-center">Baú 1</th>
-                              <th className="p-4 text-center">Baú 2</th>
-                              <th className="p-4">Trecho</th>
-                              <th className="p-4 text-right">Valor NF</th>
-                              <th className="p-4 w-12 text-center">Ações</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 bg-white font-sans">
-                            {voltaRows.map((row, i) => (
-                              <tr key={i} className="text-xs text-slate-800 hover:bg-indigo-50/20 transition-all group/row font-sans relative">
-                                <td className="p-3 text-center text-slate-400 font-mono font-bold text-xs w-10">
-                                  {i + 1}
-                                </td>
-                                <td className="p-3 text-center w-12">
-                                  <button
-                                    type="button"
-                                    onClick={() => updateRowValue(i, 'ok', !row.ok, 'volta')}
-                                    className={cn(
-                                      "w-5 h-5 mx-auto flex items-center justify-center rounded-md border-2 transition-all cursor-pointer",
-                                      row.ok 
-                                        ? "bg-blue-600 border-blue-700 text-white shadow-sm" 
-                                        : "bg-slate-50 border-slate-200 text-transparent hover:border-blue-500/50"
-                                    )}
-                                    title={row.ok ? "Marcar como pendente" : "Marcar como OK"}
-                                  >
-                                    <Check size={12} className="stroke-[3]" />
-                                  </button>
-                                </td>
-                                <td className="p-3">
+                      <p className="text-sm text-[#4a3623] mb-4 font-serif">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
+                      <div className="flex flex-col gap-3 w-full max-w-md">
+                        <textarea 
+                          onPaste={(e) => handlePaste(e, 'volta')}
+                          placeholder="Ctrl+V aqui..."
+                          className="w-full h-24  bg-[#d2c2b2] border border-[#c0a892] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-xl p-4 text-xs font-mono text-[#4a3623] outline-none placeholder-[#a57045]/50 focus:border-[#b91c1c] resize-none"
+                        />
+                        <button 
+                          onClick={() => addNewRow('volta')}
+                          className="w-full py-3 border border-dashed border-[#991b1b]/50 rounded-xl text-[#991b1b] hover:text-[#b91c1c] flex items-center justify-center gap-2 text-xs font-bold uppercase"
+                        >
+                          <Plus size={16} /> Adicionar manualmente
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gradient-to-b from-[#7f1d1d] to-[#991b1b] text-[#fdfaf5] text-[10px] uppercase font-bold tracking-[0.2em] border-b border-[#450a0a] shadow-sm">
+                            <th className="p-4 w-10 text-center">#</th>
+                            <th className="p-4 w-12 text-center">OK</th>
+                            <th className="p-4">Data</th>
+                            <th className="p-4">Motorista</th>
+                            <th className="p-4 text-center">Placa</th>
+                            <th className="p-4 text-center">Baú 1</th>
+                            <th className="p-4 text-center">Baú 2</th>
+                            <th className="p-4">Trecho</th>
+                            <th className="p-4 text-right">Valor NF</th>
+                            <th className="p-4 w-12 text-center">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#c0a892]/50 bg-[#fdfaf5]/90 font-serif backdrop-blur-sm">
+                          {voltaRows.map((row, i) => (
+                            <tr key={i} className="text-xs text-[#4a3623] hover:bg-[#d0a782]/10 transition-all group/row font-bold relative">
+                              <td className="p-3 text-center text-stone-500 font-mono font-bold text-xs w-10">
+                                {i + 1}
+                              </td>
+                              <td className="p-3 text-center w-12">
+                                <button
+                                  type="button"
+                                  onClick={() => updateRowValue(i, 'ok', !row.ok, 'volta')}
+                                  className={cn(
+                                    "w-5 h-5 mx-auto flex items-center justify-center rounded-md border-2 transition-all cursor-pointer",
+                                    row.ok 
+                                      ? "bg-green-600 border-green-700 text-white shadow-sm" 
+                                      : "bg-stone-100 border-stone-300 text-transparent hover:border-green-600/50"
+                                  )}
+                                  title={row.ok ? "Marcar como pendente" : "Marcar como OK"}
+                                >
+                                  <Check size={12} className="stroke-[3]" />
+                                </button>
+                              </td>
+                              <td className="p-3">
+                                <input 
+                                  type="text"
+                                  value={row.dataSaida}
+                                  onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'volta')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                />
+                              </td>
+                              <td className="p-3 font-bold group/cell">
+                                <div className="flex items-center gap-2">
                                   <input 
                                     type="text"
-                                    value={row.dataSaida}
-                                    onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-mono"
+                                    value={row.motorista}
+                                    onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'volta')}
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
                                   />
-                                </td>
-                                <td className="p-3 font-bold group/cell">
-                                  <div className="flex items-center gap-2">
-                                    <input 
-                                      type="text"
-                                      value={row.motorista}
-                                      onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'volta')}
-                                      className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all uppercase font-medium"
-                                    />
-                                    <button 
-                                      onClick={() => navigator.clipboard.writeText(row.motorista)}
-                                      className="opacity-0 group-hover/cell:opacity-100 p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-indigo-600 transition-all shrink-0"
-                                      title="Copiar Motorista"
-                                    >
-                                      <Copy size={12} />
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="p-3 text-center">
-                                  <input 
-                                    type="text"
-                                    value={row.placa}
-                                    onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-bold tracking-widest uppercase font-mono"
-                                  />
-                                </td>
-                                <td className="p-3 text-center">
-                                  <input 
-                                    type="text"
-                                    value={row.bau1}
-                                    onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-mono"
-                                  />
-                                </td>
-                                <td className="p-3 text-center">
-                                  <input 
-                                    type="text"
-                                    value={row.bau2}
-                                    onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-mono"
-                                  />
-                                </td>
-                                <td className="p-3">
-                                  <div className="flex items-center gap-2 group/trecho">
-                                    <input 
-                                      type="text"
-                                      value={row.trecho}
-                                      onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'volta')}
-                                      className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-slate-800 shadow-sm rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all uppercase font-medium"
-                                    />
-                                    <button 
-                                      onClick={() => {
-                                        const inverted = invertRoute(row.trecho);
-                                        updateRowValue(i, 'trecho', inverted, 'volta');
-                                      }}
-                                      className="opacity-0 group-hover/trecho:opacity-100 p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 transition-all shrink-0 shadow-sm"
-                                      title="Inverter Rota"
-                                    >
-                                      <RefreshCw size={12} />
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="p-3 text-right font-bold text-emerald-600 group/cell">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button 
-                                      onClick={() => navigator.clipboard.writeText(row.valorNf)}
-                                      className="opacity-0 group-hover/cell:opacity-100 p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-emerald-600 transition-all shrink-0"
-                                      title="Copiar Valor"
-                                    >
-                                      <Copy size={12} />
-                                    </button>
-                                    <input 
-                                      type="text"
-                                      value={row.valorNf}
-                                      onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'volta')}
-                                      className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-emerald-600 font-bold shadow-sm rounded-lg py-1.5 px-3 text-right focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all font-mono"
-                                    />
-                                  </div>
-                                </td>
-                                <td className="p-3 text-center">
                                   <button 
-                                    onClick={() => saveVolta(voltaRows.filter((_, idx) => idx !== i))} 
-                                    className="p-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all shadow-sm"
+                                    onClick={() => navigator.clipboard.writeText(row.motorista)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-red-500/10 hover:bg-red-500/30 rounded-lg text-red-500 transition-all shrink-0"
+                                    title="Copiar Motorista"
                                   >
-                                    <Trash2 size={14} />
+                                    <Copy size={12} />
                                   </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.placa}
+                                  onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'volta')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-black tracking-widest uppercase"
+                                />
+                              </td>
+                              <td className="p-3 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.bau1}
+                                  onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'volta')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                />
+                              </td>
+                              <td className="p-3 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.bau2}
+                                  onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'volta')}
+                                  className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-center focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                />
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-2 group/trecho">
+                                  <input 
+                                    type="text"
+                                    value={row.trecho}
+                                    onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'volta')}
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all uppercase"
+                                  />
+                                  <button 
+                                    onClick={() => {
+                                      const inverted = invertRoute(row.trecho);
+                                      updateRowValue(i, 'trecho', inverted, 'volta');
+                                    }}
+                                    className="opacity-0 group-hover/trecho:opacity-100 p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shrink-0 shadow-lg"
+                                    title="Inverter Rota"
+                                  >
+                                    <RefreshCw size={12} />
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="p-3 text-right font-black text-red-500 group/cell">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button 
+                                    onClick={() => navigator.clipboard.writeText(row.valorNf)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-red-500/10 hover:bg-red-500/30 rounded-lg text-red-500 transition-all shrink-0"
+                                    title="Copiar Valor"
+                                  >
+                                    <Copy size={12} />
+                                  </button>
+                                  <input 
+                                    type="text"
+                                    value={row.valorNf}
+                                    onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'volta')}
+                                    className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 text-right focus:bg-red-500/10 focus:border-red-500/30 outline-none transition-all font-mono"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <button 
+                                  onClick={() => saveVolta(voltaRows.filter((_, idx) => idx !== i))} 
+                                  className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-lg shadow-rose-500/10"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div></div></section>
             </div>
 
             {/* Calculator Sidebar */}
             <div className="space-y-6">
-              <div className="bg-white border border-slate-200 p-1.5 rounded-3xl shadow-xl relative overflow-hidden h-full flex flex-col">
-                <div className="border border-slate-100 bg-slate-50/50 rounded-2xl p-6 flex flex-col flex-1 relative shadow-inner">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider font-sans">
-                      <Calculator size={16} className="text-blue-600" />
-                      Soma de Valores
-                    </h3>
+              <div className="bg-white/45 border-4 border-[#3A2414] p-1.5 rounded-3xl shadow-[0_8px_20px_rgba(58,36,20,0.06)] relative overflow-hidden h-full flex flex-col">
+       <div className="border border-[#3A2414]/15 bg-[#fdfcf9] rounded-2xl p-6 flex flex-col flex-1 relative shadow-inner">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-sm font-bold text-[#3A2414] font-serif flex items-center gap-2 drop-shadow-sm uppercase">
+                    <Calculator size={16} className="text-[#B32025]" />
+                    Soma de Valores
+                  </h3>
+                  <button 
+                    onClick={() => saveCalc(calcValues.map(() => ''))}
+                    className="p-1.5 text-[#B32025] hover:underline text-shadow-sm font-serif ml-2 transition-colors cursor-pointer"
+                    title="Resetar calculadora"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                <div className="bg-gradient-to-br from-[#B32025] to-[#8c060d] rounded-xl p-6 mb-6 border border-[#3A2414]/25 shadow-md text-center relative group/total overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+                  <p className="text-[11px] font-black text-white/80 font-serif uppercase tracking-[0.2em] mb-2">Total Consolidado</p>
+                  <h4 className="text-3xl font-black text-white tracking-tighter font-serif drop-shadow-md">
+                    <span className="text-orange-200 mr-2 text-xl font-medium">R$</span>
+                    {calculateTotal()}
+                  </h4>
+                  <div className="absolute top-3 right-3 opacity-0 group-hover/total:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                     <button 
-                      onClick={() => saveCalc(calcValues.map(() => ''))}
-                      className="p-1.5 text-rose-500 hover:text-rose-600 font-sans text-xs font-bold transition-colors cursor-pointer"
-                      title="Resetar calculadora"
+                      onClick={copyTotalRaw}
+                      className={cn(
+                        "p-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center cursor-pointer",
+                        totalRawCopied ? "bg-green-650 text-white" : "bg-white/10 text-white hover:bg-white/20"
+                      )}
+                      title="Copiar Valor"
                     >
-                      <Trash2 size={14} />
+                      {totalRawCopied ? <Check size={18} /> : <Copy size={18} />}
                     </button>
                   </div>
+                </div>
 
-                  <div className="bg-gradient-to-br from-blue-900 to-blue-700 rounded-xl p-6 mb-6 border border-blue-950/20 shadow-md text-center relative group/total overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                    <p className="text-[11px] font-black text-blue-100 font-sans uppercase tracking-[0.2em] mb-2">Total Consolidado</p>
-                    <h4 className="text-3xl font-black text-white tracking-tighter font-sans drop-shadow-sm">
-                      <span className="text-blue-200 mr-2 text-xl font-medium">R$</span>
-                      {calculateTotal()}
-                    </h4>
-                    <div className="absolute top-3 right-3 opacity-0 group-hover/total:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                      <button 
-                        onClick={copyTotalRaw}
-                        className={cn(
-                          "p-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center cursor-pointer",
-                          totalRawCopied ? "bg-emerald-600 text-white" : "bg-white/10 text-white hover:bg-white/20"
+                <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] no-scrollbar pr-1">
+                  {calcValues.map((val, i) => (
+                    <div key={i} className="group relative flex items-center">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-[10px]">R$</div>
+                      <input
+                        type="text"
+                        value={val}
+                        onChange={(e) => updateCalcValue(i, e.target.value)}
+                        placeholder="0,00"
+                        className="w-full bg-white border border-[#3A2414]/15 rounded-xl pl-9 pr-20 py-3 text-sm text-[#2D1A10] font-mono focus:border-[#B32025] outline-none transition-all placeholder:text-stone-300 shadow-sm"
+                      />
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                        {val && (
+                          <button 
+                            onClick={() => updateCalcValue(i, '')}
+                            className="text-[#3A2414]/40 hover:text-[#B32025] hover:bg-[#B32025]/5 rounded-lg p-1.5 transition-all cursor-pointer"
+                            title="Limpar Campo"
+                          >
+                            <X size={13} className="stroke-[2.5]" />
+                          </button>
                         )}
-                        title="Copiar Valor"
-                      >
-                        {totalRawCopied ? <Check size={18} /> : <Copy size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] no-scrollbar pr-1">
-                    {calcValues.map((val, i) => (
-                      <div key={i} className="group relative flex items-center">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">R$</div>
-                        <input
-                          type="text"
-                          value={val}
-                          onChange={(e) => updateCalcValue(i, e.target.value)}
-                          placeholder="0,00"
-                          className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-20 py-3 text-sm text-slate-800 font-mono focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300 shadow-sm"
-                        />
-                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                          {val && (
-                            <button 
-                              onClick={() => updateCalcValue(i, '')}
-                              className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg p-1.5 transition-all cursor-pointer"
-                              title="Limpar Campo"
-                            >
-                              <X size={13} className="stroke-[2.5]" />
-                            </button>
-                          )}
-                          {calcValues.length > 1 && (
-                            <button 
-                              onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i))}
-                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg p-1.5 transition-all cursor-pointer"
-                              title="Remover Linha"
-                            >
-                              <Trash2 size={13} className="stroke-[2.5]" />
-                            </button>
-                          )}
-                        </div>
+                        {calcValues.length > 1 && (
+                          <button 
+                            onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i))}
+                            className="text-[#3A2414]/40 hover:text-red-650 hover:bg-[#B32025]/5 rounded-lg p-1.5 transition-all cursor-pointer"
+                            title="Remover Linha"
+                          >
+                            <Trash2 size={13} className="stroke-[2.5]" />
+                          </button>
+                        )}
                       </div>
-                    ))}
-                    
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <motion.button 
-                        whileHover={{ scale: 1.01, backgroundColor: "rgba(37, 99, 235, 0.05)" }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={addCalcLine}
-                        className="py-4 border-2 border-dashed border-slate-200 hover:border-blue-500 rounded-xl text-slate-600 hover:text-blue-600 flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
-                      >
-                        <Plus size={16} /> Adicionar Linha
-                      </motion.button>
-
-                      <motion.button 
-                        whileHover={{ scale: 1.01, backgroundColor: "rgba(225, 29, 72, 0.05)" }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => saveCalc(calcValues.map(() => ''))}
-                        className="py-4 border-2 border-dashed border-rose-200 hover:border-rose-500 text-rose-500 hover:text-rose-600 rounded-xl flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
-                        title="Limpar todos os valores adicionados"
-                      >
-                        <Trash2 size={16} /> Limpar Tudo
-                      </motion.button>
                     </div>
-                  </div>
+                  ))}
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <motion.button 
+                      whileHover={{ scale: 1.01, backgroundColor: "rgba(179, 32, 37, 0.05)" }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={addCalcLine}
+                      className="py-4 border-2 border-dashed border-[#3A2414]/20 hover:border-[#B32025] rounded-xl text-[#3A2414] hover:text-[#B32025] flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
+                    >
+                      <Plus size={16} /> Adicionar Linha
+                    </motion.button>
 
-                  <div className="mt-8 pt-6 border-t border-slate-100 bg-white/50 p-4 rounded-xl shadow-inner">
+                    <motion.button 
+                      whileHover={{ scale: 1.01, backgroundColor: "rgba(225, 29, 72, 0.05)" }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => saveCalc(calcValues.map(() => ''))}
+                      className="py-4 border-2 border-dashed border-rose-500/20 hover:border-rose-500 text-rose-500/80 hover:text-rose-500 rounded-xl flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-[0.15em] bg-transparent cursor-pointer"
+                      title="Limpar todos os valores adicionados"
+                    >
+                      <Trash2 size={16} /> Limpar Tudo
+                    </motion.button>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-[#3A2414]/15 bg-white/50 p-4 rounded-xl shadow-inner">
                     <div className="flex items-start gap-4">
-                      <div className="p-2 bg-blue-50 rounded-lg text-blue-600 mt-1 border border-blue-100">
+                      <div className="p-2 bg-[#B32025]/10 rounded-lg text-[#B32025] mt-1 border border-[#B32025]/15">
                         <Info size={14} />
                       </div>
-                      <p className="text-[10px] text-slate-500 leading-relaxed font-sans font-medium">
+                      <p className="text-[10px] text-[#3A2414]/85 leading-relaxed font-serif font-bold">
                         A calculadora aceita valores com pontos e vírgulas. A soma é atualizada em tempo real.
                       </p>
                     </div>
-                  </div>
                 </div>
               </div>
+            </div>
               
-              <div className="bg-white border border-slate-200 p-4 flex items-center justify-between group cursor-pointer hover:border-blue-500 transition-all rounded-xl shadow-sm mt-4">
+              <div className="bg-[#fdfcf9] border border-[#3A2414]/15 p-4 flex items-center justify-between group cursor-pointer hover:border-[#B32025] transition-all rounded-xl shadow-sm mt-4">
                 <div className="flex items-center gap-3">
-                  <CalendarIcon size={18} className="text-blue-600 group-hover:scale-110 transition-transform" />
+                  <CalendarIcon size={18} className="text-[#B32025] group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-sans">Última Atualização</p>
-                    <p className="text-xs font-bold text-slate-700 font-sans">Agora mesmo</p>
+                    <p className="text-[10px] font-black text-[#3A2414]/60 uppercase tracking-widest font-serif drop-shadow-sm">Última Atualização</p>
+                    <p className="text-xs font-bold text-[#3A2414] font-serif">Agora mesmo</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                <ChevronRight size={16} className="text-[#3A2414]/40 group-hover:text-[#B32025] transition-colors" />
               </div>
             </div>
             

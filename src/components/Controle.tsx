@@ -312,6 +312,9 @@ export default function Controle({ onBack }: ControleProps) {
 
   const allTransportadoras = [...TRANSPORTADORAS, ...customTransportadoras];
 
+  const isPaletizado1 = sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
+  const isPaletizado2 = sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
+
   // Sync transportadora and motorista states when either updates, keeping both sections intuitive
   const handleSidebarTranspChange = (val: string) => {
     setSidebarTransportadora(val);
@@ -739,8 +742,6 @@ export default function Controle({ onBack }: ControleProps) {
 
   // Function to build and copy HTML template for Email pasting
   const handleCopyToEmail = async () => {
-    const isPaletizado1 = sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
-    const isPaletizado2 = sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
 
     // Helper to render ladder visual grid inside email HTML matching the provided style
     const renderLadderHtml = (
@@ -990,7 +991,7 @@ export default function Controle({ onBack }: ControleProps) {
                       sidebarEmbarque1
                         ? `
                         <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: ${isPaletizado1 ? '6px' : '10px'}; margin: 0 auto 10px auto; width: ${isPaletizado1 ? '140px' : '300px'}; height: ${isPaletizado1 ? '180px' : '380px'}; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                          <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain;">
+                          <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: ${isPaletizado1 ? '35%' : '95%'}; max-height: ${isPaletizado1 ? '35%' : '95%'}; width: auto; height: auto; object-fit: contain;">
                         </div>
                         `
                         : `${renderLadderHtml(ladder1, "ESCALA 01", carreta1, "").replace('padding-right: 15px; padding-top: 15px;', '')}`
@@ -1008,7 +1009,7 @@ export default function Controle({ onBack }: ControleProps) {
                       sidebarEmbarque2
                         ? `
                         <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: ${isPaletizado2 ? '6px' : '10px'}; margin: 0 auto 10px auto; width: ${isPaletizado2 ? '140px' : '300px'}; height: ${isPaletizado2 ? '180px' : '380px'}; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                          <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain;">
+                          <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: ${isPaletizado2 ? '35%' : '95%'}; max-height: ${isPaletizado2 ? '35%' : '95%'}; width: auto; height: auto; object-fit: contain;">
                         </div>
                         `
                         : `${renderLadderHtml(ladder2, "ESCALA 02", carreta2, "").replace('padding-top: 15px;', '')}`
@@ -1759,7 +1760,10 @@ Embarque: ${
                                   src={sidebarEmbarque1}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
-                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
+                                  className={cn(
+                                    "w-auto h-auto object-contain bg-white mx-auto block border-0 transition-all duration-300",
+                                    isPaletizado1 ? "max-w-[35%] max-h-[35%]" : "max-w-[95%] max-h-[95%]"
+                                  )}
                                 />
                               </div>
                               <div className="text-center mt-[15px]">
@@ -1823,7 +1827,10 @@ Embarque: ${
                                   src={sidebarEmbarque2}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
-                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
+                                  className={cn(
+                                    "w-auto h-auto object-contain bg-white mx-auto block border-0 transition-all duration-300",
+                                    isPaletizado2 ? "max-w-[35%] max-h-[35%]" : "max-w-[95%] max-h-[95%]"
+                                  )}
                                 />
                               </div>
                               <div className="text-center mt-[15px]">
