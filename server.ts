@@ -4,11 +4,9 @@ import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createRequire } from "module";
-import multer from 'multer';
 
 const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
-const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 const PORT = 3000;
@@ -325,55 +323,37 @@ function extractNfValueFromText(text: string): { valor: number; valorFormatado: 
   return null;
 }
 
-app.post("/api/parse-nf-pdfs", upload.any(), async (req, res) => {
+app.post("/api/parse-nf-pdfs", async (req, res) => {
   try {
-    const fileListToProcess: Array<{ name: string; buffer: Buffer }> = [];
-
-    // 1. Check for files uploaded via FormData (req.files)
-    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      for (const f of req.files as Express.Multer.File[]) {
-        fileListToProcess.push({
-          name: f.originalname || "nota.pdf",
-          buffer: f.buffer
-        });
-      }
-    } else if ((req as any).file) {
-      const f = (req as any).file as Express.Multer.File;
-      fileListToProcess.push({
-        name: f.originalname || "nota.pdf",
-        buffer: f.buffer
-      });
-    }
-
-    // 2. Check for base64 JSON payload ({ files: [{ name, base64 }] })
-    if (fileListToProcess.length === 0 && req.body && req.body.files && Array.isArray(req.body.files)) {
-      for (const item of req.body.files) {
-        const base64Clean = (item.base64 || "").replace(/^data:[^;]+;base64,/, "");
-        if (base64Clean) {
-          fileListToProcess.push({
-            name: item.name || "nota.pdf",
-            buffer: Buffer.from(base64Clean, 'base64')
-          });
-        }
-      }
-    }
-
-    if (fileListToProcess.length === 0) {
-      return res.status(400).json({ success: false, error: "Nenhum arquivo PDF enviado ou fornecido." });
+    const { files } = req.body;
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: "Nenhum arquivo PDF fornecido." });
     }
 
     const results = [];
     const apiKey = process.env.GEMINI_API_KEY;
 
-    for (const item of fileListToProcess) {
-      const fileName = item.name;
-      const buffer = item.buffer;
-      const base64Data = buffer.toString('base64');
+    for (const fileItem of files) {
+      const fileName = fileItem.name || "nota.pdf";
+      const base64Data = (fileItem.base64 || "").replace(/^data:[^;]+;base64,/, "");
+
+      if (!base64Data) {
+        results.push({
+          fileName,
+          success: false,
+          error: "Base64 inválido",
+          valor: 0,
+          valorFormatado: "0,00",
+          numeroNf: "---"
+        });
+        continue;
+      }
 
       let parsedInfo = null;
 
       // 1. Try local PDF parsing with pdf-parse
       try {
+        const buffer = Buffer.from(base64Data, 'base64');
         const pdfData = await pdf(buffer);
         const text = pdfData.text || "";
         parsedInfo = extractNfValueFromText(text);
@@ -452,13 +432,8 @@ app.post("/api/parse-nf-pdfs", upload.any(), async (req, res) => {
       maximumFractionDigits: 2
     }).format(totalSomado);
 
-    const firstSuccess = results.find(r => r.success);
-    const valorTotalNF = totalSomadoFormatado || (firstSuccess ? firstSuccess.valorFormatado : '0,00');
-
     return res.status(200).json({
       success: true,
-      valorTotalNF,
-      valorTotalNf: valorTotalNF,
       totalSomado,
       totalSomadoFormatado,
       items: results
@@ -466,7 +441,7 @@ app.post("/api/parse-nf-pdfs", upload.any(), async (req, res) => {
 
   } catch (err) {
     console.error("Erro na rota /api/parse-nf-pdfs:", err);
-    return res.status(500).json({ success: false, error: "Erro interno ao processar arquivos PDF." });
+    return res.status(500).json({ error: "Erro interno ao processar arquivos PDF." });
   }
 });
 
