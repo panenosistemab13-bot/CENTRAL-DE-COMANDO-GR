@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import * as pdfjsLib from 'pdfjs-dist';
 import { 
   Clipboard, 
   Trash2, 
@@ -25,6 +26,10 @@ import {
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set, update } from 'firebase/database';
+
+if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '3.11.174'}/pdf.worker.min.js`;
+}
 
 const invertRoute = (trecho: string) => {
   if (!trecho) return '';
@@ -183,53 +188,109 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     setIsPdfModalOpen(true);
   };
 
+  const processarNotasFiscaisClient = async (arquivos: File[]) => {
+    const extractedItems: Array<{
+      fileName: string;
+      numeroNf: string;
+      valor: number;
+      valorFormatado: string;
+      success: boolean;
+      error?: string;
+    }> = [];
+
+    for (const arquivo of arquivos) {
+      try {
+        const arrayBuffer = await arquivo.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        let textoNota = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          textoNota += content.items.map((item: any) => item.str).join(' ') + ' ';
+        }
+
+        // Busca especificamente pelo rótulo VALOR TOTAL DA NF (quadro Cálculo do Imposto)
+        const regexValorTotal = /VALOR\s+TOTAL\s+DA\s+NF[\s\S]*?([\d\.]+,\d{2})/i;
+        let match = textoNota.match(regexValorTotal);
+
+        if (!match) {
+          // Fallback para pequenas variações de layout
+          const regexFallback = /VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]*?([\d\.]+,\d{2})/i;
+          match = textoNota.match(regexFallback);
+        }
+
+        // Extrai o número da NF se disponível
+        let numeroNf = '---';
+        const matchNf = textoNota.match(/Nº[\s\.:]*(\d[\d\.\-]*\d|\d+)/i) || textoNota.match(/NF-e[\s\.:]*(\d+)/i);
+        if (matchNf && matchNf[1]) {
+          numeroNf = matchNf[1].replace(/\D/g, '');
+        }
+
+        if (match && match[1]) {
+          const valorTexto = match[1];
+          const valorNumerico = parseFloat(valorTexto.replace(/\./g, '').replace(',', '.'));
+          const valorFormatado = new Intl.NumberFormat('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }).format(valorNumerico);
+
+          extractedItems.push({
+            fileName: arquivo.name,
+            numeroNf,
+            valor: valorNumerico,
+            valorFormatado,
+            success: true
+          });
+        } else {
+          extractedItems.push({
+            fileName: arquivo.name,
+            numeroNf: '---',
+            valor: 0,
+            valorFormatado: '0,00',
+            success: false,
+            error: 'Não localizado: VALOR TOTAL DA NF'
+          });
+        }
+      } catch (erro) {
+        console.error(`Erro ao ler o arquivo ${arquivo.name}:`, erro);
+        extractedItems.push({
+          fileName: arquivo.name,
+          numeroNf: '---',
+          valor: 0,
+          valorFormatado: '0,00',
+          success: false,
+          error: 'Erro de leitura do arquivo PDF'
+        });
+      }
+    }
+
+    return extractedItems;
+  };
+
   const handlePdfFilesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsProcessingPdf(true);
     const fileArray: File[] = Array.from(files);
-    const payloadFiles: Array<{ name: string; base64: string }> = [];
-
-    for (const file of fileArray) {
-      try {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        payloadFiles.push({ name: file.name, base64 });
-      } catch (err) {
-        console.error(`Error reading file ${file.name}:`, err);
-      }
-    }
 
     try {
-      const response = await fetch('/api/parse-nf-pdfs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: payloadFiles })
-      });
+      const newExtracted = await processarNotasFiscaisClient(fileArray);
+      const newItems = [...parsedPdfItems, ...newExtracted];
+      const newTotal = newItems.reduce((acc, curr) => acc + (curr.valor || 0), 0);
+      const newTotalFormatted = new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(newTotal);
 
-      const data = await response.json();
-      if (data.success) {
-        const newItems = [...parsedPdfItems, ...(data.items || [])];
-        const newTotal = newItems.reduce((acc, curr) => acc + (curr.valor || 0), 0);
-        const newTotalFormatted = new Intl.NumberFormat('pt-BR', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).format(newTotal);
-
-        setParsedPdfItems(newItems);
-        setPdfTotalSomado(newTotal);
-        setPdfTotalSomadoFormatado(newTotalFormatted);
-      } else {
-        alert(data.error || 'Erro ao processar PDFs.');
-      }
+      setParsedPdfItems(newItems);
+      setPdfTotalSomado(newTotal);
+      setPdfTotalSomadoFormatado(newTotalFormatted);
     } catch (err) {
-      console.error('Error sending PDFs to /api/parse-nf-pdfs:', err);
-      alert('Erro de conexão ao processar arquivos PDF.');
+      console.error('Erro ao ler arquivos PDF:', err);
+      alert('Erro ao processar os arquivos PDF.');
     } finally {
       setIsProcessingPdf(false);
       e.target.value = '';
