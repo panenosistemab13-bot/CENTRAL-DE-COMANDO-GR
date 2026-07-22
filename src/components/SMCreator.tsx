@@ -15,7 +15,12 @@ import {
   RefreshCw,
   Calendar as CalendarIcon,
   X,
-  LayoutGrid
+  LayoutGrid,
+  FileText,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
@@ -154,6 +159,184 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   const [copied, setCopied] = useState(false);
   const [idaCopied, setIdaCopied] = useState(false);
   const [voltaCopied, setVoltaCopied] = useState(false);
+
+  // PDF Import Modal State
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [pdfTargetSection, setPdfTargetSection] = useState<'ida' | 'volta' | 'calc'>('ida');
+  const [pdfTargetRowIndex, setPdfTargetRowIndex] = useState<number | null>(null);
+  const [isProcessingPdf, setIsProcessingPdf] = useState(false);
+  const [parsedPdfItems, setParsedPdfItems] = useState<Array<{
+    fileName: string;
+    numeroNf: string;
+    valor: number;
+    valorFormatado: string;
+    success: boolean;
+    error?: string;
+  }>>([]);
+  const [pdfTotalSomado, setPdfTotalSomado] = useState<number>(0);
+  const [pdfTotalSomadoFormatado, setPdfTotalSomadoFormatado] = useState<string>('0,00');
+  const [pdfCopied, setPdfCopied] = useState(false);
+
+  const openPdfModal = (section: 'ida' | 'volta' | 'calc' = 'ida', rowIndex: number | null = null) => {
+    setPdfTargetSection(section);
+    setPdfTargetRowIndex(rowIndex);
+    setIsPdfModalOpen(true);
+  };
+
+  const handlePdfFilesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsProcessingPdf(true);
+    const fileArray: File[] = Array.from(files);
+    const payloadFiles: Array<{ name: string; base64: string }> = [];
+
+    for (const file of fileArray) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        payloadFiles.push({ name: file.name, base64 });
+      } catch (err) {
+        console.error(`Error reading file ${file.name}:`, err);
+      }
+    }
+
+    try {
+      const response = await fetch('/api/parse-nf-pdfs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: payloadFiles })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        const newItems = [...parsedPdfItems, ...(data.items || [])];
+        const newTotal = newItems.reduce((acc, curr) => acc + (curr.valor || 0), 0);
+        const newTotalFormatted = new Intl.NumberFormat('pt-BR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(newTotal);
+
+        setParsedPdfItems(newItems);
+        setPdfTotalSomado(newTotal);
+        setPdfTotalSomadoFormatado(newTotalFormatted);
+      } else {
+        alert(data.error || 'Erro ao processar PDFs.');
+      }
+    } catch (err) {
+      console.error('Error sending PDFs to /api/parse-nf-pdfs:', err);
+      alert('Erro de conexão ao processar arquivos PDF.');
+    } finally {
+      setIsProcessingPdf(false);
+      e.target.value = '';
+    }
+  };
+
+  const updateParsedPdfItemValue = (index: number, rawVal: string) => {
+    const digits = rawVal.replace(/\D/g, '');
+    const amount = digits ? parseFloat(digits) / 100 : 0;
+    const formatted = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+
+    const updated = [...parsedPdfItems];
+    updated[index] = {
+      ...updated[index],
+      valor: amount,
+      valorFormatado: formatted,
+      success: amount > 0
+    };
+
+    const newTotal = updated.reduce((acc, curr) => acc + (curr.valor || 0), 0);
+    const newTotalFormatted = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(newTotal);
+
+    setParsedPdfItems(updated);
+    setPdfTotalSomado(newTotal);
+    setPdfTotalSomadoFormatado(newTotalFormatted);
+  };
+
+  const removeParsedPdfItem = (index: number) => {
+    const updated = parsedPdfItems.filter((_, idx) => idx !== index);
+    const newTotal = updated.reduce((acc, curr) => acc + (curr.valor || 0), 0);
+    const newTotalFormatted = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(newTotal);
+
+    setParsedPdfItems(updated);
+    setPdfTotalSomado(newTotal);
+    setPdfTotalSomadoFormatado(newTotalFormatted);
+  };
+
+  const applyPdfTotalToTarget = (section: 'ida' | 'volta' | 'calc') => {
+    const totalValStr = pdfTotalSomadoFormatado;
+
+    if (section === 'calc') {
+      if (calcValues.length === 1 && (!calcValues[0] || calcValues[0] === '')) {
+        saveCalc([totalValStr]);
+      } else {
+        saveCalc([...calcValues, totalValStr]);
+      }
+    } else {
+      const targetRows = section === 'ida' ? idaRows : voltaRows;
+      const saveFunc = section === 'ida' ? saveIda : saveVolta;
+
+      if (pdfTargetRowIndex !== null && targetRows[pdfTargetRowIndex]) {
+        const updatedRows = [...targetRows];
+        updatedRows[pdfTargetRowIndex] = {
+          ...updatedRows[pdfTargetRowIndex],
+          valorNf: totalValStr
+        };
+        saveFunc(updatedRows);
+      } else if (targetRows.length > 0) {
+        const updatedRows = [...targetRows];
+        updatedRows[updatedRows.length - 1] = {
+          ...updatedRows[updatedRows.length - 1],
+          valorNf: totalValStr
+        };
+        saveFunc(updatedRows);
+      } else {
+        const newRow: SMRow = {
+          dataSaida: new Date().toLocaleDateString('pt-BR'),
+          motorista: '',
+          placa: '',
+          bau1: '',
+          bau2: '',
+          trecho: '',
+          valorNf: totalValStr
+        };
+        saveFunc([newRow]);
+      }
+    }
+
+    setIsPdfModalOpen(false);
+  };
+
+  const applyIndividualPdfValuesToCalc = () => {
+    const validValues = parsedPdfItems.filter(i => i.valor > 0).map(i => i.valorFormatado);
+    if (validValues.length > 0) {
+      if (calcValues.length === 1 && (!calcValues[0] || calcValues[0] === '')) {
+        saveCalc(validValues);
+      } else {
+        saveCalc([...calcValues, ...validValues]);
+      }
+    }
+    setIsPdfModalOpen(false);
+  };
+
+  const copyPdfTotal = () => {
+    navigator.clipboard.writeText(pdfTotalSomadoFormatado);
+    setPdfCopied(true);
+    setTimeout(() => setPdfCopied(false), 2000);
+  };
 
   const renderCodesTable = () => (
     <div className="report-card overflow-hidden">
@@ -478,6 +661,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
               </span>
             </div>
           </div>
+
+          <button 
+            onClick={() => openPdfModal('ida')}
+            className="ml-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#B32025] to-[#8c060d] hover:brightness-110 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border border-[#3A2414]/30"
+          >
+            <FileText size={16} /> Importar NFs (PDF)
+          </button>
         </div>
       </div>
 
@@ -496,6 +686,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <TrendingUp size={16} className="text-[#B32025]" /> Rota Ida
                   </h3>
                   <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => openPdfModal('ida')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#14325c] hover:bg-[#0f2a4a] text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
+                      title="Importar várias NFs em PDF e calcular total somado"
+                    >
+                      <FileText size={12} /> Importar NFs (PDF)
+                    </button>
                     <button 
                       onClick={() => addNewRow('ida')}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-[#B32025] hover:brightness-110 text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
@@ -637,7 +834,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                 />
                               </td>
                               <td className="p-3 text-right font-black text-green-500 group/cell">
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button 
+                                    onClick={() => openPdfModal('ida', i)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-[#14325c]/10 hover:bg-[#14325c]/25 rounded-lg text-[#14325c] transition-all shrink-0 cursor-pointer"
+                                    title="Importar PDFs de NFs para esta linha"
+                                  >
+                                    <FileText size={12} />
+                                  </button>
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.valorNf)}
                                     className="opacity-0 group-hover/cell:opacity-100 p-2 bg-green-500/10 hover:bg-green-500/30 rounded-lg text-green-500 transition-all shrink-0"
@@ -676,6 +880,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <Download size={16} className="rotate-180 text-[#B32025]" /> Rota Volta
                   </h3>
                   <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => openPdfModal('volta')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#7f1d1d] hover:bg-[#991b1b] text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
+                      title="Importar várias NFs em PDF e calcular total somado"
+                    >
+                      <FileText size={12} /> Importar NFs (PDF)
+                    </button>
                     <button 
                       onClick={() => addNewRow('volta')}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-[#B32025] hover:brightness-110 text-white font-bold uppercase tracking-wider transition-all border-b-2 border-[#3A2414]/25 shadow-sm cursor-pointer"
@@ -829,7 +1040,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                 </div>
                               </td>
                               <td className="p-3 text-right font-black text-red-500 group/cell">
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button 
+                                    onClick={() => openPdfModal('volta', i)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-2 bg-[#7f1d1d]/10 hover:bg-[#7f1d1d]/25 rounded-lg text-[#7f1d1d] transition-all shrink-0 cursor-pointer"
+                                    title="Importar PDFs de NFs para esta linha"
+                                  >
+                                    <FileText size={12} />
+                                  </button>
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.valorNf)}
                                     className="opacity-0 group-hover/cell:opacity-100 p-2 bg-red-500/10 hover:bg-red-500/30 rounded-lg text-red-500 transition-all shrink-0"
@@ -871,13 +1089,22 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <Calculator size={16} className="text-[#B32025]" />
                     Soma de Valores
                   </h3>
-                  <button 
-                    onClick={() => saveCalc(calcValues.map(() => ''))}
-                    className="p-1.5 text-[#B32025] hover:underline text-shadow-sm font-serif ml-2 transition-colors cursor-pointer"
-                    title="Resetar calculadora"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => openPdfModal('calc')}
+                      className="px-2.5 py-1 bg-[#B32025]/10 text-[#B32025] hover:bg-[#B32025]/20 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer border border-[#B32025]/20"
+                      title="Importar PDFs de NFs para somar na calculadora"
+                    >
+                      <FileText size={12} /> PDF
+                    </button>
+                    <button 
+                      onClick={() => saveCalc(calcValues.map(() => ''))}
+                      className="p-1.5 text-[#B32025] hover:underline text-shadow-sm font-serif transition-colors cursor-pointer"
+                      title="Resetar calculadora"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="bg-gradient-to-br from-[#B32025] to-[#8c060d] rounded-xl p-6 mb-6 border border-[#3A2414]/25 shadow-md text-center relative group/total overflow-hidden">
@@ -982,6 +1209,195 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
               </div>
             </div>
             
+          </div>
+        </div>
+      )}
+
+      {/* ================= PDF IMPORT MODAL ================= */}
+      {isPdfModalOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#3A2414] to-[#25150a] p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-[#B32025] rounded-xl text-white shadow-md">
+                  <FileText size={22} />
+                </div>
+                <div>
+                  <h3 className="font-serif font-black uppercase text-base tracking-wide text-amber-100">
+                    Importar Várias Notas Fiscais (PDF)
+                  </h3>
+                  <p className="text-xs text-amber-200/80 font-sans">
+                    Extração automática do valor total das NFs e cálculo da soma total
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsPdfModalOpen(false)}
+                className="p-2 text-amber-200/60 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              
+              {/* File Upload Dropzone */}
+              <div className="relative border-2 border-dashed border-[#B32025]/40 hover:border-[#B32025] bg-[#B32025]/5 hover:bg-[#B32025]/10 rounded-2xl p-6 transition-all text-center flex flex-col items-center justify-center cursor-pointer group">
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="application/pdf,.pdf" 
+                  onChange={handlePdfFilesUpload}
+                  disabled={isProcessingPdf}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div className="p-4 bg-white rounded-full text-[#B32025] shadow-md group-hover:scale-110 transition-transform mb-3 border border-[#B32025]/20">
+                  <Upload size={28} />
+                </div>
+                <p className="text-sm font-bold text-[#3A2414] uppercase tracking-wide">
+                  Clique para Selecionar ou Arraste os PDFs das NFs
+                </p>
+                <p className="text-xs text-[#3A2414]/60 mt-1">
+                  Você pode selecionar várias notas fiscais em PDF simultaneamente (DANFE / NF-e)
+                </p>
+              </div>
+
+              {/* Processing Loader */}
+              {isProcessingPdf && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 text-amber-900 font-bold text-sm animate-pulse">
+                  <Loader2 size={20} className="animate-spin text-[#B32025]" />
+                  Processando e lendo o valor das NFs em PDF...
+                </div>
+              )}
+
+              {/* Parsed Results Area */}
+              {parsedPdfItems.length > 0 && (
+                <div className="space-y-4">
+                  {/* Total Banner */}
+                  <div className="bg-gradient-to-r from-[#B32025] via-[#8c060d] to-[#590206] p-5 rounded-2xl text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-amber-200/90 font-serif">
+                        Valor Total Somado ({parsedPdfItems.length} NFs)
+                      </p>
+                      <h4 className="text-3xl font-black text-white font-serif tracking-tight mt-0.5">
+                        <span className="text-amber-300 text-xl font-normal mr-1.5">R$</span>
+                        {pdfTotalSomadoFormatado}
+                      </h4>
+                    </div>
+
+                    <button 
+                      onClick={copyPdfTotal}
+                      className={cn(
+                        "px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md cursor-pointer border",
+                        pdfCopied 
+                          ? "bg-green-600 border-green-400 text-white" 
+                          : "bg-white/20 hover:bg-white/30 border-white/30 text-white"
+                      )}
+                    >
+                      {pdfCopied ? <Check size={16} /> : <Copy size={16} />}
+                      {pdfCopied ? 'Copiado!' : 'Copiar Total'}
+                    </button>
+                  </div>
+
+                  {/* List of imported PDFs */}
+                  <div className="border border-[#3A2414]/15 rounded-2xl overflow-hidden bg-white shadow-sm">
+                    <div className="bg-[#3A2414]/5 p-3 border-b border-[#3A2414]/15 flex items-center justify-between">
+                      <span className="text-xs font-black uppercase text-[#3A2414] tracking-wider font-serif">
+                        Notas Importadas ({parsedPdfItems.length})
+                      </span>
+                      <button 
+                        onClick={() => {
+                          setParsedPdfItems([]);
+                          setPdfTotalSomado(0);
+                          setPdfTotalSomadoFormatado('0,00');
+                        }}
+                        className="text-[10px] font-bold text-[#B32025] hover:underline uppercase tracking-wider cursor-pointer"
+                      >
+                        Limpar Lista
+                      </button>
+                    </div>
+
+                    <div className="divide-y divide-[#3A2414]/10 max-h-56 overflow-y-auto">
+                      {parsedPdfItems.map((item, idx) => (
+                        <div key={idx} className="p-3 flex items-center justify-between gap-3 text-xs hover:bg-stone-50 transition-colors">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className={cn("p-1.5 rounded-lg shrink-0", item.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
+                              {item.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-[#2D1A10] truncate" title={item.fileName}>
+                                {item.fileName}
+                              </p>
+                              <p className="text-[10px] text-stone-500">
+                                {item.numeroNf !== '---' ? `NF Nº ${item.numeroNf}` : item.error || 'Valor extraído do PDF'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-stone-400 font-bold text-[10px]">R$</span>
+                            <input 
+                              type="text" 
+                              value={item.valorFormatado}
+                              onChange={(e) => updateParsedPdfItemValue(idx, e.target.value)}
+                              className="w-28 bg-[#d2c2b2]/40 border border-[#c0a892] rounded-lg py-1 px-2 text-right font-mono text-xs font-bold text-[#3A2414] outline-none focus:border-[#B32025]"
+                            />
+                            <button 
+                              onClick={() => removeParsedPdfItem(idx)}
+                              className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Remover Nota"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="bg-[#3A2414]/5 p-5 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-[#3A2414]/70 font-serif font-bold text-center sm:text-left">
+                {pdfTargetRowIndex !== null ? (
+                  <span>Aplicando na linha #{pdfTargetRowIndex + 1} ({pdfTargetSection === 'ida' ? 'Rota Ida' : 'Rota Volta'})</span>
+                ) : (
+                  <span>Selecione onde aplicar o valor total somado (R$ {pdfTotalSomadoFormatado})</span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 w-full sm:w-auto">
+                <button 
+                  onClick={() => applyPdfTotalToTarget('ida')}
+                  disabled={parsedPdfItems.length === 0}
+                  className="px-3.5 py-2 bg-[#14325c] hover:bg-[#0f2a4a] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
+                >
+                  Preencher Rota Ida
+                </button>
+
+                <button 
+                  onClick={() => applyPdfTotalToTarget('volta')}
+                  disabled={parsedPdfItems.length === 0}
+                  className="px-3.5 py-2 bg-[#7f1d1d] hover:bg-[#991b1b] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
+                >
+                  Preencher Rota Volta
+                </button>
+
+                <button 
+                  onClick={() => applyPdfTotalToTarget('calc')}
+                  disabled={parsedPdfItems.length === 0}
+                  className="px-3.5 py-2 bg-[#3A2414] hover:bg-[#2A1408] disabled:opacity-50 text-[#fbdba5] font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
+                >
+                  Lançar na Calculadora
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

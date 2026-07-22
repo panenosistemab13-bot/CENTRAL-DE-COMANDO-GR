@@ -8,7 +8,9 @@ import {
   CreditCard, 
   Phone,
   Trash2,
-  LayoutGrid
+  LayoutGrid,
+  Copy,
+  Check
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -43,6 +45,12 @@ interface AverbacaoProps {
 
 const DATA_PATH = 'averbacao_data/default';
 
+const QUICK_CODES = [
+  { label: 'Cápsula', value: '9000000982' },
+  { label: 'Máquina', value: '000000901' },
+  { label: 'Embalagem', value: '132' }
+];
+
 export default function Averbacao({ onBack, view }: AverbacaoProps) {
   const [parsedRows, setParsedRows] = useState<RawData[]>([]);
   const [extraData, setExtraData] = useState<ExtraData>({
@@ -53,6 +61,17 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
     telefone: ''
   });
   const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const copyCodeToClipboard = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedCode(label);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (e) {
+      console.error("Erro ao copiar código:", e);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -237,9 +256,47 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen canvas-grid">
-      {/* Sidebar - Artisan Plate */}
-      <div className="w-full md:w-[320px] bg-[#E8D4B0] p-6 flex flex-col border-b-8 md:border-b-0 md:border-r-8 border-[#6B4423] shadow-2xl relative shrink-0">
+    <div className="flex flex-col min-h-screen md:h-screen canvas-grid overflow-hidden">
+      {/* Top Banner with Quick Copy Codes */}
+      <div className="bg-[#3A2414] border-b-4 border-[#6B4423] p-3 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-3 text-white shrink-0 shadow-xl z-20">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-black uppercase tracking-wider text-[#C7A26A] font-serif flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#B32025] inline-block animate-pulse"></span>
+            CÓDIGOS RÁPIDOS PARA AVERBAÇÃO:
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          {QUICK_CODES.map((item) => (
+            <div 
+              key={item.label}
+              className="flex items-center gap-2 bg-[#2D1A10] border-2 border-[#C7A26A]/40 hover:border-[#C7A26A] rounded-xl px-3 py-1.5 transition-all shadow-inner"
+            >
+              <span className="text-[11px] font-black text-[#E8D4B0] uppercase tracking-wide">{item.label}:</span>
+              <code className="text-xs font-mono font-black text-amber-300 bg-black/50 px-2.5 py-0.5 rounded border border-white/10 select-all tracking-wider">
+                {item.value}
+              </code>
+              <button
+                type="button"
+                onClick={() => copyCodeToClipboard(item.label, item.value)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 cursor-pointer border shadow-sm",
+                  copiedCode === item.label
+                    ? "bg-green-600 border-green-500 text-white"
+                    : "bg-[#B32025] hover:bg-[#8c060a] border-[#5a0f12] text-white"
+                )}
+                title={`Copiar ${item.label}`}
+              >
+                {copiedCode === item.label ? <Check size={12} /> : <Copy size={12} />}
+                <span>{copiedCode === item.label ? 'COPIADO!' : 'COPIAR'}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
+        {/* Sidebar - Artisan Plate */}
+        <div className="w-full md:w-[320px] bg-[#E8D4B0] p-6 flex flex-col border-b-8 md:border-b-0 md:border-r-8 border-[#6B4423] shadow-2xl relative shrink-0">
         {onBack && (
           <button 
             onClick={onBack}
@@ -369,5 +426,6 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
         )}
       </div>
     </div>
-  );
+  </div>
+);
 }

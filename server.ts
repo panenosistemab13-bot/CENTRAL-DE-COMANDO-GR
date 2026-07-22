@@ -247,6 +247,204 @@ async function startServer() {
     }
   });
 
+function extractNfValueFromText(text: string): { valor: number; valorFormatado: string; numeroNf: string } | null {
+  if (!text) return null;
+
+  let numeroNf = '---';
+  const nfNumMatch = text.match(/(?:NF-e|NOTA FISCAL|Nº|Nº\.|Nº:)\s*(\d{1,3}(?:\.\d{3})+|\d{4,9})/i) ||
+                     text.match(/(?:SÉRIE|SERIE).*?(?:Nº|Nº\.|NUMERO)\s*(\d+)/i);
+  if (nfNumMatch) {
+    numeroNf = nfNumMatch[1];
+  }
+
+  const lines = text.split(/\r?\n/);
+
+  // 1. Explicit inline keywords like "VALOR TOTAL DA NOTA 15.420,50" or "VALOR TOTAL DA NOTA R$ 15.420,50"
+  const directMatch = text.match(/(?:VALOR\s+TOTAL\s+DA\s+NOTA|VALOR\s+TOTAL\s+DO\s+DOCUMENTO|VALOR\s+TOTAL\s+DA\s+NF|VALOR\s+TOTAL\s+DOS\s+PRODUTOS|V\.\s*TOTAL\s+DA\s+NOTA|TOTAL\s+DA\s+NOTA)\s*[:\.]?\s*(?:R\$\s*)?([\d\.]+\,\d{2})/i);
+  if (directMatch) {
+    const strVal = directMatch[1];
+    const numVal = parseFloat(strVal.replace(/\./g, '').replace(',', '.'));
+    if (!isNaN(numVal) && numVal > 0) {
+      return {
+        valor: numVal,
+        valorFormatado: new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numVal),
+        numeroNf
+      };
+    }
+  }
+
+  // 2. Line-by-line DANFE block search
+  for (let i = 0; i < lines.length; i++) {
+    const lineUpper = lines[i].toUpperCase();
+    if (
+      lineUpper.includes('VALOR TOTAL DA NOTA') || 
+      lineUpper.includes('VALOR TOTAL DO DOCUMENTO') || 
+      lineUpper.includes('VALOR TOTAL DA NF') ||
+      lineUpper.includes('V. TOTAL') ||
+      lineUpper.includes('VALOR TOTAL DOS PRODUTOS')
+    ) {
+      for (let j = i; j <= Math.min(i + 3, lines.length - 1); j++) {
+        const moneyMatches = lines[j].match(/(\d{1,3}(?:\.\d{3})*,\d{2})/g);
+        if (moneyMatches && moneyMatches.length > 0) {
+          const lastValStr = moneyMatches[moneyMatches.length - 1];
+          const numVal = parseFloat(lastValStr.replace(/\./g, '').replace(',', '.'));
+          if (!isNaN(numVal) && numVal > 0) {
+            return {
+              valor: numVal,
+              valorFormatado: new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numVal),
+              numeroNf
+            };
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Fallback: Search all currency patterns with R$
+  const allMoney = text.match(/(?:R\$\s*)(\d{1,3}(?:\.\d{3})*,\d{2})/g);
+  if (allMoney && allMoney.length > 0) {
+    let maxVal = 0;
+    for (const m of allMoney) {
+      const clean = m.replace(/R\$\s*/, '');
+      const numVal = parseFloat(clean.replace(/\./g, '').replace(',', '.'));
+      if (!isNaN(numVal) && numVal > maxVal) {
+        maxVal = numVal;
+      }
+    }
+    if (maxVal > 0) {
+      return {
+        valor: maxVal,
+        valorFormatado: new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(maxVal),
+        numeroNf
+      };
+    }
+  }
+
+  return null;
+}
+
+app.post("/api/parse-nf-pdfs", async (req, res) => {
+  try {
+    const { files } = req.body;
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: "Nenhum arquivo PDF fornecido." });
+    }
+
+    const results = [];
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    for (const fileItem of files) {
+      const fileName = fileItem.name || "nota.pdf";
+      const base64Data = (fileItem.base64 || "").replace(/^data:[^;]+;base64,/, "");
+
+      if (!base64Data) {
+        results.push({
+          fileName,
+          success: false,
+          error: "Base64 inválido",
+          valor: 0,
+          valorFormatado: "0,00",
+          numeroNf: "---"
+        });
+        continue;
+      }
+
+      let parsedInfo = null;
+
+      // 1. Try local PDF parsing with pdf-parse
+      try {
+        const buffer = Buffer.from(base64Data, 'base64');
+        const pdfData = await pdf(buffer);
+        const text = pdfData.text || "";
+        parsedInfo = extractNfValueFromText(text);
+      } catch (err) {
+        console.warn(`Local pdf-parse failed for ${fileName}:`, err);
+      }
+
+      // 2. Gemini fallback if needed
+      if ((!parsedInfo || !parsedInfo.valor) && apiKey) {
+        try {
+          const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
+          const genResponse = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: "application/pdf",
+                    data: base64Data
+                  }
+                },
+                {
+                  text: "Analise esta Nota Fiscal / DANFE em PDF. Extraia o Valor Total da Nota Fiscal e o Número da Nota. Responda estritamente em JSON: {\"valorTotalNf\": \"12345.67\", \"valorTotalNfFormatado\": \"12.345,67\", \"numeroNf\": \"12345\"}"
+                }
+              ]
+            },
+            config: {
+              responseMimeType: "application/json"
+            }
+          });
+
+          let jsonText = genResponse.text || "";
+          jsonText = jsonText.replace(/```json\n?|```/g, "").trim();
+          const geminiData = JSON.parse(jsonText);
+
+          let numVal = parseFloat(geminiData.valorTotalNf || '0');
+          if (isNaN(numVal) && geminiData.valorTotalNfFormatado) {
+            numVal = parseFloat(geminiData.valorTotalNfFormatado.replace(/\./g, '').replace(',', '.'));
+          }
+
+          if (!isNaN(numVal) && numVal > 0) {
+            parsedInfo = {
+              valor: numVal,
+              valorFormatado: new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numVal),
+              numeroNf: geminiData.numeroNf || "---"
+            };
+          }
+        } catch (geminiErr) {
+          console.error(`Gemini extraction failed for ${fileName}:`, geminiErr);
+        }
+      }
+
+      if (parsedInfo && parsedInfo.valor > 0) {
+        results.push({
+          fileName,
+          success: true,
+          valor: parsedInfo.valor,
+          valorFormatado: parsedInfo.valorFormatado,
+          numeroNf: parsedInfo.numeroNf || "---"
+        });
+      } else {
+        results.push({
+          fileName,
+          success: false,
+          error: "Não foi possível extrair o Valor Total da Nota",
+          valor: 0,
+          valorFormatado: "0,00",
+          numeroNf: "---"
+        });
+      }
+    }
+
+    const totalSomado = results.reduce((acc, curr) => acc + (curr.valor || 0), 0);
+    const totalSomadoFormatado = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(totalSomado);
+
+    return res.status(200).json({
+      success: true,
+      totalSomado,
+      totalSomadoFormatado,
+      items: results
+    });
+
+  } catch (err) {
+    console.error("Erro na rota /api/parse-nf-pdfs:", err);
+    return res.status(500).json({ error: "Erro interno ao processar arquivos PDF." });
+  }
+});
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

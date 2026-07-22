@@ -326,6 +326,24 @@ interface IngestedVehicle {
   hasAssinou: string;
 }
 
+const getFormattedEmailSubject = (): string => {
+  const now = new Date();
+  const daysUpper = [
+    'DOMINGO',
+    'SEGUNDA-FEIRA',
+    'TERÇA-FEIRA',
+    'QUARTA-FEIRA',
+    'QUINTA-FEIRA',
+    'SEXTA-FEIRA',
+    'SÁBADO'
+  ];
+  const dayOfWeek = daysUpper[now.getDay()];
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  return `DISPONIBILIDADE DE VEÍCULOS | ${dayOfWeek} ${dd}/${mm}/${yyyy}`;
+};
+
 const getAutoGreeting = (): 'bom dia' | 'boa tarde' | 'boa noite' => {
   const hour = new Date().getHours();
   if (hour >= 12 && hour < 18) {
@@ -358,6 +376,7 @@ export default function Patio({ onBack }: PatioProps) {
     }
   }, [activeSubTab]);
   const [dispCopied, setDispCopied] = useState(false);
+  const [subjectCopied, setSubjectCopied] = useState(false);
   const [ingestedVehicles, setIngestedVehicles] = useState<IngestedVehicle[]>([]);
 
   // Iscas states
@@ -2182,6 +2201,37 @@ export default function Patio({ onBack }: PatioProps) {
 
               <div className="space-y-5 flex flex-col justify-between flex-1">
                 
+                {/* Assunto do E-mail (Copiar Separadamente) */}
+                <div className="flex flex-col gap-2 text-left bg-[#f8f5ee]/90 border-2 border-[#5c3c24]/30 rounded-xl p-3.5 shadow-sm">
+                  <div className="flex justify-between items-center gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24] flex items-center gap-1.5">
+                      <FileText size={13} className="text-[#ca1a20] shrink-0" />
+                      <span>Assunto do e-mail (copiar separadamente):</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const subjectText = getFormattedEmailSubject();
+                        await navigator.clipboard.writeText(subjectText);
+                        setSubjectCopied(true);
+                        setTimeout(() => setSubjectCopied(false), 2000);
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm shrink-0",
+                        subjectCopied
+                          ? "bg-green-700 border-green-800 text-white"
+                          : "bg-gradient-to-b from-[#ca1a20] to-[#8c060a] hover:from-[#e52229] hover:to-[#a9080d] border-[#ff3e47]/30 text-white"
+                      )}
+                    >
+                      {subjectCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} className="stroke-[2.5]" />}
+                      {subjectCopied ? 'Copiado!' : 'Copiar Assunto'}
+                    </button>
+                  </div>
+                  <div className="bg-[#1d120a] border border-[#5c3c24]/60 rounded-lg p-2.5 font-mono text-xs font-bold text-[#edd9bf] select-all tracking-wide break-all">
+                    {getFormattedEmailSubject()}
+                  </div>
+                </div>
+
                 {/* Greeting Dropdown Selector */}
                 <div className="flex flex-col gap-2 text-left">
                   <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">Saudação Inicial (Automática):</label>
