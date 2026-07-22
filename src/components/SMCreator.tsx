@@ -189,28 +189,42 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
 
     setIsProcessingPdf(true);
     const fileArray: File[] = Array.from(files);
-    const payloadFiles: Array<{ name: string; base64: string }> = [];
-
-    for (const file of fileArray) {
-      try {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        payloadFiles.push({ name: file.name, base64 });
-      } catch (err) {
-        console.error(`Error reading file ${file.name}:`, err);
-      }
-    }
 
     try {
-      const response = await fetch('/api/parse-nf-pdfs', {
+      // 1. Send using FormData (preferred and fastest)
+      const formData = new FormData();
+      for (const file of fileArray) {
+        formData.append('file', file);
+      }
+
+      let response = await fetch('/api/parse-nf-pdfs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: payloadFiles })
+        body: formData
       });
+
+      // 2. Fallback to base64 JSON if FormData request failed
+      if (!response.ok && response.status === 400) {
+        const payloadFiles: Array<{ name: string; base64: string }> = [];
+        for (const file of fileArray) {
+          try {
+            const base64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            payloadFiles.push({ name: file.name, base64 });
+          } catch (err) {
+            console.error(`Error reading file ${file.name}:`, err);
+          }
+        }
+
+        response = await fetch('/api/parse-nf-pdfs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: payloadFiles })
+        });
+      }
 
       const data = await response.json();
       if (data.success) {
