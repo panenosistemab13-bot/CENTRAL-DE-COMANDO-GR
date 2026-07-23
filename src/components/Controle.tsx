@@ -30,6 +30,7 @@ import {
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
 import { ref, onValue, set, update } from "firebase/database";
+import Prancheta, { PranchetaRow } from "./Prancheta";
 
 // Vintage Screw component
 function Screw({ className }: { className?: string }) {
@@ -158,6 +159,9 @@ interface ControleProps {
 }
 
 export default function Controle({ onBack }: ControleProps) {
+  // Navigation tab state: 'gerador' or 'prancheta'
+  const [activeTab, setActiveTab] = useState<'gerador' | 'prancheta'>('gerador');
+
   // State for all form fields
   const [numCarretas, setNumCarretas] = useState<1 | 2>(2);
   const [alertaResgate, setAlertaResgate] = useState(
@@ -1071,11 +1075,84 @@ Embarque: ${
     }
   };
 
+  const handleUsePranchetaRow = (row: PranchetaRow) => {
+    if (row.noIsca) handleIsca1Change(row.noIsca);
+    if (row.cavalo) setCavalo(row.cavalo);
+    if (row.carreta) setCarreta1(row.carreta);
+    if (row.noNf) setNfInicio(row.noNf);
+    if (row.produto) setProduto1(row.produto);
+    if (row.uma) setUma1(formatUMA(row.uma));
+    if (row.destino) {
+      const destUpper = row.destino.toUpperCase();
+      const matched = DESTINOS_OPCOES.find((d) => d.toUpperCase().includes(destUpper));
+      if (matched) {
+        setDestino(matched);
+      } else {
+        setDestino(row.destino);
+      }
+    }
+    setActiveTab("gerador");
+    alert(`Informações da ISCA ${row.noIsca} aplicadas no Gerador de Controle PGR!`);
+  };
+
   return (
     <div 
-      className="w-full relative z-10 max-w-[102rem] mx-auto grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start font-sans"
+      className="w-full relative z-10 max-w-[102rem] mx-auto flex flex-col gap-5 font-sans"
       style={{ zoom: 0.9 }}
     >
+      {/* Top Navigation Tabs Bar */}
+      <div className="bg-[#FFFDFB] border-2 border-[#5c3e29] rounded-2xl p-2.5 shadow-md flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("gerador")}
+            className={cn(
+              "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer",
+              activeTab === "gerador"
+                ? "bg-[#B32025] text-white shadow-md"
+                : "bg-transparent text-[#5c3e29] hover:bg-[#EFE3CD]"
+            )}
+          >
+            <Sliders size={16} />
+            Gerador de Controle PGR
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("prancheta")}
+            className={cn(
+              "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer relative",
+              activeTab === "prancheta"
+                ? "bg-[#7A0C22] text-white shadow-md"
+                : "bg-transparent text-[#5c3e29] hover:bg-[#EFE3CD]"
+            )}
+          >
+            <FileText size={16} />
+            Prancheta (Anexo)
+            <span className="bg-[#B32025] text-white text-[9px] px-1.5 py-0.5 rounded-full ml-1 font-bold">
+              Digitalizada
+            </span>
+          </button>
+        </div>
+
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="bg-stone-100 hover:bg-stone-200 text-[#5c3e29] border border-stone-300 text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+          >
+            <ArrowLeft size={12} strokeWidth={3} /> Voltar ao Menu
+          </button>
+        )}
+      </div>
+
+      {/* TAB CONTENT: Prancheta */}
+      {activeTab === "prancheta" && (
+        <Prancheta onUseRowInControle={handleUsePranchetaRow} />
+      )}
+
+      {/* TAB CONTENT: Gerador PGR */}
+      {activeTab === "gerador" && (
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
       {/* LEFT AREA: Template Generator (expanded dynamically) */}
       <div className="col-span-1 xl:col-span-1 flex flex-col">
         <div className="flex-1 rounded-3xl bg-[#fdfbf7] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col p-6 sm:p-8">
@@ -2558,6 +2635,8 @@ Embarque: ${
           </div>
         </div>
       </div>
+      </div>
+      )}
     </div>
   );
 }
