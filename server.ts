@@ -20,6 +20,172 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  app.post("/api/parse-prancheta", async (req, res) => {
+    try {
+      const { fileBase64, mimeType, fileName } = req.body;
+
+      if (!fileBase64) {
+        return res.status(400).json({ error: "Arquivo base64 é obrigatório." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, "");
+      let effectiveMimeType = mimeType || "application/pdf";
+      if (fileName && fileName.toLowerCase().endsWith(".pdf")) {
+        effectiveMimeType = "application/pdf";
+      } else if (fileName && fileName.toLowerCase().endsWith(".png")) {
+        effectiveMimeType = "image/png";
+      } else if (fileName && (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg"))) {
+        effectiveMimeType = "image/jpeg";
+      }
+
+      // 1. If Gemini API key is present, use multimodal Gemini 3.5 Flash
+      if (apiKey) {
+        try {
+          const ai = new GoogleGenAI({
+            apiKey,
+            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+          });
+
+          const promptText = `Você é um especialista em OCR e digitalização de relatórios logísticos e pranchetas de controle de embarque de iscas.
+Analise com máxima precisão o documento em anexo (Prancheta / Controle de Embarque de Iscas).
+Leia atentamente todas as linhas da tabela, identificando tanto textos impressos quanto anotações manuscritas (como números de isca, datas, horas, docas, placas de cavalo e carreta, m3, destinos, notas fiscais, nomes de responsáveis, produtos, U.M.A. e valores em R$).
+Identifique a ortografia o mais próximo possível do original. Se algum campo estiver em branco ou totalmente ilegível, deixe-o em branco ("").
+
+Campos exigidos em cada objeto da lista JSON:
+- noIsca: Número/código da ISCA (ex: R10000639, R10000913)
+- data: Data do embarque (ex: 21/07, 22/07)
+- hora: Horário no formato HH:MM (ex: 22:03, 06:25)
+- doca: Número da Doca (ex: 03, 07, 05, 10, etc)
+- cavalo: Placa do Cavalo Mecânico (ex: TYM5E00, SAS2D02, PYV-8215)
+- carreta: Placa da Carreta / Reboque (ex: GEK8H91, SJOA72, PVE-9195)
+- m3: Volume M³ (ex: 88, 98, 107, 86, 91)
+- destino: Cidade ou código do destino (ex: Guarulhos, MOC, Londrina, Gov. Celso, Cuiabá, CABAM, RS)
+- noNf: Número da Nota Fiscal (ex: 2932174, 610307735, 2932205)
+- responsavel: Nome ou sigla do responsável (ex: Vini, PGEF, DCGF)
+- produto: Código do produto (ex: 12031025, 12051024, 12034101)
+- uma: Número da U.M.A. ou texto impresso/manuscrito (ex: 13758510281, 6000000017382, Batida)
+- valorNf: Valor da NF formatado em R$ com ponto e vírgula (ex: 417.897,75 ou 22.371,79 ou 1.069.271,88)
+- preAlertaGr: Pré-alerta GR (ex: Vini, PGEF, DCGF)
+- planCarreg: Status ou informação do planejamento (ex: OK)
+- baixaGr: Status da baixa GR (ex: OK)
+
+Retorne estritamente o array JSON com as linhas encontradas.`;
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: effectiveMimeType,
+                    data: cleanBase64
+                  }
+                },
+                { text: promptText }
+              ]
+            },
+            config: {
+              responseMimeType: "application/json",
+              temperature: 0.1,
+              responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    noIsca: { type: Type.STRING },
+                    data: { type: Type.STRING },
+                    hora: { type: Type.STRING },
+                    doca: { type: Type.STRING },
+                    cavalo: { type: Type.STRING },
+                    carreta: { type: Type.STRING },
+                    m3: { type: Type.STRING },
+                    destino: { type: Type.STRING },
+                    noNf: { type: Type.STRING },
+                    responsavel: { type: Type.STRING },
+                    produto: { type: Type.STRING },
+                    uma: { type: Type.STRING },
+                    valorNf: { type: Type.STRING },
+                    preAlertaGr: { type: Type.STRING },
+                    planCarreg: { type: Type.STRING },
+                    baixaGr: { type: Type.STRING }
+                  }
+                }
+              }
+            }
+          });
+
+          let jsonText = response.text || "";
+          jsonText = jsonText.replace(/```json\n?|```/g, "").trim();
+          const parsedRows = JSON.parse(jsonText);
+
+          if (Array.isArray(parsedRows) && parsedRows.length > 0) {
+            return res.status(200).json({ success: true, data: parsedRows });
+          }
+        } catch (geminiErr) {
+          console.warn("Gemini extraction failed for prancheta, trying fallback:", geminiErr);
+        }
+      }
+
+      // Fallback using pdf-parse if it's a PDF
+      if (effectiveMimeType === "application/pdf") {
+        try {
+          const buffer = Buffer.from(cleanBase64, 'base64');
+          const pdfData = await pdf(buffer);
+          const text = pdfData.text || "";
+          const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+
+          const extractedRows: any[] = [];
+          const iscaPattern = /(R\d{6,10})/gi;
+          const platePattern = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
+          const timePattern = /(\d{2}:\d{2})/;
+          const datePattern = /(\d{2}\/\d{2}(?:\/\d{2,4})?)/;
+
+          for (const l of lines) {
+            const iscas = l.match(iscaPattern);
+            const plates = l.match(platePattern);
+            if (iscas || plates) {
+              const timeMatch = l.match(timePattern);
+              const dateMatch = l.match(datePattern);
+              const numbers = l.match(/\b\d{6,11}\b/g) || [];
+
+              extractedRows.push({
+                noIsca: iscas ? iscas[0] : "",
+                data: dateMatch ? dateMatch[1] : "",
+                hora: timeMatch ? timeMatch[1] : "",
+                doca: "",
+                cavalo: plates && plates[0] ? plates[0].replace(/[\s-]/g, '').toUpperCase() : "",
+                carreta: plates && plates[1] ? plates[1].replace(/[\s-]/g, '').toUpperCase() : "",
+                m3: "",
+                destino: "",
+                noNf: numbers[0] || "",
+                responsavel: "",
+                produto: numbers[1] || "",
+                uma: numbers[2] || "",
+                valorNf: "",
+                preAlertaGr: "",
+                planCarreg: "",
+                baixaGr: ""
+              });
+            }
+          }
+
+          if (extractedRows.length > 0) {
+            return res.status(200).json({ success: true, data: extractedRows });
+          }
+        } catch (pdfErr) {
+          console.warn("PDF parse fallback error:", pdfErr);
+        }
+      }
+
+      return res.status(400).json({ error: "Não foi possível extrair os dados do arquivo fornecido." });
+
+    } catch (err) {
+      console.error("Erro na rota /api/parse-prancheta:", err);
+      return res.status(500).json({ error: "Erro interno ao processar a prancheta." });
+    }
+  });
+
   app.post("/api/extract-table", async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Método não permitido' });

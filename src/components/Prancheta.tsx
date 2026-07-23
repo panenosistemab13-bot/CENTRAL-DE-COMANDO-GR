@@ -445,49 +445,103 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
     setIsProcessing(true);
     try {
       const fileName = file.name;
-      alert(`Arquivo "${fileName}" carregado! Se o arquivo contiver texto tabulado, processaremos e adicionaremos à tabela.`);
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        if (text && text.length > 0) {
-          const lines = text.split('\n').filter(l => l.trim().length > 0);
-          const parsedRows: PranchetaRow[] = [];
-          
-          lines.forEach((line, idx) => {
-            const parts = line.split(/[\t;,|]+/);
-            if (parts.length >= 3) {
-              parsedRows.push({
-                id: (Date.now() + idx).toString(),
-                noIsca: parts[0]?.trim() || '',
-                data: parts[1]?.trim() || '',
-                hora: parts[2]?.trim() || '',
-                doca: parts[3]?.trim() || '',
-                cavalo: parts[4]?.trim() || '',
-                carreta: parts[5]?.trim() || '',
-                m3: parts[6]?.trim() || '',
-                destino: parts[7]?.trim() || '',
-                noNf: parts[8]?.trim() || '',
-                responsavel: parts[9]?.trim() || '',
-                produto: parts[10]?.trim() || '',
-                uma: parts[11]?.trim() || '',
-                valorNf: parts[12]?.trim() || '',
-                preAlertaGr: parts[13]?.trim() || '',
-                planCarreg: parts[14]?.trim() || '',
-                baixaGr: parts[15]?.trim() || '',
-              });
-            }
-          });
+      const isTextFile = fileName.endsWith('.csv') || fileName.endsWith('.txt');
 
-          if (parsedRows.length > 0) {
-            saveRows([...rows, ...parsedRows]);
+      if (isTextFile) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target?.result as string;
+          if (text && text.length > 0) {
+            const lines = text.split('\n').filter(l => l.trim().length > 0);
+            const parsedRows: PranchetaRow[] = [];
+            
+            lines.forEach((line, idx) => {
+              const parts = line.split(/[\t;,|]+/);
+              if (parts.length >= 3) {
+                parsedRows.push({
+                  id: (Date.now() + idx).toString(),
+                  noIsca: parts[0]?.trim() || '',
+                  data: parts[1]?.trim() || '',
+                  hora: parts[2]?.trim() || '',
+                  doca: parts[3]?.trim() || '',
+                  cavalo: parts[4]?.trim() || '',
+                  carreta: parts[5]?.trim() || '',
+                  m3: parts[6]?.trim() || '',
+                  destino: parts[7]?.trim() || '',
+                  noNf: parts[8]?.trim() || '',
+                  responsavel: parts[9]?.trim() || '',
+                  produto: parts[10]?.trim() || '',
+                  uma: parts[11]?.trim() || '',
+                  valorNf: parts[12]?.trim() || '',
+                  preAlertaGr: parts[13]?.trim() || '',
+                  planCarreg: parts[14]?.trim() || '',
+                  baixaGr: parts[15]?.trim() || '',
+                });
+              }
+            });
+
+            if (parsedRows.length > 0) {
+              saveRows([...rows, ...parsedRows]);
+              alert(`${parsedRows.length} linhas importadas da prancheta!`);
+            }
           }
-        }
-        setIsProcessing(false);
-      };
-      reader.readAsText(file);
+          setIsProcessing(false);
+        };
+        reader.readAsText(file);
+      } else {
+        // Send PDF or Image file to backend API route /api/parse-prancheta
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const fileBase64 = event.target?.result as string;
+          try {
+            const res = await fetch('/api/parse-prancheta', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileBase64,
+                mimeType: file.type || 'application/pdf',
+                fileName: file.name
+              })
+            });
+
+            const result = await res.json();
+            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+              const newRows: PranchetaRow[] = result.data.map((item: any, idx: number) => ({
+                id: (Date.now() + idx + Math.random()).toString(),
+                noIsca: item.noIsca || '',
+                data: item.data || '',
+                hora: item.hora || '',
+                doca: item.doca || '',
+                cavalo: item.cavalo || '',
+                carreta: item.carreta || '',
+                m3: item.m3 || '',
+                destino: item.destino || '',
+                noNf: item.noNf || '',
+                responsavel: item.responsavel || '',
+                produto: item.produto || '',
+                uma: item.uma || '',
+                valorNf: item.valorNf || '',
+                preAlertaGr: item.preAlertaGr || '',
+                planCarreg: item.planCarreg || '',
+                baixaGr: item.baixaGr || ''
+              }));
+
+              saveRows([...rows, ...newRows]);
+              alert(`Digitalização com IA concluída! ${newRows.length} registros extraídos da prancheta.`);
+            } else {
+              alert(result.error || 'Não foi possível extrair dados estruturados da prancheta. Verifique a qualidade do arquivo.');
+            }
+          } catch (err) {
+            console.error('Erro ao enviar prancheta para API:', err);
+            alert('Erro ao conectar ao serviço de leitura de pranchetas.');
+          } finally {
+            setIsProcessing(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
     } catch (error) {
-      console.error('Erro ao ler arquivo:', error);
+      console.error('Erro ao processar arquivo de prancheta:', error);
       setIsProcessing(false);
     }
   };
