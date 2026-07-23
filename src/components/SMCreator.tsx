@@ -203,43 +203,152 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         const arrayBuffer = await arquivo.arrayBuffer();
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
-        let textoNota = '';
+
+        interface SpatialItem {
+          str: string;
+          x: number;
+          y: number;
+        }
+
+        const allItems: SpatialItem[] = [];
 
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          textoNota += content.items.map((item: any) => item.str).join(' ') + ' ';
+
+          for (const item of content.items as any[]) {
+            if (!item.str || !item.str.trim()) continue;
+            const transform = item.transform || [1, 0, 0, 1, 0, 0];
+            allItems.push({
+              str: item.str,
+              x: transform[4] || 0,
+              y: transform[5] || 0
+            });
+          }
         }
 
-        // Busca especificamente pelo rótulo VALOR TOTAL DA NF (quadro Cálculo do Imposto)
-        const regexValorTotal = /VALOR\s+TOTAL\s+DA\s+NF[\s\S]*?([\d\.]+,\d{2})/i;
-        let match = textoNota.match(regexValorTotal);
-
-        if (!match) {
-          // Fallback para pequenas variações de layout
-          const regexFallback = /VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]*?([\d\.]+,\d{2})/i;
-          match = textoNota.match(regexFallback);
+        // 1. Agrupa itens em linhas ordenadas espacialmente (Y decrescente, X crescente)
+        const lineGroups: Array<{ y: number; items: SpatialItem[] }> = [];
+        for (const item of allItems) {
+          let group = lineGroups.find(g => Math.abs(g.y - item.y) <= 4);
+          if (!group) {
+            group = { y: item.y, items: [] };
+            lineGroups.push(group);
+          }
+          group.items.push(item);
         }
 
-        // Extrai o número da NF se disponível
+        lineGroups.sort((a, b) => b.y - a.y); // Do topo para o rodapé da página
+
+        const lines = lineGroups.map(g => {
+          g.items.sort((a, b) => a.x - b.x); // Da esquerda para a direita
+          return {
+            y: g.y,
+            items: g.items,
+            fullText: g.items.map(i => i.str).join(' ')
+          };
+        });
+
+        const fullSpatialText = lines.map(l => l.fullText).join('\n');
+
+        // Extrai o número da NF
         let numeroNf = '---';
-        const matchNf = textoNota.match(/Nº[\s\.:]*(\d[\d\.\-]*\d|\d+)/i) || textoNota.match(/NF-e[\s\.:]*(\d+)/i);
+        const matchNf = fullSpatialText.match(/Nº[\s\.:]*(\d[\d\.\-]*\d|\d+)/i) || 
+                        fullSpatialText.match(/NF-e[\s\.:]*(\d+)/i) ||
+                        fullSpatialText.match(/NOTA\s+FISCAL[\s\S]{0,30}?(\d{3,9})/i);
         if (matchNf && matchNf[1]) {
           numeroNf = matchNf[1].replace(/\D/g, '');
         }
 
-        if (match && match[1]) {
-          const valorTexto = match[1];
-          const valorNumerico = parseFloat(valorTexto.replace(/\./g, '').replace(',', '.'));
+        let valorTextoResult: string | null = null;
+        let valorNumericoResult: number | null = null;
+
+        // ESTRATÉGIA 1: Proximidade espacial e alinhamento de coluna (DANFE "Cálculo do Imposto")
+        const labelCandidates = allItems.filter(i => /VALOR\s+TOTAL\s+(?:DA\s+)?NF/i.test(i.str));
+        if (labelCandidates.length > 0) {
+          // Seleciona o rótulo da caixa principal (geralmente no meio/topo da DANFE)
+          const labelItem = labelCandidates[0];
+          const labelX = labelItem.x;
+          const labelY = labelItem.y;
+
+          // Coleta todos os números no formato de moeda
+          const currencyRegex = /\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g;
+          const candidateNumbers: Array<{ numStr: string; val: number; x: number; y: number }> = [];
+
+          for (const item of allItems) {
+            const matches = item.str.match(currencyRegex);
+            if (matches) {
+              for (const m of matches) {
+                const val = parseFloat(m.replace(/\./g, '').replace(',', '.'));
+                candidateNumbers.push({ numStr: m, val, x: item.x, y: item.y });
+              }
+            }
+          }
+
+          // Filtra números na mesma faixa de altura Y (mesma linha ou logo abaixo) e coluna X à direita
+          const spatialMatches = candidateNumbers.filter(
+            c => c.y >= labelY - 40 && c.y <= labelY + 15 && c.x >= labelX - 80
+          );
+
+          if (spatialMatches.length > 0) {
+            // Ordena pelo X mais à direita (na DANFE, o VALOR TOTAL DA NF é a última coluna da direita)
+            spatialMatches.sort((a, b) => b.x - a.x);
+            valorTextoResult = spatialMatches[0].numStr;
+            valorNumericoResult = spatialMatches[0].val;
+          }
+        }
+
+        // ESTRATÉGIA 2: Análise relacional por linhas ordenadas
+        if (valorNumericoResult === null) {
+          for (let idx = 0; idx < lines.length; idx++) {
+            const line = lines[idx];
+            if (/VALOR\s+TOTAL\s+(?:DA\s+)?NF/i.test(line.fullText)) {
+              // Verifica se o valor está na mesma linha logo após a etiqueta
+              const matchSameLine = line.fullText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]*?([\d\.]+,\d{2})/i);
+              if (matchSameLine && matchSameLine[1]) {
+                valorTextoResult = matchSameLine[1];
+                valorNumericoResult = parseFloat(valorTextoResult.replace(/\./g, '').replace(',', '.'));
+                break;
+              }
+
+              // Verifica as 2 linhas seguintes (na DANFE, os valores ficam abaixo do cabeçalho)
+              for (let offset = 1; offset <= 2; offset++) {
+                if (idx + offset < lines.length) {
+                  const nextLine = lines[idx + offset];
+                  const numbersOnNextLine = nextLine.fullText.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g);
+                  if (numbersOnNextLine && numbersOnNextLine.length > 0) {
+                    // O VALOR TOTAL DA NF fica no canto direito (último número da linha de valores)
+                    const lastNum = numbersOnNextLine[numbersOnNextLine.length - 1];
+                    valorTextoResult = lastNum;
+                    valorNumericoResult = parseFloat(lastNum.replace(/\./g, '').replace(',', '.'));
+                    break;
+                  }
+                }
+              }
+              if (valorNumericoResult !== null) break;
+            }
+          }
+        }
+
+        // ESTRATÉGIA 3: Fallback por expressão regular com janela reduzida
+        if (valorNumericoResult === null) {
+          const matchFallback = fullSpatialText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]{0,120}?([\d\.]+,\d{2})/i);
+          if (matchFallback && matchFallback[1]) {
+            valorTextoResult = matchFallback[1];
+            valorNumericoResult = parseFloat(valorTextoResult.replace(/\./g, '').replace(',', '.'));
+          }
+        }
+
+        if (valorNumericoResult !== null && valorTextoResult !== null) {
           const valorFormatado = new Intl.NumberFormat('pt-BR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
-          }).format(valorNumerico);
+          }).format(valorNumericoResult);
 
           extractedItems.push({
             fileName: arquivo.name,
             numeroNf,
-            valor: valorNumerico,
+            valor: valorNumericoResult,
             valorFormatado,
             success: true
           });
