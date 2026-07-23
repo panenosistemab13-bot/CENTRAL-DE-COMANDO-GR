@@ -11,9 +11,18 @@ import {
   Download, 
   RefreshCw,
   Search,
-  Eye
+  Eye,
+  AlertTriangle,
+  DollarSign,
+  FileCheck,
+  X,
+  Receipt
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configuração do Worker do pdfjs-dist para execução 100% Client-Side
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export interface PranchetaRow {
   id: string;
@@ -33,6 +42,233 @@ export interface PranchetaRow {
   preAlertaGr: string;
   planCarreg: string;
   baixaGr: string;
+  alertas?: string[];
+}
+
+// Dicionário para autocorreção ortográfica e sanitização de destinos
+const CORRECOES_ORTOGRAFICAS: Record<string, string> = {
+  'MOC': 'Montes Claros/MG',
+  'Gov. Celso': 'Governador Celso Ramos/SC',
+  'GOV. CELSO': 'Governador Celso Ramos/SC',
+  'LONDAWA': 'Londrina/PR',
+  'CABAM': 'Cajamar/SP',
+  'RS': 'R$',
+  'Pre Baixa': 'Pré-Baixa',
+};
+
+// Sanitiza e padroniza valores de moeda no padrão BRL (R$ XX.XXX,XX)
+function sanitizarValorMonetario(val: string): { valorCorrigido: string; alterado: boolean; aviso?: string } {
+  if (!val) return { valorCorrigido: '', alterado: false };
+  const original = val.trim();
+  let cleaned = original;
+
+  if (cleaned.startsWith('RS')) {
+    cleaned = cleaned.replace(/^RS\s*/, 'R$ ');
+  }
+
+  // Trata traços ou espaços em números corrompidos
+  cleaned = cleaned.replace(/(\d+)\s*-\s*(\d+)/g, '$1.$2');
+  cleaned = cleaned.replace(/,\s+(\d{2})/, ',$1');
+
+  // Corrigir múltiplos pontos ou zeros extras
+  const cleanDigits = cleaned.replace(/[^\d\.]/g, '');
+  if (/^\d{1,3}\.\d{3}\.\d{3}$/.test(cleanDigits)) {
+    const parts = cleanDigits.split('.');
+    if (parts.length === 3) {
+      cleaned = `R$ ${parts[0]}.${parts[1]},${parts[2].substring(0, 2)}`;
+    }
+  }
+
+  if (!cleaned.startsWith('R$') && /^\d/.test(cleaned)) {
+    cleaned = `R$ ${cleaned}`;
+  }
+
+  const isDifferent = cleaned !== original;
+  return {
+    valorCorrigido: cleaned,
+    alterado: isDifferent,
+    aviso: isDifferent ? `Valor corrigido: "${original}" → "${cleaned}"` : undefined
+  };
+}
+
+export interface DanfeDetail {
+  nomeArquivo: string;
+  valorFormatado: string;
+  valorNumerico: number;
+  sucesso: boolean;
+}
+
+// Função para processar PDFs de Notas Fiscais (DANFE) e extrair o VALOR TOTAL DA NF
+export async function processarNotasFiscais(arquivos: FileList | File[]) {
+  let somaTotal = 0;
+  const detalhesNotas: DanfeDetail[] = [];
+
+  for (const arquivo of Array.from(arquivos)) {
+    try {
+      const arrayBuffer = await arquivo.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let textoNota = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        textoNota += content.items.map((item: any) => item.str).join(' ') + ' ';
+      }
+
+      // Busca exatamente o campo VALOR TOTAL DA NF (quadro Cálculo do Imposto)
+      const regexValorTotal = /VALOR\s+TOTAL\s+DA\s+NF[\s\S]*?([\d\.]+,\d{2})/i;
+      let match = textoNota.match(regexValorTotal);
+
+      if (!match) {
+        const regexFallback = /VALOR\s+TOTAL[\s\S]*?([\d\.]+,\d{2})/i;
+        match = textoNota.match(regexFallback);
+      }
+
+      if (match && match[1]) {
+        const valorTexto = match[1];
+        const valorNumerico = parseFloat(valorTexto.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(valorNumerico)) {
+          somaTotal += valorNumerico;
+          detalhesNotas.push({
+            nomeArquivo: arquivo.name,
+            valorFormatado: `R$ ${valorTexto}`,
+            valorNumerico,
+            sucesso: true
+          });
+        } else {
+          detalhesNotas.push({
+            nomeArquivo: arquivo.name,
+            valorFormatado: 'Invalido',
+            valorNumerico: 0,
+            sucesso: false
+          });
+        }
+      } else {
+        detalhesNotas.push({
+          nomeArquivo: arquivo.name,
+          valorFormatado: 'Não encontrado',
+          valorNumerico: 0,
+          sucesso: false
+        });
+      }
+    } catch (erro) {
+      console.error(`Erro ao ler o arquivo ${arquivo.name}:`, erro);
+      detalhesNotas.push({
+        nomeArquivo: arquivo.name,
+        valorFormatado: 'Erro na leitura do PDF',
+        valorNumerico: 0,
+        sucesso: false
+      });
+    }
+  }
+
+  const totalGeralFormatado = somaTotal.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
+  return {
+    detalhesNotas,
+    somaTotalNumerica: somaTotal,
+    totalGeralFormatado
+  };
+}
+
+// Função para processar PDF da Prancheta e verificar ortografia
+export async function processarPranchetaEVerificarOrtografia(file: File): Promise<{
+  sucesso: boolean;
+  totalLinhas?: number;
+  dados?: PranchetaRow[];
+  erro?: string;
+}> {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let textoBruto = '';
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      textoBruto += content.items.map((item: any) => item.str).join(' ') + '\n';
+    }
+
+    const linhas = textoBruto.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    const relatorioFinal: PranchetaRow[] = [];
+
+    const iscaRegex = /(R10000\d{3,5}|R\d{6,10})/i;
+    const dateRegex = /(\d{2}\/\d{2}(?:\/\d{2,4})?)/;
+    const timeRegex = /(\d{2}:\d{2})/;
+    const plateRegex = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
+    const valorNfRegex = /(?:R\$\s*|RS\s*)?([\d\.]{2,10},\d{2})/i;
+
+    linhas.forEach((linha, idx) => {
+      const alertasOrtografia: string[] = [];
+      let linhaCorrigida = linha;
+
+      Object.keys(CORRECOES_ORTOGRAFICAS).forEach((termoIncorreto) => {
+        if (linhaCorrigida.includes(termoIncorreto)) {
+          const termoCerto = CORRECOES_ORTOGRAFICAS[termoIncorreto];
+          linhaCorrigida = linhaCorrigida.split(termoIncorreto).join(termoCerto);
+          alertasOrtografia.push(`Ortografia corrigida: "${termoIncorreto}" → "${termoCerto}"`);
+        }
+      });
+
+      const iscaMatch = linhaCorrigida.match(iscaRegex);
+      const dateMatch = linhaCorrigida.match(dateRegex);
+      const timeMatch = linhaCorrigida.match(timeRegex);
+      const plates = linhaCorrigida.match(plateRegex) || [];
+      const valorMatch = linhaCorrigida.match(valorNfRegex);
+      const numbers = linhaCorrigida.match(/\b\d{6,13}\b/g) || [];
+
+      if (iscaMatch || plates.length > 0 || numbers.length > 0) {
+        let rawValor = valorMatch ? valorMatch[0] : '';
+        const sanValor = sanitizarValorMonetario(rawValor);
+        if (sanValor.alterado && sanValor.aviso) {
+          alertasOrtografia.push(sanValor.aviso);
+        }
+
+        let dest = '';
+        if (linhaCorrigida.toUpperCase().includes('MONTES CLAROS') || linhaCorrigida.toUpperCase().includes('MOC')) dest = 'Montes Claros/MG';
+        else if (linhaCorrigida.toUpperCase().includes('GUARULHOS')) dest = 'Guarulhos';
+        else if (linhaCorrigida.toUpperCase().includes('GOVERNADOR CELSO') || linhaCorrigida.toUpperCase().includes('GOV. CELSO')) dest = 'Governador Celso Ramos/SC';
+        else if (linhaCorrigida.toUpperCase().includes('LONDRINA') || linhaCorrigida.toUpperCase().includes('LONDAWA')) dest = 'Londrina/PR';
+        else if (linhaCorrigida.toUpperCase().includes('CUIABÁ') || linhaCorrigida.toUpperCase().includes('CUIABA')) dest = 'Cuiabá';
+        else if (linhaCorrigida.toUpperCase().includes('CAJAMAR') || linhaCorrigida.toUpperCase().includes('CABAM')) dest = 'Cajamar/SP';
+
+        relatorioFinal.push({
+          id: (Date.now() + idx + Math.random()).toString(),
+          noIsca: iscaMatch ? iscaMatch[0].toUpperCase() : '',
+          data: dateMatch ? dateMatch[1] : '',
+          hora: timeMatch ? timeMatch[1] : '',
+          doca: '',
+          cavalo: plates[0] ? plates[0].replace(/[\s-]/g, '').toUpperCase() : '',
+          carreta: plates[1] ? plates[1].replace(/[\s-]/g, '').toUpperCase() : '',
+          m3: '',
+          destino: dest,
+          noNf: numbers[0] || '',
+          responsavel: 'Vini',
+          produto: numbers[1] || '',
+          uma: numbers[2] || '',
+          valorNf: sanValor.valorCorrigido || (valorMatch ? valorMatch[1] : ''),
+          preAlertaGr: 'Vini',
+          planCarreg: 'OK',
+          baixaGr: 'OK',
+          alertas: alertasOrtografia
+        });
+      }
+    });
+
+    return {
+      sucesso: true,
+      totalLinhas: relatorioFinal.length,
+      dados: relatorioFinal
+    };
+  } catch (error: any) {
+    return {
+      sucesso: false,
+      erro: error.message || 'Erro ao processar PDF'
+    };
+  }
 }
 
 export const INITIAL_PRANCHETA_ROWS: PranchetaRow[] = [
@@ -306,7 +542,16 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const danfeInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Estado para resultados das Notas Fiscais (DANFE) e Soma Total R$
+  const [danfeResult, setDanfeResult] = useState<{
+    detalhesNotas: DanfeDetail[];
+    somaTotalNumerica: number;
+    totalGeralFormatado: string;
+  } | null>(null);
 
   const saveRows = (newRows: PranchetaRow[]) => {
     setRows(newRows);
@@ -438,6 +683,25 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
     }
   };
 
+  // Upload e processamento de DANFEs / NFs (Soma R$ client-side)
+  const handleDanfeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsProcessing(true);
+    try {
+      const res = await processarNotasFiscais(files);
+      setDanfeResult(res);
+    } catch (err) {
+      console.error('Erro ao processar DANFE:', err);
+      alert('Erro ao ler arquivos PDF de DANFE.');
+    } finally {
+      setIsProcessing(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  // Upload e processamento da Prancheta (100% Client-Side com pdfjs-dist e autocorreção)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -489,60 +753,21 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
         };
         reader.readAsText(file);
       } else {
-        // Send PDF or Image file to backend API route /api/parse-prancheta
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const fileBase64 = event.target?.result as string;
-          try {
-            const res = await fetch('/api/parse-prancheta', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                fileBase64,
-                mimeType: file.type || 'application/pdf',
-                fileName: file.name
-              })
-            });
-
-            const result = await res.json();
-            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-              const newRows: PranchetaRow[] = result.data.map((item: any, idx: number) => ({
-                id: (Date.now() + idx + Math.random()).toString(),
-                noIsca: item.noIsca || '',
-                data: item.data || '',
-                hora: item.hora || '',
-                doca: item.doca || '',
-                cavalo: item.cavalo || '',
-                carreta: item.carreta || '',
-                m3: item.m3 || '',
-                destino: item.destino || '',
-                noNf: item.noNf || '',
-                responsavel: item.responsavel || '',
-                produto: item.produto || '',
-                uma: item.uma || '',
-                valorNf: item.valorNf || '',
-                preAlertaGr: item.preAlertaGr || '',
-                planCarreg: item.planCarreg || '',
-                baixaGr: item.baixaGr || ''
-              }));
-
-              saveRows([...rows, ...newRows]);
-              alert(`Digitalização com IA concluída! ${newRows.length} registros extraídos da prancheta.`);
-            } else {
-              alert(result.error || 'Não foi possível extrair dados estruturados da prancheta. Verifique a qualidade do arquivo.');
-            }
-          } catch (err) {
-            console.error('Erro ao enviar prancheta para API:', err);
-            alert('Erro ao conectar ao serviço de leitura de pranchetas.');
-          } finally {
-            setIsProcessing(false);
-          }
-        };
-        reader.readAsDataURL(file);
+        // Leitura 100% Client-side usando pdfjs-dist com autocorreção ortográfica
+        const result = await processarPranchetaEVerificarOrtografia(file);
+        if (result.sucesso && result.dados && result.dados.length > 0) {
+          saveRows([...rows, ...result.dados]);
+          alert(`Prancheta processada com sucesso! ${result.dados.length} linhas extraídas.`);
+        } else {
+          alert(result.erro || 'Não foi possível extrair os dados da prancheta fornecida.');
+        }
+        setIsProcessing(false);
       }
     } catch (error) {
       console.error('Erro ao processar arquivo de prancheta:', error);
       setIsProcessing(false);
+    } finally {
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -571,11 +796,32 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
             <span>Digitalização de Prancheta / Controle de Embarque de Iscas</span>
           </div>
           <p className="text-xs text-[#5c3e29] font-medium max-w-2xl">
-            Informações digitalizadas exatamente como constam na prancheta em anexo. Você pode editar, filtrar, copiar ou importar novos arquivos de prancheta.
+            Processamento 100% no navegador. Você pode importar PDFs de DANFE (para calcular a Soma Total em Dinheiro) ou PDFs de Pranchetas de Isca com verificação ortográfica automática.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Input para NFs / DANFE (múltiplos PDFs) */}
+          <input 
+            type="file" 
+            ref={danfeInputRef} 
+            onChange={handleDanfeUpload} 
+            accept=".pdf" 
+            multiple
+            className="hidden" 
+          />
+          <button
+            type="button"
+            onClick={() => danfeInputRef.current?.click()}
+            disabled={isProcessing}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            title="Importar um ou mais PDFs de DANFE para extrair e somar o Valor Total da NF"
+          >
+            <Receipt size={15} />
+            {isProcessing ? 'Lendo PDFs...' : 'Importar DANFEs (NFs) - Soma R$'}
+          </button>
+
+          {/* Input para Pranchetas */}
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -587,10 +833,11 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isProcessing}
-            className="bg-[#7A0C22] hover:bg-[#5a0919] text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+            className="bg-[#7A0C22] hover:bg-[#5a0919] text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            title="Importar PDF da Prancheta de Iscas com correção ortográfica"
           >
             <Upload size={14} />
-            {isProcessing ? 'Processando...' : 'Importar PDF / Imagem'}
+            {isProcessing ? 'Processando...' : 'Importar PDF Prancheta'}
           </button>
 
           <button
@@ -600,7 +847,7 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
             title="Restaurar dados originais da folha em anexo"
           >
             <RefreshCw size={14} />
-            Carregar Prancheta Anexa
+            Restaurar Original
           </button>
 
           <button
@@ -609,7 +856,7 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
             className="bg-[#3e2516] hover:bg-[#28180e] text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             {copiedAll ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-            {copiedAll ? 'Copiado para Excel!' : 'Copiar Tabela (Excel)'}
+            {copiedAll ? 'Copiado!' : 'Copiar Tabela'}
           </button>
 
           <button
@@ -623,6 +870,76 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
           </button>
         </div>
       </div>
+
+      {/* PAINEL DE RESULTADO: SOMA TOTAL EM DINHEIRO DAS DANFEs / NOTAS FISCAIS */}
+      {danfeResult && (
+        <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 border-2 border-emerald-500 rounded-2xl p-5 text-white shadow-2xl relative overflow-hidden animate-fadeIn">
+          <button
+            type="button"
+            onClick={() => setDanfeResult(null)}
+            className="absolute top-3 right-3 bg-emerald-950/60 hover:bg-emerald-950 text-emerald-200 p-1.5 rounded-full transition-all cursor-pointer"
+            title="Fechar resultado DANFE"
+          >
+            <X size={16} />
+          </button>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-emerald-700/60">
+            <div>
+              <span className="bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                <FileCheck size={12} /> Cálculo do Imposto (VALOR TOTAL DA NF)
+              </span>
+              <h3 className="text-lg font-black uppercase tracking-tight text-white mt-1">
+                Resumo das Notas Fiscais Carregadas ({danfeResult.detalhesNotas.length} arquivos)
+              </h3>
+            </div>
+
+            <div className="bg-emerald-950/80 border-2 border-emerald-400/80 px-6 py-3 rounded-2xl text-right shadow-inner">
+              <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest block">
+                Soma Total em Dinheiro
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tracking-tight drop-shadow-md">
+                {danfeResult.totalGeralFormatado}
+              </span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-sans">
+              <thead>
+                <tr className="bg-emerald-950/60 text-emerald-200 font-bold uppercase text-[10px] tracking-wider border-b border-emerald-700">
+                  <th className="p-2">Nome do Arquivo PDF</th>
+                  <th className="p-2 text-right">Valor Total da NF</th>
+                  <th className="p-2 text-center">Status Extrator</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-emerald-800/50 font-medium">
+                {danfeResult.detalhesNotas.map((nota, i) => (
+                  <tr key={i} className="hover:bg-emerald-800/30">
+                    <td className="p-2 font-mono text-emerald-100 flex items-center gap-2">
+                      <Receipt size={14} className="text-emerald-300 shrink-0" />
+                      {nota.nomeArquivo}
+                    </td>
+                    <td className="p-2 text-right font-black font-mono text-amber-200 text-sm">
+                      {nota.valorFormatado}
+                    </td>
+                    <td className="p-2 text-center">
+                      {nota.sucesso ? (
+                        <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <Check size={10} /> Extraído
+                        </span>
+                      ) : (
+                        <span className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <AlertTriangle size={10} /> {nota.valorFormatado}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Top Warning Banner identical to the paper sheet */}
       <div className="bg-[#1a0509] text-white border-2 border-[#7A0C22] rounded-xl py-2.5 px-4 text-center font-black text-xs sm:text-sm tracking-wide uppercase shadow-md flex items-center justify-center gap-2">
@@ -695,22 +1012,34 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
             ) : (
               filteredRows.map((row, idx) => {
                 const isEven = idx % 2 === 0;
+                const temAlertas = row.alertas && row.alertas.length > 0;
                 return (
                   <tr 
                     key={row.id} 
                     className={cn(
-                      "hover:bg-[#f3e9d8] transition-colors divide-x divide-[#e1ccb0]/80",
-                      isEven ? "bg-[#FFFDFB]" : "bg-[#F9F4EB]"
+                      "hover:bg-[#f3e9d8] transition-colors divide-x divide-[#e1ccb0]/80 relative",
+                      isEven ? "bg-[#FFFDFB]" : "bg-[#F9F4EB]",
+                      temAlertas && "bg-amber-50/60"
                     )}
                   >
                     {/* Nº ISCA */}
                     <td className="p-1.5">
-                      <input
-                        type="text"
-                        value={row.noIsca}
-                        onChange={(e) => handleCellChange(row.id, 'noIsca', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-bold font-mono text-[#7A0C22] uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
-                      />
+                      <div className="flex items-center gap-1">
+                        {temAlertas && (
+                          <span 
+                            title={row.alertas?.join('\n')}
+                            className="bg-amber-100 text-amber-800 border border-amber-300 p-0.5 rounded shrink-0 cursor-help"
+                          >
+                            <AlertTriangle size={12} className="text-amber-600" />
+                          </span>
+                        )}
+                        <input
+                          type="text"
+                          value={row.noIsca}
+                          onChange={(e) => handleCellChange(row.id, 'noIsca', e.target.value)}
+                          className="w-full bg-transparent px-1 py-0.5 font-bold font-mono text-[#7A0C22] uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        />
+                      </div>
                     </td>
 
                     {/* DATA */}
