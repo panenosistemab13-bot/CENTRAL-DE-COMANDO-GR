@@ -215,23 +215,32 @@ export default function Controle({ onBack }: ControleProps) {
   };
 
   const formatUMA = (value: string) => {
-    // Remove all non-numeric characters
+    if (!value) return "";
+
+    // Se contiver letras, permite escrita alfanumérica livre (convertendo para maiúsculas)
+    if (/[a-zA-Z]/.test(value)) {
+      return value.toUpperCase();
+    }
+
+    // Remove todos os caracteres não numéricos se for estritamente numérico
     let digits = value.replace(/\D/g, "");
 
-    // If first digit is '9' or '6', do not add leading '0' nor any dots, and allow up to 14 digits
+    if (!digits) return value.toUpperCase();
+
+    // Se o primeiro dígito for '9' ou '6', não adiciona '0' nem pontos, e permite até 14 dígitos
     if (digits.length > 0 && (digits[0] === "9" || digits[0] === "6")) {
       return digits.substring(0, 14);
     }
 
-    // Only add '0' automatically if there are 11 digits and it doesn't start with '0' (meaning 1 digit is missing out of 12)
+    // Apenas adiciona '0' automaticamente se houver 11 dígitos e não começar com '0'
     if (digits.length === 11 && digits[0] !== "0") {
       digits = "0" + digits;
     }
 
-    // Limit to 12 digits (0XXX.XXX.XXX.XXX pattern)
+    // Limita a 12 dígitos (padrão 0XXX.XXX.XXX.XXX)
     digits = digits.substring(0, 12);
 
-    // Apply dots every 3 characters
+    // Aplica pontos a cada 3 caracteres se for numérico
     let formatted = "";
     for (let i = 0; i < digits.length; i++) {
       if (i > 0 && i % 3 === 0) {
@@ -667,8 +676,8 @@ export default function Controle({ onBack }: ControleProps) {
     setIsca2("");
     setProduto1("");
     setProduto2("");
-    setUma1(formatUMA("0"));
-    setUma2(formatUMA("0"));
+    setUma1("");
+    setUma2("");
   };
 
   const handleClear = () => {
@@ -695,8 +704,8 @@ export default function Controle({ onBack }: ControleProps) {
       setIsca2("");
       setProduto1("");
       setProduto2("");
-      setUma1(formatUMA("0"));
-      setUma2(formatUMA("0"));
+      setUma1("");
+      setUma2("");
       setDestino("");
       setDataEnviada(getFormattedDate());
       setParametrizacao("Parametrização das iscas");
