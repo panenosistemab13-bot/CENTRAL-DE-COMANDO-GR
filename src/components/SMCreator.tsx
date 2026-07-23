@@ -100,6 +100,137 @@ interface SMCreatorProps {
   onBack?: () => void;
 }
 
+interface RouteItem {
+  ida: string;
+  idaCod: string;
+  volta: string;
+  voltaCod: string;
+}
+
+const DEFAULT_ROUTES: RouteItem[] = [
+  { ida: 'SANTA LUZIA-MG X RIO DE JANEIRO-RJ', idaCod: '4069', volta: 'RIO DE JANEIRO-RJ X SANTA LUZIA-MG', voltaCod: '4079' },
+  { ida: 'SANTA LUZIA-MG X GUARULHOS-SP', idaCod: '4070', volta: 'GUARULHOS-SP X SANTA LUZIA-MG', voltaCod: '3971/4076' },
+  { ida: 'SANTA LUZIA-MG X MONTES CLAROS-MG', idaCod: '', volta: 'MONTES CLAROS-MG X SANTA LUZIA-MG', voltaCod: '4081' },
+  { ida: 'SANTA LUZIA-MG X VIANA-ES', idaCod: '', volta: 'VIANA-ES X SANTA LUZIA-MG', voltaCod: '3985' },
+  { ida: 'SANTA LUZIA-MG X BRASILIA-DF', idaCod: '4071', volta: 'BRASILIA-DF X SANTA LUZIA-MG', voltaCod: '4077' },
+  { ida: 'SANTA LUZIA-MG X SUMARE-SP', idaCod: '', volta: 'SUMARE-SP X SANTA LUZIA-MG', voltaCod: '3994' },
+  { ida: 'SANTA LUZIA-MG X PINHAIS-PR', idaCod: '', volta: 'PINHAIS-PR X SANTA LUZIA-MG', voltaCod: '4080' },
+  { ida: 'SANTA LUZIA-MG X LONDRINA-PR', idaCod: '4027', volta: 'LONDRINA-PR X SANTA LUZIA-MG', voltaCod: '3975/4078/4091' },
+  { ida: 'SANTA LUZIA-MG X NATAL-RN', idaCod: '4015', volta: 'NATAL-RN X SANTA LUZIA-MG', voltaCod: '3969/3970/4075' },
+  { ida: 'SANTA LUZIA-MG X GOV. CELSO RAMOS-SC', idaCod: '', volta: 'GOV. CELSO RAMOS-SC X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X SALVADOR-BA', idaCod: '', volta: 'SALVADOR-BA X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X EUSEBIO-CE', idaCod: '', volta: 'EUSEBIO-CE X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X GRAVATAI-RS', idaCod: '', volta: 'GRAVATAI-RS X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X CAMPO GRANDE-MT', idaCod: '', volta: 'CAMPO GRANDE-MS X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X CUIABA-MT', idaCod: '', volta: 'CUIABA-MT X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X ARIQUEMES', idaCod: '', volta: 'ARIQUEMES-RO X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X VESPASIANO-MG', idaCod: '', volta: 'VESPASIANO-MG X SANTA LUZIA-MG', voltaCod: '3989/3990' },
+];
+
+const CITY_MAP: Record<string, string> = {
+  slt: 'SANTA LUZIA',
+  stl: 'SANTA LUZIA',
+  'santa luzia': 'SANTA LUZIA',
+  vesp: 'VESPASIANO',
+  vespasiano: 'VESPASIANO',
+  bra: 'BRASILIA',
+  brasilia: 'BRASILIA',
+  spo: 'GUARULHOS',
+  guarulhos: 'GUARULHOS',
+  cam: 'SUMARE',
+  sumare: 'SUMARE',
+  via: 'VIANA',
+  viana: 'VIANA',
+  rjo: 'RIO DE JANEIRO',
+  'rio de janeiro': 'RIO DE JANEIRO',
+  pinh: 'PINHAIS',
+  pinhais: 'PINHAIS',
+  lon: 'LONDRINA',
+  londrina: 'LONDRINA',
+  moc: 'MONTES CLAROS',
+  'montes claros': 'MONTES CLAROS',
+  nat: 'NATAL',
+  natal: 'NATAL',
+  gov: 'GOV. CELSO RAMOS',
+  salv: 'SALVADOR',
+  euseb: 'EUSEBIO',
+  grav: 'GRAVATAI',
+  cg: 'CAMPO GRANDE',
+  cui: 'CUIABA',
+  ariq: 'ARIQUEMES'
+};
+
+const resolveCityName = (term: string): string => {
+  const clean = term.trim().toLowerCase().replace(/[-_]/g, ' ');
+  if (CITY_MAP[clean]) return CITY_MAP[clean];
+  
+  for (const [key, val] of Object.entries(CITY_MAP)) {
+    if (clean.includes(key)) return val;
+  }
+  return clean.toUpperCase();
+};
+
+const findRouteCode = (trechoStr: string, section: 'ida' | 'volta', routes: RouteItem[]): string => {
+  if (!trechoStr || !trechoStr.trim()) return '---';
+  
+  const raw = trechoStr.trim();
+  const parts = raw.split(/\s*X\s*/i);
+  let origin = '';
+  let destination = '';
+
+  if (parts.length >= 2) {
+    origin = resolveCityName(parts[0]);
+    destination = resolveCityName(parts[1]);
+  } else {
+    origin = resolveCityName(raw);
+  }
+
+  if (section === 'volta') {
+    if (origin === 'SANTA LUZIA' && destination && destination !== 'SANTA LUZIA') {
+      const temp = origin;
+      origin = destination;
+      destination = temp;
+    }
+  }
+
+  for (const r of routes) {
+    const idaUpper = (r.ida || '').toUpperCase();
+    const voltaUpper = (r.volta || '').toUpperCase();
+
+    if (section === 'ida') {
+      if (origin && destination) {
+        if (idaUpper.includes(origin) && idaUpper.includes(destination)) {
+          return r.idaCod || r.voltaCod || '---';
+        }
+      } else if (origin) {
+        if (idaUpper.includes(origin)) return r.idaCod || r.voltaCod || '---';
+      }
+    } else {
+      if (origin && destination) {
+        if (voltaUpper.includes(origin) && voltaUpper.includes(destination)) {
+          return r.voltaCod || r.idaCod || '---';
+        }
+      } else if (origin) {
+        if (voltaUpper.includes(origin)) return r.voltaCod || r.idaCod || '---';
+      }
+    }
+  }
+
+  for (const r of routes) {
+    const idaUpper = (r.ida || '').toUpperCase();
+    const voltaUpper = (r.volta || '').toUpperCase();
+
+    if (origin && destination) {
+      if ((idaUpper.includes(origin) && idaUpper.includes(destination)) ||
+          (voltaUpper.includes(origin) && voltaUpper.includes(destination))) {
+        return section === 'ida' ? (r.idaCod || r.voltaCod || '---') : (r.voltaCod || r.idaCod || '---');
+      }
+    }
+  }
+
+  return '---';
+};
+
 const generateStyledTableHtml = (rows: SMRow[], isIda: boolean) => {
   if (rows.length === 0) return '';
   const color = isIda ? '#14325c' : '#7f1d1d';
@@ -160,10 +291,11 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   const [idaRows, setIdaRows] = useState<SMRow[]>([]);
   const [voltaRows, setVoltaRows] = useState<SMRow[]>([]);
   const [calcValues, setCalcValues] = useState<string[]>(['']);
+  const [routesList, setRoutesList] = useState<RouteItem[]>(DEFAULT_ROUTES);
 
   useEffect(() => {
     const smRef = ref(db, 'sm_creator_data');
-    const unsubscribe = onValue(smRef, (snapshot) => {
+    const unsubscribeSM = onValue(smRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         if (data.ida) setIdaRows(data.ida);
@@ -171,7 +303,21 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         if (data.calc) setCalcValues(data.calc);
       }
     });
-    return () => unsubscribe();
+
+    const rotasRef = ref(db, 'app_rotas_data');
+    const unsubscribeRotas = onValue(rotasRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && Array.isArray(data) && data.length > 0) {
+        setRoutesList(data);
+      } else {
+        setRoutesList(DEFAULT_ROUTES);
+      }
+    });
+
+    return () => {
+      unsubscribeSM();
+      unsubscribeRotas();
+    };
   }, []);
 
   const saveIda = (rows: SMRow[]) => {
@@ -1001,6 +1147,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                             <th className="p-4 text-center">Baú 1</th>
                             <th className="p-4 text-center">Baú 2</th>
                             <th className="p-4">Trecho</th>
+                            <th className="p-4 text-center">Rotas</th>
                             <th className="p-4 text-right">Valor NF</th>
                             <th className="p-4 w-12 text-center">Ações</th>
                           </tr>
@@ -1082,6 +1229,11 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'ida')}
                                   className="w-full  bg-[#d2c2b2] border border-[#c0a892] text-[#4a3623] shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] rounded-lg py-1.5 px-3 focus:bg-[#e6d5c3] focus:border-[#a57045] outline-none transition-all uppercase"
                                 />
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="bg-[#d2c2b2]/80 border border-[#c0a892] text-[#3A2414] font-black font-mono text-xs rounded-lg py-1.5 px-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)] inline-block min-w-[65px] text-center" title="Número da rota obtido da página de Rotas">
+                                  {findRouteCode(row.trecho, 'ida', routesList)}
+                                </div>
                               </td>
                               <td className="p-3 text-right font-black text-green-500 group/cell">
                                 <div className="flex items-center justify-end gap-1.5">
@@ -1195,6 +1347,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                             <th className="p-4 text-center">Baú 1</th>
                             <th className="p-4 text-center">Baú 2</th>
                             <th className="p-4">Trecho</th>
+                            <th className="p-4 text-center">Rotas</th>
                             <th className="p-4 text-right">Valor NF</th>
                             <th className="p-4 w-12 text-center">Ações</th>
                           </tr>
@@ -1287,6 +1440,11 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   >
                                     <RefreshCw size={12} />
                                   </button>
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="bg-[#d2c2b2]/80 border border-[#c0a892] text-[#3A2414] font-black font-mono text-xs rounded-lg py-1.5 px-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)] inline-block min-w-[65px] text-center" title="Número da rota obtido da página de Rotas">
+                                  {findRouteCode(row.trecho, 'volta', routesList)}
                                 </div>
                               </td>
                               <td className="p-3 text-right font-black text-red-500 group/cell">
