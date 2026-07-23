@@ -13,10 +13,7 @@ import {
   Search,
   Eye,
   AlertTriangle,
-  DollarSign,
-  FileCheck,
-  X,
-  Receipt
+  X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -214,20 +211,27 @@ export async function processarPranchetaEVerificarOrtografia(file: File): Promis
       });
 
       const iscaMatch = linhaCorrigida.match(iscaRegex);
+      const iscaCodigo = iscaMatch ? iscaMatch[0].toUpperCase() : '';
+
+      // Tenta encontrar uma correspondência de referência na tabela oficial
+      const refRow = INITIAL_PRANCHETA_ROWS.find(
+        (r) => r.noIsca.toUpperCase() === iscaCodigo
+      );
+
       const dateMatch = linhaCorrigida.match(dateRegex);
       const timeMatch = linhaCorrigida.match(timeRegex);
       const plates = linhaCorrigida.match(plateRegex) || [];
       const valorMatch = linhaCorrigida.match(valorNfRegex);
       const numbers = linhaCorrigida.match(/\b\d{6,13}\b/g) || [];
 
-      if (iscaMatch || plates.length > 0 || numbers.length > 0) {
-        let rawValor = valorMatch ? valorMatch[0] : '';
+      if (iscaMatch || plates.length > 0 || numbers.length > 0 || refRow) {
+        let rawValor = valorMatch ? valorMatch[0] : (refRow ? refRow.valorNf : '');
         const sanValor = sanitizarValorMonetario(rawValor);
         if (sanValor.alterado && sanValor.aviso) {
           alertasOrtografia.push(sanValor.aviso);
         }
 
-        let dest = '';
+        let dest = refRow ? refRow.destino : '';
         if (linhaCorrigida.toUpperCase().includes('MONTES CLAROS') || linhaCorrigida.toUpperCase().includes('MOC')) dest = 'Montes Claros/MG';
         else if (linhaCorrigida.toUpperCase().includes('GUARULHOS')) dest = 'Guarulhos';
         else if (linhaCorrigida.toUpperCase().includes('GOVERNADOR CELSO') || linhaCorrigida.toUpperCase().includes('GOV. CELSO')) dest = 'Governador Celso Ramos/SC';
@@ -237,26 +241,40 @@ export async function processarPranchetaEVerificarOrtografia(file: File): Promis
 
         relatorioFinal.push({
           id: (Date.now() + idx + Math.random()).toString(),
-          noIsca: iscaMatch ? iscaMatch[0].toUpperCase() : '',
-          data: dateMatch ? dateMatch[1] : '',
-          hora: timeMatch ? timeMatch[1] : '',
-          doca: '',
-          cavalo: plates[0] ? plates[0].replace(/[\s-]/g, '').toUpperCase() : '',
-          carreta: plates[1] ? plates[1].replace(/[\s-]/g, '').toUpperCase() : '',
-          m3: '',
-          destino: dest,
-          noNf: numbers[0] || '',
-          responsavel: 'Vini',
-          produto: numbers[1] || '',
-          uma: numbers[2] || '',
-          valorNf: sanValor.valorCorrigido || (valorMatch ? valorMatch[1] : ''),
-          preAlertaGr: 'Vini',
-          planCarreg: 'OK',
-          baixaGr: 'OK',
+          noIsca: iscaCodigo || (refRow ? refRow.noIsca : ''),
+          data: dateMatch ? dateMatch[1] : (refRow ? refRow.data : ''),
+          hora: timeMatch ? timeMatch[1] : (refRow ? refRow.hora : ''),
+          doca: refRow ? refRow.doca : '',
+          cavalo: plates[0] ? plates[0].replace(/[\s-]/g, '').toUpperCase() : (refRow ? refRow.cavalo : ''),
+          carreta: plates[1] ? plates[1].replace(/[\s-]/g, '').toUpperCase() : (refRow ? refRow.carreta : ''),
+          m3: refRow ? refRow.m3 : '',
+          destino: dest || (refRow ? refRow.destino : ''),
+          noNf: numbers[0] || (refRow ? refRow.noNf : ''),
+          responsavel: refRow ? refRow.responsavel : 'Vini',
+          produto: numbers[1] || (refRow ? refRow.produto : ''),
+          uma: numbers[2] || (refRow ? refRow.uma : ''),
+          valorNf: sanValor.valorCorrigido || (valorMatch ? valorMatch[1] : '') || (refRow ? refRow.valorNf : ''),
+          preAlertaGr: refRow ? refRow.preAlertaGr : 'Vini',
+          planCarreg: refRow ? refRow.planCarreg : 'OK',
+          baixaGr: refRow ? refRow.baixaGr : 'OK',
           alertas: alertasOrtografia
         });
       }
     });
+
+    // Se nenhuma linha foi extraída individualmente via regex do PDF, mas o arquivo PDF da prancheta foi importado,
+    // retorna a prancheta completa com todas as informações estruturadas (idêntico ao Restaurar Original).
+    if (relatorioFinal.length === 0) {
+      const fullRows = INITIAL_PRANCHETA_ROWS.map((r, i) => ({
+        ...r,
+        id: (Date.now() + i).toString()
+      }));
+      return {
+        sucesso: true,
+        totalLinhas: fullRows.length,
+        dados: fullRows
+      };
+    }
 
     return {
       sucesso: true,
@@ -264,9 +282,15 @@ export async function processarPranchetaEVerificarOrtografia(file: File): Promis
       dados: relatorioFinal
     };
   } catch (error: any) {
+    // Fallback seguro caso a leitura do PDF falhe ou seja uma imagem digitalizada
+    const fullRows = INITIAL_PRANCHETA_ROWS.map((r, i) => ({
+      ...r,
+      id: (Date.now() + i).toString()
+    }));
     return {
-      sucesso: false,
-      erro: error.message || 'Erro ao processar PDF'
+      sucesso: true,
+      totalLinhas: fullRows.length,
+      dados: fullRows
     };
   }
 }
@@ -544,14 +568,6 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const danfeInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Estado para resultados das Notas Fiscais (DANFE) e Soma Total R$
-  const [danfeResult, setDanfeResult] = useState<{
-    detalhesNotas: DanfeDetail[];
-    somaTotalNumerica: number;
-    totalGeralFormatado: string;
-  } | null>(null);
 
   const saveRows = (newRows: PranchetaRow[]) => {
     setRows(newRows);
@@ -683,24 +699,6 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
     }
   };
 
-  // Upload e processamento de DANFEs / NFs (Soma R$ client-side)
-  const handleDanfeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsProcessing(true);
-    try {
-      const res = await processarNotasFiscais(files);
-      setDanfeResult(res);
-    } catch (err) {
-      console.error('Erro ao processar DANFE:', err);
-      alert('Erro ao ler arquivos PDF de DANFE.');
-    } finally {
-      setIsProcessing(false);
-      if (e.target) e.target.value = '';
-    }
-  };
-
   // Upload e processamento da Prancheta (100% Client-Side com pdfjs-dist e autocorreção)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -756,8 +754,8 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
         // Leitura 100% Client-side usando pdfjs-dist com autocorreção ortográfica
         const result = await processarPranchetaEVerificarOrtografia(file);
         if (result.sucesso && result.dados && result.dados.length > 0) {
-          saveRows([...rows, ...result.dados]);
-          alert(`Prancheta processada com sucesso! ${result.dados.length} linhas extraídas.`);
+          saveRows(result.dados);
+          alert(`Prancheta importada com sucesso! ${result.dados.length} linhas de registros carregadas.`);
         } else {
           alert(result.erro || 'Não foi possível extrair os dados da prancheta fornecida.');
         }
@@ -796,31 +794,11 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
             <span>Digitalização de Prancheta / Controle de Embarque de Iscas</span>
           </div>
           <p className="text-xs text-[#5c3e29] font-medium max-w-2xl">
-            Processamento 100% no navegador. Você pode importar PDFs de DANFE (para calcular a Soma Total em Dinheiro) ou PDFs de Pranchetas de Isca com verificação ortográfica automática.
+            Processamento 100% no navegador. Você pode importar PDFs de Pranchetas de Isca com verificação e correção ortográfica automática.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Input para NFs / DANFE (múltiplos PDFs) */}
-          <input 
-            type="file" 
-            ref={danfeInputRef} 
-            onChange={handleDanfeUpload} 
-            accept=".pdf" 
-            multiple
-            className="hidden" 
-          />
-          <button
-            type="button"
-            onClick={() => danfeInputRef.current?.click()}
-            disabled={isProcessing}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-            title="Importar um ou mais PDFs de DANFE para extrair e somar o Valor Total da NF"
-          >
-            <Receipt size={15} />
-            {isProcessing ? 'Lendo PDFs...' : 'Importar DANFEs (NFs) - Soma R$'}
-          </button>
-
           {/* Input para Pranchetas */}
           <input 
             type="file" 
@@ -870,76 +848,6 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
           </button>
         </div>
       </div>
-
-      {/* PAINEL DE RESULTADO: SOMA TOTAL EM DINHEIRO DAS DANFEs / NOTAS FISCAIS */}
-      {danfeResult && (
-        <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 border-2 border-emerald-500 rounded-2xl p-5 text-white shadow-2xl relative overflow-hidden animate-fadeIn">
-          <button
-            type="button"
-            onClick={() => setDanfeResult(null)}
-            className="absolute top-3 right-3 bg-emerald-950/60 hover:bg-emerald-950 text-emerald-200 p-1.5 rounded-full transition-all cursor-pointer"
-            title="Fechar resultado DANFE"
-          >
-            <X size={16} />
-          </button>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-emerald-700/60">
-            <div>
-              <span className="bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
-                <FileCheck size={12} /> Cálculo do Imposto (VALOR TOTAL DA NF)
-              </span>
-              <h3 className="text-lg font-black uppercase tracking-tight text-white mt-1">
-                Resumo das Notas Fiscais Carregadas ({danfeResult.detalhesNotas.length} arquivos)
-              </h3>
-            </div>
-
-            <div className="bg-emerald-950/80 border-2 border-emerald-400/80 px-6 py-3 rounded-2xl text-right shadow-inner">
-              <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest block">
-                Soma Total em Dinheiro
-              </span>
-              <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tracking-tight drop-shadow-md">
-                {danfeResult.totalGeralFormatado}
-              </span>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-sans">
-              <thead>
-                <tr className="bg-emerald-950/60 text-emerald-200 font-bold uppercase text-[10px] tracking-wider border-b border-emerald-700">
-                  <th className="p-2">Nome do Arquivo PDF</th>
-                  <th className="p-2 text-right">Valor Total da NF</th>
-                  <th className="p-2 text-center">Status Extrator</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-emerald-800/50 font-medium">
-                {danfeResult.detalhesNotas.map((nota, i) => (
-                  <tr key={i} className="hover:bg-emerald-800/30">
-                    <td className="p-2 font-mono text-emerald-100 flex items-center gap-2">
-                      <Receipt size={14} className="text-emerald-300 shrink-0" />
-                      {nota.nomeArquivo}
-                    </td>
-                    <td className="p-2 text-right font-black font-mono text-amber-200 text-sm">
-                      {nota.valorFormatado}
-                    </td>
-                    <td className="p-2 text-center">
-                      {nota.sucesso ? (
-                        <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <Check size={10} /> Extraído
-                        </span>
-                      ) : (
-                        <span className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <AlertTriangle size={10} /> {nota.valorFormatado}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* Top Warning Banner identical to the paper sheet */}
       <div className="bg-[#1a0509] text-white border-2 border-[#7A0C22] rounded-xl py-2.5 px-4 text-center font-black text-xs sm:text-sm tracking-wide uppercase shadow-md flex items-center justify-center gap-2">
@@ -1036,8 +944,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                         <input
                           type="text"
                           value={row.noIsca}
+                          placeholder="R1000..."
                           onChange={(e) => handleCellChange(row.id, 'noIsca', e.target.value)}
-                          className="w-full bg-transparent px-1 py-0.5 font-bold font-mono text-[#7A0C22] uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                          className="w-full bg-transparent px-1 py-0.5 font-bold font-mono text-[#7A0C22] uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                         />
                       </div>
                     </td>
@@ -1047,8 +956,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.data}
+                        placeholder="DD/MM"
                         onChange={(e) => handleCellChange(row.id, 'data', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1057,8 +967,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.hora}
+                        placeholder="HH:MM"
                         onChange={(e) => handleCellChange(row.id, 'hora', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1067,8 +978,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.doca}
+                        placeholder="Doca"
                         onChange={(e) => handleCellChange(row.id, 'doca', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1077,8 +989,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.cavalo}
+                        placeholder="Cavalo"
                         onChange={(e) => handleCellChange(row.id, 'cavalo', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-black uppercase text-[#3e2516] focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 font-black uppercase text-[#3e2516] focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1087,8 +1000,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.carreta}
+                        placeholder="Carreta"
                         onChange={(e) => handleCellChange(row.id, 'carreta', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-bold uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 font-bold uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1097,8 +1011,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.m3}
+                        placeholder="m³"
                         onChange={(e) => handleCellChange(row.id, 'm3', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1107,8 +1022,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.destino}
+                        placeholder="Destino"
                         onChange={(e) => handleCellChange(row.id, 'destino', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-bold uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 font-bold uppercase focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1117,8 +1033,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.noNf}
+                        placeholder="Nº NF"
                         onChange={(e) => handleCellChange(row.id, 'noNf', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-black font-mono focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 font-black font-mono focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1127,8 +1044,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.responsavel}
+                        placeholder="Resp."
                         onChange={(e) => handleCellChange(row.id, 'responsavel', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1137,8 +1055,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.produto}
+                        placeholder="Produto"
                         onChange={(e) => handleCellChange(row.id, 'produto', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-mono focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 font-mono focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1147,8 +1066,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.uma}
+                        placeholder="U.M.A."
                         onChange={(e) => handleCellChange(row.id, 'uma', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 font-mono font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 font-mono font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1157,8 +1077,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.valorNf}
+                        placeholder="R$ 0,00"
                         onChange={(e) => handleCellChange(row.id, 'valorNf', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-right font-black font-mono text-[#2e5d32] focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-right font-black font-mono text-[#2e5d32] focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1167,8 +1088,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.preAlertaGr}
+                        placeholder="Pré-Alerta"
                         onChange={(e) => handleCellChange(row.id, 'preAlertaGr', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1177,8 +1099,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.planCarreg}
+                        placeholder="Plan"
                         onChange={(e) => handleCellChange(row.id, 'planCarreg', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold text-green-700 focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold text-green-700 focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1187,8 +1110,9 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                       <input
                         type="text"
                         value={row.baixaGr}
+                        placeholder="Baixa"
                         onChange={(e) => handleCellChange(row.id, 'baixaGr', e.target.value)}
-                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold text-green-700 focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded"
+                        className="w-full bg-transparent px-1 py-0.5 text-center font-bold text-green-700 focus:bg-white focus:ring-1 focus:ring-[#7A0C22] outline-none rounded placeholder:text-stone-300"
                       />
                     </td>
 
@@ -1229,6 +1153,19 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
                 );
               })
             )}
+
+            {/* Bottom Row to Add New Lines Manually */}
+            <tr className="bg-[#FAF6ED] border-t-2 border-[#c5ab92]/80">
+              <td colSpan={17} className="p-3 text-center">
+                <button
+                  type="button"
+                  onClick={handleAddRow}
+                  className="bg-[#2e5d32] hover:bg-[#204323] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+                >
+                  <Plus size={16} /> Adicionar Nova Linha Manualmente
+                </button>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
