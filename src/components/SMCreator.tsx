@@ -28,8 +28,36 @@ import { rtdb as db } from '../firebase';
 import { ref, onValue, set, update } from 'firebase/database';
 
 if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '3.11.174'}/pdf.worker.min.js`;
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '3.11.174'}/pdf.worker.min.js`;
+  } catch (e) {
+    console.error('Error initializing PDF worker src:', e);
+  }
 }
+
+let isWorkerConfigured = false;
+const ensurePdfWorker = async () => {
+  if (isWorkerConfigured) return;
+  if (typeof window === 'undefined') return;
+
+  try {
+    const version = pdfjsLib.version || '3.11.174';
+    const cdnUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
+    const response = await fetch(cdnUrl);
+    if (response.ok) {
+      const workerCode = await response.text();
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+    } else {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = cdnUrl;
+    }
+  } catch (err) {
+    console.warn('Fallback workerSrc:', err);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+  } finally {
+    isWorkerConfigured = true;
+  }
+};
 
 const invertRoute = (trecho: string) => {
   if (!trecho) return '';
@@ -186,9 +214,9 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     setPdfTargetSection(section);
     setPdfTargetRowIndex(rowIndex);
     setIsPdfModalOpen(true);
-  };
+  };  const processarNotasFiscaisClient = async (arquivos: File[]) => {
+    await ensurePdfWorker();
 
-  const processarNotasFiscaisClient = async (arquivos: File[]) => {
     const extractedItems: Array<{
       fileName: string;
       numeroNf: string;
@@ -210,132 +238,184 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           y: number;
         }
 
-        const allItems: SpatialItem[] = [];
+        interface PageExtractionResult {
+          pageNum: number;
+          valorNumerico: number | null;
+          valorTexto: string | null;
+        }
 
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
+        const pageResults: PageExtractionResult[] = [];
+        let numeroNf = '---';
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
           const content = await page.getTextContent();
 
+          const pageItems: SpatialItem[] = [];
+          const pageStrs: string[] = [];
+
           for (const item of content.items as any[]) {
-            if (!item.str || !item.str.trim()) continue;
-            const transform = item.transform || [1, 0, 0, 1, 0, 0];
-            allItems.push({
-              str: item.str,
-              x: transform[4] || 0,
-              y: transform[5] || 0
-            });
-          }
-        }
-
-        // 1. Agrupa itens em linhas ordenadas espacialmente (Y decrescente, X crescente)
-        const lineGroups: Array<{ y: number; items: SpatialItem[] }> = [];
-        for (const item of allItems) {
-          let group = lineGroups.find(g => Math.abs(g.y - item.y) <= 4);
-          if (!group) {
-            group = { y: item.y, items: [] };
-            lineGroups.push(group);
-          }
-          group.items.push(item);
-        }
-
-        lineGroups.sort((a, b) => b.y - a.y); // Do topo para o rodapé da página
-
-        const lines = lineGroups.map(g => {
-          g.items.sort((a, b) => a.x - b.x); // Da esquerda para a direita
-          return {
-            y: g.y,
-            items: g.items,
-            fullText: g.items.map(i => i.str).join(' ')
-          };
-        });
-
-        const fullSpatialText = lines.map(l => l.fullText).join('\n');
-
-        // Extrai o número da NF
-        let numeroNf = '---';
-        const matchNf = fullSpatialText.match(/Nº[\s\.:]*(\d[\d\.\-]*\d|\d+)/i) || 
-                        fullSpatialText.match(/NF-e[\s\.:]*(\d+)/i) ||
-                        fullSpatialText.match(/NOTA\s+FISCAL[\s\S]{0,30}?(\d{3,9})/i);
-        if (matchNf && matchNf[1]) {
-          numeroNf = matchNf[1].replace(/\D/g, '');
-        }
-
-        let valorTextoResult: string | null = null;
-        let valorNumericoResult: number | null = null;
-
-        // ESTRATÉGIA 1: Proximidade espacial e alinhamento de coluna (DANFE "Cálculo do Imposto")
-        const labelCandidates = allItems.filter(i => /VALOR\s+TOTAL\s+(?:DA\s+)?NF/i.test(i.str));
-        if (labelCandidates.length > 0) {
-          // Seleciona o rótulo da caixa principal (geralmente no meio/topo da DANFE)
-          const labelItem = labelCandidates[0];
-          const labelX = labelItem.x;
-          const labelY = labelItem.y;
-
-          // Coleta todos os números no formato de moeda
-          const currencyRegex = /\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g;
-          const candidateNumbers: Array<{ numStr: string; val: number; x: number; y: number }> = [];
-
-          for (const item of allItems) {
-            const matches = item.str.match(currencyRegex);
-            if (matches) {
-              for (const m of matches) {
-                const val = parseFloat(m.replace(/\./g, '').replace(',', '.'));
-                candidateNumbers.push({ numStr: m, val, x: item.x, y: item.y });
-              }
+            if (!item.str) continue;
+            pageStrs.push(item.str);
+            if (item.str.trim()) {
+              const transform = item.transform || [1, 0, 0, 1, 0, 0];
+              pageItems.push({
+                str: item.str,
+                x: transform[4] || 0,
+                y: transform[5] || 0
+              });
             }
           }
 
-          // Filtra números na mesma faixa de altura Y (mesma linha ou logo abaixo) e coluna X à direita
-          const spatialMatches = candidateNumbers.filter(
-            c => c.y >= labelY - 40 && c.y <= labelY + 15 && c.x >= labelX - 80
-          );
+          const rawPageText = pageStrs.join(' ');
 
-          if (spatialMatches.length > 0) {
-            // Ordena pelo X mais à direita (na DANFE, o VALOR TOTAL DA NF é a última coluna da direita)
-            spatialMatches.sort((a, b) => b.x - a.x);
-            valorTextoResult = spatialMatches[0].numStr;
-            valorNumericoResult = spatialMatches[0].val;
+          // Agrupa itens em linhas na página atual (coordenada Y com tolerância de 6pt)
+          const lineGroups: Array<{ y: number; items: SpatialItem[] }> = [];
+          for (const item of pageItems) {
+            let group = lineGroups.find(g => Math.abs(g.y - item.y) <= 6);
+            if (!group) {
+              group = { y: item.y, items: [] };
+              lineGroups.push(group);
+            }
+            group.items.push(item);
           }
-        }
 
-        // ESTRATÉGIA 2: Análise relacional por linhas ordenadas
-        if (valorNumericoResult === null) {
-          for (let idx = 0; idx < lines.length; idx++) {
-            const line = lines[idx];
-            if (/VALOR\s+TOTAL\s+(?:DA\s+)?NF/i.test(line.fullText)) {
-              // Verifica se o valor está na mesma linha logo após a etiqueta
-              const matchSameLine = line.fullText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]*?([\d\.]+,\d{2})/i);
-              if (matchSameLine && matchSameLine[1]) {
-                valorTextoResult = matchSameLine[1];
-                valorNumericoResult = parseFloat(valorTextoResult.replace(/\./g, '').replace(',', '.'));
-                break;
-              }
+          lineGroups.sort((a, b) => b.y - a.y); // Do topo para o rodapé
 
-              // Verifica as 2 linhas seguintes (na DANFE, os valores ficam abaixo do cabeçalho)
-              for (let offset = 1; offset <= 2; offset++) {
-                if (idx + offset < lines.length) {
-                  const nextLine = lines[idx + offset];
-                  const numbersOnNextLine = nextLine.fullText.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g);
-                  if (numbersOnNextLine && numbersOnNextLine.length > 0) {
-                    // O VALOR TOTAL DA NF fica no canto direito (último número da linha de valores)
-                    const lastNum = numbersOnNextLine[numbersOnNextLine.length - 1];
-                    valorTextoResult = lastNum;
-                    valorNumericoResult = parseFloat(lastNum.replace(/\./g, '').replace(',', '.'));
-                    break;
+          const lines = lineGroups.map(g => {
+            g.items.sort((a, b) => a.x - b.x); // Da esquerda para a direita
+            return {
+              y: g.y,
+              items: g.items,
+              fullText: g.items.map(i => i.str).join(' ')
+            };
+          });
+
+          const fullSpatialText = lines.map(l => l.fullText).join('\n');
+          const combinedPageText = rawPageText + '\n' + fullSpatialText;
+
+          // Extrai o Número da NF se ainda não encontrado
+          if (numeroNf === '---') {
+            const matchNf = combinedPageText.match(/Nº[\s\.:]*(\d[\d\.\-]*\d|\d+)/i) || 
+                            combinedPageText.match(/NF-e[\s\.:]*(\d+)/i) ||
+                            combinedPageText.match(/NOTA\s+FISCAL[\s\S]{0,30}?(\d{3,9})/i);
+            if (matchNf && matchNf[1]) {
+              numeroNf = matchNf[1].replace(/\D/g, '');
+            }
+          }
+
+          let pageValTexto: string | null = null;
+          let pageValNumerico: number | null = null;
+
+          // ESTRATÉGIA 1: Correspondência direta quando a etiqueta e o valor estão adjacentes
+          const matchDirect1 = rawPageText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[^\d]*?([\d\.]+\,\d{2})/i) ||
+                               fullSpatialText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[^\d]*?([\d\.]+\,\d{2})/i);
+          if (matchDirect1 && matchDirect1[1]) {
+            pageValTexto = matchDirect1[1];
+            pageValNumerico = parseFloat(pageValTexto.replace(/\./g, '').replace(',', '.'));
+          }
+
+          // ESTRATÉGIA 2: Análise espacial por linhas
+          if (pageValNumerico === null) {
+            for (let idx = 0; idx < lines.length; idx++) {
+              const line = lines[idx];
+              if (/VALOR\s+TOTAL\s+(?:DA\s+)?NF/i.test(line.fullText)) {
+                // Tenta encontrar valor na mesma linha após a etiqueta
+                const labelIdx = line.fullText.search(/VALOR\s+TOTAL\s+(?:DA\s+)?NF/i);
+                const afterLabel = line.fullText.substring(labelIdx);
+                const afterMatch = afterLabel.match(/([\d\.]+\,\d{2})/);
+                if (afterMatch) {
+                  pageValTexto = afterMatch[1];
+                  pageValNumerico = parseFloat(pageValTexto.replace(/\./g, '').replace(',', '.'));
+                  break;
+                }
+
+                // Senão procura nas 3 linhas imediatamente abaixo
+                const labelItem = line.items.slice().reverse().find(i => /NF|TOTAL|VALOR/i.test(i.str)) || line.items[line.items.length - 1];
+                const labelX = labelItem ? labelItem.x : 400;
+
+                for (let offset = 1; offset <= 3; offset++) {
+                  if (idx + offset < lines.length) {
+                    const subLine = lines[idx + offset];
+                    const numbersInSubLine: Array<{ numStr: string; val: number; x: number }> = [];
+                    
+                    for (const item of subLine.items) {
+                      const m = item.str.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g);
+                      if (m) {
+                        for (const numStr of m) {
+                          const val = parseFloat(numStr.replace(/\./g, '').replace(',', '.'));
+                          numbersInSubLine.push({ numStr, val, x: item.x });
+                        }
+                      }
+                    }
+
+                    if (numbersInSubLine.length > 0) {
+                      const rightAligned = numbersInSubLine.filter(n => n.x >= labelX - 100);
+                      if (rightAligned.length > 0) {
+                        rightAligned.sort((a, b) => b.x - a.x);
+                        pageValTexto = rightAligned[0].numStr;
+                        pageValNumerico = rightAligned[0].val;
+                      } else {
+                        const lastNum = numbersInSubLine[numbersInSubLine.length - 1];
+                        pageValTexto = lastNum.numStr;
+                        pageValNumerico = lastNum.val;
+                      }
+                      break;
+                    }
                   }
                 }
+                if (pageValNumerico !== null) break;
               }
-              if (valorNumericoResult !== null) break;
             }
           }
+
+          // ESTRATÉGIA 3: Região do quadro "CÁLCULO DO IMPOSTO"
+          if (pageValNumerico === null) {
+            const regexBlock = /(?:CALCULO\s+DO\s+IMPOSTO|VALOR\s+TOTAL\s+PRODUTOS)[\s\S]{0,350}/i;
+            const blockMatch = combinedPageText.match(regexBlock);
+            if (blockMatch) {
+              const blockText = blockMatch[0];
+              const allCurrencies = blockText.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g);
+              if (allCurrencies && allCurrencies.length > 0) {
+                const lastVal = allCurrencies[allCurrencies.length - 1];
+                pageValTexto = lastVal;
+                pageValNumerico = parseFloat(lastVal.replace(/\./g, '').replace(',', '.'));
+              }
+            }
+          }
+
+          // ESTRATÉGIA 4: Fallback por regex geral
+          if (pageValNumerico === null) {
+            const matchFallback = combinedPageText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]{0,150}?([\d\.]+\,\d{2})/i);
+            if (matchFallback && matchFallback[1]) {
+              pageValTexto = matchFallback[1];
+              pageValNumerico = parseFloat(pageValTexto.replace(/\./g, '').replace(',', '.'));
+            }
+          }
+
+          pageResults.push({
+            pageNum,
+            valorNumerico: pageValNumerico,
+            valorTexto: pageValTexto
+          });
         }
 
-        // ESTRATÉGIA 3: Fallback por expressão regular com janela reduzida
-        if (valorNumericoResult === null) {
-          const matchFallback = fullSpatialText.match(/VALOR\s+TOTAL\s+(?:DA\s+)?NF[\s\S]{0,120}?([\d\.]+,\d{2})/i);
-          if (matchFallback && matchFallback[1]) {
-            valorTextoResult = matchFallback[1];
-            valorNumericoResult = parseFloat(valorTextoResult.replace(/\./g, '').replace(',', '.'));
+        // Seleciona o melhor resultado entre todas as folhas do PDF
+        let valorNumericoResult: number | null = null;
+        let valorTextoResult: string | null = null;
+
+        // 1. Procura por valores positivos (> 0). Dá preferência ao valor preenchido na última folha que tiver valor > 0
+        const nonZeroResults = pageResults.filter(p => p.valorNumerico !== null && p.valorNumerico > 0);
+        if (nonZeroResults.length > 0) {
+          const chosen = nonZeroResults[nonZeroResults.length - 1];
+          valorNumericoResult = chosen.valorNumerico;
+          valorTextoResult = chosen.valorTexto;
+        } else {
+          // 2. Se nenhuma folha tinha valor > 0, pega o primeiro resultado válido (ex: 0,00)
+          const anyResult = pageResults.find(p => p.valorNumerico !== null);
+          if (anyResult) {
+            valorNumericoResult = anyResult.valorNumerico;
+            valorTextoResult = anyResult.valorTexto;
           }
         }
 
@@ -355,14 +435,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         } else {
           extractedItems.push({
             fileName: arquivo.name,
-            numeroNf: '---',
+            numeroNf,
             valor: 0,
             valorFormatado: '0,00',
             success: false,
-            error: 'Não localizado: VALOR TOTAL DA NF'
+            error: 'Valor Total da NF não localizado'
           });
         }
-      } catch (erro) {
+      } catch (erro: any) {
         console.error(`Erro ao ler o arquivo ${arquivo.name}:`, erro);
         extractedItems.push({
           fileName: arquivo.name,
@@ -370,7 +450,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           valor: 0,
           valorFormatado: '0,00',
           success: false,
-          error: 'Erro de leitura do arquivo PDF'
+          error: `Erro de leitura: ${erro?.message || 'PDF inválido'}`
         });
       }
     }
@@ -560,7 +640,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     </div>
   );
 
-  const parseInput = (text: string, saveFunc: (rows: SMRow[]) => void, existingRows: SMRow[], section: 'ida' | 'volta', forceZeroValue: boolean = false) => {
+  const parseInput = (text: string, saveFunc: (rows: SMRow[]) => void, existingRows: SMRow[], section: 'ida' | 'volta') => {
     const lines = text.trim().split('\n');
     const newRows: SMRow[] = [];
 
@@ -579,7 +659,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           bau1: parts[3] || '',
           bau2: parts[4] || '',
           trecho: trecho,
-          valorNf: forceZeroValue ? '0,00' : (parts[6] || '')
+          valorNf: '0,00'
         });
       }
     });
@@ -591,7 +671,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
 
   const handlePaste = (e: React.ClipboardEvent, section: 'ida' | 'volta') => {
     const text = e.clipboardData.getData('text');
-    parseInput(text, section === 'ida' ? saveIda : saveVolta, section === 'ida' ? idaRows : voltaRows, section, true);
+    parseInput(text, section === 'ida' ? saveIda : saveVolta, section === 'ida' ? idaRows : voltaRows, section);
   };
 
   const addNewRow = (section: 'ida' | 'volta') => {
