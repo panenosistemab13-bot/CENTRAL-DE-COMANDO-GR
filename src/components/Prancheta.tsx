@@ -351,6 +351,12 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
     }
   };
 
+  const handleClearAll = () => {
+    if (window.confirm('Tem certeza que deseja limpar todos os registros da prancheta?')) {
+      saveRows([]);
+    }
+  };
+
   const handleCopyRow = async (row: PranchetaRow) => {
     const text = [
       row.noIsca,
@@ -550,6 +556,16 @@ export default function Prancheta({ onUseRowInControle }: PranchetaProps) {
           >
             {copiedAll ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
             {copiedAll ? 'Copiado para Excel!' : 'Copiar Tabela (Excel)'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="bg-red-700 hover:bg-red-800 text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+            title="Limpar todos os registros da prancheta"
+          >
+            <Trash2 size={14} />
+            Limpar Tudo
           </button>
         </div>
       </div>
