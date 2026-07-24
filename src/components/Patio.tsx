@@ -383,112 +383,7 @@ export interface OrdemColetaItem {
   inseridoEm?: string;
 }
 
-const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [
-  {
-    id: 'oc_1',
-    mes: 'JAN|26',
-    origem: 'SANTA LUZIA | MG',
-    dia: 'sexta-feira',
-    data: '02/01/2026',
-    contatoWhats: '08:00:00',
-    horaLiberado: '08:28:00',
-    status: 'LIBERADO CARREGAMENTO',
-    modeloCarreta: 'BAÚ',
-    modeloCavalo: 'TOCO',
-    fezContato: 'SIM',
-    destino: 'GUARULHOS',
-    transportador: 'TOMASI',
-    cavalo: 'JDL1B07',
-    carreta: 'BY28D70',
-    cargaLiberacao: '',
-    estadoMotorista: 'RS',
-    estadoCavalo: 'RS',
-    estadoCarreta: 'RS',
-    pendencia: '',
-    checkList: 'VENCIDO',
-    dias: '40227',
-    segundaCarreta: '',
-    inseridoEm: '2026-01-02T08:00:00.000Z'
-  },
-  {
-    id: 'oc_2',
-    mes: 'JAN|26',
-    origem: 'SANTA LUZIA | MG',
-    dia: 'sexta-feira',
-    data: '02/01/2026',
-    contatoWhats: '08:30:00',
-    horaLiberado: '08:43:00',
-    status: 'LIBERADO CARREGAMENTO',
-    modeloCarreta: 'RODOTREM BAÚ',
-    modeloCavalo: 'TRUCADO',
-    fezContato: 'SIM',
-    destino: 'GOV. CELSO RAMOS',
-    transportador: 'COMBOIO',
-    cavalo: 'QXQ0J06',
-    carreta: 'PKV2882',
-    cargaLiberacao: '',
-    estadoMotorista: 'MG',
-    estadoCavalo: 'MG',
-    estadoCarreta: 'MG',
-    pendencia: '21/01/2026',
-    checkList: 'VENCIDO',
-    dias: '180',
-    segundaCarreta: 'FXV2244',
-    inseridoEm: '2026-01-02T08:30:00.000Z'
-  },
-  {
-    id: 'oc_3',
-    mes: 'JAN|26',
-    origem: 'SANTA LUZIA | MG',
-    dia: 'sexta-feira',
-    data: '02/01/2026',
-    contatoWhats: '08:30:00',
-    horaLiberado: '08:43:00',
-    status: 'LIBERADO CARREGAMENTO',
-    modeloCarreta: 'RODOTREM BAÚ',
-    modeloCavalo: 'TRUCADO',
-    fezContato: 'SIM',
-    destino: 'GOV. CELSO RAMOS',
-    transportador: 'COMBOIO',
-    cavalo: 'QXQ0J06',
-    carreta: 'PKV2244',
-    cargaLiberacao: '',
-    estadoMotorista: 'MG',
-    estadoCavalo: 'MG',
-    estadoCarreta: 'MG',
-    pendencia: '21/01/2026',
-    checkList: 'VENCIDO',
-    dias: '180',
-    segundaCarreta: '',
-    inseridoEm: '2026-01-02T08:30:00.000Z'
-  },
-  {
-    id: 'oc_4',
-    mes: 'JUL|26',
-    origem: 'SANTA LUZIA | MG',
-    dia: 'sexta-feira',
-    data: '24/07/2026',
-    contatoWhats: '08:00:00',
-    horaLiberado: '08:00:00',
-    status: 'LIBERADO CARREGAMENTO',
-    modeloCarreta: 'BAÚ',
-    modeloCavalo: 'TRUCADO',
-    fezContato: 'SIM',
-    destino: 'GUARULHOS SP',
-    transportador: 'TRANSMAGNA',
-    cavalo: 'SEV5A39',
-    carreta: 'TPY3G57',
-    cargaLiberacao: 'WISTOR FRANKLIN BELISARIO BRITO',
-    estadoMotorista: 'SC',
-    estadoCavalo: 'SC',
-    estadoCarreta: 'SC',
-    pendencia: '',
-    checkList: 'OK',
-    dias: '180',
-    segundaCarreta: '',
-    inseridoEm: '2026-07-24T08:00:00.000Z'
-  }
-];
+const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [];
 
 export default function Patio({ onBack }: PatioProps) {
   const principle = useCurrentPrinciple();
@@ -573,7 +468,7 @@ export default function Patio({ onBack }: PatioProps) {
   const [editingM3, setEditingM3] = useState('');
 
   // Ordem de Coleta states
-  const [ordemColetaData, setOrdemColetaData] = useState<OrdemColetaItem[]>(DEFAULT_ORDEM_COLETA);
+  const [ordemColetaData, setOrdemColetaData] = useState<OrdemColetaItem[]>([]);
   const [ordemColetaSearch, setOrdemColetaSearch] = useState('');
   const [ordemColetaPdfFile, setOrdemColetaPdfFile] = useState<File | null>(null);
   const [isProcessingOrdemColeta, setIsProcessingOrdemColeta] = useState(false);
@@ -644,7 +539,7 @@ export default function Patio({ onBack }: PatioProps) {
         });
         setOrdemColetaData(items);
       } else {
-        setOrdemColetaData(DEFAULT_ORDEM_COLETA);
+        setOrdemColetaData([]);
       }
     }, (error) => {
       console.error("Erro ao carregar Ordem de Coleta:", error);
@@ -806,21 +701,6 @@ export default function Patio({ onBack }: PatioProps) {
     }
   };
 
-  const handleRestoreDefaultOrdemColeta = async () => {
-    try {
-      const ocRef = ref(db, 'patio/ordem_coleta');
-      await remove(ocRef);
-      for (const item of DEFAULT_ORDEM_COLETA) {
-        const newItemRef = push(ocRef);
-        const { id, ...rest } = item;
-        await set(newItemRef, rest);
-      }
-      setOrdemColetaStatusMsg({ type: 'success', text: 'Dados padrão restaurados!' });
-      setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
-    } catch (error) {
-      console.error("Erro ao restaurar dados de Ordem de Coleta:", error);
-    }
-  };
 
   const parseIscaDate = (str: string): Date | null => {
     if (!str) return null;
@@ -3119,31 +2999,23 @@ export default function Patio({ onBack }: PatioProps) {
                   <span>Adicionar Linha</span>
                 </motion.button>
 
-                {/* Restore Default */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleRestoreDefaultOrdemColeta}
-                  className="px-4 py-2.5 bg-[#fcf8f2] text-[#8c060a] border-2 border-[#8c060a]/30 hover:bg-[#ebd9c3]/50 font-black text-[10px] uppercase tracking-wider rounded-xl shadow-sm flex items-center gap-2 cursor-pointer transition-all"
-                >
-                  <span>Restaurar Original</span>
-                </motion.button>
-
-                {/* Clear Table */}
+                {/* Clear Table Button */}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={async () => {
-                    if (window.confirm("Deseja realmente apagar todas as linhas da tabela Ordem de Coleta?")) {
+                    if (window.confirm("Deseja realmente apagar todas as informações acumuladas da Ordem de Coleta?")) {
                       await remove(ref(db, 'patio/ordem_coleta'));
-                      setOrdemColetaStatusMsg({ type: 'success', text: 'Tabela limpa!' });
+                      setLastImportedOrdemColetaItems([]);
+                      setOrdemColetaStatusMsg({ type: 'success', text: 'Todas as informações da Ordem de Coleta foram limpas!' });
                       setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
                     }
                   }}
-                  className="px-3.5 py-2.5 bg-red-950/20 text-red-700 border border-red-300 hover:bg-red-900/30 font-bold text-[10px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 cursor-pointer transition-all"
+                  className="px-4 py-2.5 bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md border border-red-400/40 flex items-center gap-2 cursor-pointer transition-all active:scale-98"
+                  title="Limpar todos os registros da aba Ordem de Coleta"
                 >
-                  <Trash2 size={14} />
-                  <span>Limpar</span>
+                  <Trash2 size={15} />
+                  <span>Limpar Tudo</span>
                 </motion.button>
               </div>
             </div>
