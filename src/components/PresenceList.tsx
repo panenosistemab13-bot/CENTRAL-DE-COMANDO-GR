@@ -54,6 +54,14 @@ export default function PresenceList({ onBack }: PresenceListProps) {
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   };
 
+  const formatLocalDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year} - ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`;
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [profileImage, setProfileImage] = useState('/images/avatar.jpg');
@@ -77,6 +85,12 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   const [newAppTime, setNewAppTime] = useState('12:00');
   const [newAppType, setNewAppType] = useState<'pessoal' | 'corporativo'>('corporativo');
   const [showAllAppsDropdown, setShowAllAppsDropdown] = useState(false);
+
+  // Modal para Agendar Lembrete ao Clicar em um Dia do Calendário
+  const [showDayReminderModal, setShowDayReminderModal] = useState(false);
+  const [reminderTitle, setReminderTitle] = useState('');
+  const [reminderTime, setReminderTime] = useState('09:00');
+  const [reminderType, setReminderType] = useState<'pessoal' | 'corporativo'>('corporativo');
 
   useEffect(() => {
     const presenceRef = ref(db, 'presence_list');
@@ -150,6 +164,13 @@ export default function PresenceList({ onBack }: PresenceListProps) {
     const newApp: Appointment = { id, date: selectedDate, time, title, type };
     update(ref(db, `presence_list/appointments`), { [id]: newApp });
     setNewAppTitle('');
+  };
+
+  const addAppointmentForTargetDate = (targetDate: string, time: string, title: string, type: 'pessoal' | 'corporativo') => {
+    if (!title.trim() || !time || !targetDate) return;
+    const id = `app_${Date.now()}`;
+    const newApp: Appointment = { id, date: targetDate, time, title, type };
+    update(ref(db, `presence_list/appointments`), { [id]: newApp });
   };
 
   const deleteAppointment = (id: string) => {
@@ -273,16 +294,6 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   };
 
   const { presentes, faltas } = getActiveMonthStats();
-
-  const formatLocalDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length < 3) return dateStr;
-    const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    const weekday = date.toLocaleDateString('pt-BR', { weekday: 'long' });
-    const formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} - ${formatted}`;
-  };
 
   // viewDate state moved to the top of component to resolve initialization order conflicts
 
@@ -739,8 +750,10 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                               if (d.inactive) {
                                 setViewDate(new Date(d.dateStr));
                               }
+                              setShowDayReminderModal(true);
                             }}
-                            className="flex items-center justify-center py-0.5"
+                            className="flex items-center justify-center py-0.5 cursor-pointer group"
+                            title={`Clique para ver ou agendar lembrete em ${d.dateStr.split('-').reverse().join('/')}`}
                           >
                             <div className={cellStyle}>
                               <span className={fontStyle}>
@@ -1502,6 +1515,229 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                   className="bg-[#5c3e29] hover:bg-[#3e2516] text-[#efdfc6] text-[10px] font-black uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer active:scale-97"
                 >
                   Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL DE AGENDAR LEMBRETE AO CLICAR NO DIA DO CALENDÁRIO */}
+      <AnimatePresence>
+        {showDayReminderModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDayReminderModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+            />
+            
+            {/* Modal Container */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-3xl w-full max-w-lg shadow-[0_25px_60px_rgba(0,0,0,0.55)] p-6 relative flex flex-col gap-4 z-50"
+            >
+              {/* Screws */}
+              <Screw className="absolute -top-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -top-1.5 -right-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -right-1.5 w-3 h-3" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#B32025] text-white p-2.5 rounded-2xl shadow-md">
+                    <Calendar size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black uppercase tracking-wider text-[#3e2516] font-serif">
+                      Agendar Lembrete / Acontecimento
+                    </h3>
+                    <p className="text-xs text-[#8c6b4e] font-mono font-bold mt-0.5">
+                      {formatLocalDate(selectedDate)}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowDayReminderModal(false)}
+                  className="p-1.5 rounded-lg hover:bg-[#5c3e29]/10 text-[#5c3e29]/75 hover:text-[#B32025] transition-all cursor-pointer"
+                  title="Fechar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Quick Add Form */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!reminderTitle.trim()) return;
+                  addAppointmentForTargetDate(selectedDate, reminderTime, reminderTitle, reminderType);
+                  setReminderTitle('');
+                }}
+                className="bg-[#fcfaf4] border border-[#d6be9c] rounded-2xl p-4 flex flex-col gap-3.5 shadow-xs"
+              >
+                <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">
+                  ➕ Cadastrar Novo Lembrete para Esta Data
+                </span>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-[#8c6b4e] uppercase tracking-wider">
+                    Descrição do Lembrete / Acontecimento:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Treinamento de segurança, Reunião, Entrega de EPI..."
+                    value={reminderTitle}
+                    onChange={(e) => setReminderTitle(e.target.value)}
+                    className="w-full bg-white border border-[#dac0a3] text-xs font-bold rounded-xl p-3 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner placeholder-stone-400"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-[#8c6b4e] uppercase tracking-wider">
+                      Horário Previsto:
+                    </label>
+                    <input
+                      type="time"
+                      value={reminderTime}
+                      onChange={(e) => setReminderTime(e.target.value)}
+                      className="w-full bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-xl p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-[#8c6b4e] uppercase tracking-wider">
+                      Tipo de Compromisso:
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setReminderType('pessoal')}
+                        className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          reminderType === 'pessoal'
+                            ? 'bg-[#d97706] text-white border-[#d97706] shadow-sm'
+                            : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                        }`}
+                      >
+                        <User size={12} />
+                        <span>Pessoal</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReminderType('corporativo')}
+                        className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          reminderType === 'corporativo'
+                            ? 'bg-[#B32025] text-white border-[#B32025] shadow-sm'
+                            : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                        }`}
+                      >
+                        <Briefcase size={12} />
+                        <span>Corp.</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!reminderTitle.trim()}
+                  className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all ${
+                    reminderTitle.trim()
+                      ? 'bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e52229] hover:to-[#a9080d] text-white cursor-pointer active:scale-98'
+                      : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  <Plus size={16} className="stroke-[3]" />
+                  <span>Salvar Lembrete</span>
+                </button>
+              </form>
+
+              {/* Existing Reminders for selectedDate */}
+              <div className="flex flex-col gap-2 mt-1">
+                <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">
+                  📋 Lembretes Agendados para Este Dia
+                </span>
+
+                {(() => {
+                  const dayApps = (Object.values(appointments || {}) as Appointment[])
+                    .filter(app => app && app.date === selectedDate)
+                    .sort((a, b) => a.time.localeCompare(b.time));
+
+                  if (dayApps.length === 0) {
+                    return (
+                      <div className="bg-[#fcfcf9]/60 border border-dashed border-[#d6be9c]/70 rounded-2xl p-5 text-center flex flex-col items-center justify-center gap-1.5">
+                        <Clock size={20} className="text-[#a27a5d] opacity-50" />
+                        <p className="text-xs font-semibold text-stone-500">
+                          Nenhum lembrete agendado para {selectedDate.split('-').reverse().join('/')}.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                      {dayApps.map((app) => (
+                        <div
+                          key={app.id}
+                          className="bg-white border-2 border-[#e1ccb0]/80 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs hover:border-[#dac0a3] transition-all"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="bg-[#FAF6ED] border border-[#d6be9c] rounded-lg px-2.5 py-1.5 font-mono text-xs font-bold text-[#3e2516] shrink-0">
+                              {app.time}
+                            </div>
+
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="text-xs font-bold text-[#3e2516] break-words">
+                                {app.title}
+                              </span>
+                              <div>
+                                {app.type === 'pessoal' ? (
+                                  <span className="text-[8.5px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50 inline-flex items-center gap-1">
+                                    <User size={9} />
+                                    Pessoal
+                                  </span>
+                                ) : (
+                                  <span className="text-[8.5px] font-black uppercase tracking-wider text-[#B32025] bg-red-50 px-1.5 py-0.5 rounded border border-red-200/50 inline-flex items-center gap-1">
+                                    <Briefcase size={9} />
+                                    Corporativo
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteAppointment(app.id)}
+                            className="text-stone-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all cursor-pointer shrink-0"
+                            title="Excluir lembrete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Footer Close Button */}
+              <div className="border-t border-[#e1ccb0] pt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowDayReminderModal(false)}
+                  className="bg-[#5c3e29] hover:bg-[#3e2516] text-[#efdfc6] text-[10px] font-black uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer active:scale-97"
+                >
+                  Concluído
                 </button>
               </div>
             </motion.div>

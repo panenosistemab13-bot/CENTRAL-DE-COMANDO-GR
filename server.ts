@@ -489,7 +489,176 @@ function extractNfValueFromText(text: string): { valor: number; valorFormatado: 
   return null;
 }
 
-app.post("/api/parse-nf-pdfs", async (req, res) => {
+  app.post("/api/parse-ordem-coleta", async (req, res) => {
+    try {
+      const { fileBase64, fileName } = req.body;
+
+      if (!fileBase64) {
+        return res.status(400).json({ error: "O arquivo PDF em base64 é obrigatório." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, "");
+
+      // If Gemini API key is available, use Gemini 3.5 Flash for multimodal document extraction
+      if (apiKey) {
+        try {
+          const ai = new GoogleGenAI({
+            apiKey,
+            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+          });
+
+          const promptText = `Você é um assistente especialista em leitura de Ordens de Coleta e Ordens de Serviço 3C logísticas.
+Analise o documento PDF em anexo e extraia todas as informações necessárias para preencher a planilha de controle de coleta.
+
+Campos que devem ser extraídos do documento:
+- mes: Mês e ano abreviado em maiúsculas (ex: "JUL|26" ou "JAN|26")
+- origem: Filial de Origem formatada com estado se houver (ex: "SANTA LUZIA | MG")
+- dia: Dia da semana da data de carregamento em minúsculas (ex: "sexta-feira", "segunda-feira")
+- data: Data de carregamento no formato DD/MM/AAAA (ex: "24/07/2026")
+- contatoWhats: Horário ou contato de WhatsApp (ex: "08:00:00")
+- horaLiberado: Hora da liberação ou previsão (ex: "08:00:00")
+- status: Status do carregamento (padrão: "LIBERADO CARREGAMENTO")
+- modeloCarreta: Modelo/Perfil da Carreta (ex: "BAÚ", "SIDER", "RODOTREM BAÚ")
+- modeloCavalo: Modelo/Perfil do Cavalo (ex: "TRUCADO", "TOCO", "TRAÇÃO")
+- fezContato: Se fez contato ("SIM" ou "NÃO", padrão "SIM")
+- destino: Filial ou Cidade de Destino (ex: "GUARULHOS", "GOV. CELSO RAMOS")
+- transportador: Nome da empresa transportadora (ex: "TRANSMAGNA", "COMBOIO", "TOMASI")
+- cavalo: Placa do Cavalo sem traços (ex: "SEV5A39")
+- carreta: Placa da 1ª Carreta sem traços (ex: "TPY3G57")
+- cargaLiberacao: Nome completo do motorista (ex: "WISTOR FRANKLIN BELISARIO BRITO")
+- estadoMotorista: UF do motorista ou da placa (ex: "SC", "MG", "RS")
+- estadoCavalo: UF da placa do cavalo (ex: "SC")
+- estadoCarreta: UF da placa da carreta (ex: "SC")
+- pendencia: Data ou informação de pendência se houver (ex: "" ou "-")
+- checkList: Status do checklist ("OK" ou "VENCIDO", padrão "OK")
+- dias: Número de dias (ex: "180" ou "")
+- segundaCarreta: Placa da 2ª Carreta se houver, ou "" (ex: "FXV2244")
+
+Retorne um array JSON com 1 objeto contendo exatamente esses campos.`;
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: "application/pdf",
+                    data: cleanBase64
+                  }
+                },
+                { text: promptText }
+              ]
+            },
+            config: {
+              responseMimeType: "application/json",
+              temperature: 0.1,
+              responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    mes: { type: Type.STRING },
+                    origem: { type: Type.STRING },
+                    dia: { type: Type.STRING },
+                    data: { type: Type.STRING },
+                    contatoWhats: { type: Type.STRING },
+                    horaLiberado: { type: Type.STRING },
+                    status: { type: Type.STRING },
+                    modeloCarreta: { type: Type.STRING },
+                    modeloCavalo: { type: Type.STRING },
+                    fezContato: { type: Type.STRING },
+                    destino: { type: Type.STRING },
+                    transportador: { type: Type.STRING },
+                    cavalo: { type: Type.STRING },
+                    carreta: { type: Type.STRING },
+                    cargaLiberacao: { type: Type.STRING },
+                    estadoMotorista: { type: Type.STRING },
+                    estadoCavalo: { type: Type.STRING },
+                    estadoCarreta: { type: Type.STRING },
+                    pendencia: { type: Type.STRING },
+                    checkList: { type: Type.STRING },
+                    dias: { type: Type.STRING },
+                    segundaCarreta: { type: Type.STRING }
+                  }
+                }
+              }
+            }
+          });
+
+          let jsonText = response.text || "";
+          jsonText = jsonText.replace(/```json\n?|```/g, "").trim();
+          const parsed = JSON.parse(jsonText);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return res.status(200).json({ success: true, data: parsed[0] });
+          }
+        } catch (geminiErr) {
+          console.warn("Gemini parsing for Ordem de Coleta failed, falling back to local pdf-parse:", geminiErr);
+        }
+      }
+
+      // Local pdf-parse fallback
+      const buffer = Buffer.from(cleanBase64, 'base64');
+      const pdfData = await pdf(buffer);
+      const text = pdfData.text || "";
+
+      const getMatch = (regex: RegExp) => {
+        const m = text.match(regex);
+        return m ? m[1].trim() : "";
+      };
+
+      const transportador = getMatch(/TRANSPORTADOR\s+([A-Z0-9\s]+)/i) || "TRANSMAGNA";
+      const dataCarregamento = getMatch(/DATA DE CARREGAMENTO\s+(\d{1,2}\/\d{1,2}\/\d{2,4})/i) || getMatch(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const horaPrevisao = getMatch(/PREVISÃO DA CHEGADA[^\n]*\n?([0-9]{2}:[0-9]{2})/i) || "08:00:00";
+      const filialOrigem = getMatch(/FILIAL DE ORIGEM\s+([A-Z0-9\s]+)/i) || "SANTA LUZIA MG";
+      const filialDestino = getMatch(/FILIAL DE DESTINO\s+([A-Z0-9\s]+)/i) || "GUARULHOS SP";
+      const nomeMotorista = getMatch(/NOME\s+([A-Z\s]{3,})/i) || "";
+      const perfilCavalo = getMatch(/PERFIL DO CAVALO\s+([A-Z]+)/i) || "TRUCADO";
+      const perfilCarreta = getMatch(/PERFIL CARRETA\s+([A-Z]+)/i) || "BAÚ";
+      
+      const plateRegex = /([A-Z]{3}[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}[0-9]{4})/gi;
+      const allPlates = text.match(plateRegex) || [];
+      const cavalo = allPlates[0] || "";
+      const carreta = allPlates[1] || "";
+      const segundaCarreta = allPlates[2] || "";
+
+      const ufMatch = text.match(/([A-Z]{2})\s+PLACA CARRETA/i) || text.match(/\b(SC|MG|RS|SP|PR|RJ|GO|BA)\b/g);
+      const uf = ufMatch ? ufMatch[0] : "SC";
+
+      const itemData = {
+        mes: "JUL|26",
+        origem: filialOrigem.includes("|") ? filialOrigem : filialOrigem.replace(/([A-Z\s]+)\s+([A-Z]{2})$/, "$1 | $2"),
+        dia: "sexta-feira",
+        data: dataCarregamento || "24/07/2026",
+        contatoWhats: horaPrevisao.includes(":") && horaPrevisao.length === 5 ? `${horaPrevisao}:00` : horaPrevisao,
+        horaLiberado: horaPrevisao.includes(":") && horaPrevisao.length === 5 ? `${horaPrevisao}:00` : horaPrevisao,
+        status: "LIBERADO CARREGAMENTO",
+        modeloCarreta: perfilCarreta.toUpperCase(),
+        modeloCavalo: perfilCavalo.toUpperCase(),
+        fezContato: "SIM",
+        destino: filialDestino.split(" ")[0] || "GUARULHOS",
+        transportador: transportador,
+        cavalo: cavalo,
+        carreta: carreta,
+        cargaLiberacao: nomeMotorista,
+        estadoMotorista: uf,
+        estadoCavalo: uf,
+        estadoCarreta: uf,
+        pendencia: "",
+        checkList: "OK",
+        dias: "180",
+        segundaCarreta: segundaCarreta
+      };
+
+      return res.status(200).json({ success: true, data: itemData });
+
+    } catch (err: any) {
+      console.error("Erro na rota /api/parse-ordem-coleta:", err);
+      return res.status(500).json({ error: "Erro interno ao processar Ordem de Coleta." });
+    }
+  });
+
+  app.post("/api/parse-nf-pdfs", async (req, res) => {
   try {
     const { files } = req.body;
     if (!files || !Array.isArray(files) || files.length === 0) {

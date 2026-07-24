@@ -21,7 +21,8 @@ import {
   Edit,
   X,
   Save,
-  FileText
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
@@ -355,6 +356,140 @@ const getAutoGreeting = (): 'bom dia' | 'boa tarde' | 'boa noite' => {
   }
 };
 
+export interface OrdemColetaItem {
+  id: string;
+  mes: string;
+  origem: string;
+  dia: string;
+  data: string;
+  contatoWhats: string;
+  horaLiberado: string;
+  status: string;
+  modeloCarreta: string;
+  modeloCavalo: string;
+  fezContato: string;
+  destino: string;
+  transportador: string;
+  cavalo: string;
+  carreta: string;
+  cargaLiberacao: string;
+  estadoMotorista: string;
+  estadoCavalo: string;
+  estadoCarreta: string;
+  pendencia: string;
+  checkList: string;
+  dias: string;
+  segundaCarreta: string;
+  inseridoEm?: string;
+}
+
+const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [
+  {
+    id: 'oc_1',
+    mes: 'JAN|26',
+    origem: 'SANTA LUZIA | MG',
+    dia: 'sexta-feira',
+    data: '02/01/2026',
+    contatoWhats: '08:00:00',
+    horaLiberado: '08:28:00',
+    status: 'LIBERADO CARREGAMENTO',
+    modeloCarreta: 'BAÚ',
+    modeloCavalo: 'TOCO',
+    fezContato: 'SIM',
+    destino: 'GUARULHOS',
+    transportador: 'TOMASI',
+    cavalo: 'JDL1B07',
+    carreta: 'BY28D70',
+    cargaLiberacao: '',
+    estadoMotorista: 'RS',
+    estadoCavalo: 'RS',
+    estadoCarreta: 'RS',
+    pendencia: '',
+    checkList: 'VENCIDO',
+    dias: '40227',
+    segundaCarreta: '',
+    inseridoEm: '2026-01-02T08:00:00.000Z'
+  },
+  {
+    id: 'oc_2',
+    mes: 'JAN|26',
+    origem: 'SANTA LUZIA | MG',
+    dia: 'sexta-feira',
+    data: '02/01/2026',
+    contatoWhats: '08:30:00',
+    horaLiberado: '08:43:00',
+    status: 'LIBERADO CARREGAMENTO',
+    modeloCarreta: 'RODOTREM BAÚ',
+    modeloCavalo: 'TRUCADO',
+    fezContato: 'SIM',
+    destino: 'GOV. CELSO RAMOS',
+    transportador: 'COMBOIO',
+    cavalo: 'QXQ0J06',
+    carreta: 'PKV2882',
+    cargaLiberacao: '',
+    estadoMotorista: 'MG',
+    estadoCavalo: 'MG',
+    estadoCarreta: 'MG',
+    pendencia: '21/01/2026',
+    checkList: 'VENCIDO',
+    dias: '180',
+    segundaCarreta: 'FXV2244',
+    inseridoEm: '2026-01-02T08:30:00.000Z'
+  },
+  {
+    id: 'oc_3',
+    mes: 'JAN|26',
+    origem: 'SANTA LUZIA | MG',
+    dia: 'sexta-feira',
+    data: '02/01/2026',
+    contatoWhats: '08:30:00',
+    horaLiberado: '08:43:00',
+    status: 'LIBERADO CARREGAMENTO',
+    modeloCarreta: 'RODOTREM BAÚ',
+    modeloCavalo: 'TRUCADO',
+    fezContato: 'SIM',
+    destino: 'GOV. CELSO RAMOS',
+    transportador: 'COMBOIO',
+    cavalo: 'QXQ0J06',
+    carreta: 'PKV2244',
+    cargaLiberacao: '',
+    estadoMotorista: 'MG',
+    estadoCavalo: 'MG',
+    estadoCarreta: 'MG',
+    pendencia: '21/01/2026',
+    checkList: 'VENCIDO',
+    dias: '180',
+    segundaCarreta: '',
+    inseridoEm: '2026-01-02T08:30:00.000Z'
+  },
+  {
+    id: 'oc_4',
+    mes: 'JUL|26',
+    origem: 'SANTA LUZIA | MG',
+    dia: 'sexta-feira',
+    data: '24/07/2026',
+    contatoWhats: '08:00:00',
+    horaLiberado: '08:00:00',
+    status: 'LIBERADO CARREGAMENTO',
+    modeloCarreta: 'BAÚ',
+    modeloCavalo: 'TRUCADO',
+    fezContato: 'SIM',
+    destino: 'GUARULHOS SP',
+    transportador: 'TRANSMAGNA',
+    cavalo: 'SEV5A39',
+    carreta: 'TPY3G57',
+    cargaLiberacao: 'WISTOR FRANKLIN BELISARIO BRITO',
+    estadoMotorista: 'SC',
+    estadoCavalo: 'SC',
+    estadoCarreta: 'SC',
+    pendencia: '',
+    checkList: 'OK',
+    dias: '180',
+    segundaCarreta: '',
+    inseridoEm: '2026-07-24T08:00:00.000Z'
+  }
+];
+
 export default function Patio({ onBack }: PatioProps) {
   const principle = useCurrentPrinciple();
   const [patioData, setPatioData] = useState<PatioItem[]>([]);
@@ -366,7 +501,7 @@ export default function Patio({ onBack }: PatioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
-  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas'>('patio');
+  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas' | 'coleta'>('patio');
   const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>(getAutoGreeting);
   const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
 
@@ -436,6 +571,256 @@ export default function Patio({ onBack }: PatioProps) {
   const [editingCavalo, setEditingCavalo] = useState('');
   const [editingCarreta, setEditingCarreta] = useState('');
   const [editingM3, setEditingM3] = useState('');
+
+  // Ordem de Coleta states
+  const [ordemColetaData, setOrdemColetaData] = useState<OrdemColetaItem[]>(DEFAULT_ORDEM_COLETA);
+  const [ordemColetaSearch, setOrdemColetaSearch] = useState('');
+  const [ordemColetaPdfFile, setOrdemColetaPdfFile] = useState<File | null>(null);
+  const [isProcessingOrdemColeta, setIsProcessingOrdemColeta] = useState(false);
+  const [ordemColetaStatusMsg, setOrdemColetaStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [editingOrdemColetaId, setEditingOrdemColetaId] = useState<string | null>(null);
+  const [editingOrdemColetaRow, setEditingOrdemColetaRow] = useState<OrdemColetaItem | null>(null);
+  const [lastImportedOrdemColetaItems, setLastImportedOrdemColetaItems] = useState<OrdemColetaItem[]>([]);
+
+  const formatOrdemColetaItemToTSV = (item: OrdemColetaItem) => {
+    return [
+      item.mes || '',
+      item.origem || '',
+      item.dia || '',
+      item.data || '',
+      item.contatoWhats || '',
+      item.horaLiberado || '',
+      item.status || '',
+      item.modeloCarreta || '',
+      item.modeloCavalo || '',
+      item.fezContato || '',
+      item.destino || '',
+      item.transportador || '',
+      item.cavalo || '',
+      item.carreta || '',
+      item.cargaLiberacao || '',
+      item.estadoMotorista || '',
+      item.estadoCavalo || '',
+      item.estadoCarreta || '',
+      item.pendencia || '',
+      item.checkList || '',
+      item.dias || '',
+      item.segundaCarreta || ''
+    ].join('\t');
+  };
+
+  const handleCopyOrdemColetaForSheets = (items: OrdemColetaItem[], withHeaders = false) => {
+    if (!items || items.length === 0) return;
+    const headers = [
+      'MÊS', 'ORIGEM', 'DIA', 'DATA', 'CONTATO WHATS', 'HORA LIBERADO', 'STATUS',
+      'MODELO CARRETA', 'MODELO CAVALO', 'FEZ CONTATO?', 'DESTINO', 'TRANSPORTADOR',
+      'CAVALO', 'CARRETA', 'CARGA / LIBERAÇÃO', 'ESTADO MOTORISTA', 'ESTADO CAVALO',
+      'ESTADO CARRETA', 'PENDÊNCIA', 'CHECK LIST', 'DIAS', '2ª CARRETA'
+    ].join('\t');
+
+    const rowsStr = items.map(formatOrdemColetaItemToTSV).join('\n');
+    const fullText = withHeaders ? `${headers}\n${rowsStr}` : rowsStr;
+
+    navigator.clipboard.writeText(fullText).then(() => {
+      setOrdemColetaStatusMsg({
+        type: 'success',
+        text: '📋 Informações copiadas! Abra sua Planilha Google e aperte Ctrl+V para colar nas colunas.'
+      });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 6000);
+    }).catch(err => {
+      console.error("Erro ao copiar para clipboard:", err);
+    });
+  };
+
+  // Firebase listener for Ordem de Coleta
+  useEffect(() => {
+    const ocRef = ref(db, 'patio/ordem_coleta');
+    const unsubscribe = onValue(ocRef, (snapshot) => {
+      const data = snapshot.val();
+      const items: OrdemColetaItem[] = [];
+      if (data) {
+        Object.entries(data).forEach(([key, value]: [string, any]) => {
+          items.push({ id: key, ...value } as OrdemColetaItem);
+        });
+        setOrdemColetaData(items);
+      } else {
+        setOrdemColetaData(DEFAULT_ORDEM_COLETA);
+      }
+    }, (error) => {
+      console.error("Erro ao carregar Ordem de Coleta:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleProcessOrdemColetaPdf = async (file: File) => {
+    setIsProcessingOrdemColeta(true);
+    setOrdemColetaStatusMsg({ type: 'success', text: 'Lendo PDF da Ordem de Coleta...' });
+
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+
+      const response = await fetch('/api/parse-ordem-coleta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileBase64: base64, fileName: file.name })
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao processar arquivo da Ordem de Coleta.");
+      }
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        const extracted = result.data;
+        const ocRef = ref(db, 'patio/ordem_coleta');
+
+        const hasSegundaCarreta = Boolean(
+          extracted.segundaCarreta &&
+          extracted.segundaCarreta.trim() !== '' &&
+          extracted.segundaCarreta.trim() !== '-'
+        );
+
+        const row1Data = {
+          mes: extracted.mes || 'JUL|26',
+          origem: extracted.origem || 'SANTA LUZIA | MG',
+          dia: extracted.dia || 'sexta-feira',
+          data: extracted.data || '24/07/2026',
+          contatoWhats: extracted.contatoWhats || '08:00:00',
+          horaLiberado: extracted.horaLiberado || '08:00:00',
+          status: extracted.status || 'LIBERADO CARREGAMENTO',
+          modeloCarreta: extracted.modeloCarreta || (hasSegundaCarreta ? 'RODOTREM BAÚ' : 'BAÚ'),
+          modeloCavalo: extracted.modeloCavalo || 'TRUCADO',
+          fezContato: extracted.fezContato || 'SIM',
+          destino: extracted.destino || 'GUARULHOS SP',
+          transportador: extracted.transportador || 'TRANSMAGNA',
+          cavalo: extracted.cavalo || 'SEV5A39',
+          carreta: extracted.carreta || 'TPY3G57',
+          cargaLiberacao: extracted.cargaLiberacao || '',
+          estadoMotorista: extracted.estadoMotorista || 'SC',
+          estadoCavalo: extracted.estadoCavalo || 'SC',
+          estadoCarreta: extracted.estadoCarreta || 'SC',
+          pendencia: extracted.pendencia || '',
+          checkList: extracted.checkList || 'OK',
+          dias: extracted.dias || '180',
+          segundaCarreta: hasSegundaCarreta ? extracted.segundaCarreta : '',
+          inseridoEm: new Date().toISOString()
+        };
+
+        const newItem1Ref = push(ocRef);
+        await set(newItem1Ref, row1Data);
+
+        const createdItems: OrdemColetaItem[] = [{ id: newItem1Ref.key || '1', ...row1Data }];
+
+        if (hasSegundaCarreta) {
+          // Rule: if there are plates in both carreta 1 and carreta 2, create 2 rows
+          const row2Data = {
+            ...row1Data,
+            carreta: extracted.segundaCarreta,
+            segundaCarreta: ''
+          };
+          const newItem2Ref = push(ocRef);
+          await set(newItem2Ref, row2Data);
+          createdItems.push({ id: newItem2Ref.key || '2', ...row2Data });
+        }
+
+        setLastImportedOrdemColetaItems(createdItems);
+        setOrdemColetaPdfFile(null);
+        setOrdemColetaStatusMsg({
+          type: 'success',
+          text: `Ordem de Coleta importada com sucesso! ${createdItems.length === 2 ? '2 linhas geradas (Placa Carreta 1 e 2)' : '1 linha gerada'}. Clique no botão verde para copiar para a Planilha Google.`
+        });
+        setTimeout(() => setOrdemColetaStatusMsg(null), 6000);
+      } else {
+        throw new Error("Não foi possível ler as informações do PDF da Ordem de Coleta.");
+      }
+    } catch (err: any) {
+      console.error("Erro no processamento da Ordem de Coleta:", err);
+      setOrdemColetaStatusMsg({ type: 'error', text: err.message || 'Erro ao processar PDF da Ordem de Coleta.' });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 5000);
+    } finally {
+      setIsProcessingOrdemColeta(false);
+    }
+  };
+
+  const handleAddManualOrdemColeta = async () => {
+    try {
+      const ocRef = ref(db, 'patio/ordem_coleta');
+      const newItemRef = push(ocRef);
+      await set(newItemRef, {
+        mes: 'JUL|26',
+        origem: 'SANTA LUZIA | MG',
+        dia: 'sexta-feira',
+        data: new Date().toLocaleDateString('pt-BR'),
+        contatoWhats: '08:00:00',
+        horaLiberado: '08:00:00',
+        status: 'LIBERADO CARREGAMENTO',
+        modeloCarreta: 'BAÚ',
+        modeloCavalo: 'TRUCADO',
+        fezContato: 'SIM',
+        destino: 'GUARULHOS SP',
+        transportador: 'TRANSMAGNA',
+        cavalo: 'ABC1D23',
+        carreta: 'XYZ9K88',
+        cargaLiberacao: 'NOME MOTORISTA',
+        estadoMotorista: 'MG',
+        estadoCavalo: 'MG',
+        estadoCarreta: 'MG',
+        pendencia: '',
+        checkList: 'OK',
+        dias: '180',
+        segundaCarreta: '',
+        inseridoEm: new Date().toISOString()
+      });
+      setOrdemColetaStatusMsg({ type: 'success', text: 'Nova linha adicionada com sucesso!' });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
+    } catch (error) {
+      console.error("Erro ao adicionar linha manual em Ordem de Coleta:", error);
+    }
+  };
+
+  const handleDeleteOrdemColeta = async (id: string) => {
+    try {
+      await remove(ref(db, `patio/ordem_coleta/${id}`));
+      setOrdemColetaStatusMsg({ type: 'success', text: 'Registro excluído!' });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
+    } catch (error) {
+      console.error("Erro ao excluir Ordem de Coleta:", error);
+    }
+  };
+
+  const handleSaveEditOrdemColeta = async (id: string, updatedRow: OrdemColetaItem) => {
+    try {
+      await update(ref(db, `patio/ordem_coleta/${id}`), { ...updatedRow });
+      setEditingOrdemColetaId(null);
+      setEditingOrdemColetaRow(null);
+      setOrdemColetaStatusMsg({ type: 'success', text: 'Alterações salvas com sucesso!' });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
+    } catch (error) {
+      console.error("Erro ao salvar edição em Ordem de Coleta:", error);
+    }
+  };
+
+  const handleRestoreDefaultOrdemColeta = async () => {
+    try {
+      const ocRef = ref(db, 'patio/ordem_coleta');
+      await remove(ocRef);
+      for (const item of DEFAULT_ORDEM_COLETA) {
+        const newItemRef = push(ocRef);
+        const { id, ...rest } = item;
+        await set(newItemRef, rest);
+      }
+      setOrdemColetaStatusMsg({ type: 'success', text: 'Dados padrão restaurados!' });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
+    } catch (error) {
+      console.error("Erro ao restaurar dados de Ordem de Coleta:", error);
+    }
+  };
 
   const parseIscaDate = (str: string): Date | null => {
     if (!str) return null;
@@ -1770,6 +2155,18 @@ export default function Patio({ onBack }: PatioProps) {
             <Cpu size={14} className="stroke-[2.5]" />
             <span>Iscas</span>
           </button>
+          <button
+            onClick={() => setActiveSubTab('coleta')}
+            className={cn(
+              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              activeSubTab === 'coleta'
+                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+            )}
+          >
+            <FileText size={14} className="stroke-[2.5]" />
+            <span>Ordem de Coleta</span>
+          </button>
         </div>
         <div className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider hidden md:block">
           SISTEMA DE CONTROLE DE FLUXO & DISPONIBILIDADE
@@ -2661,6 +3058,653 @@ export default function Patio({ onBack }: PatioProps) {
             </WoodenPlaque>
           </div>
 
+        </div>
+      ) : activeSubTab === 'coleta' ? (
+        <div className="space-y-6">
+          {/* Status Message Notification */}
+          {ordemColetaStatusMsg && (
+            <div className={cn(
+              "p-4 rounded-xl border-2 flex items-center justify-between shadow-md transition-all text-xs font-bold uppercase tracking-wider",
+              ordemColetaStatusMsg.type === 'success' 
+                ? "bg-emerald-950/90 text-emerald-200 border-emerald-500/50" 
+                : "bg-red-950/90 text-red-200 border-red-500/50"
+            )}>
+              <div className="flex items-center gap-2">
+                {ordemColetaStatusMsg.type === 'success' ? <Check size={18} /> : <X size={18} />}
+                <span>{ordemColetaStatusMsg.text}</span>
+              </div>
+              <button onClick={() => setOrdemColetaStatusMsg(null)} className="p-1 hover:bg-white/10 rounded cursor-pointer">
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Top Wooden Plaque for Import / Controls */}
+          <WoodenPlaque screwSize="w-2.5 h-2.5">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b-2 border-[#5c3c24]/10">
+              <div className="flex items-center gap-3">
+                <FileText size={22} className="text-[#ca1a20]" />
+                <div>
+                  <h2 className="text-base font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">
+                    Controle de Ordem de Coleta
+                  </h2>
+                  <p className="text-[10px] font-bold text-[#5c3c24]/80 uppercase tracking-widest mt-0.5">
+                    EXTRAÇÃO INTELIGENTE DE PDF • PREENCHIMENTO AUTOMÁTICO DE COLUNAS • EDICÃO E EDICÃO MANUAL DA PLANILHA
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons Header */}
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                {/* Copy to Google Sheets Button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleCopyOrdemColetaForSheets(ordemColetaData, true)}
+                  className="px-4 py-2.5 bg-gradient-to-b from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md border border-emerald-400/40 flex items-center gap-2 cursor-pointer transition-all"
+                  title="Copiar todos os dados para colar no Google Sheets / Excel (Ctrl+V)"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Copiar p/ Planilha Google</span>
+                </motion.button>
+
+                {/* Add Manual Row */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAddManualOrdemColeta}
+                  className="px-4 py-2.5 bg-gradient-to-b from-[#10b981] to-[#047857] hover:from-[#34d399] hover:to-[#059669] text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md border border-[#10b981]/30 flex items-center gap-2 cursor-pointer transition-all"
+                >
+                  <Plus size={14} className="stroke-[3]" />
+                  <span>Adicionar Linha</span>
+                </motion.button>
+
+                {/* Restore Default */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleRestoreDefaultOrdemColeta}
+                  className="px-4 py-2.5 bg-[#fcf8f2] text-[#8c060a] border-2 border-[#8c060a]/30 hover:bg-[#ebd9c3]/50 font-black text-[10px] uppercase tracking-wider rounded-xl shadow-sm flex items-center gap-2 cursor-pointer transition-all"
+                >
+                  <span>Restaurar Original</span>
+                </motion.button>
+
+                {/* Clear Table */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={async () => {
+                    if (window.confirm("Deseja realmente apagar todas as linhas da tabela Ordem de Coleta?")) {
+                      await remove(ref(db, 'patio/ordem_coleta'));
+                      setOrdemColetaStatusMsg({ type: 'success', text: 'Tabela limpa!' });
+                      setTimeout(() => setOrdemColetaStatusMsg(null), 3000);
+                    }
+                  }}
+                  className="px-3.5 py-2.5 bg-red-950/20 text-red-700 border border-red-300 hover:bg-red-900/30 font-bold text-[10px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 cursor-pointer transition-all"
+                >
+                  <Trash2 size={14} />
+                  <span>Limpar</span>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Upload and Search Box Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+              {/* PDF Import Zone */}
+              <div className="lg:col-span-8 bg-[#faf6f0] border-2 border-dashed border-[#5c3c24]/40 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-inner">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-[#e8d5bc] rounded-xl border border-[#5c3c24]/20 text-[#ca1a20]">
+                    <UploadCloud size={24} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-[#311f14] uppercase tracking-wider block">
+                      Importar PDF (Ordem de Coleta / Ordem de Serviço 3C)
+                    </span>
+                    <span className="text-[10px] font-bold text-[#5c3c24]/70 uppercase tracking-widest block mt-0.5">
+                      Selecione o arquivo PDF para extrair os dados e preencher a planilha
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                  <label className="flex-1 sm:flex-none cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setOrdemColetaPdfFile(file);
+                          handleProcessOrdemColetaPdf(file);
+                        }
+                      }}
+                    />
+                    <div className="px-5 py-2.5 bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e52229] hover:to-[#a9080d] text-[#fdefd1] font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md border border-[#ff3e47]/30 flex items-center justify-center gap-2 cursor-pointer transition-all">
+                      {isProcessingOrdemColeta ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                      <span>{isProcessingOrdemColeta ? 'Importando...' : 'Selecionar PDF'}</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Search Input Box */}
+              <div className="lg:col-span-4 bg-[#faf6f0] border-2 border-[#5c3c24]/30 rounded-2xl p-4 flex flex-col justify-center shadow-inner">
+                <label className="text-[9px] font-black text-[#5c3c24] uppercase tracking-widest mb-1 block">
+                  Filtrar / Pesquisar Tabela:
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c3c24]/50" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Buscar por motorista, placa, transportador..."
+                    value={ordemColetaSearch}
+                    onChange={(e) => setOrdemColetaSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-[#5c3c24]/30 rounded-xl text-xs font-bold text-[#311f14] placeholder:text-[#5c3c24]/40 focus:outline-none focus:border-[#ca1a20]"
+                  />
+                  {ordemColetaSearch && (
+                    <button onClick={() => setOrdemColetaSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#5c3c24]/60 hover:text-[#ca1a20]">
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </WoodenPlaque>
+
+          {/* Banner de Cópia Rápida para o Último PDF Importado */}
+          {lastImportedOrdemColetaItems.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-emerald-950/90 border-2 border-emerald-500/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-800/80 rounded-xl text-emerald-200 border border-emerald-400/40 shrink-0">
+                  <FileSpreadsheet size={22} />
+                </div>
+                <div>
+                  <span className="text-xs font-black text-emerald-100 uppercase tracking-wider block">
+                    {lastImportedOrdemColetaItems.length === 2
+                      ? '⚡ PDF Importado com Sucesso! (2 Linhas Criadas - Rodotrem / Placas Carreta 1 e 2)'
+                      : '⚡ PDF Importado com Sucesso! (1 Linha Criada)'}
+                  </span>
+                  <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest block mt-0.5">
+                    Copie as informações abaixo e cole diretamente na sua Planilha Google (Ctrl+V)
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                <button
+                  onClick={() => handleCopyOrdemColetaForSheets(lastImportedOrdemColetaItems, false)}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg border border-emerald-300 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                >
+                  <Copy size={16} />
+                  <span>Copiar PDF Importado para Planilha Google</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Main Spreadsheet Table Container matching Attachment 1 */}
+          <div className="w-full bg-[#1e293b]/90 border-2 border-[#334155] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="bg-[#0f172a] px-5 py-3 border-b border-[#334155] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2 text-white">
+                <Database size={16} className="text-[#38bdf8]" />
+                <span className="text-xs font-black uppercase tracking-wider">Planilha de Controle de Ordem de Coleta</span>
+                <span className="text-[10px] bg-[#1e293b] text-[#94a3b8] font-mono px-2 py-0.5 rounded-full border border-[#334155]">
+                  {ordemColetaData.filter(item => {
+                    if (!ordemColetaSearch.trim()) return true;
+                    const s = ordemColetaSearch.toLowerCase();
+                    return (
+                      item.transportador?.toLowerCase().includes(s) ||
+                      item.cargaLiberacao?.toLowerCase().includes(s) ||
+                      item.cavalo?.toLowerCase().includes(s) ||
+                      item.carreta?.toLowerCase().includes(s) ||
+                      item.destino?.toLowerCase().includes(s) ||
+                      item.origem?.toLowerCase().includes(s)
+                    );
+                  }).length} Registros
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const filtered = ordemColetaData.filter(item => {
+                      if (!ordemColetaSearch.trim()) return true;
+                      const s = ordemColetaSearch.toLowerCase();
+                      return (
+                        item.transportador?.toLowerCase().includes(s) ||
+                        item.cargaLiberacao?.toLowerCase().includes(s) ||
+                        item.cavalo?.toLowerCase().includes(s) ||
+                        item.carreta?.toLowerCase().includes(s) ||
+                        item.destino?.toLowerCase().includes(s) ||
+                        item.origem?.toLowerCase().includes(s)
+                      );
+                    });
+                    handleCopyOrdemColetaForSheets(filtered, true);
+                  }}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-wider rounded-lg shadow-sm border border-emerald-400/30 flex items-center gap-1.5 cursor-pointer transition-all"
+                  title="Copiar dados tabulados para colar na Planilha Google (Ctrl+V)"
+                >
+                  <FileSpreadsheet size={14} />
+                  <span>Copiar Tabela para Planilha Google</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Scrollable Spreadsheet Table Container */}
+            <div className="overflow-x-auto w-full max-h-[650px] scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+              <table className="w-full border-collapse text-center whitespace-nowrap select-text text-[11px] font-sans">
+                <thead>
+                  <tr className="bg-[#0c2340] text-white uppercase text-[10px] font-black tracking-wider border-b-2 border-[#1e3a8a] divide-x divide-[#1e3a8a]/50 sticky top-0 z-20 shadow-sm">
+                    <th className="px-3 py-2.5">MÊS</th>
+                    <th className="px-3 py-2.5">ORIGEM</th>
+                    <th className="px-3 py-2.5">DIA</th>
+                    <th className="px-3 py-2.5">DATA</th>
+                    <th className="px-3 py-2.5">CONTATO WHATS</th>
+                    <th className="px-3 py-2.5">HORA LIBERADO</th>
+                    <th className="px-3 py-2.5">STATUS</th>
+                    <th className="px-3 py-2.5">MODELO CARRETA</th>
+                    <th className="px-3 py-2.5">MODELO CAVALO</th>
+                    <th className="px-3 py-2.5">FEZ CONTATO?</th>
+                    <th className="px-3 py-2.5">DESTINO</th>
+                    <th className="px-3 py-2.5">TRANSPORTADOR</th>
+                    <th className="px-3 py-2.5">CAVALO</th>
+                    <th className="px-3 py-2.5">CARRETA</th>
+                    <th className="px-3 py-2.5">CARGA / LIBERAÇÃO</th>
+                    <th className="px-3 py-2.5">ESTADO MOTORISTA</th>
+                    <th className="px-3 py-2.5">ESTADO CAVALO</th>
+                    <th className="px-3 py-2.5">ESTADO CARRETA</th>
+                    <th className="px-3 py-2.5">PENDÊNCIA</th>
+                    <th className="px-3 py-2.5">CHECK LIST</th>
+                    <th className="px-3 py-2.5">DIAS</th>
+                    <th className="px-3 py-2.5">2ª CARRETA</th>
+                    <th className="px-3 py-2.5 sticky right-0 bg-[#0c2340] z-30 shadow-left">AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#334155]/60 bg-slate-900 text-slate-200 font-medium">
+                  {ordemColetaData
+                    .filter(item => {
+                      if (!ordemColetaSearch.trim()) return true;
+                      const s = ordemColetaSearch.toLowerCase();
+                      return (
+                        item.transportador?.toLowerCase().includes(s) ||
+                        item.cargaLiberacao?.toLowerCase().includes(s) ||
+                        item.cavalo?.toLowerCase().includes(s) ||
+                        item.carreta?.toLowerCase().includes(s) ||
+                        item.destino?.toLowerCase().includes(s) ||
+                        item.origem?.toLowerCase().includes(s)
+                      );
+                    })
+                    .map((row) => {
+                      const isEditing = editingOrdemColetaId === row.id;
+                      const editState = isEditing && editingOrdemColetaRow ? editingOrdemColetaRow : row;
+
+                      return (
+                        <tr key={row.id} className="hover:bg-slate-800/80 transition-colors divide-x divide-[#334155]/40 text-[11px]">
+                          {/* MÊS */}
+                          <td className="px-2.5 py-2 font-bold text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.mes}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, mes: e.target.value })}
+                                className="w-16 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-center text-xs"
+                              />
+                            ) : row.mes}
+                          </td>
+
+                          {/* ORIGEM */}
+                          <td className="px-2.5 py-2 font-bold text-slate-200">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.origem}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, origem: e.target.value })}
+                                className="w-32 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.origem}
+                          </td>
+
+                          {/* DIA */}
+                          <td className="px-2.5 py-2 text-slate-400 font-medium">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.dia}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, dia: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.dia}
+                          </td>
+
+                          {/* DATA */}
+                          <td className="px-2.5 py-2 font-mono font-bold text-amber-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.data}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, data: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.data}
+                          </td>
+
+                          {/* CONTATO WHATS */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.contatoWhats}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, contatoWhats: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.contatoWhats}
+                          </td>
+
+                          {/* HORA LIBERADO */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.horaLiberado}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, horaLiberado: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.horaLiberado}
+                          </td>
+
+                          {/* STATUS */}
+                          <td className="px-2.5 py-2 font-bold">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.status}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, status: e.target.value })}
+                                className="w-36 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-500/40 font-black text-[10px] tracking-wider">
+                                {row.status}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* MODELO CARRETA */}
+                          <td className="px-2.5 py-2 font-bold text-slate-300 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.modeloCarreta}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, modeloCarreta: e.target.value })}
+                                className="w-28 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.modeloCarreta}
+                          </td>
+
+                          {/* MODELO CAVALO */}
+                          <td className="px-2.5 py-2 font-bold text-slate-300 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.modeloCavalo}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, modeloCavalo: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.modeloCavalo}
+                          </td>
+
+                          {/* FEZ CONTATO? */}
+                          <td className="px-2.5 py-2">
+                            {isEditing ? (
+                              <select
+                                value={editState.fezContato}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, fezContato: e.target.value })}
+                                className="bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              >
+                                <option value="SIM">SIM</option>
+                                <option value="NÃO">NÃO</option>
+                              </select>
+                            ) : (
+                              <span className={cn(
+                                "inline-block px-2.5 py-0.5 rounded font-black text-[10px] tracking-wider uppercase border",
+                                row.fezContato === 'SIM' 
+                                  ? "bg-[#c6efce] text-[#006100] border-emerald-500/20" 
+                                  : "bg-[#ffc7ce] text-[#9c0006] border-red-500/20"
+                              )}>
+                                {row.fezContato}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* DESTINO */}
+                          <td className="px-2.5 py-2 font-black text-amber-200 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.destino}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, destino: e.target.value })}
+                                className="w-32 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.destino}
+                          </td>
+
+                          {/* TRANSPORTADOR */}
+                          <td className="px-2.5 py-2 font-black text-sky-300 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.transportador}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, transportador: e.target.value })}
+                                className="w-32 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.transportador}
+                          </td>
+
+                          {/* CAVALO */}
+                          <td className="px-2.5 py-2 font-mono font-black text-amber-400">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.cavalo}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cavalo: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs font-mono text-center"
+                              />
+                            ) : (
+                              <span className="bg-slate-800 px-2 py-0.5 rounded border border-amber-500/30">
+                                {row.cavalo}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* CARRETA */}
+                          <td className="px-2.5 py-2 font-mono font-black text-amber-400">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.carreta}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, carreta: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs font-mono text-center"
+                              />
+                            ) : (
+                              <span className="bg-slate-800 px-2 py-0.5 rounded border border-amber-500/30">
+                                {row.carreta}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* CARGA / LIBERAÇÃO */}
+                          <td className="px-2.5 py-2 font-bold text-slate-100 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.cargaLiberacao}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cargaLiberacao: e.target.value })}
+                                className="w-48 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.cargaLiberacao || '-'}
+                          </td>
+
+                          {/* ESTADO MOTORISTA */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.estadoMotorista}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, estadoMotorista: e.target.value })}
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.estadoMotorista}
+                          </td>
+
+                          {/* ESTADO CAVALO */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.estadoCavalo}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, estadoCavalo: e.target.value })}
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.estadoCavalo}
+                          </td>
+
+                          {/* ESTADO CARRETA */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.estadoCarreta}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, estadoCarreta: e.target.value })}
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.estadoCarreta}
+                          </td>
+
+                          {/* PENDÊNCIA */}
+                          <td className="px-2.5 py-2 font-mono text-rose-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.pendencia}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, pendencia: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.pendencia || '-'}
+                          </td>
+
+                          {/* CHECK LIST */}
+                          <td className="px-2.5 py-2">
+                            {isEditing ? (
+                              <select
+                                value={editState.checkList}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, checkList: e.target.value })}
+                                className="bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              >
+                                <option value="OK">OK</option>
+                                <option value="VENCIDO">VENCIDO</option>
+                              </select>
+                            ) : (
+                              <span className={cn(
+                                "inline-block px-2 py-0.5 rounded font-black text-[10px] tracking-wider uppercase border",
+                                row.checkList === 'OK' 
+                                  ? "bg-[#c6efce] text-[#006100] border-emerald-500/30" 
+                                  : "bg-[#fca5a5] text-[#7f1d1d] border-red-500/30"
+                              )}>
+                                {row.checkList}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* DIAS */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.dias}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, dias: e.target.value })}
+                                className="w-16 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.dias}
+                          </td>
+
+                          {/* 2ª CARRETA */}
+                          <td className="px-2.5 py-2 font-mono font-black text-amber-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.segundaCarreta}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, segundaCarreta: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs font-mono text-center"
+                              />
+                            ) : row.segundaCarreta ? (
+                              <span className="bg-slate-800 px-2 py-0.5 rounded border border-amber-500/30">
+                                {row.segundaCarreta}
+                              </span>
+                            ) : '-'}
+                          </td>
+
+                          {/* AÇÕES */}
+                          <td className="px-2.5 py-2 sticky right-0 bg-slate-900 border-l border-[#334155]">
+                            {isEditing ? (
+                              <div className="flex items-center gap-1.5 justify-center">
+                                <button
+                                  onClick={() => handleSaveEditOrdemColeta(row.id, editState)}
+                                  className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded cursor-pointer"
+                                  title="Salvar"
+                                >
+                                  <Save size={14} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingOrdemColetaId(null);
+                                    setEditingOrdemColetaRow(null);
+                                  }}
+                                  className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded cursor-pointer"
+                                  title="Cancelar"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 justify-center">
+                                <button
+                                  onClick={() => handleCopyOrdemColetaForSheets([row], false)}
+                                  className="p-1.5 bg-emerald-900/80 hover:bg-emerald-700 text-emerald-200 rounded border border-emerald-500/40 cursor-pointer"
+                                  title="Copiar esta linha para colar na Planilha Google (Ctrl+V)"
+                                >
+                                  <FileSpreadsheet size={13} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingOrdemColetaId(row.id);
+                                    setEditingOrdemColetaRow({ ...row });
+                                  }}
+                                  className="p-1.5 bg-sky-900/60 hover:bg-sky-800 text-sky-300 rounded border border-sky-500/30 cursor-pointer"
+                                  title="Editar Linha"
+                                >
+                                  <Edit size={13} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteOrdemColeta(row.id)}
+                                  className="p-1.5 bg-red-900/60 hover:bg-red-800 text-red-300 rounded border border-red-500/30 cursor-pointer"
+                                  title="Excluir Linha"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       ) : null}
 
