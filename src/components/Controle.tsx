@@ -83,6 +83,90 @@ const EMBARQUE_IMAGES = [
   { value: "none", label: "Nenhum Embarque" },
 ];
 
+export const DESTINOS_PLANILHA_ISCAS = [
+  "ARAÇARIGUAMA",
+  "ARIQUEMES-RO",
+  "BARBALHA",
+  "BRASILIA",
+  "CAMPO GRANDE",
+  "CLIENTE",
+  "CUIABA",
+  "CURITIBA",
+  "DESCARTÁVEL",
+  "EUSEBIO",
+  "EXPORTAÇÃO",
+  "GOVERNADOR CR",
+  "GRAVATAI",
+  "GUARULHOS",
+  "JUIZ DE FORA",
+  "JOÃO PESSOA",
+  "LONDRINA",
+  "MACEIÓ",
+  "MANAUS",
+  "MOSSORO",
+  "MONTES CLAROS",
+  "NATAL",
+  "RECIFE",
+  "RIO DE JANEIRO",
+  "SALVADOR",
+  "SANTA LUZIA",
+  "SMART",
+  "SUMARE",
+  "TERESINA",
+  "TOTAL SERVICE",
+  "VESPASIANO",
+  "VIANA"
+];
+
+export const cleanDestinoForPlanilha = (raw: string): string => {
+  if (!raw) return "";
+  const upper = raw.toUpperCase().trim();
+  
+  if (DESTINOS_PLANILHA_ISCAS.includes(upper)) return upper;
+
+  let clean = upper.replace(/^SANTA\s+LUZIA(?:\/MG)?\s*X\s*/i, "").trim();
+
+  if (DESTINOS_PLANILHA_ISCAS.includes(clean)) return clean;
+
+  if (clean.includes("GOV") || clean.includes("CELSO RAMOS") || clean.includes("GOVERNADOR")) return "GOVERNADOR CR";
+  if (clean.includes("RIO DE JANEIRO")) return "RIO DE JANEIRO";
+  if (clean.includes("GUARULHOS")) return "GUARULHOS";
+  if (clean.includes("BRASILIA") || clean.includes("BRASÍLIA")) return "BRASILIA";
+  if (clean.includes("MONTES CLAROS")) return "MONTES CLAROS";
+  if (clean.includes("LONDRINA")) return "LONDRINA";
+  if (clean.includes("VIANA")) return "VIANA";
+  if (clean.includes("CAMPO GRANDE")) return "CAMPO GRANDE";
+  if (clean.includes("CLIENTE")) return "CLIENTE";
+  if (clean.includes("CUIABA") || clean.includes("CUIABÁ")) return "CUIABA";
+  if (clean.includes("EUSEBIO") || clean.includes("EUSÉBIO")) return "EUSEBIO";
+  if (clean.includes("EXPORTAÇÃO") || clean.includes("EXPORTACAO")) return "EXPORTAÇÃO";
+  if (clean.includes("GRAVATAI") || clean.includes("GRAVATAÍ")) return "GRAVATAI";
+  if (clean.includes("JUIZ DE FORA")) return "JUIZ DE FORA";
+  if (clean.includes("MANAUS")) return "MANAUS";
+  if (clean.includes("MOSSORO") || clean.includes("MOSSORÓ")) return "MOSSORO";
+  if (clean.includes("NATAL")) return "NATAL";
+  if (clean.includes("ARIQUEMES")) return "ARIQUEMES-RO";
+  if (clean.includes("RECIFE")) return "RECIFE";
+  if (clean.includes("SALVADOR")) return "SALVADOR";
+  if (clean.includes("SANTA LUZIA")) return "SANTA LUZIA";
+  if (clean.includes("SMART")) return "SMART";
+  if (clean.includes("SUMARE") || clean.includes("SUMARÉ")) return "SUMARE";
+  if (clean.includes("TOTAL SERVICE")) return "TOTAL SERVICE";
+  if (clean.includes("VESPASIANO")) return "VESPASIANO";
+  if (clean.includes("TERESINA")) return "TERESINA";
+  if (clean.includes("BARBALHA")) return "BARBALHA";
+  if (clean.includes("MACEIÓ") || clean.includes("MACEIO")) return "MACEIÓ";
+  if (clean.includes("JOÃO PESSOA") || clean.includes("JOAO PESSOA")) return "JOÃO PESSOA";
+  if (clean.includes("ARAÇARIGUAMA") || clean.includes("ARACARIGUAMA")) return "ARAÇARIGUAMA";
+  if (clean.includes("CURITIBA")) return "CURITIBA";
+  if (clean.includes("DESCARTÁVEL") || clean.includes("DESCARTAVEL")) return "DESCARTÁVEL";
+
+  const withoutUf = clean.replace(/\/[A-Z]{2}$/, "").trim();
+  if (DESTINOS_PLANILHA_ISCAS.includes(withoutUf)) return withoutUf;
+
+  return clean;
+};
+
 const DESTINOS_OPCOES = [
   "SANTA LUZIA/MG x RIO DE JANEIRO/RJ",
   "SANTA LUZIA/MG x GUARULHOS/SP",
@@ -346,12 +430,13 @@ export default function Controle({ onBack }: ControleProps) {
 
   const getIscaRows = () => {
     const rows = [];
+    const formattedDest = cleanDestinoForPlanilha(destino) || destino || "";
     
     // Row 1 (Isca 1)
     const row1 = {
       id: '1',
       idIsca: isca1 || "",
-      destino: destino || "",
+      destino: formattedDest,
       status: statusIsca1 || "EM ROTA(IDA)",
       obs1: obs1Isca1 || "PRÉ ALERTA OK",
       dataStatus: dataStatusIsca1 || getIscaDataStatusDefault(),
@@ -366,7 +451,7 @@ export default function Controle({ onBack }: ControleProps) {
       const row2 = {
         id: '2',
         idIsca: isca2 || "",
-        destino: destino || "",
+        destino: formattedDest,
         status: statusIsca2 || "EM ROTA(IDA)",
         obs1: obs1Isca2 || "PRÉ ALERTA OK",
         dataStatus: dataStatusIsca2 || getIscaDataStatusDefault(),
@@ -2861,14 +2946,23 @@ Embarque: ${
                 </div>
 
                 {/* DESTINO */}
-                <div className="p-2 font-black text-xs text-slate-900 text-center uppercase">
-                  <input
-                    type="text"
-                    value={destino}
+                <div className="p-2 font-black text-xs text-slate-900 text-center uppercase relative flex items-center justify-center">
+                  <select
+                    value={cleanDestinoForPlanilha(destino)}
                     onChange={(e) => setDestino(e.target.value)}
-                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
-                    placeholder="DESTINO"
-                  />
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-2 py-0.5 border border-transparent focus:border-emerald-500 cursor-pointer appearance-none pr-4"
+                  >
+                    <option value="" disabled className="text-slate-400 font-bold">SELECIONE</option>
+                    {cleanDestinoForPlanilha(destino) && !DESTINOS_PLANILHA_ISCAS.includes(cleanDestinoForPlanilha(destino)) && (
+                      <option value={cleanDestinoForPlanilha(destino)} className="text-slate-900 font-black">{cleanDestinoForPlanilha(destino)}</option>
+                    )}
+                    {DESTINOS_PLANILHA_ISCAS.map((dest) => (
+                      <option key={dest} value={dest} className="text-slate-900 font-black">
+                        {dest}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-600 text-[9px]">▼</span>
                 </div>
 
                 {/* STATUS */}
@@ -2971,14 +3065,23 @@ Embarque: ${
                   </div>
 
                   {/* DESTINO */}
-                  <div className="p-2 font-black text-xs text-slate-900 text-center uppercase">
-                    <input
-                      type="text"
-                      value={destino}
+                  <div className="p-2 font-black text-xs text-slate-900 text-center uppercase relative flex items-center justify-center">
+                    <select
+                      value={cleanDestinoForPlanilha(destino)}
                       onChange={(e) => setDestino(e.target.value)}
-                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
-                      placeholder="DESTINO"
-                    />
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-2 py-0.5 border border-transparent focus:border-emerald-500 cursor-pointer appearance-none pr-4"
+                    >
+                      <option value="" disabled className="text-slate-400 font-bold">SELECIONE</option>
+                      {cleanDestinoForPlanilha(destino) && !DESTINOS_PLANILHA_ISCAS.includes(cleanDestinoForPlanilha(destino)) && (
+                        <option value={cleanDestinoForPlanilha(destino)} className="text-slate-900 font-black">{cleanDestinoForPlanilha(destino)}</option>
+                      )}
+                      {DESTINOS_PLANILHA_ISCAS.map((dest) => (
+                        <option key={dest} value={dest} className="text-slate-900 font-black">
+                          {dest}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-600 text-[9px]">▼</span>
                   </div>
 
                   {/* STATUS */}
