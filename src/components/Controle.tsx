@@ -1131,11 +1131,11 @@ export default function Controle({ onBack }: ControleProps) {
                 ? ""
                 : sidebarEmbarque1
                 ? `
-                <div style="text-align: center; width: ${isPaletizado1 ? '150px' : '320px'};">
-                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado1 ? '6px' : '12px'}; margin-bottom: ${isPaletizado1 ? '8px' : '15px'}; width: ${isPaletizado1 ? '150px' : '320px'}; height: ${isPaletizado1 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                <div style="text-align: center; width: ${isPaletizado1 ? '280px' : '320px'};">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado1 ? '10px' : '12px'}; margin-bottom: ${isPaletizado1 ? '12px' : '15px'}; width: ${isPaletizado1 ? '280px' : '320px'}; height: ${isPaletizado1 ? '370px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                     <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
-                  <p style="font-size: ${isPaletizado1 ? '8px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado1 ? '6px' : '15px'}; text-transform: uppercase;">${carreta1}</p>
+                  <p style="font-size: ${isPaletizado1 ? '10px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado1 ? '10px' : '15px'}; text-transform: uppercase;">${carreta1}</p>
                 </div>
               `
                 : `<div style="text-align: center; width: 100px;">
@@ -1150,11 +1150,11 @@ export default function Controle({ onBack }: ControleProps) {
                   ? ""
                   : sidebarEmbarque2
                   ? `
-                <div style="text-align: center; width: ${isPaletizado2 ? '150px' : '320px'};">
-                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado2 ? '6px' : '12px'}; margin-bottom: ${isPaletizado2 ? '8px' : '15px'}; width: ${isPaletizado2 ? '150px' : '320px'}; height: ${isPaletizado2 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                <div style="text-align: center; width: ${isPaletizado2 ? '280px' : '320px'};">
+                  <div style="background-color: #FFFFFF; border: 1px solid #D5CBBF; padding: ${isPaletizado2 ? '10px' : '12px'}; margin-bottom: ${isPaletizado2 ? '12px' : '15px'}; width: ${isPaletizado2 ? '280px' : '320px'}; height: ${isPaletizado2 ? '370px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                     <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
-                  <p style="font-size: ${isPaletizado2 ? '8px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado2 ? '6px' : '15px'}; text-transform: uppercase;">${carreta2}</p>
+                  <p style="font-size: ${isPaletizado2 ? '10px' : '11px'}; font-weight: bold; color: #521521; margin-top: ${isPaletizado2 ? '10px' : '15px'}; text-transform: uppercase;">${carreta2}</p>
                 </div>
                 `
                   : `<div style="text-align: center; width: 100px;">
