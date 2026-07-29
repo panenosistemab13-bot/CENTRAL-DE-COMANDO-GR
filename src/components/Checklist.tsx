@@ -294,20 +294,26 @@ export default function Checklist() {
         }));
         setItems(list);
       } else {
-        const seedData = [
-          { cavalo: "POZ4431", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-          { cavalo: "POZ3241", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-          { cavalo: "POD0255", carretas: "", dataTeste: "2026-03-24", dataVencimento: "2026-05-23", manutencaoOs: "", periferico: "SENSOR", observacao: "" },
-          { cavalo: "PNY2605", carretas: "PNE7353 / PNE7433", dataTeste: "2026-03-31", dataVencimento: "2026-05-30", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - POF9075 / POF8375" },
-          { cavalo: "SAR8D82", carretas: "SBF9G98 / TIC0F85", dataTeste: "2026-04-03", dataVencimento: "2026-06-02", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
-          { cavalo: "THX5I51", carretas: "POG0685 / POG0545", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
-          { cavalo: "TYT8A14", carretas: "QOX3164 / QOX3168", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-          { cavalo: "SBK4142", carretas: "POF9785 / POR5E42", dataTeste: "2026-04-13", dataVencimento: "2026-06-12", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - MIN8723 / TIC0D95" },
-        ];
-        seedData.forEach((item, idx) => {
-          const id = (Date.now() + idx).toString();
-          set(ref(rtdb, `checklist_veiculos/${id}`), { ...item, id });
-        });
+        const initialized = localStorage.getItem('checklist_initialized');
+        if (!initialized) {
+          localStorage.setItem('checklist_initialized', 'true');
+          const seedData = [
+            { cavalo: "POZ4431", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
+            { cavalo: "POZ3241", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
+            { cavalo: "POD0255", carretas: "", dataTeste: "2026-03-24", dataVencimento: "2026-05-23", manutencaoOs: "", periferico: "SENSOR", observacao: "" },
+            { cavalo: "PNY2605", carretas: "PNE7353 / PNE7433", dataTeste: "2026-03-31", dataVencimento: "2026-05-30", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - POF9075 / POF8375" },
+            { cavalo: "SAR8D82", carretas: "SBF9G98 / TIC0F85", dataTeste: "2026-04-03", dataVencimento: "2026-06-02", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
+            { cavalo: "THX5I51", carretas: "POG0685 / POG0545", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
+            { cavalo: "TYT8A14", carretas: "QOX3164 / QOX3168", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
+            { cavalo: "SBK4142", carretas: "POF9785 / POR5E42", dataTeste: "2026-04-13", dataVencimento: "2026-06-12", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - MIN8723 / TIC0D95" },
+          ];
+          seedData.forEach((item, idx) => {
+            const id = (Date.now() + idx).toString();
+            set(ref(rtdb, `checklist_veiculos/${id}`), { ...item, id });
+          });
+        } else {
+          setItems([]);
+        }
       }
     });
     return () => unsubscribe();
@@ -351,6 +357,19 @@ export default function Checklist() {
       await remove(ref(rtdb, `checklist_veiculos/${id}`));
     } catch (error) {
       console.error("Erro ao deletar:", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm("Tem certeza de que deseja apagar TODOS os registros do checklist? Esta ação não pode ser desfeita.")) return;
+    try {
+      localStorage.setItem('checklist_initialized', 'true');
+      await remove(ref(rtdb, 'checklist_veiculos'));
+      setItems([]);
+      alert("Todos os registros do checklist foram apagados com sucesso!");
+    } catch (error) {
+      console.error("Erro ao limpar registros:", error);
+      alert("Erro ao apagar os registros do checklist.");
     }
   };
 
@@ -585,6 +604,14 @@ export default function Checklist() {
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border-y border-t-[#F93E47]/20 border-b-black/40"
               >
                 <Plus size={16} /> NOVO REGISTRO
+              </button>
+
+              <button 
+                onClick={handleClearAll}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-red-950/80 hover:bg-red-900 text-red-200 hover:text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border border-red-800/60"
+                title="Limpar todos os registros de checklist"
+              >
+                <Trash2 size={16} /> LIMPAR TUDO
               </button>
             </div>
           )}
