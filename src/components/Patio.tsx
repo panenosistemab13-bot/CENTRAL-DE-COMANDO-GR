@@ -22,7 +22,8 @@ import {
   X,
   Save,
   FileText,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Printer
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
@@ -413,10 +414,58 @@ export default function Patio({ onBack }: PatioProps) {
   const [iscaInput, setIscaInput] = useState('');
   const [iscaCopied, setIscaCopied] = useState(false);
   const [iscaNumbersCopied, setIscaNumbersCopied] = useState(false);
+  const [copiedIscaRowId, setCopiedIscaRowId] = useState<string | null>(null);
+  const [copiedAllIscasRows, setCopiedAllIscasRows] = useState(false);
   const [filterBattery100, setFilterBattery100] = useState(true);
   const [filterSameDay, setFilterSameDay] = useState(true);
   const [filterTwoHours, setFilterTwoHours] = useState(true);
   const [filterSantaLuzia, setFilterSantaLuzia] = useState(true);
+
+  const getIscaShortDate = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const months = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    return `${day}.${months[now.getMonth()]}`;
+  };
+
+  const handleCopySingleIscaRow = async (numero: string, id: string) => {
+    const dateStr = getIscaShortDate();
+    const row = [
+      numero,          // ID ISCA
+      "",              // DESTINO (vazia)
+      "DISPONIVEL",    // STATUS (disponivel)
+      "",              // OBS 1 (vazia)
+      dateStr,         // DATA STATUS
+      "",              // CARRETA (vazia)
+      "",              // CAVALO (vazia)
+      ""               // MOTORISTA (vazia)
+    ].join("\t");
+
+    await navigator.clipboard.writeText(row);
+    setCopiedIscaRowId(id);
+    setTimeout(() => setCopiedIscaRowId(null), 2000);
+  };
+
+  const handleCopyAllIscaRowsFormatted = async () => {
+    const items = getProcessedIscas();
+    if (items.length === 0) return;
+    const dateStr = getIscaShortDate();
+
+    const text = items.map(item => [
+      item.numero,     // ID ISCA
+      "",              // DESTINO (vazia)
+      "DISPONIVEL",    // STATUS (disponivel)
+      "",              // OBS 1 (vazia)
+      dateStr,         // DATA STATUS
+      "",              // CARRETA (vazia)
+      "",              // CAVALO (vazia)
+      ""               // MOTORISTA (vazia)
+    ].join("\t")).join("\n");
+
+    await navigator.clipboard.writeText(text);
+    setCopiedAllIscasRows(true);
+    setTimeout(() => setCopiedAllIscasRows(false), 2000);
+  };
 
   // Interfaces for Isca
   interface IscaItem {
@@ -2902,35 +2951,173 @@ export default function Patio({ onBack }: PatioProps) {
                     <p className="text-[10px] uppercase font-bold text-[#5c3c24]/40 tracking-wider mt-1">Cole a planilha do lado esquerdo para analisar.</p>
                   </div>
                 ) : (
-                  <div className="flex-1 overflow-auto flex flex-col items-center py-6 px-4">
-                    {/* Direct Copy Button for Quick Access */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={async () => {
-                        const processed = getProcessedIscas();
-                        if (processed.length === 0) return;
-                        const text = processed.map(item => item.numero).join('\n');
-                        await navigator.clipboard.writeText(text);
-                        setIscaNumbersCopied(true);
-                        setTimeout(() => setIscaNumbersCopied(false), 2000);
-                      }}
-                      className="mb-6 px-6 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#34d399] hover:to-[#10b981] text-white font-black text-[11px] uppercase tracking-widest rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.25)] active:translate-y-0.5 border border-[#10b981]/20 flex items-center gap-2 cursor-pointer transition-all shrink-0"
-                    >
-                      {iscaNumbersCopied ? <Check size={14} /> : <Copy size={14} />}
-                      <span>{iscaNumbersCopied ? 'Números Copiados!' : 'Copiar para Planilha Google'}</span>
-                    </motion.button>
+                  <div className="flex-1 overflow-auto flex flex-col items-center py-4 px-2 sm:px-4">
+                    {/* Action Buttons Header */}
+                    <div className="mb-4 flex flex-wrap items-center justify-center gap-3 shrink-0">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={async () => {
+                          const processed = getProcessedIscas();
+                          if (processed.length === 0) return;
+                          const text = processed.map(item => item.numero).join('\n');
+                          await navigator.clipboard.writeText(text);
+                          setIscaNumbersCopied(true);
+                          setTimeout(() => setIscaNumbersCopied(false), 2000);
+                        }}
+                        className="px-5 py-2.5 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#34d399] hover:to-[#10b981] text-white font-black text-[11px] uppercase tracking-wider rounded-xl shadow-md active:translate-y-0.5 border border-[#10b981]/20 flex items-center gap-2 cursor-pointer transition-all shrink-0"
+                      >
+                        {iscaNumbersCopied ? <Check size={14} /> : <Copy size={14} />}
+                        <span>{iscaNumbersCopied ? 'Números Copiados!' : 'Copiar para Planilha Google'}</span>
+                      </motion.button>
 
-                    {/* Single Column Isca Table identical to image */}
-                    <div className="w-full max-w-[260px] border border-[#be938a] rounded-md overflow-hidden shadow-[0_6px_15px_rgba(0,0,0,0.1)] divide-y divide-[#be938a] bg-[#dfb3ab] shrink-0 mb-6">
-                      {getProcessedIscas().map((item) => (
-                        <div 
-                          key={item.id} 
-                          className="px-4 py-3.5 text-center text-[13px] font-black text-[#1a0a07] tracking-wider hover:bg-[#d5a49c] transition-colors select-all"
-                        >
-                          {item.numero}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => window.print()}
+                        className="px-5 py-2.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white font-black text-[11px] uppercase tracking-wider rounded-xl shadow-md active:translate-y-0.5 border border-slate-700 flex items-center gap-2 cursor-pointer transition-all shrink-0"
+                      >
+                        <Printer size={14} />
+                        <span>Imprimir Planilha de Embarque</span>
+                      </motion.button>
+                    </div>
+
+                    {/* PRINTABLE ISCAS WORKSHEET (CONTROLE DE EMBARQUE DE ISCAS) */}
+                    <div className="printable-iscas-sheet w-full max-w-[1200px] overflow-x-auto bg-white p-2.5 rounded-xl border-2 border-black shadow-xl text-black font-sans shrink-0 mb-6">
+                      {/* Top Black Header Bar */}
+                      <div className="bg-black text-white px-3 py-1.5 font-black text-[10px] sm:text-[11px] uppercase flex flex-col sm:flex-row justify-between items-center gap-1 border border-black tracking-tight">
+                        <span className="text-center sm:text-left">FAVOR NÃO ESQUECER DE MARCAR NA ULTIMA FOLHA O POSICIONAMENTO DA ISCA NA CARRETA</span>
+                        <div className="flex items-center gap-3 text-[10px] shrink-0 font-mono">
+                          <span>{new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR')}</span>
+                          <span className="bg-white text-black px-2 py-0.5 font-black rounded text-[9px]">USO DO GR</span>
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Main Table Matching Attached Image */}
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full border-collapse border border-black text-center text-[10px] font-sans">
+                          <thead>
+                            <tr className="bg-white font-black text-[10px] uppercase text-black">
+                              <th className="border border-black p-1 min-w-[90px] bg-slate-100" rowSpan={2}>Nº ISCA</th>
+                              <th className="border border-black p-1 min-w-[45px] bg-slate-100" rowSpan={2}>DATA</th>
+                              <th className="border border-black p-1 min-w-[45px] bg-slate-100" rowSpan={2}>HORA</th>
+                              <th className="border border-black p-1 min-w-[45px] bg-slate-100" rowSpan={2}>DOCA</th>
+                              <th className="border border-black p-1 min-w-[70px] bg-slate-100" rowSpan={2}>CAVALO</th>
+                              <th className="border border-black p-1 min-w-[70px] bg-slate-100" rowSpan={2}>CARRETA</th>
+                              <th className="border border-black p-1 min-w-[35px] bg-slate-100" rowSpan={2}>M³</th>
+                              <th className="border border-black p-1 min-w-[85px] bg-slate-100" rowSpan={2}>DESTINO</th>
+                              <th className="border border-black p-1 min-w-[70px] bg-[#cde0e0]" rowSpan={2}>Nº NF</th>
+                              <th className="border border-black p-1 min-w-[85px] bg-slate-100" rowSpan={2}>RESPONSÁVEL</th>
+                              <th className="border border-black p-1 min-w-[80px] bg-slate-100" rowSpan={2}>PRODUTO</th>
+                              <th className="border border-black p-1 min-w-[65px] bg-slate-100" rowSpan={2}>U.M.A.</th>
+                              <th className="border border-black p-1 min-w-[95px] bg-slate-100" rowSpan={2}>VALOR NF (R$)</th>
+                              <th className="border border-black p-1 bg-slate-100" colSpan={3}>USO DO GR</th>
+                            </tr>
+                            <tr className="bg-white font-black text-[8.5px] uppercase text-black">
+                              <th className="border border-black p-1 min-w-[42px] bg-slate-100">PRÉ - ALERTA GR</th>
+                              <th className="border border-black p-1 min-w-[42px] bg-slate-100">PLAN. CARREG</th>
+                              <th className="border border-black p-1 min-w-[42px] bg-slate-100">BAIXA GR</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Array.from({ length: Math.max(22, getProcessedIscas().length) }).map((_, idx) => {
+                              const isca = getProcessedIscas()[idx];
+                              return (
+                                <tr key={idx} className="h-6 hover:bg-slate-50/80 transition-colors">
+                                  {/* Nº ISCA */}
+                                  <td className="border border-black px-1 font-black text-black text-center text-[11px] font-mono">
+                                    {isca ? isca.numero : ''}
+                                  </td>
+
+                                  {/* DATA */}
+                                  <td className="border border-black px-0.5 text-center font-bold text-slate-800">
+                                    <input defaultValue="/" className="w-full bg-transparent text-center font-bold outline-none text-[10px]" />
+                                  </td>
+
+                                  {/* HORA */}
+                                  <td className="border border-black px-0.5 text-center font-bold text-slate-800">
+                                    <input defaultValue=":" className="w-full bg-transparent text-center font-bold outline-none text-[10px]" />
+                                  </td>
+
+                                  {/* DOCA */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* CAVALO */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-black outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* CARRETA */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-black outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* M³ */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none text-[10px]" />
+                                  </td>
+
+                                  {/* DESTINO */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* Nº NF */}
+                                  <td className="border border-black px-0.5 bg-[#dce6e6]">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* RESPONSÁVEL */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* PRODUTO */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* U.M.A. */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center font-bold outline-none uppercase text-[10px]" />
+                                  </td>
+
+                                  {/* VALOR NF (R$) */}
+                                  <td className="border border-black px-1 text-left font-bold text-slate-800">
+                                    <div className="flex items-center gap-0.5">
+                                      <span className="font-bold text-[10px]">R$</span>
+                                      <input className="w-full bg-transparent outline-none font-bold text-[10px]" />
+                                    </div>
+                                  </td>
+
+                                  {/* PRÉ - ALERTA GR */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center outline-none text-[10px]" />
+                                  </td>
+
+                                  {/* PLAN. CARREG */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center outline-none text-[10px]" />
+                                  </td>
+
+                                  {/* BAIXA GR */}
+                                  <td className="border border-black px-0.5">
+                                    <input className="w-full bg-transparent text-center outline-none text-[10px]" />
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Bottom Black Footer Bar */}
+                      <div className="bg-black text-white px-3 py-1.5 font-black text-[10px] sm:text-[11px] uppercase flex justify-between items-center border border-black tracking-tight mt-0.5">
+                        <span>CONTROLE DE EMBARQUE DE ISCAS</span>
+                        <span className="font-mono text-[10px]">{new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR')}</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2938,6 +3125,125 @@ export default function Patio({ onBack }: PatioProps) {
             </WoodenPlaque>
           </div>
 
+          {/* BOTTOM SECTION: COPIAR LINHAS DE ISCAS FORMATADAS PARA PLANILHA GOOGLE */}
+          {getProcessedIscas().length > 0 && (
+            <WoodenPlaque screwSize="w-2.5 h-2.5" className="mt-6 col-span-1 lg:col-span-12">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b-2 border-[#5c3c24]/10">
+                <div className="flex items-center gap-3 text-left">
+                  <FileSpreadsheet size={22} className="text-[#ca1a20]" />
+                  <div>
+                    <h2 className="text-sm font-black text-[#311f14] uppercase tracking-[0.2em] font-serif">
+                      Copiar Linhas de Iscas para Planilha Google
+                    </h2>
+                    <p className="text-[9.5px] font-bold text-[#5c3c24]/80 uppercase tracking-widest mt-0.5">
+                      FORMATO PRONTO PARA COLAR NAS COLUNAS A-H (ID ISCA, DESTINO, STATUS, OBS 1, DATA STATUS, CARRETA, CAVALO, MOTORISTA)
+                    </p>
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleCopyAllIscaRowsFormatted}
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black text-[11px] uppercase tracking-wider rounded-xl shadow-md active:translate-y-0.5 border border-emerald-500/30 flex items-center gap-2 cursor-pointer transition-all shrink-0"
+                >
+                  {copiedAllIscasRows ? <Check size={14} /> : <Copy size={14} />}
+                  <span>{copiedAllIscasRows ? 'Todas as Linhas Copiadas!' : 'Copiar Todas as Linhas (DISPONÍVEL)'}</span>
+                </motion.button>
+              </div>
+
+              {/* Table of Formatted Isca Rows matching requested columns */}
+              <div className="overflow-x-auto rounded-xl border-2 border-[#5c3c24]/30 bg-[#faf6f0] shadow-inner">
+                <table className="w-full text-left text-xs font-sans border-collapse">
+                  <thead>
+                    <tr className="bg-[#e2d5c3] text-[#311f14] font-black text-[10px] uppercase border-b border-[#5c3c24]/20 tracking-wider">
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[120px] text-center">A - ID ISCA</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[100px] text-center">B - DESTINO</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[110px] text-center">C - STATUS</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[90px] text-center">D - OBS 1</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[100px] text-center">E - DATA STATUS</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[90px] text-center">F - CARRETA</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[90px] text-center">G - CAVALO</th>
+                      <th className="p-3 border-r border-[#5c3c24]/15 min-w-[110px] text-center">H - MOTORISTA</th>
+                      <th className="p-3 text-center min-w-[120px]">AÇÃO</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#5c3c24]/15 text-[11px] font-medium text-slate-900">
+                    {getProcessedIscas().map((item) => {
+                      const isCopied = copiedIscaRowId === item.id;
+                      const dateStr = getIscaShortDate();
+                      return (
+                        <tr 
+                          key={item.id} 
+                          className="hover:bg-[#f2e6d6] transition-colors group cursor-pointer"
+                          onClick={() => handleCopySingleIscaRow(item.numero, item.id)}
+                          title="Clique para copiar esta linha formatada para a planilha"
+                        >
+                          {/* ID ISCA */}
+                          <td className="p-2.5 font-black text-center text-slate-900 border-r border-[#5c3c24]/10 font-mono text-[12px]">
+                            {item.numero}
+                          </td>
+
+                          {/* DESTINO */}
+                          <td className="p-2.5 text-center text-slate-400 italic border-r border-[#5c3c24]/10">
+                            (vazia)
+                          </td>
+
+                          {/* STATUS */}
+                          <td className="p-2.5 text-center border-r border-[#5c3c24]/10">
+                            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-black text-[10px] uppercase rounded border border-emerald-300 shadow-sm">
+                              DISPONIVEL
+                            </span>
+                          </td>
+
+                          {/* OBS 1 */}
+                          <td className="p-2.5 text-center text-slate-400 italic border-r border-[#5c3c24]/10">
+                            (vazia)
+                          </td>
+
+                          {/* DATA STATUS */}
+                          <td className="p-2.5 font-bold text-center text-slate-800 border-r border-[#5c3c24]/10 font-mono">
+                            {dateStr}
+                          </td>
+
+                          {/* CARRETA */}
+                          <td className="p-2.5 text-center text-slate-400 italic border-r border-[#5c3c24]/10">
+                            (vazia)
+                          </td>
+
+                          {/* CAVALO */}
+                          <td className="p-2.5 text-center text-slate-400 italic border-r border-[#5c3c24]/10">
+                            (vazia)
+                          </td>
+
+                          {/* MOTORISTA */}
+                          <td className="p-2.5 text-center text-slate-400 italic border-r border-[#5c3c24]/10">
+                            (vazia)
+                          </td>
+
+                          {/* AÇÃO */}
+                          <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleCopySingleIscaRow(item.numero, item.id)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 mx-auto transition-all shadow-sm cursor-pointer",
+                                isCopied 
+                                  ? "bg-emerald-600 text-white" 
+                                  : "bg-[#8c7465] hover:bg-[#6e584a] text-white active:scale-95"
+                              )}
+                            >
+                              {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                              <span>{isCopied ? 'Copiado!' : 'Copiar Linha'}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </WoodenPlaque>
+          )}
         </div>
       ) : activeSubTab === 'coleta' ? (
         <div className="space-y-6">
