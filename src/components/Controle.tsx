@@ -26,6 +26,7 @@ import {
   Eye,
   EyeOff,
   Battery,
+  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -322,6 +323,117 @@ export default function Controle({ onBack }: ControleProps) {
   const [customTransportadoras, setCustomTransportadoras] = useState<string[]>([]);
   const [newTranspName, setNewTranspName] = useState("");
   const [isAddingTransp, setIsAddingTransp] = useState(false);
+
+  // Google Sheets Export States for Iscas (matching attached user format)
+  const getIscaDataStatusDefault = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const months = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    return `${day}.${months[now.getMonth()]}`; // e.g. "28.jul."
+  };
+
+  const [statusIsca1, setStatusIsca1] = useState("EM ROTA(IDA)");
+  const [statusIsca2, setStatusIsca2] = useState("EM ROTA(IDA)");
+  const [obs1Isca1, setObs1Isca1] = useState("PRÉ ALERTA OK");
+  const [obs1Isca2, setObs1Isca2] = useState("PRÉ ALERTA OK");
+  const [dataStatusIsca1, setDataStatusIsca1] = useState(getIscaDataStatusDefault());
+  const [dataStatusIsca2, setDataStatusIsca2] = useState(getIscaDataStatusDefault());
+
+  const [copiedIscaRow1, setCopiedIscaRow1] = useState(false);
+  const [copiedIscaRow2, setCopiedIscaRow2] = useState(false);
+  const [copiedIscaAll, setCopiedIscaAll] = useState(false);
+  const [copiedIscaDataOnly, setCopiedIscaDataOnly] = useState(false);
+
+  const getIscaRows = () => {
+    const rows = [];
+    
+    // Row 1 (Isca 1)
+    const row1 = {
+      id: '1',
+      idIsca: isca1 || "",
+      destino: destino || "",
+      status: statusIsca1 || "EM ROTA(IDA)",
+      obs1: obs1Isca1 || "PRÉ ALERTA OK",
+      dataStatus: dataStatusIsca1 || getIscaDataStatusDefault(),
+      carreta: carreta1 || "",
+      cavalo: cavalo || "",
+      motorista: motorista || sidebarMotorista || ""
+    };
+    rows.push(row1);
+
+    // Row 2 (Isca 2, if 2 carretas and isca2 is set and not "SEM ISCA")
+    if (numCarretas === 2 && isca2 && isca2 !== "SEM ISCA") {
+      const row2 = {
+        id: '2',
+        idIsca: isca2 || "",
+        destino: destino || "",
+        status: statusIsca2 || "EM ROTA(IDA)",
+        obs1: obs1Isca2 || "PRÉ ALERTA OK",
+        dataStatus: dataStatusIsca2 || getIscaDataStatusDefault(),
+        carreta: carreta2 || "",
+        cavalo: cavalo || "",
+        motorista: motorista || sidebarMotorista || ""
+      };
+      rows.push(row2);
+    }
+
+    return rows;
+  };
+
+  const copyIscaRowToClipboard = (row: ReturnType<typeof getIscaRows>[0], withHeaders = false, isRow2 = false) => {
+    const headers = ["ID ISCA", "DESTINO", "STATUS", "OBS 1", "DATA STATUS", "CARRETA", "CAVALO", "MOTORISTA"].join("\t");
+    const rowTsv = [
+      row.idIsca,
+      row.destino,
+      row.status,
+      row.obs1,
+      row.dataStatus,
+      row.carreta,
+      row.cavalo,
+      row.motorista
+    ].join("\t");
+
+    const textToCopy = withHeaders ? `${headers}\n${rowTsv}` : rowTsv;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      if (isRow2) {
+        setCopiedIscaRow2(true);
+        setTimeout(() => setCopiedIscaRow2(false), 3000);
+      } else {
+        setCopiedIscaRow1(true);
+        setTimeout(() => setCopiedIscaRow1(false), 3000);
+      }
+    });
+  };
+
+  const copyAllIscaRowsToClipboard = (withHeaders = true) => {
+    const rows = getIscaRows();
+    if (rows.length === 0) return;
+
+    const headers = ["ID ISCA", "DESTINO", "STATUS", "OBS 1", "DATA STATUS", "CARRETA", "CAVALO", "MOTORISTA"].join("\t");
+    const rowsTsv = rows.map(row => [
+      row.idIsca,
+      row.destino,
+      row.status,
+      row.obs1,
+      row.dataStatus,
+      row.carreta,
+      row.cavalo,
+      row.motorista
+    ].join("\t")).join("\n");
+
+    const textToCopy = withHeaders ? `${headers}\n${rowsTsv}` : rowsTsv;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      if (withHeaders) {
+        setCopiedIscaAll(true);
+        setTimeout(() => setCopiedIscaAll(false), 3000);
+      } else {
+        setCopiedIscaDataOnly(true);
+        setTimeout(() => setCopiedIscaDataOnly(false), 3000);
+      }
+    });
+  };
 
   const allTransportadoras = [...TRANSPORTADORAS, ...customTransportadoras];
 
@@ -1161,7 +1273,8 @@ Embarque: ${
 
       {/* TAB CONTENT: Gerador PGR */}
       {activeTab === "gerador" && (
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
       {/* LEFT AREA: Template Generator (expanded dynamically) */}
       <div className="col-span-1 xl:col-span-1 flex flex-col">
         <div className="flex-1 rounded-3xl bg-[#fdfbf7] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col p-6 sm:p-8">
@@ -2641,6 +2754,324 @@ Embarque: ${
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+      </div>
+
+      {/* SEÇÃO DE CÓPIA PARA PLANILHA GOOGLE (LINHAS DE ISCA) */}
+      <div className="w-full mt-8 bg-[#1e293b]/95 border-2 border-[#334155] rounded-3xl shadow-2xl overflow-hidden flex flex-col p-5 sm:p-7">
+        {/* Header banner */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-[#334155]">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg border border-emerald-400/40 shrink-0">
+              <FileSpreadsheet size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-md border border-emerald-500/30">
+                  Planilha Google / Excel
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-serif font-black text-white uppercase tracking-tight mt-1">
+                Copiar Linhas de Iscas para Planilha Google
+              </h3>
+              <p className="text-xs text-slate-300 font-semibold mt-0.5">
+                Copie cada linha individualmente ou a tabela completa para colar no Google Sheets (Ctrl+V)
+              </p>
+            </div>
+          </div>
+
+          {/* Batch Copy Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => copyAllIscaRowsToClipboard(false)}
+              className={cn(
+                "px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border flex items-center gap-2 transition-all cursor-pointer active:scale-98",
+                copiedIscaDataOnly
+                  ? "bg-emerald-500 text-slate-950 border-emerald-300"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/40"
+              )}
+              title="Copiar todas as linhas tabuladas para colar no Google Sheets (Ctrl+V)"
+            >
+              {copiedIscaDataOnly ? <Check size={16} /> : <Copy size={16} />}
+              <span>{copiedIscaDataOnly ? "Copiado para Planilha!" : "Copiar Apenas Dados (Ctrl+V)"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => copyAllIscaRowsToClipboard(true)}
+              className={cn(
+                "px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border flex items-center gap-2 transition-all cursor-pointer active:scale-98",
+                copiedIscaAll
+                  ? "bg-emerald-500 text-slate-950 border-emerald-300"
+                  : "bg-teal-700 hover:bg-teal-600 text-white border-teal-400/40"
+              )}
+              title="Copiar cabeçalho + linhas de iscas no formato Google Sheets"
+            >
+              {copiedIscaAll ? <Check size={16} /> : <FileSpreadsheet size={16} />}
+              <span>{copiedIscaAll ? "Tabela Copiada!" : "Copiar com Cabeçalho"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Spreadsheet Mock Preview Table matching attached image */}
+        <div className="mt-5 w-full rounded-2xl border-2 border-emerald-800/60 overflow-x-auto shadow-xl bg-[#0b2829]">
+          <div className="min-w-[1000px]">
+            {/* Column Letters Bar A-H */}
+            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#071c1d] border-b border-emerald-800/80 text-[10px] font-black text-emerald-300 text-center py-1 divide-x divide-emerald-800/50">
+              <div>A</div>
+              <div>B</div>
+              <div>C</div>
+              <div>D</div>
+              <div>E</div>
+              <div>F</div>
+              <div>G</div>
+              <div>H</div>
+              <div>AÇÃO</div>
+            </div>
+
+            {/* Header Row (Dark Teal with white uppercase text like attached image) */}
+            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#0b3c3d] text-white text-[11px] font-black uppercase py-2.5 divide-x divide-emerald-800/80 border-b border-emerald-700/80 items-center">
+              <div className="px-2 text-center">ID ISCA</div>
+              <div className="px-2 text-center">DESTINO</div>
+              <div className="px-2 text-center">STATUS</div>
+              <div className="px-2 text-center">OBS 1</div>
+              <div className="px-2 text-center">DATA STATUS</div>
+              <div className="px-2 text-center">CARRETA</div>
+              <div className="px-2 text-center">CAVALO</div>
+              <div className="px-2 text-center">MOTORISTA</div>
+              <div className="px-2 text-center">AÇÃO</div>
+            </div>
+
+            {/* Data Rows */}
+            <div className="divide-y divide-slate-300 bg-stone-100 text-slate-900 font-sans">
+              {/* Row 1 (Isca 1) */}
+              <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] divide-x divide-slate-300 items-center hover:bg-emerald-50 transition-colors">
+                {/* ID ISCA */}
+                <div className="p-2 font-black text-xs text-slate-900 text-center">
+                  <input
+                    type="text"
+                    value={isca1}
+                    onChange={(e) => handleIsca1Change(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="R100000..."
+                  />
+                </div>
+
+                {/* DESTINO */}
+                <div className="p-2 font-black text-xs text-slate-900 text-center uppercase">
+                  <input
+                    type="text"
+                    value={destino}
+                    onChange={(e) => setDestino(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="DESTINO"
+                  />
+                </div>
+
+                {/* STATUS */}
+                <div className="p-2 text-center font-black text-xs uppercase">
+                  <input
+                    type="text"
+                    value={statusIsca1}
+                    onChange={(e) => setStatusIsca1(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="EM ROTA(IDA)"
+                  />
+                </div>
+
+                {/* OBS 1 */}
+                <div className="p-2 text-center font-black text-xs uppercase">
+                  <input
+                    type="text"
+                    value={obs1Isca1}
+                    onChange={(e) => setObs1Isca1(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="PRÉ ALERTA OK"
+                  />
+                </div>
+
+                {/* DATA STATUS */}
+                <div className="p-2 text-center font-bold text-xs text-slate-900">
+                  <input
+                    type="text"
+                    value={dataStatusIsca1}
+                    onChange={(e) => setDataStatusIsca1(e.target.value)}
+                    className="w-full text-center bg-transparent font-bold text-xs text-slate-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="28.jul."
+                  />
+                </div>
+
+                {/* CARRETA */}
+                <div className="p-2 text-center font-black text-xs text-slate-900 uppercase">
+                  <input
+                    type="text"
+                    value={carreta1}
+                    onChange={(e) => setCarreta1(e.target.value.toUpperCase())}
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="CARRETA 1"
+                  />
+                </div>
+
+                {/* CAVALO */}
+                <div className="p-2 text-center font-black text-xs text-slate-900 uppercase">
+                  <input
+                    type="text"
+                    value={cavalo}
+                    onChange={(e) => setCavalo(e.target.value.toUpperCase())}
+                    className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="CAVALO"
+                  />
+                </div>
+
+                {/* MOTORISTA */}
+                <div className="p-2 font-black text-xs text-slate-900 uppercase">
+                  <input
+                    type="text"
+                    value={motorista || sidebarMotorista}
+                    onChange={(e) => handleTableMotoristaChange(e.target.value)}
+                    className="w-full bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="NOME MOTORISTA"
+                  />
+                </div>
+
+                {/* AÇÃO (COPIAR LINHA 1) */}
+                <div className="p-1.5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => copyIscaRowToClipboard(getIscaRows()[0], false, false)}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border flex items-center gap-1 transition-all cursor-pointer active:scale-95",
+                      copiedIscaRow1
+                        ? "bg-emerald-600 text-white border-emerald-400"
+                        : "bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500/40"
+                    )}
+                    title="Copiar esta linha para colar no Google Sheets (Ctrl+V)"
+                  >
+                    {copiedIscaRow1 ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copiedIscaRow1 ? "Copiado!" : "Copiar"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2 (Isca 2, if 2 carretas and isca2 is set and not "SEM ISCA") */}
+              {numCarretas === 2 && isca2 && isca2 !== "SEM ISCA" && (
+                <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] divide-x divide-slate-300 items-center hover:bg-emerald-50 transition-colors">
+                  {/* ID ISCA */}
+                  <div className="p-2 font-black text-xs text-slate-900 text-center">
+                    <input
+                      type="text"
+                      value={isca2}
+                      onChange={(e) => handleIsca2Change(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="R100000..."
+                    />
+                  </div>
+
+                  {/* DESTINO */}
+                  <div className="p-2 font-black text-xs text-slate-900 text-center uppercase">
+                    <input
+                      type="text"
+                      value={destino}
+                      onChange={(e) => setDestino(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="DESTINO"
+                    />
+                  </div>
+
+                  {/* STATUS */}
+                  <div className="p-2 text-center font-black text-xs uppercase">
+                    <input
+                      type="text"
+                      value={statusIsca2}
+                      onChange={(e) => setStatusIsca2(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="EM ROTA(IDA)"
+                    />
+                  </div>
+
+                  {/* OBS 1 */}
+                  <div className="p-2 text-center font-black text-xs uppercase">
+                    <input
+                      type="text"
+                      value={obs1Isca2}
+                      onChange={(e) => setObs1Isca2(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="PRÉ ALERTA OK"
+                    />
+                  </div>
+
+                  {/* DATA STATUS */}
+                  <div className="p-2 text-center font-bold text-xs text-slate-900">
+                    <input
+                      type="text"
+                      value={dataStatusIsca2}
+                      onChange={(e) => setDataStatusIsca2(e.target.value)}
+                      className="w-full text-center bg-transparent font-bold text-xs text-slate-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="28.jul."
+                    />
+                  </div>
+
+                  {/* CARRETA */}
+                  <div className="p-2 text-center font-black text-xs text-slate-900 uppercase">
+                    <input
+                      type="text"
+                      value={carreta2}
+                      onChange={(e) => setCarreta2(e.target.value.toUpperCase())}
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="CARRETA 2"
+                    />
+                  </div>
+
+                  {/* CAVALO */}
+                  <div className="p-2 text-center font-black text-xs text-slate-900 uppercase">
+                    <input
+                      type="text"
+                      value={cavalo}
+                      onChange={(e) => setCavalo(e.target.value.toUpperCase())}
+                      className="w-full text-center bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="CAVALO"
+                    />
+                  </div>
+
+                  {/* MOTORISTA */}
+                  <div className="p-2 font-black text-xs text-slate-900 uppercase">
+                    <input
+                      type="text"
+                      value={motorista || sidebarMotorista}
+                      onChange={(e) => handleTableMotoristaChange(e.target.value)}
+                      className="w-full bg-transparent font-black text-xs text-slate-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="NOME MOTORISTA"
+                    />
+                  </div>
+
+                  {/* AÇÃO (COPIAR LINHA 2) */}
+                  <div className="p-1.5 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const rows = getIscaRows();
+                        if (rows.length > 1) {
+                          copyIscaRowToClipboard(rows[1], false, true);
+                        }
+                      }}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border flex items-center gap-1 transition-all cursor-pointer active:scale-95",
+                        copiedIscaRow2
+                          ? "bg-emerald-600 text-white border-emerald-400"
+                          : "bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500/40"
+                      )}
+                      title="Copiar esta linha para colar no Google Sheets (Ctrl+V)"
+                    >
+                      {copiedIscaRow2 ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedIscaRow2 ? "Copiado!" : "Copiar"}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
