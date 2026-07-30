@@ -25,7 +25,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
-import { rtdb as db, handleDatabaseError, OperationType } from '../firebase';
+import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
 
 interface PatioProps {
   onBack?: () => void;
@@ -529,7 +529,9 @@ export default function Patio({ onBack }: PatioProps) {
 
   // Firebase listener for Ordem de Coleta
   useEffect(() => {
-    const ocRef = ref(db, 'patio/ordem_coleta');
+    const path = 'patio/ordem_coleta';
+    const ocRef = ref(db, path);
+    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
     const unsubscribe = onValue(ocRef, (snapshot) => {
       const data = snapshot.val();
       const items: OrdemColetaItem[] = [];
@@ -913,7 +915,9 @@ export default function Patio({ onBack }: PatioProps) {
 
   useEffect(() => {
     // Escutar rtdb
-    const patioRef = ref(db, 'patio/veiculos');
+    const path = 'patio/veiculos';
+    const patioRef = ref(db, path);
+    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
     const unsubscribe = onValue(patioRef, (snapshot) => {
       const data = snapshot.val();
       const items: PatioItem[] = [];
@@ -924,7 +928,7 @@ export default function Patio({ onBack }: PatioProps) {
       }
       setPatioData(items);
     }, (error) => {
-      handleDatabaseError(error, OperationType.LIST, 'patio/veiculos');
+      handleFirestoreError(error, OperationType.LIST, 'patio/veiculos');
     });
 
     return () => unsubscribe();
@@ -932,7 +936,9 @@ export default function Patio({ onBack }: PatioProps) {
 
   useEffect(() => {
     // Escutar cubagem do rtdb
-    const cubagemRef = ref(db, 'patio/cubagem');
+    const path = 'patio/cubagem';
+    const cubagemRef = ref(db, path);
+    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
     const unsubscribe = onValue(cubagemRef, (snapshot) => {
       const data = snapshot.val();
       const items: CubagemItem[] = [];
@@ -1392,7 +1398,9 @@ export default function Patio({ onBack }: PatioProps) {
 
   useEffect(() => {
     // Escutar referências para cruzamento de dados de destino e outros valores
-    const refsRef = ref(db, 'pre_alertas/referencias');
+    const path = 'pre_alertas/referencias';
+    const refsRef = ref(db, path);
+    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
     const unsubscribeRefs = onValue(refsRef, (snapshot) => {
       if (snapshot.exists()) {
         setReferencias(snapshot.val() || {});
@@ -1415,7 +1423,7 @@ export default function Patio({ onBack }: PatioProps) {
     try {
       await update(ref(db, `patio/veiculos/${id}`), { [field]: value });
     } catch (error) {
-      handleDatabaseError(error, OperationType.UPDATE, `patio/veiculos/${id}`);
+      handleFirestoreError(error, OperationType.UPDATE, `patio/veiculos/${id}`);
     }
   };
 
@@ -1423,7 +1431,7 @@ export default function Patio({ onBack }: PatioProps) {
     try {
       await remove(ref(db, `patio/veiculos/${id}`));
     } catch (error) {
-      handleDatabaseError(error, OperationType.DELETE, `patio/veiculos/${id}`);
+      handleFirestoreError(error, OperationType.DELETE, `patio/veiculos/${id}`);
     }
   };
 
@@ -1435,7 +1443,7 @@ export default function Patio({ onBack }: PatioProps) {
       setStatusMsg({ type: 'success', text: 'Todos os dados foram limpos.' });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch(err) {
-      handleDatabaseError(err, OperationType.DELETE, 'patio/veiculos');
+      handleFirestoreError(err, OperationType.DELETE, 'patio/veiculos');
     }
   };
 

@@ -16,7 +16,7 @@ import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
 import mockupImg from '../assets/images/averba_o_interface_mockup_1780899726248.png';
 import { ref, get, set } from 'firebase/database';
-import { rtdb as db, handleDatabaseError, OperationType } from '../firebase';
+import { db } from '../firebase';
 
 interface RawData {
   dataAverbacao: string;
@@ -107,8 +107,7 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
           }));
         }
       } catch (error) {
-        console.warn("Database offline or inaccessible. Operating with local backup:", error);
-        handleDatabaseError(error, OperationType.GET, DATA_PATH);
+        console.warn("Realtime Database offline or inaccessible. Operating with local backup:", error);
       }
     };
     fetchData();
@@ -124,8 +123,7 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
     try {
       await set(ref(db, DATA_PATH), { parsedRows: rows, extraData: extra });
     } catch (error) {
-      console.warn("Failed to sync with Database (client might be offline):", error);
-      handleDatabaseError(error, OperationType.WRITE, DATA_PATH);
+      console.warn("Failed to sync with Realtime Database (client might be offline):", error);
     }
   };
 

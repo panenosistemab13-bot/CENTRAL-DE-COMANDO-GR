@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Lock, User } from 'lucide-react';
-import { auth, handleDatabaseError, OperationType } from '../firebase';
+import { auth, handleFirestoreError, OperationType } from '../firebase';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { toAbsoluteUrl } from '../utils/url';
 import loginBg from '../assets/images/coffee_shop_bg_1780921585218.png';
