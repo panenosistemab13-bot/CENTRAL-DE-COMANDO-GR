@@ -531,15 +531,6 @@ export default function PresenceList({ onBack }: PresenceListProps) {
           
           {/* Main Padding Container */}
           <div className="p-4 sm:p-6 relative z-10 flex flex-col h-full gap-5">
-            {onBack && (
-              <button 
-                onClick={onBack}
-                className="md:hidden flex items-center justify-center gap-2 w-full bg-[#1c1008] hover:bg-[#2c1a11] text-[#efdfc6] py-3.5 rounded-2xl font-black text-xs transition-all border border-[#5c3e29] shadow-md mb-2 cursor-pointer"
-              >
-                <LayoutGrid size={16} className="text-[#bf9663]" />
-                <span>Voltar ao Menu Inicial</span>
-              </button>
-            )}
             
             {/* Top Area: Splitted into Left (Profile) and Right (Image + Titles) */}
             <div className="flex flex-col md:flex-row gap-5">

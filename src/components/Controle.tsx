@@ -1304,55 +1304,53 @@ Embarque: ${
   };
 
   return (
-    <div 
-      className="w-full relative z-10 max-w-[102rem] mx-auto flex flex-col gap-5 font-sans"
-      style={{ zoom: 0.9 }}
-    >
-      {/* Top Navigation Tabs Bar */}
-      <div className="bg-[#FFFDFB] border-2 border-[#5c3e29] rounded-2xl p-2.5 shadow-md flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col min-h-screen bg-[#2D1A10] text-stone-100 overflow-hidden font-sans" style={{ zoom: 0.85 }}>
+      {/* Top Header / Quick Tabs Bar */}
+      <header className="bg-[#3A2414] border-b-2 border-[#6B4423] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xl z-20">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#B32025] animate-pulse inline-block"></span>
+            <h1 className="text-sm font-black tracking-wider text-[#E8D4B0] uppercase font-serif flex items-center gap-2">
+              <Sliders size={16} className="text-[#C7A26A]" />
+              CENTRAL DE CONTROLE PGR
+            </h1>
+          </div>
+        </div>
+
+        {/* Navigation Tabs Bar */}
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             onClick={() => setActiveTab("gerador")}
             className={cn(
-              "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer",
+              "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border shadow-sm",
               activeTab === "gerador"
-                ? "bg-[#B32025] text-white shadow-md"
-                : "bg-transparent text-[#5c3e29] hover:bg-[#EFE3CD]"
+                ? "bg-[#B32025] text-white border-[#8c060a]"
+                : "bg-[#21120B] text-[#E8D4B0] border-[#C7A26A]/30 hover:border-[#C7A26A]"
             )}
           >
-            <Sliders size={16} />
-            Gerador de Controle PGR
+            <Sliders size={14} />
+            Gerador PGR
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("prancheta")}
             className={cn(
-              "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer relative",
+              "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border shadow-sm relative",
               activeTab === "prancheta"
-                ? "bg-[#7A0C22] text-white shadow-md"
-                : "bg-transparent text-[#5c3e29] hover:bg-[#EFE3CD]"
+                ? "bg-[#B32025] text-white border-[#8c060a]"
+                : "bg-[#21120B] text-[#E8D4B0] border-[#C7A26A]/30 hover:border-[#C7A26A]"
             )}
           >
-            <FileText size={16} />
-            Prancheta (Anexo)
-            <span className="bg-[#B32025] text-white text-[9px] px-1.5 py-0.5 rounded-full ml-1 font-bold">
-              Digitalizada
-            </span>
+            <FileText size={14} />
+            Prancheta Digitalizada
           </button>
         </div>
+      </header>
 
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="bg-stone-100 hover:bg-stone-200 text-[#5c3e29] border border-stone-300 text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
-          >
-            <ArrowLeft size={12} strokeWidth={3} /> Voltar ao Menu
-          </button>
-        )}
-      </div>
-
+      {/* Main Workspace Layout */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-canvas">
       {/* TAB CONTENT: Prancheta */}
       {activeTab === "prancheta" && (
         <Prancheta onUseRowInControle={handleUsePranchetaRow} />
@@ -1360,67 +1358,59 @@ Embarque: ${
 
       {/* TAB CONTENT: Gerador PGR */}
       {activeTab === "gerador" && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
-      {/* LEFT AREA: Template Generator (expanded dynamically) */}
+      {/* LEFT AREA: Template Generator */}
       <div className="col-span-1 xl:col-span-1 flex flex-col">
-        <div className="flex-1 rounded-3xl bg-white border border-slate-200/80 shadow-xl relative overflow-hidden flex flex-col p-6 sm:p-8">
+        <div className="flex-1 rounded-[2rem] bg-white border-2 border-[#3A2414]/20 shadow-2xl relative overflow-hidden flex flex-col p-6 sm:p-8">
 
           {/* Module Title */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#3A2414]/10 pb-5 mb-6 gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-red-600 text-white p-2.5 rounded-2xl shadow-md">
+              <div className="bg-[#B32025] text-white p-3 rounded-2xl shadow-md border border-[#3A2414]/20">
                 <Sliders size={22} className="stroke-[2.5]" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-sans font-black text-slate-900 uppercase tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-serif font-black text-[#3A2414] uppercase tracking-tight">
                   Gerador de Controle PGR
                 </h2>
-                <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] text-[#3A2414]/70 font-black uppercase tracking-widest mt-0.5">
                   Gerador corporativo de pré-alerta e iscas
                 </p>
               </div>
             </div>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
-              >
-                <ArrowLeft size={12} strokeWidth={3} /> Voltar ao Menu
-              </button>
-            )}
           </div>
 
           {/* Generator Workspace Form */}
           <div className="flex flex-col gap-6">
             {/* GREETING SELECTION (Menu Suspenso para Saudação) */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-[#FAF6F0] border-2 border-[#3A2414]/15 rounded-2xl p-4 shadow-inner">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#3A2414] shrink-0">
                 Saudação:
               </label>
               <div className="relative flex-1 max-w-[200px]">
                 <select
                   value={saudacao}
                   onChange={(e) => setSaudacao(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-extrabold text-slate-900 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 outline-none transition-all cursor-pointer shadow-2xs"
+                  className="w-full bg-white border-2 border-[#3A2414]/20 rounded-xl px-3.5 py-2.5 text-xs font-black text-[#3A2414] focus:border-[#B32025] outline-none transition-all cursor-pointer shadow-sm"
                 >
                   <option value="Boa tarde,">Boa tarde,</option>
                   <option value="Bom dia,">Bom dia,</option>
                   <option value="Boa noite,">Boa noite,</option>
                 </select>
               </div>
-              <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+              <p className="text-[10px] font-black text-[#3A2414]/70 uppercase tracking-wider">
                 Define a saudação inicial do pré-alerta
               </p>
             </div>
 
             {/* EMAIL SUBJECT HEADER BLOCK */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg text-white">
+            <div className="bg-[#3A2414] border-2 border-[#6B4423] rounded-2xl p-5 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl text-white">
               <div className="flex-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#E8D4B0] block mb-1">
                   Assunto do E-mail (Copiar separadamente)
                 </span>
-                <h1 className="text-lg font-sans font-black text-white uppercase tracking-tight m-0 select-all">
+                <h1 className="text-lg font-serif font-black text-white uppercase tracking-tight m-0 select-all">
                   PRÉ-ALERTA DE ISCA - {destino || "BRASÍLIA"} -{" "}
                   {cavalo.replace(/-/g, "") || "TYQ6F51"}
                 </h1>
@@ -1429,38 +1419,38 @@ Embarque: ${
                 type="button"
                 onClick={handleCopySubject}
                 className={cn(
-                  "flex items-center gap-2 font-black uppercase text-[10px] tracking-wider px-4 py-3 rounded-xl shadow-md transition-all cursor-pointer select-none active:scale-95 shrink-0 border-2",
+                  "flex items-center gap-2 font-black uppercase text-[10px] tracking-wider px-5 py-3 rounded-xl shadow-md transition-all cursor-pointer select-none active:scale-95 shrink-0 border-2",
                   copiedAssunto
-                    ? "bg-emerald-600 text-white border-transparent"
-                    : "bg-red-600 hover:bg-red-700 text-white border-transparent",
+                    ? "bg-emerald-600 text-white border-emerald-500"
+                    : "bg-[#B32025] hover:bg-[#8c060a] text-white border-[#3A2414]/30",
                 )}
               >
                 {copiedAssunto ? (
                   <>
-                    <Check size={12} className="stroke-[3]" /> COPIADO!
+                    <Check size={13} className="stroke-[3]" /> COPIADO!
                   </>
                 ) : (
                   <>
-                    <Copy size={12} className="stroke-[2.5]" /> COPIAR ASSUNTO
+                    <Copy size={13} className="stroke-[2.5]" /> COPIAR ASSUNTO
                   </>
                 )}
               </button>
             </div>
 
             {/* PREVIEW CONTAINER - CORPORATE EXECUTIVE OFFICE PREVIEW */}
-            <div className="bg-slate-50 border border-slate-300 rounded-3xl p-6 sm:p-7 shadow-xl overflow-x-auto relative">
-              <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block mb-5 border-b border-slate-200 pb-2">
+            <div className="bg-[#FAF6F0] border-2 border-[#3A2414]/20 rounded-[2rem] p-6 sm:p-7 shadow-xl overflow-x-auto relative">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#3A2414]/70 block mb-5 border-b-2 border-[#3A2414]/10 pb-2">
                 Visualização do Pré-Alerta (Template do E-mail)
               </span>
 
-              <div className="min-w-[850px] font-sans text-xs text-slate-900">
+              <div className="min-w-[850px] font-sans text-xs text-[#3A2414]">
                 {/* 1. Greeting Output */}
-                <div className="mb-4 font-sans font-extrabold text-sm text-slate-900 ml-0 pl-0">
+                <div className="mb-4 font-sans font-black text-sm text-[#3A2414] ml-0 pl-0">
                   {saudacao}
                 </div>
 
                 {/* 2. Executive Alert Banner */}
-                <div className="mb-5 bg-red-600 text-white font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-sm flex items-center rounded-lg border border-red-700 max-w-max ml-0">
+                <div className="mb-5 bg-[#B32025] text-white font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 border-[#3A2414]/30 max-w-max ml-0">
                   <input
                     type="text"
                     value={alertaResgate}
@@ -1471,34 +1461,34 @@ Embarque: ${
                 </div>
 
                 {/* 3. Atentar às informações */}
-                <div className="mb-3.5 font-black text-slate-900 text-[13px] ml-0 pl-0">
+                <div className="mb-3.5 font-black text-[#3A2414] text-[13px] ml-0 pl-0">
                   <input
                     type="text"
                     value={infoAbaixo}
                     onChange={(e) => setInfoAbaixo(e.target.value)}
-                    className="bg-transparent border-none outline-none hover:bg-slate-200/50 focus:bg-slate-200 rounded px-1.5 py-0.5 w-full font-black text-slate-900 transition-all"
+                    className="bg-transparent border-none outline-none hover:bg-[#3A2414]/5 focus:bg-[#3A2414]/10 rounded px-1.5 py-0.5 w-full font-black text-[#3A2414] transition-all"
                   />
                 </div>
 
                 {/* 4. Routes and Instructions Selector Box with executive left highlight */}
-                <div className="border border-slate-200 border-l-4 border-l-sky-600 bg-sky-50/70 p-4 mb-6 font-bold leading-relaxed max-w-xl rounded-lg shadow-2xs">
+                <div className="border-2 border-[#3A2414]/20 border-l-4 border-l-[#B32025] bg-white p-4 mb-6 font-bold leading-relaxed max-w-xl rounded-xl shadow-inner">
                   <div className="flex items-center gap-2">
-                    <span className="text-sky-600 text-sm">•</span>
+                    <span className="text-[#B32025] text-sm">•</span>
                     <input
                       type="text"
                       value={rota1}
                       onChange={(e) => setRota1(e.target.value)}
-                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-slate-200/50 focus:bg-slate-200 rounded text-xs text-slate-900 transition-all"
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-[#3A2414]/5 focus:bg-[#3A2414]/10 rounded text-xs text-[#3A2414] transition-all"
                       placeholder="· SANTA LUZIA/MG x GUARULHOS/SP;"
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-sky-600 text-sm">•</span>
+                    <span className="text-[#B32025] text-sm">•</span>
                     <input
                       type="text"
                       value={instrucao1}
                       onChange={(e) => setInstrucao1(e.target.value)}
-                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-slate-200/50 focus:bg-slate-200 rounded text-xs text-slate-900 transition-all"
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-[#3A2414]/5 focus:bg-[#3A2414]/10 rounded text-xs text-[#3A2414] transition-all"
                       placeholder="· * Favor, acusar o recebimento do pré-alerta;"
                     />
                   </div>
@@ -3140,6 +3130,7 @@ Embarque: ${
       </div>
       </div>
       )}
+      </div>
     </div>
   );
 }

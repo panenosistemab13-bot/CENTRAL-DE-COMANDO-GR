@@ -605,16 +605,19 @@ export default function Patio({ onBack }: PatioProps) {
 
       // Helper functions for extraction
       const extractCPF = () => {
-        const match = text.match(/\b\d{11}\b/);
-        return match ? match[0] : '';
+        const match = text.match(/CPF\s+(\d{11})/i) || text.match(/\b\d{11}\b/);
+        return match ? (match[1] || match[0]) : '';
       };
 
       const extractCNH = (excludeCpf: string) => {
+        const match = text.match(/(?:N° DO REGISTRO CNH|REGISTRO CNH)\s+(\d{9,11})/i);
+        if (match) return match[1];
         const matches = text.match(/\b\d{11}\b/g) || [];
         return matches.find(m => m !== excludeCpf) || '';
       };
 
       const extractPlacasComUF = () => {
+        // Look for plates followed by UF like ABC1D23 SP
         const regex = /([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\s+([A-Z]{2})/g;
         const results = [];
         let m;
@@ -625,28 +628,43 @@ export default function Patio({ onBack }: PatioProps) {
       };
 
       const extractPhone = () => {
-        const match = text.match(/\b\d{2}\s\d\s\d{8}\b/);
-        return match ? match[0] : '';
+        const match = text.match(/CELULAR\s+(\d{2}\s\d\s\d{8})/i) || text.match(/\b\d{2}\s\d\s\d{8}\b/);
+        return match ? (match[1] || match[0]) : '';
       };
 
       const extractPallets = () => {
+        const match = text.match(/CAPACIDADE PALLETS\s+(\d+)/i);
+        if (match) return match[1];
         const blockMatch = text.match(/(?:TRUCADO|TOCO|SIMPLES)\s+(?:BAU|SIDER|GRADE)\s+(\d{1,2})\s+(\d{1,2})/i);
         return blockMatch ? blockMatch[1] : '';
       };
 
       const extractToneladas = () => {
+        const match = text.match(/CAPACIDADE TONELADAS\s+(\d+)/i);
+        if (match) return match[1];
         const blockMatch = text.match(/(?:TRUCADO|TOCO|SIMPLES)\s+(?:BAU|SIDER|GRADE)\s+(\d{1,2})\s+(\d{1,2})/i);
         return blockMatch ? blockMatch[2] : '';
       };
 
       const extractRG = () => {
-        const match = text.match(/\b[A-Z0-9]{7,10}\b/g) || [];
+        const match = text.match(/RG\s+([A-Z0-9.\-]{5,15})/i);
+        if (match) return match[1].trim().toUpperCase();
+        
+        const matches = text.match(/\b[A-Z0-9]{7,10}\b/g) || [];
         const placaRegex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/;
-        return match.find(m => m.length >= 7 && m.length <= 10 && !placaRegex.test(m) && isNaN(Number(m))) || 
-               match.find(m => m.length >= 7 && m.length <= 9 && !placaRegex.test(m)) || '';
+        const commonWords = ['CHEGADA', 'SAIDA', 'DADOS', 'PLACA', 'DATA', 'NOME', 'CPF', 'CNH'];
+        return matches.find(m => 
+          m.length >= 7 && 
+          m.length <= 10 && 
+          !placaRegex.test(m) && 
+          isNaN(Number(m)) && 
+          !commonWords.includes(m.toUpperCase())
+        ) || '';
       };
 
       const extractVinculo = () => {
+        const match = text.match(/VINCULO MOTORISTA\s+([A-Z]{3,})/i);
+        if (match) return match[1].toUpperCase();
         if (text.includes('FROTA')) return 'FROTA';
         if (text.includes('AGREGADO')) return 'AGREGADO';
         if (text.includes('TERCEIRO')) return 'TERCEIRO';
@@ -658,24 +676,40 @@ export default function Patio({ onBack }: PatioProps) {
       const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
       const currentMes = `${months[now.getMonth()]}|${now.getFullYear().toString().slice(-2)}`;
 
-      const transportadorMatch = text.match(/TRANSPORTADOR\s+([A-Z\s]{3,})\s+DATA/i);
+      const transportadorMatch = text.match(/TRANSPORTADOR\s+([A-Z\s]{3,100})\s+(?:DATA|VINCULO)/i);
       const transportador = transportadorMatch ? transportadorMatch[1].trim().toUpperCase() : (text.includes('TRANSMAGNA') ? 'TRANSMAGNA' : '');
       
-      const destinoMatch = text.match(/FILIAL DE DESTINO\s+([A-Z\s]{3,})\s+AGENDA/i);
+      const destinoMatch = text.match(/FILIAL DE DESTINO\s+([A-Z\s]{3,50})\s+(?:AGENDA|FILIAL)/i);
       const destino = destinoMatch ? destinoMatch[1].trim().toUpperCase() : (text.match(/GUARULHOS\s+SP/i) ? 'GUARULHOS SP' : '');
       
       const cpf = extractCPF();
-      const motoristaNameMatch = text.match(new RegExp(`([A-Z\\s]{10,})\\s+${cpf}`, 'i'));
-      const motorista = motoristaNameMatch ? motoristaNameMatch[1].trim().toUpperCase() : '';
+      const motoristaMatch = text.match(/NOME MOTORISTA\s+([A-Z\s]{3,100})(?=\s+CPF|\s+RG|$)/i);
+      const motorista = motoristaMatch 
+        ? motoristaMatch[1].trim().toUpperCase() 
+        : (text.match(new RegExp(`([A-Z\\s]{10,})\\s+${cpf}`, 'i'))?.[1]?.trim().toUpperCase() || '');
       
       const placasComUf = extractPlacasComUF();
-      const cavaloData = placasComUf[0] || { placa: '', uf: '' };
-      const carretaData = placasComUf[1] || { placa: '', uf: '' };
-      const segundaCarretaData = placasComUf[2] || { placa: '', uf: '' };
+      // Try to find specific plate headers if the UF regex is too generic
+      const placaCavaloMatch = text.match(/PLACA CAVALO\s+([A-Z]{3}[0-9][A-Z0-9][0-9]{2})/i);
+      const placaCarreta1Match = text.match(/PLACA CARRETA 1\s+([A-Z]{3}[0-9][A-Z0-9][0-9]{2})/i);
+      const placaCarreta2Match = text.match(/PLACA CARRETA 2\s+([A-Z]{3}[0-9][A-Z0-9][0-9]{2})/i);
+
+      const cavaloPlaca = placaCavaloMatch ? placaCavaloMatch[1].toUpperCase() : (placasComUf[0]?.placa.toUpperCase() || '');
+      const carretaPlaca = placaCarreta1Match ? placaCarreta1Match[1].toUpperCase() : (placasComUf[1]?.placa.toUpperCase() || '');
+      const segundaCarretaPlaca = placaCarreta2Match ? placaCarreta2Match[1].toUpperCase() : (placasComUf[2]?.placa.toUpperCase() || '');
       
-      const modeloCavalo = text.includes('TRUCADO') ? 'TRUCADO' : text.includes('TOCO') ? 'TOCO' : '';
-      const modeloCarreta = text.includes('BAU') ? 'BAU' : text.includes('SIDER') ? 'SIDER' : '';
-      const tecnologia = text.includes('SIGHRA') ? 'SIGHRA' : text.includes('AUTOTRAC') ? 'AUTOTRAC' : text.includes('ONIXSAT') ? 'ONIXSAT' : '';
+      const ufMatch = text.match(/UF\s+([A-Z]{2})/i);
+      const cavaloUF = placasComUf[0]?.uf || (ufMatch ? ufMatch[1] : '');
+      const carretaUF = placasComUf[1]?.uf || (ufMatch ? ufMatch[1] : '');
+
+      const perfilCavaloMatch = text.match(/PERFIL DO CAVALO\s+([A-Z\s]{3,20})/i);
+      const perfilCarretaMatch = text.match(/PERFIL CARRETA\s+([A-Z\s]{3,20})/i);
+
+      const modeloCavalo = perfilCavaloMatch ? perfilCavaloMatch[1].trim().toUpperCase() : (text.includes('TRUCADO') ? 'TRUCADO' : text.includes('TOCO') ? 'TOCO' : '');
+      const modeloCarreta = perfilCarretaMatch ? perfilCarretaMatch[1].trim().toUpperCase() : (text.includes('BAU') ? 'BAU' : text.includes('SIDER') ? 'SIDER' : '');
+      
+      const tecnologiaMatch = text.match(/RASTREADOR\s+([A-Z]{3,})/i);
+      const tecnologia = tecnologiaMatch ? tecnologiaMatch[1].toUpperCase() : (text.includes('SIGHRA') ? 'SIGHRA' : text.includes('AUTOTRAC') ? 'AUTOTRAC' : text.includes('ONIXSAT') ? 'ONIXSAT' : '');
       
       const ocRef = ref(db, 'patio/ordem_coleta');
       
@@ -692,8 +726,8 @@ export default function Patio({ onBack }: PatioProps) {
         fezContato: 'NAO',
         destino: destino,
         transportador: transportador,
-        cavalo: cavaloData.placa.toUpperCase(),
-        carreta: carretaData.placa.toUpperCase(),
+        cavalo: cavaloPlaca,
+        carreta: carretaPlaca,
         pallets: extractPallets() || '28',
         pbtTon: extractToneladas() || '30',
         m3: '',
@@ -708,13 +742,13 @@ export default function Patio({ onBack }: PatioProps) {
         codigoTransportadora: '',
         idCargaLacre: '',
         estadoMotorista: '',
-        estadoCavalo: cavaloData.uf.toUpperCase(),
-        estadoCarreta: carretaData.uf.toUpperCase(),
+        estadoCavalo: cavaloUF.toUpperCase(),
+        estadoCarreta: carretaUF.toUpperCase(),
         pendencia: '',
         checkList: '',
         vencido: '',
         dias: '',
-        segundaCarreta: segundaCarretaData.placa.toUpperCase(),
+        segundaCarreta: segundaCarretaPlaca,
         inseridoEm: new Date().toISOString()
       };
 
@@ -2033,7 +2067,7 @@ export default function Patio({ onBack }: PatioProps) {
     <div className="w-full min-h-full text-[#2b180d] relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden select-none">
       
        {/* ================= HEADER AREA ================= */}
-      <div className="hidden w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
         
         {/* Left title and logo stack */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 text-left w-full md:w-auto">
@@ -2081,17 +2115,6 @@ export default function Patio({ onBack }: PatioProps) {
             </div>
           </div>
         </div>
-
-        {/* Action Button for returning / Back */}
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#8c060a] hover:from-[#e52229] hover:to-[#a9080d] border-2 border-[#ff3e47]/20 text-white text-xs font-black uppercase tracking-[0.2em] transition-all shadow-[0_4px_10px_rgba(140,6,10,0.3)] active:translate-y-0.5 cursor-pointer select-none"
-          >
-            <ChevronLeft size={16} className="stroke-[3]" />
-            <span>Voltar ao Menu Inicial</span>
-          </button>
-        )}
       </div>
 
       {/* ================= NAVIGATION TABS ================= */}

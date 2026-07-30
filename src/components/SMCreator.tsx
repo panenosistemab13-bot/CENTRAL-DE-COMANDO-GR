@@ -977,18 +977,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
 
   return (
     <>
-      {onBack && (
-        <div className="w-full max-w-[94rem] mx-auto px-6 mt-4 md:hidden">
-          <button 
-            onClick={onBack}
-            className="flex items-center justify-center gap-2 w-full bg-[#3A2414] hover:bg-[#2A1408] text-[#fbdba5] py-3.5 rounded-2xl font-black text-xs transition-all border border-[#3A2414] shadow-md cursor-pointer"
-          >
-            <LayoutGrid size={16} className="text-[#B32025]" />
-            <span>Voltar ao Menu Inicial</span>
-          </button>
-        </div>
-      )}
-
       {/* ================= HEADER AREA ================= */}
       <div className="w-full flex flex-col md:flex-row items-center justify-end gap-6 max-w-[94rem] mx-auto mt-2 mb-6 px-6 font-sans">
         

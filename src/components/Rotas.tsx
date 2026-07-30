@@ -300,74 +300,58 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
   );
 
   return (
-    <div className="min-h-full bg-transparent p-0 space-y-6 md:space-y-8 pb-32 text-[#3A2414]">
-      {onBack && (
-        <button 
-          onClick={onBack}
-          className="md:hidden flex items-center justify-center gap-2 w-full bg-[#3A2414] hover:bg-[#2A1408] text-[#fbdba5] py-3.5 rounded-2xl font-black text-xs transition-all border border-[#3A2414] shadow-md cursor-pointer mb-2"
-        >
-          <LayoutGrid size={16} className="text-[#B32025]" />
-          <span>Voltar ao Menu Inicial</span>
-        </button>
-      )}
+    <div className="min-h-full bg-transparent p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 pb-32 text-[#3A2414]">
 
       {/* Dynamic Earthy Hero Section */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#ebd8bf] to-[#d6bc99] border-4 border-[#3A2414] p-6 lg:p-8 shadow-md">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#ebd8bf] via-[#e2ccaa] to-[#d6bc99] border-4 border-[#3A2414] p-6 sm:p-8 lg:p-10 shadow-xl">
         {/* Decorative corner accents */}
-        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
-        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
-        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
-        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+        <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-[#3A2414]/30 pointer-events-none" />
+        <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-[#3A2414]/30 pointer-events-none" />
+        <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-[#3A2414]/30 pointer-events-none" />
+        <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-[#3A2414]/30 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-8">
           <div className="flex flex-col md:flex-row items-center gap-6 w-full xl:w-2/3">
             {/* Studio Composition Image Frame */}
-            <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#3A2414] shadow-md group">
+            <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#3A2414] shadow-lg group">
               <img 
                 src={toAbsoluteUrl(coffeeBg)} 
                 alt="Edição Rústica Sofisticada" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#3A2414]/30 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3A2414]/40 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 bg-[#3A2414]/70 px-2.5 py-1 rounded-full backdrop-blur-sm border border-white/10">
                 <span className="w-2 h-2 rounded-full bg-[#B32025] animate-pulse" />
-                <span className="text-[9px] font-mono font-bold tracking-widest text-white uppercase">Composição Macro</span>
+                <span className="text-[9px] font-mono font-bold tracking-widest text-white uppercase">Sincronizado</span>
               </div>
             </div>
 
             <div className="text-center md:text-left space-y-2">
-              <h1 className="text-3xl md:text-4xl font-serif font-black text-[#3A2414] tracking-tight leading-tight uppercase">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3A2414] text-[#EEDBC5] rounded-full text-[10px] font-mono font-black uppercase tracking-widest shadow-sm">
+                <Navigation size={12} className="text-[#B32025]" />
+                <span>Central de Trechos e SM</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-serif font-black text-[#3A2414] tracking-tight leading-none uppercase">
                 Gestão de Rotas
               </h1>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
-                <span className="font-mono text-xs text-[#B32025] font-black uppercase tracking-widest">
-                  CONTROLE DE CÓDIGOS SM
-                </span>
-                <span className="text-[#3A2414]/30">•</span>
-                <span className="font-serif italic text-xs text-[#3A2414]/80">
-                  Sincronização em Tempo Real
-                </span>
-              </div>
-              <p className="text-xs text-[#3A2414]/80 leading-relaxed max-w-xl font-medium">
-                Gerenciamento centralizado de trechos de Ida e Volta, permitindo a edição, reordenação e sincronização de códigos SM para otimização logística.
+              <p className="text-xs text-[#3A2414]/85 leading-relaxed max-w-xl font-medium">
+                Controle operacional de rotas de ida e volta, códigos SM integrados em tempo real com backup em nuvem e reordenação instantânea.
               </p>
             </div>
           </div>
 
           {/* Metrics styled like paper tag tickets hanging */}
           <div className="flex items-center gap-4 w-full xl:w-auto justify-center xl:justify-end">
-            <div className="px-5 py-4 bg-[#fdfcf9]  border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[-1.5deg]">
-              {/* String hanging effect */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#3A2414]/25 rounded" />
-              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">TRECHOS</span>
+            <div className="px-6 py-4 bg-[#fdfcf9] border-2 border-[#3A2414]/30 rounded-2xl shadow-md min-w-[130px] text-center relative rotate-[-1.5deg] hover:rotate-0 transition-transform">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-3.5 bg-[#3A2414]/40 rounded-full" />
+              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">TOTAL TRECHOS</span>
               <span className="text-3xl font-serif font-black text-[#3A2414]">{currentData.length}</span>
             </div>
             
-            <div className="px-5 py-4 bg-[#fdfcf9]  border-2 border-[#3A2414]/25 rounded-2xl shadow-sm min-w-[120px] text-center relative rotate-[1.5deg]">
-              {/* String hanging effect */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-3 bg-[#3A2414]/25 rounded" />
-              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">CÓDIGOS</span>
+            <div className="px-6 py-4 bg-[#fdfcf9] border-2 border-[#3A2414]/30 rounded-2xl shadow-md min-w-[130px] text-center relative rotate-[1.5deg] hover:rotate-0 transition-transform">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-3.5 bg-[#3A2414]/40 rounded-full" />
+              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">CÓDIGOS SM</span>
               <span className="text-3xl font-serif font-black text-[#3A2414]">
                 {currentData.filter(r => r.idaCod).length + currentData.filter(r => r.voltaCod).length}
               </span>
@@ -381,7 +365,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50/90 backdrop-blur-sm border-4 border-[#3A2414] rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md  relative overflow-hidden"
+          className="bg-amber-50/95 backdrop-blur-md border-4 border-[#3A2414] rounded-[2.5rem] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden"
         >
           <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
           <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
@@ -389,26 +373,26 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
           <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
           
           <div className="flex flex-col md:flex-row gap-5 items-center text-center md:text-left">
-            <div className="p-4 bg-[#B32025] text-white rounded-2xl shrink-0 shadow-md flex items-center justify-center">
-              <Database size={24} />
+            <div className="w-14 h-14 bg-[#B32025] text-white rounded-2xl shrink-0 shadow-lg flex items-center justify-center border-2 border-[#3A2414]/30">
+              <Database size={26} />
             </div>
             <div>
-              <h4 className="font-serif font-black text-lg text-[#3A2414] uppercase tracking-tight">Sincronização de Rotas do Computador Corporativo</h4>
+              <h4 className="font-serif font-black text-lg text-[#3A2414] uppercase tracking-tight">Sincronização de Rotas Pendente</h4>
               <p className="text-xs text-[#3A2414]/90 mt-1 font-medium max-w-2xl leading-relaxed">
-                Detectamos <span className="font-black text-[#B32025]">{legacyData.length} rotas antigas</span> salvas localmente neste navegador (antigo backup do Vercel). Deseja sincronizá-las e subir para a Nuvem de forma global para funcionar em todos os dispositivos?
+                Detectamos <span className="font-black text-[#B32025]">{legacyData.length} rotas locais</span> armazenadas no navegador. Deseja importá-las para a Nuvem para acesso global em qualquer dispositivo?
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 shrink-0 justify-center w-full md:w-auto">
+          <div className="flex flex-wrap gap-2.5 shrink-0 justify-center w-full md:w-auto">
             <button 
               onClick={() => handleImportLegacy('merge')}
-              className="px-5 py-3.5 bg-[#3A2414] hover:bg-[#3A2414]/90 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm cursor-pointer border border-[#3A2414]"
+              className="px-6 py-3.5 bg-[#3A2414] hover:bg-[#2B180D] text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer border border-[#3A2414]"
             >
               Mesclar com Nuvem
             </button>
             <button 
               onClick={() => handleImportLegacy('replace')}
-              className="px-5 py-3.5 bg-[#B32025] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm cursor-pointer border-2 border-[#3A2414]/20"
+              className="px-6 py-3.5 bg-[#B32025] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer border-2 border-[#3A2414]/20"
             >
               Substituir Nuvem
             </button>
@@ -417,7 +401,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                 localStorage.removeItem('app_rotas_data');
                 setLegacyData(null);
               }}
-              className="px-5 py-3.5 bg-white hover:bg-stone-50 text-stone-700 border-2 border-[#3A2414]/15 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm cursor-pointer"
+              className="px-6 py-3.5 bg-white hover:bg-stone-100 text-stone-700 border-2 border-[#3A2414]/20 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm cursor-pointer"
             >
               Descartar
             </button>
@@ -426,7 +410,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
       )}
 
       {/* Main Content Card - Styled as a premium rustic board sheet */}
-      <div className="bg-[#fdfcf9]/85 backdrop-blur-md  border-4 border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-md relative overflow-hidden text-[#3A2414]">
+      <div className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden text-[#3A2414]">
         
         {/* Actions & Filters Bar */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -439,18 +423,18 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
               placeholder="PESQUISAR ROTA, CIDADE OU CÓDIGO SM..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border-2 border-[#3A2414]/15 focus:border-[#B32025] rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-[#3A2414] placeholder-stone-400 transition-all outline-none uppercase tracking-widest font-mono shadow-sm"
+              className="w-full bg-white border-2 border-[#3A2414]/20 focus:border-[#B32025] rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-[#3A2414] placeholder-stone-400 transition-all outline-none uppercase tracking-widest font-mono shadow-inner"
             />
           </div>
 
-          <div className="flex flex-wrap md:flex-nowrap gap-2">
+          <div className="flex flex-wrap md:flex-nowrap gap-3">
             {!isEditing ? (
               <>
                 <button 
                   onClick={handleStartEdit} 
-                  className="flex items-center gap-3 px-6 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-sm"
+                  className="flex items-center justify-center gap-2.5 px-6 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-md"
                 >
-                  <Edit2 size={16} /> Editar Configuração
+                  <Edit2 size={16} /> <span>Editar Rotas</span>
                 </button>
                 <button 
                   onClick={() => {
@@ -458,29 +442,30 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     setBackupStatus({ type: '', message: '' });
                     setBackupText('');
                   }} 
-                  className="flex items-center gap-3 px-6 py-4 bg-[#3A2414] hover:brightness-110 text-[#fbdba5] border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-sm"
+                  className="flex items-center justify-center gap-2.5 px-6 py-4 bg-[#3A2414] hover:bg-[#2B180D] text-[#EEDBC5] border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-md"
                   title="Fazer Backup ou Restaurar Rotas"
                 >
-                  <Database size={16} /> Sincronizar Backup
+                  <Database size={16} /> <span>Sincronizar Backup</span>
                 </button>
               </>
             ) : (
-              <div className="flex gap-2 w-full md:w-auto">
+              <div className="flex gap-2.5 w-full md:w-auto">
                 <button 
                   onClick={addRow} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#3A2414] hover:brightness-110 text-white border-2 border-[#3A2414]/20 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-sm"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#3A2414] hover:bg-[#2B180D] text-white border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-md"
                 >
-                  <Plus size={16} /> Adicionar
+                  <Plus size={16} /> <span>Adicionar</span>
                 </button>
                 <button 
                   onClick={handleSave} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/25 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-sm"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-md"
                 >
-                  <Save size={16} /> Salvar
+                  <Save size={16} /> <span>Salvar Alterações</span>
                 </button>
                 <button 
                   onClick={handleCancel} 
-                  className="p-4 bg-white hover:bg-stone-50 text-[#3A2414] border-2 border-[#3A2414]/15 rounded-2xl transition-all cursor-pointer shadow-sm"
+                  className="px-5 py-4 bg-white hover:bg-stone-100 text-[#3A2414] border-2 border-[#3A2414]/20 rounded-2xl transition-all cursor-pointer shadow-sm flex items-center justify-center"
+                  title="Cancelar"
                 >
                   <X size={18} />
                 </button>
@@ -489,7 +474,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
           </div>
         </div>
 
-        {/* Premium Responsive Route Cards Grid (Matches Attached Image) */}
+        {/* Premium Responsive Route Cards Grid */}
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
             {currentData.map((route) => {
@@ -503,66 +488,66 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                   onDragOver={(e: any) => handleDragOver(e, realIndex)}
                   onDragEnd={() => handleDragEnd()}
                   onDrop={(e: any) => handleDrop(e, realIndex)}
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   key={`${route.idaCod}-${route.voltaCod}-${realIndex}`} 
                   className={cn(
-                    "grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch p-1 rounded-3xl transition-all relative",
+                    "grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch p-1.5 rounded-[2.2rem] transition-all relative",
                     draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10" : "",
-                    hoveredIndex === realIndex ? "border-2 border-dashed border-[#B32025]/50 bg-[#B32025]/5" : ""
+                    hoveredIndex === realIndex ? "border-2 border-dashed border-[#B32025] bg-[#B32025]/5" : ""
                   )}
                 >
                   {/* CARD LEFT: IDA */}
-                  <div className="flex items-center gap-4 bg-[#FCFBF8] hover:bg-[#F8F5F0] border border-[#3A2414]/10 rounded-[2rem] p-2 pr-4 shadow-[0_2px_8px_rgba(58,36,20,0.02)] hover:shadow-[0_4px_16px_rgba(58,36,20,0.06)] transition-all group/card relative w-full">
+                  <div className="flex items-center gap-4 bg-white hover:bg-[#FAF6F0] border-2 border-[#3A2414]/15 rounded-[2rem] p-3.5 pr-5 shadow-sm hover:shadow-md transition-all group/card relative w-full">
                     {/* Six Dots Drag Handle */}
                     {!isEditing && (
                       <div 
-                        className="pl-2 pr-1 text-[#3A2414]/20 hover:text-[#B32025] cursor-grab active:cursor-grabbing shrink-0 transition-colors" 
+                        className="pl-1 pr-1 text-[#3A2414]/30 hover:text-[#B32025] cursor-grab active:cursor-grabbing shrink-0 transition-colors" 
                         title="Arraste para reordenar"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <GripVertical size={16} className="stroke-[2.5]" />
+                        <GripVertical size={18} className="stroke-[2.5]" />
                       </div>
                     )}
                     
                     {/* Brown button with right arrow (→) */}
-                    <div className="w-10 h-10 bg-[#B37C4E] text-white rounded-full flex items-center justify-center shrink-0 shadow-inner transition-transform duration-300 hover:scale-105">
-                      <ArrowRight size={16} className="stroke-[3]" />
+                    <div className="w-11 h-11 bg-[#B37C4E] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md transition-transform duration-300 group-hover/card:scale-105">
+                      <ArrowRight size={18} className="stroke-[3]" />
                     </div>
 
                     {/* Route Name Column */}
                     <div className="flex-1 min-w-0 pr-1">
                       {isEditing ? (
                         <div className="flex items-center gap-2">
-                          <MapPin size={13} className="text-[#B32025] shrink-0" />
+                          <MapPin size={14} className="text-[#B32025] shrink-0" />
                           <input 
                             value={route.ida} 
                             onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
-                            className="w-full bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-sm font-mono tracking-tight"
+                            className="w-full bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-inner font-mono tracking-tight"
                             placeholder="ORIGEM X DESTINO"
                           />
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[11px] lg:text-xs font-bold text-[#4a3322] uppercase tracking-wide break-words">
+                        <div className="flex items-center justify-between gap-3" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-xs lg:text-sm font-bold text-[#3A2414] uppercase tracking-wide break-words leading-snug">
                             {route.ida || '---'}
                           </span>
                           {route.ida && (
                             <button
                               onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
                               className={cn(
-                                "w-7 h-7 flex items-center justify-center rounded-full transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
+                                "w-8 h-8 flex items-center justify-center rounded-xl transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
                                 copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 text-green-600"
-                                  : "bg-white border border-[#3A2414]/5 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/20 hover:bg-[#B32025]/5 shadow-sm"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-[#FAF6F0] border border-[#3A2414]/10 text-[#3A2414]/50 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5 shadow-sm"
                               )}
                               title="Copiar nome da Rota (Ida)"
                             >
                               {copiedCode?.type === 'idaName' && copiedCode?.index === realIndex ? (
-                                <Check size={11} className="stroke-[3]" />
+                                <Check size={13} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={11} />
+                                <Clipboard size={13} />
                               )}
                             </button>
                           )}
@@ -571,37 +556,37 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     </div>
 
                     {/* Code Badge & Copy Code Button */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
                       {isEditing ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-[9px] font-black uppercase text-[#B32025] tracking-widest">Código</span>
                           <input 
                             value={route.idaCod} 
                             onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
-                            className="w-20 bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
+                            className="w-24 bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-inner"
                             placeholder="----"
                           />
                         </div>
                       ) : (
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="bg-[#FAF5F0] hover:bg-[#F2E8DE] text-[#3A2414] border border-[#3A2414]/10 px-4 py-1.5 rounded-full font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
+                          <div className="bg-[#FAF6F0] hover:bg-[#F2E8DE] text-[#3A2414] border-2 border-[#3A2414]/15 px-4 py-2 rounded-2xl font-mono text-xs font-black shadow-inner min-w-[76px] text-center transition-colors">
                             {route.idaCod || '—'}
                           </div>
                           {route.idaCod && (
                             <button
                               onClick={() => copyIndividualCode(route.idaCod, 'ida', realIndex)}
                               className={cn(
-                                "w-8 h-8 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer shadow-sm",
+                                "w-9 h-9 flex items-center justify-center rounded-2xl transition-all shrink-0 cursor-pointer shadow-sm",
                                 copiedCode?.type === 'ida' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border border-green-200 text-green-600"
-                                  : "bg-white border border-[#3A2414]/10 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                  ? "bg-green-100 border-2 border-green-300 text-green-700"
+                                  : "bg-[#FAF6F0] border-2 border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/40 hover:bg-[#B32025]/10"
                               )}
                               title="Copiar Código Ida"
                             >
                               {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
-                                <Check size={12} className="stroke-[3]" />
+                                <Check size={14} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={12} />
+                                <Clipboard size={14} />
                               )}
                             </button>
                           )}
@@ -613,53 +598,53 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     {isEditing && (
                       <button 
                         onClick={() => removeRow(realIndex)} 
-                        className="absolute -top-2 -left-2 w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 border border-red-200 text-red-700 rounded-full transition-all cursor-pointer shadow-sm z-10"
+                        className="absolute -top-2.5 -left-2.5 w-7 h-7 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-full transition-all cursor-pointer shadow-md z-10 border-2 border-white"
                         title="Excluir trecho"
                       >
-                        <X size={10} className="stroke-[2.5]" />
+                        <X size={12} className="stroke-[3]" />
                       </button>
                     )}
                   </div>
 
                   {/* CARD RIGHT: VOLTA */}
-                  <div className="flex items-center gap-4 bg-[#FCFBF8] hover:bg-[#F8F5F0] border border-[#3A2414]/10 rounded-[2rem] p-2 pr-4 shadow-[0_2px_8px_rgba(58,36,20,0.02)] hover:shadow-[0_4px_16px_rgba(58,36,20,0.06)] transition-all group/card relative w-full">
+                  <div className="flex items-center gap-4 bg-white hover:bg-[#FAF6F0] border-2 border-[#3A2414]/15 rounded-[2rem] p-3.5 pr-5 shadow-sm hover:shadow-md transition-all group/card relative w-full">
                     {/* Light beige button with left arrow (←) */}
-                    <div className="w-10 h-10 bg-[#EEDBC5] text-[#3A2414] rounded-full flex items-center justify-center shrink-0 shadow-inner transition-transform duration-300 hover:scale-105 ml-1">
-                      <ArrowRight size={16} className="stroke-[3] rotate-180" />
+                    <div className="w-11 h-11 bg-[#EEDBC5] text-[#3A2414] rounded-2xl flex items-center justify-center shrink-0 shadow-md transition-transform duration-300 group-hover/card:scale-105 border border-[#3A2414]/20">
+                      <ArrowRight size={18} className="stroke-[3] rotate-180" />
                     </div>
 
                     {/* Route Name Column */}
                     <div className="flex-1 min-w-0 pr-1">
                       {isEditing ? (
                         <div className="flex items-center gap-2">
-                          <MapPin size={13} className="text-[#B32025] shrink-0" />
+                          <MapPin size={14} className="text-[#B32025] shrink-0" />
                           <input 
                             value={route.volta} 
                             onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
-                            className="w-full bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-sm font-mono tracking-tight"
+                            className="w-full bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-inner font-mono tracking-tight"
                             placeholder="ORIGEM X DESTINO"
                           />
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[11px] lg:text-xs font-bold text-[#4a3322] uppercase tracking-wide break-words">
+                        <div className="flex items-center justify-between gap-3" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-xs lg:text-sm font-bold text-[#3A2414] uppercase tracking-wide break-words leading-snug">
                             {route.volta || '---'}
                           </span>
                           {route.volta && (
                             <button
                               onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
                               className={cn(
-                                "w-7 h-7 flex items-center justify-center rounded-full transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
+                                "w-8 h-8 flex items-center justify-center rounded-xl transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
                                 copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 text-green-600"
-                                  : "bg-white border border-[#3A2414]/5 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/20 hover:bg-[#B32025]/5 shadow-sm"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-[#FAF6F0] border border-[#3A2414]/10 text-[#3A2414]/50 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5 shadow-sm"
                               )}
                               title="Copiar nome da Rota (Volta)"
                             >
                               {copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex ? (
-                                <Check size={11} className="stroke-[3]" />
+                                <Check size={13} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={11} />
+                                <Clipboard size={13} />
                               )}
                             </button>
                           )}
@@ -668,37 +653,37 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     </div>
 
                     {/* Code Badge & Copy Code Button */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
                       {isEditing ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-[9px] font-black uppercase text-[#B32025] tracking-widest">Código</span>
                           <input 
                             value={route.voltaCod} 
                             onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
-                            className="w-20 bg-white p-2.5 rounded-xl border border-[#3A2414]/15 text-[11px] text-[#312c27] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-sm"
+                            className="w-24 bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-inner"
                             placeholder="----"
                           />
                         </div>
                       ) : (
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="bg-[#FAF5F0] hover:bg-[#F2E8DE] text-[#3A2414] border border-[#3A2414]/10 px-4 py-1.5 rounded-full font-mono text-xs font-bold shadow-inner min-w-[70px] text-center transition-colors">
+                          <div className="bg-[#FAF6F0] hover:bg-[#F2E8DE] text-[#3A2414] border-2 border-[#3A2414]/15 px-4 py-2 rounded-2xl font-mono text-xs font-black shadow-inner min-w-[76px] text-center transition-colors">
                             {route.voltaCod || '—'}
                           </div>
                           {route.voltaCod && (
                             <button
                               onClick={() => copyIndividualCode(route.voltaCod, 'volta', realIndex)}
                               className={cn(
-                                "w-8 h-8 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer shadow-sm",
+                                "w-9 h-9 flex items-center justify-center rounded-2xl transition-all shrink-0 cursor-pointer shadow-sm",
                                 copiedCode?.type === 'volta' && copiedCode?.index === realIndex
-                                  ? "bg-green-50 border border-green-200 text-green-600"
-                                  : "bg-white border border-[#3A2414]/10 text-[#3A2414]/40 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5"
+                                  ? "bg-green-100 border-2 border-green-300 text-green-700"
+                                  : "bg-[#FAF6F0] border-2 border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/40 hover:bg-[#B32025]/10"
                               )}
                               title="Copiar Código Volta"
                             >
                               {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
-                                <Check size={12} className="stroke-[3]" />
+                                <Check size={14} className="stroke-[3]" />
                               ) : (
-                                <Clipboard size={12} />
+                                <Clipboard size={14} />
                               )}
                             </button>
                           )}
@@ -712,21 +697,21 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
           </AnimatePresence>
 
           {currentData.length === 0 && (
-            <div className="p-20 text-center bg-white rounded-3xl border border-[#3A2414]/15">
-              <Database className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-              <p className="text-xs font-black text-stone-400 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
+            <div className="p-20 text-center bg-white rounded-3xl border-2 border-dashed border-[#3A2414]/20">
+              <Database className="w-12 h-12 text-[#3A2414]/30 mx-auto mb-4" />
+              <p className="text-xs font-black text-[#3A2414]/60 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
             </div>
           )}
         </div>
 
         {/* Destructive Action */}
         {isEditing && (
-          <div className="mt-8 pt-8 border-t-2 border-[#3A2414]/10 flex justify-center">
+          <div className="mt-10 pt-8 border-t-2 border-[#3A2414]/15 flex justify-center">
             <button 
               onClick={clearAll} 
-              className="px-6 py-3 bg-red-50 text-red-800 hover:bg-red-100 border-2 border-red-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm"
+              className="px-8 py-4 bg-red-100 text-red-900 hover:bg-red-200 border-2 border-red-300 rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-md flex items-center gap-2"
             >
-              Resetar Base de Dados de Rotas
+              <Trash2 size={16} /> Resetar Base de Dados de Rotas
             </button>
           </div>
         )}
