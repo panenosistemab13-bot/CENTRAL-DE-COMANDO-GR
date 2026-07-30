@@ -395,6 +395,9 @@ export interface OrdemColetaItem {
   tecnologia?: string;
   pallets?: string;
   toneladas?: string;
+  categoria?: string;
+  m3?: string;
+  vigenciaCadastro?: string;
 }
 
 const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [];
