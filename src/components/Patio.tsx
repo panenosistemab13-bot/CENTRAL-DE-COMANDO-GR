@@ -604,11 +604,6 @@ export default function Patio({ onBack }: PatioProps) {
       console.log("Texto extraído do PDF:", text);
 
       // Helper functions for extraction
-      const extractDate = () => {
-        const match = text.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-        return match ? match[1] : '';
-      };
-
       const extractCPF = () => {
         const match = text.match(/\b\d{11}\b/);
         return match ? match[0] : '';
@@ -619,9 +614,14 @@ export default function Patio({ onBack }: PatioProps) {
         return matches.find(m => m !== excludeCpf) || '';
       };
 
-      const extractPlacas = () => {
-        const regex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/g;
-        return text.match(regex) || [];
+      const extractPlacasComUF = () => {
+        const regex = /([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\s+([A-Z]{2})/g;
+        const results = [];
+        let m;
+        while ((m = regex.exec(text)) !== null) {
+          results.push({ placa: m[1], uf: m[2] });
+        }
+        return results;
       };
 
       const extractPhone = () => {
@@ -630,105 +630,91 @@ export default function Patio({ onBack }: PatioProps) {
       };
 
       const extractPallets = () => {
-        // Look for capacity pallets which is usually a 2-digit number after/near headers
-        const match = text.match(/CAPACIDADE PALLETS.*?(\d{1,2})/i);
-        if (match) return match[1];
-        // fallback search for 28 in the block TRUCADO BAU 28 30
         const blockMatch = text.match(/(?:TRUCADO|TOCO|SIMPLES)\s+(?:BAU|SIDER|GRADE)\s+(\d{1,2})\s+(\d{1,2})/i);
         return blockMatch ? blockMatch[1] : '';
       };
 
       const extractToneladas = () => {
-        const match = text.match(/CAPACIDADE TONELADAS.*?(\d{1,2})/i);
-        if (match) return match[1];
         const blockMatch = text.match(/(?:TRUCADO|TOCO|SIMPLES)\s+(?:BAU|SIDER|GRADE)\s+(\d{1,2})\s+(\d{1,2})/i);
         return blockMatch ? blockMatch[2] : '';
       };
 
       const extractRG = () => {
         const match = text.match(/\b[A-Z0-9]{7,10}\b/g) || [];
-        // RG usually starts with a letter or has 7-9 digits, and is NOT a placa or CNH/CPF
         const placaRegex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/;
         return match.find(m => m.length >= 7 && m.length <= 10 && !placaRegex.test(m) && isNaN(Number(m))) || 
                match.find(m => m.length >= 7 && m.length <= 9 && !placaRegex.test(m)) || '';
       };
 
-      // Mapeamento
-      const dataStr = extractDate();
-      const transportador = text.includes('TRANSMAGNA') ? 'TRANSMAGNA' : '';
-      const origem = text.match(/SANTA LUZIA\s+MG/i) ? 'SANTA LUZIA MG' : '';
-      const destino = text.match(/GUARULHOS\s+SP/i) ? 'GUARULHOS SP' : '';
+      const extractVinculo = () => {
+        if (text.includes('FROTA')) return 'FROTA';
+        if (text.includes('AGREGADO')) return 'AGREGADO';
+        if (text.includes('TERCEIRO')) return 'TERCEIRO';
+        return '';
+      };
+
+      // Mapping logic
+      const now = new Date();
+      const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+      const currentMes = `${months[now.getMonth()]}|${now.getFullYear().toString().slice(-2)}`;
+
+      const transportadorMatch = text.match(/TRANSPORTADOR\s+([A-Z\s]{3,})\s+DATA/i);
+      const transportador = transportadorMatch ? transportadorMatch[1].trim().toUpperCase() : (text.includes('TRANSMAGNA') ? 'TRANSMAGNA' : '');
+      
+      const destinoMatch = text.match(/FILIAL DE DESTINO\s+([A-Z\s]{3,})\s+AGENDA/i);
+      const destino = destinoMatch ? destinoMatch[1].trim().toUpperCase() : (text.match(/GUARULHOS\s+SP/i) ? 'GUARULHOS SP' : '');
       
       const cpf = extractCPF();
       const motoristaNameMatch = text.match(new RegExp(`([A-Z\\s]{10,})\\s+${cpf}`, 'i'));
       const motorista = motoristaNameMatch ? motoristaNameMatch[1].trim().toUpperCase() : '';
       
-      const placas = extractPlacas();
-      const cavalo = (placas[0] || '').toUpperCase();
-      const carreta = (placas[1] || '').toUpperCase();
-      const segundaCarreta = (placas[2] || '').toUpperCase();
+      const placasComUf = extractPlacasComUF();
+      const cavaloData = placasComUf[0] || { placa: '', uf: '' };
+      const carretaData = placasComUf[1] || { placa: '', uf: '' };
+      const segundaCarretaData = placasComUf[2] || { placa: '', uf: '' };
       
       const modeloCavalo = text.includes('TRUCADO') ? 'TRUCADO' : text.includes('TOCO') ? 'TOCO' : '';
       const modeloCarreta = text.includes('BAU') ? 'BAU' : text.includes('SIDER') ? 'SIDER' : '';
       const tecnologia = text.includes('SIGHRA') ? 'SIGHRA' : text.includes('AUTOTRAC') ? 'AUTOTRAC' : text.includes('ONIXSAT') ? 'ONIXSAT' : '';
       
-      const getMesAbreviado = (d: string) => {
-        if (!d) return 'JUL|26';
-        const p = d.split('/');
-        if (p.length < 3) return 'JUL|26';
-        const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-        const m = parseInt(p[1], 10) - 1;
-        const y = p[2].slice(-2);
-        return `${months[m]}|${y}`;
-      };
-
-      const getDiaSemana = (d: string) => {
-        if (!d) return 'sexta-feira';
-        const p = d.split('/');
-        if (p.length < 3) return 'sexta-feira';
-        const date = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
-        const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-        return days[date.getDay()];
-      };
-
       const ocRef = ref(db, 'patio/ordem_coleta');
       
       const row1Data: Partial<OrdemColetaItem> = {
-        mes: getMesAbreviado(dataStr),
-        origem: origem || 'SANTA LUZIA MG',
-        dia: getDiaSemana(dataStr),
-        data: dataStr || '24/07/2026',
-        contatoWhats: 'X',
-        horaLiberado: '08:00:00',
-        status: 'LIBERADO CARREGAMENTO',
+        mes: currentMes,
+        origem: '',
+        dia: '',
+        data: '',
+        contatoWhats: '',
+        horaLiberado: '',
+        status: 'REALIZAR IMPRESSAO',
         modeloCarreta: (modeloCarreta || 'BAU').toUpperCase(),
         modeloCavalo: (modeloCavalo || 'TRUCADO').toUpperCase(),
-        fezContato: 'SIM',
-        destino: destino || 'GUARULHOS SP',
-        transportador: transportador || 'TRANSMAGNA',
-        cavalo: cavalo,
-        carreta: carreta,
+        fezContato: 'NAO',
+        destino: destino,
+        transportador: transportador,
+        cavalo: cavaloData.placa.toUpperCase(),
+        carreta: carretaData.placa.toUpperCase(),
         pallets: extractPallets() || '28',
         pbtTon: extractToneladas() || '30',
         m3: '',
-        categoria: 'FROTA',
+        categoria: extractVinculo().toUpperCase() || 'FROTA',
         tecnologia: (tecnologia || 'SIGHRA').toUpperCase(),
         condutor: motorista,
         cpf: cpf,
         rgSap: extractRG(),
         cnh: extractCNH(cpf),
         telefone: extractPhone(),
-        vigenciaCadastro: 'SEGURO PROPRIO',
+        vigenciaCadastro: '',
         codigoTransportadora: '',
         idCargaLacre: '',
-        estadoMotorista: 'SC',
-        estadoCavalo: 'SC',
-        estadoCarreta: 'SC',
+        estadoMotorista: '',
+        estadoCavalo: cavaloData.uf.toUpperCase(),
+        estadoCarreta: carretaData.uf.toUpperCase(),
         pendencia: '',
-        checkList: 'OK',
-        vencido: 'NÃO',
-        dias: '180',
-        segundaCarreta: segundaCarreta,
+        checkList: '',
+        vencido: '',
+        dias: '',
+        segundaCarreta: segundaCarretaData.placa.toUpperCase(),
         inseridoEm: new Date().toISOString()
       };
 
@@ -737,22 +723,11 @@ export default function Patio({ onBack }: PatioProps) {
 
       const createdItems: OrdemColetaItem[] = [{ id: newItem1Ref.key || '1', ...row1Data } as OrdemColetaItem];
 
-      if (segundaCarreta) {
-        const row2Data = {
-          ...row1Data,
-          carreta: segundaCarreta,
-          segundaCarreta: ''
-        };
-        const newItem2Ref = push(ocRef);
-        await set(newItem2Ref, row2Data);
-        createdItems.push({ id: newItem2Ref.key || '2', ...row2Data } as OrdemColetaItem);
-      }
-
       setLastImportedOrdemColetaItems(createdItems);
       setOrdemColetaPdfFile(null);
       setOrdemColetaStatusMsg({
         type: 'success',
-        text: `Ordem de Coleta importada com sucesso! ${createdItems.length === 2 ? '2 linhas geradas (Placa Carreta 1 e 2)' : '1 linha gerada'}.`
+        text: `Ordem de Coleta importada com sucesso! 1 linha gerada.`
       });
       setTimeout(() => setOrdemColetaStatusMsg(null), 6000);
 
