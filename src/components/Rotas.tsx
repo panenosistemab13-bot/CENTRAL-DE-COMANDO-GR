@@ -300,7 +300,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] p-4 md:p-8 space-y-6 md:space-y-8 pb-32 text-[#3A2414]">
+    <div className="min-h-full bg-transparent p-0 space-y-6 md:space-y-8 pb-32 text-[#3A2414]">
       {onBack && (
         <button 
           onClick={onBack}
@@ -337,20 +337,20 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
             </div>
 
             <div className="text-center md:text-left space-y-2">
-              <h1 className="text-3xl md:text-4xl font-serif font-black text-[#3A2414] tracking-tight leading-tight">
-                Edição Rústica Sofisticada
+              <h1 className="text-3xl md:text-4xl font-serif font-black text-[#3A2414] tracking-tight leading-tight uppercase">
+                Gestão de Rotas
               </h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
                 <span className="font-mono text-xs text-[#B32025] font-black uppercase tracking-widest">
-                  CAFÉ EM GRÃOS SELECIONADOS
+                  CONTROLE DE CÓDIGOS SM
                 </span>
                 <span className="text-[#3A2414]/30">•</span>
                 <span className="font-serif italic text-xs text-[#3A2414]/80">
-                  Composição de Estúdio "3corações"
+                  Sincronização em Tempo Real
                 </span>
               </div>
               <p className="text-xs text-[#3A2414]/80 leading-relaxed max-w-xl font-medium">
-                Cata de texturas artesanais de café: juta, papel kraft, cobre polido, gotejador de cobre, caneca de cerâmica rústica, folhas de café frescas e o selo de cera vermelho-escura.
+                Gerenciamento centralizado de trechos de Ida e Volta, permitindo a edição, reordenação e sincronização de códigos SM para otimização logística.
               </p>
             </div>
           </div>
@@ -499,10 +499,10 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                 <motion.div 
                   layout
                   draggable={!isEditing}
-                  onDragStart={(e) => handleDragStart(e, realIndex)}
-                  onDragOver={(e) => handleDragOver(e, realIndex)}
-                  onDragEnd={handleDragEnd}
-                  onDrop={(e) => handleDrop(e, realIndex)}
+                  onDragStart={(e: any) => handleDragStart(e, realIndex)}
+                  onDragOver={(e: any) => handleDragOver(e, realIndex)}
+                  onDragEnd={() => handleDragEnd()}
+                  onDrop={(e: any) => handleDrop(e, realIndex)}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}

@@ -460,7 +460,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
           {/* Inner padded container for top content */}
           <div className="p-6 pb-4">
             {/* Header: Logo & Title */}
-            <div className="flex items-center gap-4">
+            <div className="hidden items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-[#B32025] border-2 border-[#D4AF37] flex items-center justify-center shrink-0 relative shadow-lg">
                 {/* Simulated 3 Corações Logo */}
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -471,10 +471,6 @@ export default function PresenceList({ onBack }: PresenceListProps) {
               </div>
               <div>
                 <h2 className="text-white font-serif text-2xl tracking-wide font-bold">LISTA DE PRESENÇA</h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-                  <span className="text-[#a27a5d] text-[10px] font-bold tracking-widest uppercase">MÓDULO ATIVO</span>
-                </div>
               </div>
             </div>
 

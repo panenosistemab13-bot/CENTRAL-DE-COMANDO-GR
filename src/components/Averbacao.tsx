@@ -15,8 +15,8 @@ import {
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
 import mockupImg from '../assets/images/averba_o_interface_mockup_1780899726248.png';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { ref, get, set } from 'firebase/database';
+import { rtdb as db, handleDatabaseError, OperationType } from '../firebase';
 
 interface RawData {
   dataAverbacao: string;
@@ -88,10 +88,10 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
       }
 
       try {
-        const docRef = doc(db, DATA_PATH);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        const dbRef = ref(db, DATA_PATH);
+        const snapshot = await get(dbRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
           if (data.parsedRows) setParsedRows(data.parsedRows);
           if (data.extraData) setExtraData(data.extraData);
           // Sync back to local backup
@@ -107,7 +107,8 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
           }));
         }
       } catch (error) {
-        console.warn("Firestore offline or inaccessible. Operating with local backup:", error);
+        console.warn("Database offline or inaccessible. Operating with local backup:", error);
+        handleDatabaseError(error, OperationType.GET, DATA_PATH);
       }
     };
     fetchData();
@@ -121,9 +122,10 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
     localStorage.setItem('backup_averbacao_data', JSON.stringify({ parsedRows: rows, extraData: extra }));
 
     try {
-      await setDoc(doc(db, DATA_PATH), { parsedRows: rows, extraData: extra });
+      await set(ref(db, DATA_PATH), { parsedRows: rows, extraData: extra });
     } catch (error) {
-      console.warn("Failed to sync with Firestore (client might be offline):", error);
+      console.warn("Failed to sync with Database (client might be offline):", error);
+      handleDatabaseError(error, OperationType.WRITE, DATA_PATH);
     }
   };
 
@@ -307,11 +309,10 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
           </button>
         )}
 
-        <div className="flex items-center gap-3 mb-6 bg-[#3A2414] p-4 rounded-xl border border-[#C7A26A]">
+        <div className="hidden items-center gap-3 mb-6 bg-[#3A2414] p-4 rounded-xl border border-[#C7A26A]">
           <div className="w-12 h-12 bg-[#B32025] rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/20">3</div>
           <div>
             <h1 className="font-bold text-sm text-[#F2E4CC] tracking-widest uppercase">AVERBAÇÃO</h1>
-            <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> MÓDULO ATIVO</p>
           </div>
         </div>
         

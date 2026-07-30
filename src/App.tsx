@@ -56,7 +56,7 @@ import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principle
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 
-type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle';
+type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -67,7 +67,9 @@ const backgroundImages: Record<Tab, string> = {
   rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
   patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
   checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
-  controle: '/images/bg_presence.jpg'
+  controle: '/images/bg_presence.jpg',
+  envio: '',
+  iscas: ''
 };
 
 const tabs = [
@@ -371,66 +373,72 @@ export default function App() {
         
         {/* Top Header (Only on active modules) */}
         {activeTab !== 'menu' && (
-          <header className="h-20 shrink-0 flex items-center justify-between px-8 z-50 relative pointer-events-none">
-            <div className={cn("hidden md:flex items-center gap-6 w-1/4 pointer-events-auto", activeTab === 'averbacao' ? "opacity-0 invisible" : "")}>
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#cead80] bg-[#800609] flex items-center justify-center shrink-0 shadow-lg shadow-black/30">
-                  <img src="/logo-pgr.png" alt="Logo" className="w-full h-full object-cover scale-105" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-2xl font-black tracking-widest text-[#3A2414] leading-none font-serif">SISTEMA PGR</span>
-                  <span className="text-[10px] font-black text-[#B32025] uppercase tracking-[0.2em] mt-1.5 leading-none">
-                    SANTA LUZIA / MG
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Centered Navigation */}
-            <div className="flex-1 hidden lg:flex justify-center pointer-events-auto">
+          <header className="py-3 shrink-0 flex items-center justify-center px-4 sm:px-8 z-50 relative pointer-events-none w-full">
+            {/* Centered Navigation Dock */}
+            <div className="flex items-center justify-center pointer-events-auto max-w-full overflow-x-auto no-scrollbar py-1">
               <AnimatePresence>
                 <motion.nav 
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
-                  className="flex items-center gap-2 p-1.5 bg-[#3A2414] border-2 border-[#C7A26A]/50 rounded-2xl shadow-xl relative"
+                  className="flex items-center gap-2 px-3.5 py-2 bg-[#24160E] border-2 border-[#543b28] rounded-full shadow-[0_12px_32px_rgba(0,0,0,0.85)] relative select-none"
                 >
-                  {/* Miniature decorative brass rivets */}
-                  <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-gradient-to-br from-[#dfc1a0] to-[#3a200a] shadow-md border border-[#C7A26A]/40" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-gradient-to-br from-[#dfc1a0] to-[#3a200a] shadow-md border border-[#C7A26A]/40" />
-                  <div className="absolute -bottom-1 -left-1 w-2 h-2 rounded-full bg-gradient-to-br from-[#dfc1a0] to-[#3a200a] shadow-md border border-[#C7A26A]/40" />
-                  <div className="absolute -bottom-1 -right-1 w-2 h-2 rounded-full bg-gradient-to-br from-[#dfc1a0] to-[#3a200a] shadow-md border border-[#C7A26A]/40" />
+                  {/* Decorative corner metallic rivets */}
+                  <div className="absolute top-1 left-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
+                    <div className="w-1.5 h-[1px] bg-[#221004] rotate-45" />
+                  </div>
+                  <div className="absolute bottom-1 left-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
+                    <div className="w-1.5 h-[1px] bg-[#221004] rotate-45" />
+                  </div>
+                  <div className="absolute top-1 right-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
+                    <div className="w-1.5 h-[1px] bg-[#221004] -rotate-45" />
+                  </div>
+                  <div className="absolute bottom-1 right-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
+                    <div className="w-1.5 h-[1px] bg-[#221004] -rotate-45" />
+                  </div>
 
+                  {/* First button: LayoutGrid inside rounded square pill container */}
                   <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveTab('menu')}
-                    className="p-2.5 rounded-xl bg-white/5 hover:bg-[#6B4423] text-[#C7A26A] hover:text-white transition-all border border-transparent hover:border-white/5"
+                    className={cn(
+                      "p-3 rounded-2xl transition-all duration-200 relative group flex items-center justify-center",
+                      (activeTab as string) === 'menu'
+                        ? "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30"
+                        : "bg-[#3d2719] text-[#e0ba85] hover:bg-[#4d3220] hover:text-[#f5d5aa]"
+                    )}
                   >
-                    <LayoutGrid size={20} />
+                    <LayoutGrid size={21} strokeWidth={(activeTab as string) === 'menu' ? 2.5 : 2} />
+                    {/* Tooltip */}
+                    <div className="absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#24160E] border border-[#543b28] rounded-xl text-[9px] font-extrabold uppercase tracking-widest text-[#fdefd1] shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
+                      Início
+                    </div>
                   </motion.button>
                   
-                  <div className="w-[1px] h-6 bg-[#C7A26A]/20 mx-1" />
+                  {/* Vertical Divider */}
+                  <div className="w-[1px] h-7 bg-[#543b29]/90 mx-1 shrink-0" />
 
+                  {/* Module Icons */}
                   {visibleTabs.filter(t => t.id !== 'menu').map((tab) => {
                     const isActive = activeTab === tab.id;
                     return (
                       <motion.button
                         key={tab.id}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={cn(
-                          "relative p-2.5 rounded-xl transition-all duration-300 group",
+                          "relative p-3 rounded-2xl transition-all duration-200 group flex items-center justify-center",
                           isActive 
-                            ? "bg-[#B32025] text-white shadow-[0_4px_12px_rgba(179,32,37,0.35)] border border-[#ff3e47]/20" 
-                            : "text-[#C7A26A] hover:bg-[#6B4423]/50 hover:text-[#fddcb4]"
+                            ? "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30" 
+                            : "bg-transparent text-[#e0ba85] hover:bg-[#3d2719] hover:text-[#f5d5aa]"
                         )}
                       >
-                        <tab.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                        <tab.icon size={21} strokeWidth={isActive ? 2.5 : 2} />
                         
                         {/* Tooltip */}
-                        <div className="absolute top-14 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-[#3A2414] border border-[#C7A26A]/30 rounded-lg text-[8px] font-black uppercase tracking-widest text-[#fdefd1] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg">
+                        <div className="absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#24160E] border border-[#543b28] rounded-xl text-[9px] font-extrabold uppercase tracking-widest text-[#fdefd1] shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
                           {tab.label}
                         </div>
                       </motion.button>
@@ -440,7 +448,8 @@ export default function App() {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center justify-end gap-8 w-1/4 pointer-events-auto">
+            {/* Right side widgets pinned absolute right */}
+            <div className="absolute right-8 hidden xl:flex items-center gap-4 pointer-events-auto">
                {/* Dynamic Breadcrumb */}
                <AnimatePresence>
                  <motion.div 
@@ -653,31 +662,7 @@ export default function App() {
             "w-full max-w-[102rem] mx-auto relative z-10 flex flex-col transition-all duration-500",
             activeTab === 'menu' ? "h-full p-0" : "min-h-full p-4 sm:p-6 md:p-8"
           )}>
-            {activeTab !== 'menu' && activeTab !== 'patio' && activeTab !== 'presence' && activeTab !== 'averbacao' && (
-               <motion.div 
-                 initial={{ y: -20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6"
-               >
-                 <div>
-                   <h2 className="text-4xl sm:text-5xl font-black text-[#3A2414] tracking-tight uppercase mb-2 font-serif filter drop-shadow-[0_1.5px_1.5px_rgba(255,255,255,0.85)]">
-                     {activeTabInfo?.label}
-                   </h2>
-                   <p className="text-[#6B4423]/80 text-xs sm:text-sm font-black tracking-widest uppercase">{activeTabInfo?.id === 'menu' ? 'Navegação Central' : 'Módulo Ativo'}</p>
-                 </div>
 
-                 {isMobile && (
-                   <motion.button
-                     whileTap={{ scale: 0.95 }}
-                     onClick={() => setActiveTab('menu')}
-                     className="flex items-center justify-center gap-3 px-6 py-4 bg-[#B32025] hover:bg-[#8c060a] border-2 border-[#8c060a] rounded-2xl text-white font-black uppercase text-[10px] tracking-widest shadow-lg transition-all cursor-pointer"
-                   >
-                     <LayoutGrid size={18} className="text-white" />
-                     <span>Voltar ao Menu</span>
-                   </motion.button>
-                 )}
-               </motion.div>
-            )}
 
             <AnimatePresence mode="wait">
               <motion.div

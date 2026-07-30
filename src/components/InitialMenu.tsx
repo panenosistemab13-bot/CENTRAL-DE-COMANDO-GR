@@ -414,7 +414,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[84rem] mx-auto mt-2">
         
         {/* TOP LEFT HEADER: MÓDULO ATIVO RED BRAND SEAL AND LABEL */}
-        <div className="flex items-center gap-2.5 bg-black/10 backdrop-blur-md rounded-full py-1 pl-1 pr-4.5 border border-white/5 shadow-2xl backdrop-saturate-150 relative transition-transform duration-300 hover:scale-[1.02]">
+        <div className="hidden flex items-center gap-2.5 bg-black/10 backdrop-blur-md rounded-full py-1 pl-1 pr-4.5 border border-white/5 shadow-2xl backdrop-saturate-150 relative transition-transform duration-300 hover:scale-[1.02]">
           <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#cead80] bg-[#800609] flex items-center justify-center shrink-0 shadow-lg shadow-black/40">
             <img 
               src={toAbsoluteUrl(coffeeLogo)} 

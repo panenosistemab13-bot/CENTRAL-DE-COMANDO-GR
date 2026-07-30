@@ -152,7 +152,7 @@ export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenc
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.08, duration: 0.45, ease: "easeOut" }}
-              whileActive={{ scale: 0.98 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => onSelect(item.id)}
               className={cn(
                 "w-full h-[72px] rounded-2.5xl flex items-center justify-between px-4 cursor-pointer select-none relative group overflow-hidden border border-black/35 shadow-lg active:scale-95",

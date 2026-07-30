@@ -25,7 +25,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
-import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
+import { rtdb as db, handleDatabaseError, OperationType } from '../firebase';
 
 interface PatioProps {
   onBack?: () => void;
@@ -924,7 +924,7 @@ export default function Patio({ onBack }: PatioProps) {
       }
       setPatioData(items);
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'patio/veiculos');
+      handleDatabaseError(error, OperationType.LIST, 'patio/veiculos');
     });
 
     return () => unsubscribe();
@@ -1415,7 +1415,7 @@ export default function Patio({ onBack }: PatioProps) {
     try {
       await update(ref(db, `patio/veiculos/${id}`), { [field]: value });
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `patio/veiculos/${id}`);
+      handleDatabaseError(error, OperationType.UPDATE, `patio/veiculos/${id}`);
     }
   };
 
@@ -1423,7 +1423,7 @@ export default function Patio({ onBack }: PatioProps) {
     try {
       await remove(ref(db, `patio/veiculos/${id}`));
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `patio/veiculos/${id}`);
+      handleDatabaseError(error, OperationType.DELETE, `patio/veiculos/${id}`);
     }
   };
 
@@ -1435,7 +1435,7 @@ export default function Patio({ onBack }: PatioProps) {
       setStatusMsg({ type: 'success', text: 'Todos os dados foram limpos.' });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch(err) {
-      handleFirestoreError(err, OperationType.DELETE, 'patio/veiculos');
+      handleDatabaseError(err, OperationType.DELETE, 'patio/veiculos');
     }
   };
 
@@ -1929,7 +1929,7 @@ export default function Patio({ onBack }: PatioProps) {
     <div className="w-full min-h-full text-[#2b180d] relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden select-none">
       
        {/* ================= HEADER AREA ================= */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
+      <div className="hidden w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
         
         {/* Left title and logo stack */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 text-left w-full md:w-auto">
@@ -1974,12 +1974,6 @@ export default function Patio({ onBack }: PatioProps) {
               <h1 className="text-3xl font-rustic-title font-black text-[#2b180d] uppercase tracking-wide leading-none drop-shadow-[1px_2px_1px_rgba(255,255,255,0.45)]">
                 PÁTIO
               </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-600 border border-[#fefdfa] animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.7)]" />
-                <span className="text-xs font-mono font-black text-[#5c3c24] uppercase tracking-widest pl-0.5">
-                  MÓDULO ATIVO
-                </span>
-              </div>
             </div>
           </div>
         </div>

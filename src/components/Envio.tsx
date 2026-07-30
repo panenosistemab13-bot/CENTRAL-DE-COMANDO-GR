@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, CheckCircle2, Copy, Loader2, ImagePlus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, remove, push, update } from 'firebase/database';
 
@@ -325,8 +326,33 @@ export default function Envio() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto flex flex-col gap-8 h-full pb-10">
+    <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 h-full pb-10 font-sans">
       
+      {/* Office Header Banner */}
+      <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-sm border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 bg-blue-600 text-white rounded-xl shadow-xs">
+            <UploadCloud size={24} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-extrabold text-white uppercase tracking-wider font-sans">
+                Gerenciador de Pré-Alertas
+              </h2>
+              <span className="text-[10px] font-extrabold bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded-md border border-blue-700">
+                ESCRITÓRIO
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 font-medium">
+              Importação de pranchetas, extração automática via IA e geração de tabelas para e-mail
+            </p>
+          </div>
+        </div>
+        <div className="text-right text-xs text-slate-400 font-mono font-bold bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
+          LOGÍSTICA & MONITORAMENTO
+        </div>
+      </div>
+
       {/* Upload Zone */}
       <div 
         onDragEnter={handleDrag}
@@ -334,10 +360,10 @@ export default function Envio() {
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => !isProcessing && fileInputRef.current?.click()}
-        className={`w-full flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-3xl cursor-pointer transition-all ${
+        className={`w-full flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
           isDragging 
-            ? 'border-indigo-500 bg-indigo-500/10' 
-            : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+            ? 'border-blue-600 bg-blue-50/80 shadow-md' 
+            : 'border-slate-300 bg-white hover:bg-slate-50 hover:border-slate-400 shadow-xs'
         } ${isProcessing ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <input 
@@ -349,18 +375,18 @@ export default function Envio() {
         />
         
         {isProcessing ? (
-          <div className="flex flex-col items-center gap-4 text-indigo-400">
-             <Loader2 className="w-12 h-12 animate-spin" />
-             <p className="font-bold uppercase tracking-widest text-sm drop-shadow">Processando arquivo com IA...</p>
+          <div className="flex flex-col items-center gap-3 text-blue-600">
+             <Loader2 className="w-10 h-10 animate-spin" />
+             <p className="font-extrabold uppercase tracking-wider text-xs">Processando documento com Inteligência Artificial...</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 text-zinc-400">
-             <div className="p-4 rounded-full bg-white/5 shadow-inner">
-               <UploadCloud className="w-10 h-10" />
+          <div className="flex flex-col items-center gap-3 text-slate-600">
+             <div className="p-3.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+               <UploadCloud className="w-8 h-8" />
              </div>
              <div className="text-center">
-               <p className="text-white font-bold select-none uppercase tracking-wide">Importar prancheta ou documento</p>
-               <p className="text-sm select-none">Clique ou arraste imagem ou PDF aqui</p>
+               <p className="text-slate-900 font-extrabold uppercase tracking-wide text-xs">Importar prancheta ou documento PDF</p>
+               <p className="text-xs text-slate-500 font-medium mt-0.5">Arraste a imagem/PDF aqui ou clique para selecionar do computador</p>
              </div>
           </div>
         )}
@@ -369,32 +395,43 @@ export default function Envio() {
       {/* Results */}
       <AnimatePresence>
         {groupedData && groupedData.map((group, index) => {
-          const nfStr = group.nfs.join(' - ');
           return (
             <motion.div 
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
+              key={group.id || index}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full flex-col p-6 rounded-[2rem] bg-zinc-900 border border-white/10 shadow-2xl relative"
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="w-full flex flex-col p-6 rounded-2xl bg-white border border-slate-200 shadow-sm relative font-sans"
             >
-              <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                <div>
-                   <h3 className="text-xl font-black text-white uppercase display flex items-center gap-2">
-                     <ImagePlus className="w-5 h-5 text-indigo-400" /> Pré Alerta: {group.cavalo}
-                   </h3>
-                   <p className="text-xs text-zinc-500 uppercase tracking-widest">Edite os campos abaixo antes de copiar</p>
+              {/* Card Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-b border-slate-100 pb-4 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-900 text-white rounded-lg font-mono text-xs font-bold">
+                    #{index + 1}
+                  </div>
+                  <div>
+                     <h3 className="text-base font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                       <ImagePlus className="w-4 h-4 text-blue-600" /> Pré-Alerta: {group.cavalo}
+                     </h3>
+                     <p className="text-xs text-slate-500 font-medium">Edite as informações abaixo se necessário e clique em copiar e-mail</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
                     onClick={() => group.id && handleDeleteGroup(group.id)}
-                    className="flex items-center justify-center p-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-colors"
+                    className="flex items-center justify-center p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
+                    title="Excluir pré-alerta"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleCopyGroup(index)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wide text-xs transition-colors"
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-xs transition-all cursor-pointer shadow-xs border",
+                      copiedIndex === index 
+                        ? "bg-emerald-600 text-white border-emerald-700" 
+                        : "bg-slate-900 hover:bg-slate-800 text-white border-slate-900"
+                    )}
                   >
                     {copiedIndex === index ? (
                        <><CheckCircle2 className="w-4 h-4" /> Copiado!</>
@@ -406,35 +443,38 @@ export default function Envio() {
               </div>
 
               {/* Editable form fields that mirror the email content */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 rounded-xl bg-black/30 border border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-200">
                  <div className="flex flex-col">
-                   <label className="text-[10px] uppercase font-black text-zinc-500 mb-1">Motorista</label>
-                   <input type="text" value={group.motorista} onChange={e => handleFieldChange(index, 'motorista', e.target.value)} className="bg-transparent border-b border-white/20 text-white p-1 text-sm outline-none focus:border-indigo-500" placeholder="Nome completo" />
+                   <label className="text-[10px] uppercase font-extrabold text-slate-500 mb-1">Motorista</label>
+                   <input type="text" value={group.motorista} onChange={e => handleFieldChange(index, 'motorista', e.target.value)} className="bg-white border border-slate-200 rounded-lg text-slate-900 px-2.5 py-1.5 text-xs font-bold outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 uppercase" placeholder="Nome do motorista" />
                  </div>
                  <div className="flex flex-col">
-                   <label className="text-[10px] uppercase font-black text-zinc-500 mb-1">Transportadora</label>
-                   <input type="text" value={group.transportadora} onChange={e => handleFieldChange(index, 'transportadora', e.target.value)} className="bg-transparent border-b border-white/20 text-white p-1 text-sm outline-none focus:border-indigo-500" />
+                   <label className="text-[10px] uppercase font-extrabold text-slate-500 mb-1">Transportadora</label>
+                   <input type="text" value={group.transportadora} onChange={e => handleFieldChange(index, 'transportadora', e.target.value)} className="bg-white border border-slate-200 rounded-lg text-slate-900 px-2.5 py-1.5 text-xs font-bold outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 uppercase" />
                  </div>
                  <div className="flex flex-col">
-                   <label className="text-[10px] uppercase font-black text-zinc-500 mb-1">Origem x Destino</label>
-                   <input type="text" value={group.originInfo} onChange={e => handleFieldChange(index, 'originInfo', e.target.value)} className="bg-transparent border-b border-white/20 text-white p-1 text-sm outline-none focus:border-indigo-500" />
+                   <label className="text-[10px] uppercase font-extrabold text-slate-500 mb-1">Origem x Destino</label>
+                   <input type="text" value={group.originInfo} onChange={e => handleFieldChange(index, 'originInfo', e.target.value)} className="bg-white border border-slate-200 rounded-lg text-slate-900 px-2.5 py-1.5 text-xs font-bold outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 uppercase" />
                  </div>
                  <div className="flex flex-col">
-                   <label className="text-[10px] uppercase font-black text-zinc-500 mb-1">Destino (Tabela)</label>
-                   <input type="text" value={group.destination} onChange={e => handleFieldChange(index, 'destination', e.target.value)} className="bg-transparent border-b border-white/20 text-white p-1 text-sm outline-none focus:border-indigo-500" />
+                   <label className="text-[10px] uppercase font-extrabold text-slate-500 mb-1">Destino (Tabela)</label>
+                   <input type="text" value={group.destination} onChange={e => handleFieldChange(index, 'destination', e.target.value)} className="bg-white border border-slate-200 rounded-lg text-slate-900 px-2.5 py-1.5 text-xs font-bold outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 uppercase" />
                  </div>
                  <div className="flex flex-col">
-                   <label className="text-[10px] uppercase font-black text-zinc-500 mb-1">Data</label>
-                   <input type="text" value={group.date} onChange={e => handleFieldChange(index, 'date', e.target.value)} className="bg-transparent border-b border-white/20 text-white p-1 text-sm outline-none focus:border-indigo-500" />
+                   <label className="text-[10px] uppercase font-extrabold text-slate-500 mb-1">Data</label>
+                   <input type="text" value={group.date} onChange={e => handleFieldChange(index, 'date', e.target.value)} className="bg-white border border-slate-200 rounded-lg text-slate-900 px-2.5 py-1.5 text-xs font-bold outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 uppercase font-mono" />
                  </div>
-                 <div className="flex flex-col col-span-2">
-                   <label className="text-[10px] uppercase font-black text-zinc-500 mb-1">Notas Fiscais</label>
-                   <input type="text" value={group.nfs.join(' - ')} onChange={e => handleFieldChange(index, 'nfs', e.target.value.split('-').map(s=>s.trim()))} className="bg-transparent border-b border-white/20 text-white p-1 text-sm outline-none focus:border-indigo-500" />
+                 <div className="flex flex-col col-span-3">
+                   <label className="text-[10px] uppercase font-extrabold text-slate-500 mb-1">Notas Fiscais</label>
+                   <input type="text" value={group.nfs.join(' - ')} onChange={e => handleFieldChange(index, 'nfs', e.target.value.split('-').map(s=>s.trim()))} className="bg-white border border-slate-200 rounded-lg text-slate-900 px-2.5 py-1.5 text-xs font-bold outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 font-mono" />
                  </div>
               </div>
 
-              {/* The hidden / structural area to be copied exactly as asked */}
-              <div className="bg-white text-black p-6 rounded-lg select-text overflow-x-auto min-h-[300px]">
+              {/* Email Table Preview Box */}
+              <div className="border border-slate-200 rounded-xl p-5 bg-white shadow-2xs overflow-x-auto select-text">
+                <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-3">
+                  PRÉ-VISUALIZAÇÃO DA TABELA DE E-MAIL
+                </p>
                 <div 
                    ref={el => { emailRefs.current[index] = el }} 
                    style={{ fontFamily: 'Arial, sans-serif', fontSize: '11pt', color: '#000000', lineHeight: '1.4' }}
@@ -442,19 +482,19 @@ export default function Envio() {
                   <p style={{ margin: '0 0 10px 0' }}>Boa noite,</p>
                   
                   <p style={{ margin: '0 0 10px 0' }}>
-                    <span style={{ backgroundColor: '#c00000', color: 'white', fontWeight: 'bold', padding: '2px 4px' }}>Favor se atentar ao resgate!</span>
+                    <span style={{ backgroundColor: '#c00000', color: 'white', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px' }}>Favor se atentar ao resgate!</span>
                   </p>
                   
                   <p style={{ margin: '0 0 5px 0' }}>Atentar às informações abaixo:</p>
                   
                   <ul style={{ margin: '0 0 15px 0', paddingLeft: '20px' }}>
                     <li>
-                       <span style={{ border: '1px solid black', padding: '1px 3px' }}>
+                       <span style={{ border: '1px solid black', padding: '1px 4px', fontWeight: 'bold' }}>
                          {group.originInfo} x {group.destination}
                        </span>;
                     </li>
                     <li style={{ marginTop: '2px' }}>
-                       <span style={{ border: '1px solid black', padding: '1px 3px' }}>
+                       <span style={{ border: '1px solid black', padding: '1px 4px' }}>
                          * Favor, acusar o recebimento do pré-alerta;
                        </span>
                     </li>
@@ -463,49 +503,49 @@ export default function Envio() {
                   <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid black', textAlign: 'center', fontSize: '10pt', minWidth: '700px' }}>
                     <thead>
                       <tr>
-                        <th colSpan={8} style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>
+                        <th colSpan={8} style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>
                           PRÉ - ALERTA DE ISCA EMBARCADA
                         </th>
                       </tr>
                       <tr>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px', width: '15%' }}>NÚMERO DA NF:</th>
-                        <td colSpan={2} style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.nfs.join(' - ') || 'N/A'}</td>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>TRANSPORTADORA:</th>
-                        <td colSpan={4} style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.transportadora || 'N/A'}</td>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px', width: '15%' }}>NÚMERO DA NF:</th>
+                        <td colSpan={2} style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.nfs.join(' - ') || 'N/A'}</td>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>TRANSPORTADORA:</th>
+                        <td colSpan={4} style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.transportadora || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>MOTORISTA</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>CAVALO</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>CARRETAS</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>Nº ISCAS</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>PRODUTO EMBARCADO</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>CÓDIGO U.M.A.</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>DESTINO</th>
-                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>DATA ENVIADA</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>MOTORISTA</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>CAVALO</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>CARRETAS</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>Nº ISCAS</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>PRODUTO EMBARCADO</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>CÓDIGO U.M.A.</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>DESTINO</th>
+                        <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>DATA ENVIADA</th>
                       </tr>
                     </thead>
                     <tbody>
                       {group.items.length > 0 ? group.items.map((item, itemIdx) => (
                         <tr key={itemIdx}>
-                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.motorista}</td>}
-                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.cavalo}</td>}
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{item.carreta}</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{item.baitCode}</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{item.product}</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{item.uma}</td>
-                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.destination}</td>}
-                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '4px' }}>{group.date}</td>}
+                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.motorista}</td>}
+                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.cavalo}</td>}
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{item.carreta}</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{item.baitCode}</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{item.product}</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{item.uma}</td>
+                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.destination}</td>}
+                          {itemIdx === 0 && <td rowSpan={group.items.length} style={{ border: '1px solid black', padding: '5px' }}>{group.date}</td>}
                         </tr>
                       )) : (
                         <tr>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.motorista}</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.cavalo}</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>-</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>-</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>-</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>-</td>
-                          <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{group.destination}</td>
-                          <td style={{ border: '1px solid black', padding: '4px' }}>{group.date}</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.motorista}</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.cavalo}</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>-</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>-</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>-</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>-</td>
+                          <td style={{ border: '1px solid black', padding: '5px', fontWeight: 'bold' }}>{group.destination}</td>
+                          <td style={{ border: '1px solid black', padding: '5px' }}>{group.date}</td>
                         </tr>
                       )}
                     </tbody>
@@ -514,14 +554,14 @@ export default function Envio() {
                   <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid black', textAlign: 'center', fontSize: '10pt', minWidth: '700px', marginTop: '10px' }}>
                      <tbody>
                         <tr>
-                          <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '4px' }}>
+                          <th style={{ backgroundColor: '#b4c6e7', border: '1px solid black', padding: '5px' }}>
                             Parametrização das iscas
                           </th>
                         </tr>
                      </tbody>
                   </table>
                   
-                  <p style={{ margin: '15px 0 0 0', fontWeight: 'bold', fontSize: '10pt', textTransform: 'uppercase' }}>ESQUEMA DE EMBARQUE DAS ISCAS:</p>
+                  <p style={{ margin: '12px 0 0 0', fontWeight: 'bold', fontSize: '10pt', textTransform: 'uppercase' }}>ESQUEMA DE EMBARQUE DAS ISCAS:</p>
                 </div>
               </div>
             </motion.div>

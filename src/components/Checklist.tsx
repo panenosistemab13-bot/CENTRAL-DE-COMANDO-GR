@@ -488,7 +488,7 @@ export default function Checklist() {
       </div>
 
       {/* ================= HEADER AREA ================= */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0 px-4">
+      <div className="hidden w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0 px-4">
         
         {/* Left title and logo stack */}
         <div className="flex items-center gap-5 text-left w-full md:w-auto">
@@ -532,12 +532,6 @@ export default function Checklist() {
             <h1 className="text-3xl font-rustic-title font-black text-[#2b180d] uppercase tracking-wide leading-none drop-shadow-[1px_2px_1px_rgba(255,255,255,0.45)]">
               CHECKLIST
             </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-600 border border-[#fefdfa] animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.7)]" />
-              <span className="text-xs font-mono font-black text-[#5c3c24] uppercase tracking-widest pl-0.5">
-                MÓDULO ATIVO
-              </span>
-            </div>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ export interface PatioItem {
   destino: string;
   estaNoPatio: 'Sim' | 'Não';
   assinado: 'Sim' | 'Não';
+  motorista?: string;
 }
 
 // Based on the image analysis and request logic:
