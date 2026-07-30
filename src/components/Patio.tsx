@@ -379,25 +379,28 @@ export interface OrdemColetaItem {
   transportador: string;
   cavalo: string;
   carreta: string;
-  cargaLiberacao: string;
+  pallets: string;
+  pbtTon: string;
+  m3: string;
+  categoria: string;
+  tecnologia: string;
+  condutor: string;
+  cpf: string;
+  rgSap: string;
+  cnh: string;
+  telefone: string;
+  vigenciaCadastro: string;
+  codigoTransportadora: string;
+  idCargaLacre: string;
   estadoMotorista: string;
   estadoCavalo: string;
   estadoCarreta: string;
   pendencia: string;
   checkList: string;
+  vencido: string;
   dias: string;
   segundaCarreta: string;
   inseridoEm?: string;
-  cpf?: string;
-  rg?: string;
-  cnh?: string;
-  telefone?: string;
-  tecnologia?: string;
-  pallets?: string;
-  toneladas?: string;
-  categoria?: string;
-  m3?: string;
-  vigenciaCadastro?: string;
 }
 
 const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [];
@@ -510,19 +513,25 @@ export default function Patio({ onBack }: PatioProps) {
       item.transportador || '',
       item.cavalo || '',
       item.carreta || '',
-      item.cargaLiberacao || '',
+      item.pallets || '',
+      item.pbtTon || '',
+      item.m3 || '',
+      item.categoria || '',
+      item.tecnologia || '',
+      item.condutor || '',
       item.cpf || '',
-      item.rg || '',
+      item.rgSap || '',
       item.cnh || '',
       item.telefone || '',
-      item.tecnologia || '',
-      item.pallets || '',
-      item.toneladas || '',
+      item.vigenciaCadastro || '',
+      item.codigoTransportadora || '',
+      item.idCargaLacre || '',
       item.estadoMotorista || '',
       item.estadoCavalo || '',
       item.estadoCarreta || '',
       item.pendencia || '',
       item.checkList || '',
+      item.vencido || '',
       item.dias || '',
       item.segundaCarreta || ''
     ].join('\t');
@@ -533,8 +542,11 @@ export default function Patio({ onBack }: PatioProps) {
     const headers = [
       'MÊS', 'ORIGEM', 'DIA', 'DATA', 'CONTATO WHATS', 'HORA LIBERADO', 'STATUS',
       'MODELO CARRETA', 'MODELO CAVALO', 'FEZ CONTATO?', 'DESTINO', 'TRANSPORTADOR',
-      'CAVALO', 'CARRETA', 'CARGA / LIBERAÇÃO', 'CPF', 'RG', 'CNH', 'TELEFONE', 'TECNOLOGIA', 'PALLETS', 'TONELADAS',
-      'ESTADO MOTORISTA', 'ESTADO CAVALO', 'ESTADO CARRETA', 'PENDÊNCIA', 'CHECK LIST', 'DIAS', '2ª CARRETA'
+      'CAVALO', 'CARRETA', 'Nº PALLETS', 'PBT (TON)', 'M³', 'CATEGORIA', 'TECNOLOGIA',
+      'CONDUTOR', 'CPF', 'RG / SAP', 'CNH', 'TELEFONE', 'VIGÊNCIA DO CADASTRO',
+      'CODIGO DA TRANSPORTADORA', 'ID DA CARGA / LACRE EXPORTAÇÃO',
+      'ESTADO MOTORISTA', 'ESTADO CAVALO', 'ESTADO CARRETA', 'PENDÊNCIA', 'CHECK LIST',
+      'VENCIDO', 'DIAS', '2ª CARRETA'
     ].join('\t');
 
     const rowsStr = items.map(formatOrdemColetaItemToTSV).join('\n');
@@ -646,54 +658,77 @@ export default function Patio({ onBack }: PatioProps) {
       const transportador = text.includes('TRANSMAGNA') ? 'TRANSMAGNA' : '';
       const origem = text.match(/SANTA LUZIA\s+MG/i) ? 'SANTA LUZIA MG' : '';
       const destino = text.match(/GUARULHOS\s+SP/i) ? 'GUARULHOS SP' : '';
-      const motoristaMatch = text.match(/NOME\s+([A-Z\s]{10,})/i);
-      // Often the name appears in a block: "NOME CPF ... WISTOR FRANKLIN ..."
-      // We can also look for the long string before CPF
+      
       const cpf = extractCPF();
       const motoristaNameMatch = text.match(new RegExp(`([A-Z\\s]{10,})\\s+${cpf}`, 'i'));
-      const motorista = motoristaNameMatch ? motoristaNameMatch[1].trim() : '';
+      const motorista = motoristaNameMatch ? motoristaNameMatch[1].trim().toUpperCase() : '';
       
       const placas = extractPlacas();
-      const cavalo = placas[0] || '';
-      const carreta = placas[1] || '';
-      const segundaCarreta = placas[2] || '';
+      const cavalo = (placas[0] || '').toUpperCase();
+      const carreta = (placas[1] || '').toUpperCase();
+      const segundaCarreta = (placas[2] || '').toUpperCase();
       
       const modeloCavalo = text.includes('TRUCADO') ? 'TRUCADO' : text.includes('TOCO') ? 'TOCO' : '';
       const modeloCarreta = text.includes('BAU') ? 'BAU' : text.includes('SIDER') ? 'SIDER' : '';
       const tecnologia = text.includes('SIGHRA') ? 'SIGHRA' : text.includes('AUTOTRAC') ? 'AUTOTRAC' : text.includes('ONIXSAT') ? 'ONIXSAT' : '';
       
+      const getMesAbreviado = (d: string) => {
+        if (!d) return 'JUL|26';
+        const p = d.split('/');
+        if (p.length < 3) return 'JUL|26';
+        const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+        const m = parseInt(p[1], 10) - 1;
+        const y = p[2].slice(-2);
+        return `${months[m]}|${y}`;
+      };
+
+      const getDiaSemana = (d: string) => {
+        if (!d) return 'sexta-feira';
+        const p = d.split('/');
+        if (p.length < 3) return 'sexta-feira';
+        const date = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+        const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+        return days[date.getDay()];
+      };
+
       const ocRef = ref(db, 'patio/ordem_coleta');
       
       const row1Data: Partial<OrdemColetaItem> = {
-        mes: 'JUL|26',
+        mes: getMesAbreviado(dataStr),
         origem: origem || 'SANTA LUZIA MG',
-        dia: 'sexta-feira', // Poderia ser calculado da data
+        dia: getDiaSemana(dataStr),
         data: dataStr || '24/07/2026',
-        contatoWhats: '08:00:00',
+        contatoWhats: 'X',
         horaLiberado: '08:00:00',
         status: 'LIBERADO CARREGAMENTO',
-        modeloCarreta: modeloCarreta || 'BAU',
-        modeloCavalo: modeloCavalo || 'TRUCADO',
+        modeloCarreta: (modeloCarreta || 'BAU').toUpperCase(),
+        modeloCavalo: (modeloCavalo || 'TRUCADO').toUpperCase(),
         fezContato: 'SIM',
         destino: destino || 'GUARULHOS SP',
         transportador: transportador || 'TRANSMAGNA',
         cavalo: cavalo,
         carreta: carreta,
-        cargaLiberacao: motorista,
+        pallets: extractPallets() || '28',
+        pbtTon: extractToneladas() || '30',
+        m3: '',
+        categoria: 'FROTA',
+        tecnologia: (tecnologia || 'SIGHRA').toUpperCase(),
+        condutor: motorista,
+        cpf: cpf,
+        rgSap: extractRG(),
+        cnh: extractCNH(cpf),
+        telefone: extractPhone(),
+        vigenciaCadastro: 'SEGURO PROPRIO',
+        codigoTransportadora: '',
+        idCargaLacre: '',
         estadoMotorista: 'SC',
         estadoCavalo: 'SC',
         estadoCarreta: 'SC',
         pendencia: '',
         checkList: 'OK',
+        vencido: 'NÃO',
         dias: '180',
         segundaCarreta: segundaCarreta,
-        cpf: cpf,
-        rg: extractRG(),
-        cnh: extractCNH(cpf),
-        telefone: extractPhone(),
-        tecnologia: tecnologia || 'SIGHRA',
-        pallets: extractPallets() || '28',
-        toneladas: extractToneladas() || '30',
         inseridoEm: new Date().toISOString()
       };
 
@@ -3219,7 +3254,7 @@ export default function Patio({ onBack }: PatioProps) {
                     const s = ordemColetaSearch.toLowerCase();
                     return (
                       item.transportador?.toLowerCase().includes(s) ||
-                      item.cargaLiberacao?.toLowerCase().includes(s) ||
+                      item.condutor?.toLowerCase().includes(s) ||
                       item.cavalo?.toLowerCase().includes(s) ||
                       item.carreta?.toLowerCase().includes(s) ||
                       item.destino?.toLowerCase().includes(s) ||
@@ -3237,7 +3272,7 @@ export default function Patio({ onBack }: PatioProps) {
                       const s = ordemColetaSearch.toLowerCase();
                       return (
                         item.transportador?.toLowerCase().includes(s) ||
-                        item.cargaLiberacao?.toLowerCase().includes(s) ||
+                        item.condutor?.toLowerCase().includes(s) ||
                         item.cavalo?.toLowerCase().includes(s) ||
                         item.carreta?.toLowerCase().includes(s) ||
                         item.destino?.toLowerCase().includes(s) ||
@@ -3274,19 +3309,25 @@ export default function Patio({ onBack }: PatioProps) {
                     <th className="px-3 py-2.5">TRANSPORTADOR</th>
                     <th className="px-3 py-2.5">CAVALO</th>
                     <th className="px-3 py-2.5">CARRETA</th>
-                    <th className="px-3 py-2.5">CARGA / LIBERAÇÃO</th>
+                    <th className="px-3 py-2.5">Nº PALLETS</th>
+                    <th className="px-3 py-2.5">PBT (TON)</th>
+                    <th className="px-3 py-2.5">M³</th>
+                    <th className="px-3 py-2.5">CATEGORIA</th>
+                    <th className="px-3 py-2.5">TECNOLOGIA</th>
+                    <th className="px-3 py-2.5">CONDUTOR</th>
                     <th className="px-3 py-2.5">CPF</th>
-                    <th className="px-3 py-2.5">RG</th>
+                    <th className="px-3 py-2.5">RG / SAP</th>
                     <th className="px-3 py-2.5">CNH</th>
                     <th className="px-3 py-2.5">TELEFONE</th>
-                    <th className="px-3 py-2.5">TECNOLOGIA</th>
-                    <th className="px-3 py-2.5">PALLETS</th>
-                    <th className="px-3 py-2.5">TONELADAS</th>
+                    <th className="px-3 py-2.5">VIGÊNCIA DO CADASTRO</th>
+                    <th className="px-3 py-2.5">CODIGO DA TRANSPORTADORA</th>
+                    <th className="px-3 py-2.5">ID DA CARGA / LACRE EXPORTAÇÃO</th>
                     <th className="px-3 py-2.5">ESTADO MOTORISTA</th>
                     <th className="px-3 py-2.5">ESTADO CAVALO</th>
                     <th className="px-3 py-2.5">ESTADO CARRETA</th>
-                    <th className="px-3 py-2.5">PENDÊNCIA</th>
+                    <th className="px-3 py-2.5">PENDENCIA</th>
                     <th className="px-3 py-2.5">CHECK LIST</th>
+                    <th className="px-3 py-2.5">VENCIDO</th>
                     <th className="px-3 py-2.5">DIAS</th>
                     <th className="px-3 py-2.5">2ª CARRETA</th>
                     <th className="px-3 py-2.5 sticky right-0 bg-[#0c2340] z-30 shadow-left">AÇÕES</th>
@@ -3299,7 +3340,7 @@ export default function Patio({ onBack }: PatioProps) {
                       const s = ordemColetaSearch.toLowerCase();
                       return (
                         item.transportador?.toLowerCase().includes(s) ||
-                        item.cargaLiberacao?.toLowerCase().includes(s) ||
+                        item.condutor?.toLowerCase().includes(s) ||
                         item.cavalo?.toLowerCase().includes(s) ||
                         item.carreta?.toLowerCase().includes(s) ||
                         item.destino?.toLowerCase().includes(s) ||
@@ -3312,7 +3353,7 @@ export default function Patio({ onBack }: PatioProps) {
 
                       return (
                         <tr key={row.id} className="hover:bg-slate-800/80 transition-colors divide-x divide-[#334155]/40 text-[11px]">
-                          {/* MÊS */}
+                          {/* B: MÊS */}
                           <td className="px-2.5 py-2 font-bold text-slate-300">
                             {isEditing ? (
                               <input
@@ -3324,7 +3365,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.mes}
                           </td>
 
-                          {/* ORIGEM */}
+                          {/* C: ORIGEM */}
                           <td className="px-2.5 py-2 font-bold text-slate-200">
                             {isEditing ? (
                               <input
@@ -3336,7 +3377,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.origem}
                           </td>
 
-                          {/* DIA */}
+                          {/* D: DIA */}
                           <td className="px-2.5 py-2 text-slate-400 font-medium">
                             {isEditing ? (
                               <input
@@ -3348,7 +3389,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.dia}
                           </td>
 
-                          {/* DATA */}
+                          {/* E: DATA */}
                           <td className="px-2.5 py-2 font-mono font-bold text-amber-300">
                             {isEditing ? (
                               <input
@@ -3360,7 +3401,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.data}
                           </td>
 
-                          {/* CONTATO WHATS */}
+                          {/* F: CONTATO WHATS */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
@@ -3372,7 +3413,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.contatoWhats}
                           </td>
 
-                          {/* HORA LIBERADO */}
+                          {/* G: HORA LIBERADO */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
@@ -3384,7 +3425,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.horaLiberado}
                           </td>
 
-                          {/* STATUS */}
+                          {/* H: STATUS */}
                           <td className="px-2.5 py-2 font-bold">
                             {isEditing ? (
                               <input
@@ -3400,7 +3441,7 @@ export default function Patio({ onBack }: PatioProps) {
                             )}
                           </td>
 
-                          {/* MODELO CARRETA */}
+                          {/* I: MODELO CARRETA */}
                           <td className="px-2.5 py-2 font-bold text-slate-300 uppercase">
                             {isEditing ? (
                               <input
@@ -3412,7 +3453,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.modeloCarreta}
                           </td>
 
-                          {/* MODELO CAVALO */}
+                          {/* J: MODELO CAVALO */}
                           <td className="px-2.5 py-2 font-bold text-slate-300 uppercase">
                             {isEditing ? (
                               <input
@@ -3424,7 +3465,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.modeloCavalo}
                           </td>
 
-                          {/* FEZ CONTATO? */}
+                          {/* K: FEZ CONTATO? */}
                           <td className="px-2.5 py-2">
                             {isEditing ? (
                               <select
@@ -3447,7 +3488,7 @@ export default function Patio({ onBack }: PatioProps) {
                             )}
                           </td>
 
-                          {/* DESTINO */}
+                          {/* L: DESTINO */}
                           <td className="px-2.5 py-2 font-black text-amber-200 uppercase">
                             {isEditing ? (
                               <input
@@ -3459,7 +3500,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.destino}
                           </td>
 
-                          {/* TRANSPORTADOR */}
+                          {/* M: TRANSPORTADOR */}
                           <td className="px-2.5 py-2 font-black text-sky-300 uppercase">
                             {isEditing ? (
                               <input
@@ -3471,7 +3512,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.transportador}
                           </td>
 
-                          {/* CAVALO */}
+                          {/* N: CAVALO */}
                           <td className="px-2.5 py-2 font-mono font-black text-amber-400">
                             {isEditing ? (
                               <input
@@ -3487,7 +3528,7 @@ export default function Patio({ onBack }: PatioProps) {
                             )}
                           </td>
 
-                          {/* CARRETA */}
+                          {/* O: CARRETA */}
                           <td className="px-2.5 py-2 font-mono font-black text-amber-400">
                             {isEditing ? (
                               <input
@@ -3503,79 +3544,7 @@ export default function Patio({ onBack }: PatioProps) {
                             )}
                           </td>
 
-                          {/* CARGA / LIBERAÇÃO */}
-                          <td className="px-2.5 py-2 font-bold text-slate-100 uppercase">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editState.cargaLiberacao}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cargaLiberacao: e.target.value })}
-                                className="w-48 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
-                              />
-                            ) : row.cargaLiberacao || '-'}
-                          </td>
-
-                          {/* CPF */}
-                          <td className="px-2.5 py-2 font-mono text-slate-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editState.cpf}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cpf: e.target.value })}
-                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
-                              />
-                            ) : row.cpf || '-'}
-                          </td>
-
-                          {/* RG */}
-                          <td className="px-2.5 py-2 font-mono text-slate-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editState.rg}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, rg: e.target.value })}
-                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
-                              />
-                            ) : row.rg || '-'}
-                          </td>
-
-                          {/* CNH */}
-                          <td className="px-2.5 py-2 font-mono text-slate-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editState.cnh}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cnh: e.target.value })}
-                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
-                              />
-                            ) : row.cnh || '-'}
-                          </td>
-
-                          {/* TELEFONE */}
-                          <td className="px-2.5 py-2 font-mono text-slate-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editState.telefone}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, telefone: e.target.value })}
-                                className="w-28 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
-                              />
-                            ) : row.telefone || '-'}
-                          </td>
-
-                          {/* TECNOLOGIA */}
-                          <td className="px-2.5 py-2 font-mono text-slate-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editState.tecnologia}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, tecnologia: e.target.value })}
-                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
-                              />
-                            ) : row.tecnologia || '-'}
-                          </td>
-
-                          {/* PALLETS */}
+                          {/* P: Nº PALLETS */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
@@ -3587,19 +3556,151 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.pallets || '-'}
                           </td>
 
-                          {/* TONELADAS */}
+                          {/* Q: PBT (TON) */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
                                 type="text"
-                                value={editState.toneladas}
-                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, toneladas: e.target.value })}
+                                value={editState.pbtTon}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, pbtTon: e.target.value })}
                                 className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
                               />
-                            ) : row.toneladas || '-'}
+                            ) : row.pbtTon || '-'}
                           </td>
 
-                          {/* ESTADO MOTORISTA */}
+                          {/* R: M³ */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.m3}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, m3: e.target.value })}
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.m3 || '-'}
+                          </td>
+
+                          {/* S: CATEGORIA */}
+                          <td className="px-2.5 py-2 font-bold text-slate-300 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.categoria}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, categoria: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.categoria || '-'}
+                          </td>
+
+                          {/* T: TECNOLOGIA */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.tecnologia}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, tecnologia: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.tecnologia || '-'}
+                          </td>
+
+                          {/* U: CONDUTOR */}
+                          <td className="px-2.5 py-2 font-bold text-slate-100 uppercase">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.condutor}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, condutor: e.target.value })}
+                                className="w-48 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.condutor || '-'}
+                          </td>
+
+                          {/* V: CPF */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.cpf}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cpf: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.cpf || '-'}
+                          </td>
+
+                          {/* W: RG / SAP */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.rgSap}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, rgSap: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.rgSap || '-'}
+                          </td>
+
+                          {/* X: CNH */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.cnh}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cnh: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.cnh || '-'}
+                          </td>
+
+                          {/* Y: TELEFONE */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.telefone}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, telefone: e.target.value })}
+                                className="w-28 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.telefone || '-'}
+                          </td>
+
+                          {/* Z: VIGÊNCIA DO CADASTRO */}
+                          <td className="px-2.5 py-2 font-bold text-emerald-400">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.vigenciaCadastro}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, vigenciaCadastro: e.target.value })}
+                                className="w-32 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              />
+                            ) : row.vigenciaCadastro || '-'}
+                          </td>
+
+                          {/* AA: CODIGO DA TRANSPORTADORA */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.codigoTransportadora}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, codigoTransportadora: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.codigoTransportadora || '-'}
+                          </td>
+
+                          {/* AB: ID DA CARGA / LACRE EXPORTAÇÃO */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.idCargaLacre}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, idCargaLacre: e.target.value })}
+                                className="w-32 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.idCargaLacre || '-'}
+                          </td>
+
+                          {/* AC: ESTADO MOTORISTA */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
@@ -3611,7 +3712,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.estadoMotorista}
                           </td>
 
-                          {/* ESTADO CAVALO */}
+                          {/* AD: ESTADO CAVALO */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
@@ -3623,7 +3724,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.estadoCavalo}
                           </td>
 
-                          {/* ESTADO CARRETA */}
+                          {/* AE: ESTADO CARRETA */}
                           <td className="px-2.5 py-2 font-mono text-slate-300">
                             {isEditing ? (
                               <input
@@ -3635,7 +3736,7 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.estadoCarreta}
                           </td>
 
-                          {/* PENDÊNCIA */}
+                          {/* AF: PENDENCIA */}
                           <td className="px-2.5 py-2 font-mono text-rose-300">
                             {isEditing ? (
                               <input
@@ -3647,8 +3748,8 @@ export default function Patio({ onBack }: PatioProps) {
                             ) : row.pendencia || '-'}
                           </td>
 
-                          {/* CHECK LIST */}
-                          <td className="px-2.5 py-2">
+                          {/* AG: CHECK LIST */}
+                          <td className="px-2.5 py-2 text-center">
                             {isEditing ? (
                               <select
                                 value={editState.checkList}
@@ -3656,7 +3757,7 @@ export default function Patio({ onBack }: PatioProps) {
                                 className="bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
                               >
                                 <option value="OK">OK</option>
-                                <option value="VENCIDO">VENCIDO</option>
+                                <option value="PENDENTE">PENDENTE</option>
                               </select>
                             ) : (
                               <span className={cn(
@@ -3670,19 +3771,42 @@ export default function Patio({ onBack }: PatioProps) {
                             )}
                           </td>
 
-                          {/* DIAS */}
-                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                          {/* AI: VENCIDO */}
+                          <td className="px-2.5 py-2 text-center">
+                            {isEditing ? (
+                              <select
+                                value={editState.vencido}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, vencido: e.target.value })}
+                                className="bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
+                              >
+                                <option value="SIM">SIM</option>
+                                <option value="NÃO">NÃO</option>
+                              </select>
+                            ) : (
+                              <span className={cn(
+                                "inline-block px-2 py-0.5 rounded font-black text-[10px] tracking-wider uppercase border",
+                                row.vencido === 'SIM' 
+                                  ? "bg-rose-900/40 text-rose-300 border-rose-500/20" 
+                                  : "bg-emerald-900/40 text-emerald-300 border-emerald-500/20"
+                              )}>
+                                {row.vencido || 'NÃO'}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* AJ: DIAS */}
+                          <td className="px-2.5 py-2 font-mono font-bold text-slate-300">
                             {isEditing ? (
                               <input
                                 type="text"
                                 value={editState.dias}
                                 onChange={(e) => setEditingOrdemColetaRow({ ...editState, dias: e.target.value })}
-                                className="w-16 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
                               />
                             ) : row.dias}
                           </td>
 
-                          {/* 2ª CARRETA */}
+                          {/* AK: 2ª CARRETA */}
                           <td className="px-2.5 py-2 font-mono font-black text-amber-300">
                             {isEditing ? (
                               <input
