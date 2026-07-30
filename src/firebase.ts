@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
 
@@ -15,9 +16,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-console.log('Firebase initialized with databaseURL:', firebaseConfig.databaseURL);
-export const rtdb = getDatabase(app);
-export const db = rtdb; // Alias to maintain compatibility with existing imports
+export const db = getFirestore(app);
+export const rtdb = getDatabase(app, "https://central-de-comandos-gr-default-rtdb.firebaseio.com/");
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
@@ -30,7 +30,7 @@ export enum OperationType {
   WRITE = 'write',
 }
 
-interface FirebaseErrorInfo {
+interface FirestoreErrorInfo {
   error: string;
   operationType: OperationType;
   path: string | null;
@@ -48,7 +48,7 @@ interface FirebaseErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirebaseErrorInfo = {
+  const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
       userId: auth.currentUser?.uid,
@@ -64,6 +64,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firebase Error: ', JSON.stringify(errInfo));
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }

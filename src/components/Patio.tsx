@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Initialize PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 import { PatioItem } from '../data/patioData';
 import { cn } from '../lib/utils';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from '../utils/principles';
@@ -381,6 +385,13 @@ export interface OrdemColetaItem {
   dias: string;
   segundaCarreta: string;
   inseridoEm?: string;
+  cpf?: string;
+  rg?: string;
+  cnh?: string;
+  telefone?: string;
+  tecnologia?: string;
+  pallets?: string;
+  toneladas?: string;
 }
 
 const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [];
@@ -494,6 +505,13 @@ export default function Patio({ onBack }: PatioProps) {
       item.cavalo || '',
       item.carreta || '',
       item.cargaLiberacao || '',
+      item.cpf || '',
+      item.rg || '',
+      item.cnh || '',
+      item.telefone || '',
+      item.tecnologia || '',
+      item.pallets || '',
+      item.toneladas || '',
       item.estadoMotorista || '',
       item.estadoCavalo || '',
       item.estadoCarreta || '',
@@ -509,8 +527,8 @@ export default function Patio({ onBack }: PatioProps) {
     const headers = [
       'MÊS', 'ORIGEM', 'DIA', 'DATA', 'CONTATO WHATS', 'HORA LIBERADO', 'STATUS',
       'MODELO CARRETA', 'MODELO CAVALO', 'FEZ CONTATO?', 'DESTINO', 'TRANSPORTADOR',
-      'CAVALO', 'CARRETA', 'CARGA / LIBERAÇÃO', 'ESTADO MOTORISTA', 'ESTADO CAVALO',
-      'ESTADO CARRETA', 'PENDÊNCIA', 'CHECK LIST', 'DIAS', '2ª CARRETA'
+      'CAVALO', 'CARRETA', 'CARGA / LIBERAÇÃO', 'CPF', 'RG', 'CNH', 'TELEFONE', 'TECNOLOGIA', 'PALLETS', 'TONELADAS',
+      'ESTADO MOTORISTA', 'ESTADO CAVALO', 'ESTADO CARRETA', 'PENDÊNCIA', 'CHECK LIST', 'DIAS', '2ª CARRETA'
     ].join('\t');
 
     const rowsStr = items.map(formatOrdemColetaItemToTSV).join('\n');
@@ -529,9 +547,7 @@ export default function Patio({ onBack }: PatioProps) {
 
   // Firebase listener for Ordem de Coleta
   useEffect(() => {
-    const path = 'patio/ordem_coleta';
-    const ocRef = ref(db, path);
-    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
+    const ocRef = ref(db, 'patio/ordem_coleta');
     const unsubscribe = onValue(ocRef, (snapshot) => {
       const data = snapshot.val();
       const items: OrdemColetaItem[] = [];
@@ -552,90 +568,153 @@ export default function Patio({ onBack }: PatioProps) {
 
   const handleProcessOrdemColetaPdf = async (file: File) => {
     setIsProcessingOrdemColeta(true);
-    setOrdemColetaStatusMsg({ type: 'success', text: 'Lendo PDF da Ordem de Coleta...' });
+    setOrdemColetaStatusMsg({ type: 'success', text: 'Lendo PDF no navegador...' });
 
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = (err) => reject(err);
-        reader.readAsDataURL(file);
-      });
-
-      const response = await fetch('/api/parse-ordem-coleta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileBase64: base64, fileName: file.name })
-      });
-
-      if (!response.ok) {
-        throw new Error("Falha ao processar arquivo da Ordem de Coleta.");
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const strings = textContent.items.map((item: any) => item.str);
+        fullText += strings.join(' ') + '\n';
       }
 
-      const result = await response.json();
-      if (result.success && result.data) {
-        const extracted = result.data;
-        const ocRef = ref(db, 'patio/ordem_coleta');
+      const text = fullText;
+      console.log("Texto extraído do PDF:", text);
 
-        const hasSegundaCarreta = Boolean(
-          extracted.segundaCarreta &&
-          extracted.segundaCarreta.trim() !== '' &&
-          extracted.segundaCarreta.trim() !== '-'
-        );
+      // Helper functions for extraction
+      const extractDate = () => {
+        const match = text.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+        return match ? match[1] : '';
+      };
 
-        const row1Data = {
-          mes: extracted.mes || 'JUL|26',
-          origem: extracted.origem || 'SANTA LUZIA | MG',
-          dia: extracted.dia || 'sexta-feira',
-          data: extracted.data || '24/07/2026',
-          contatoWhats: extracted.contatoWhats || '08:00:00',
-          horaLiberado: extracted.horaLiberado || '08:00:00',
-          status: extracted.status || 'LIBERADO CARREGAMENTO',
-          modeloCarreta: extracted.modeloCarreta || (hasSegundaCarreta ? 'RODOTREM BAÚ' : 'BAÚ'),
-          modeloCavalo: extracted.modeloCavalo || 'TRUCADO',
-          fezContato: extracted.fezContato || 'SIM',
-          destino: extracted.destino || 'GUARULHOS SP',
-          transportador: extracted.transportador || 'TRANSMAGNA',
-          cavalo: extracted.cavalo || 'SEV5A39',
-          carreta: extracted.carreta || 'TPY3G57',
-          cargaLiberacao: extracted.cargaLiberacao || '',
-          estadoMotorista: extracted.estadoMotorista || 'SC',
-          estadoCavalo: extracted.estadoCavalo || 'SC',
-          estadoCarreta: extracted.estadoCarreta || 'SC',
-          pendencia: extracted.pendencia || '',
-          checkList: extracted.checkList || 'OK',
-          dias: extracted.dias || '180',
-          segundaCarreta: hasSegundaCarreta ? extracted.segundaCarreta : '',
-          inseridoEm: new Date().toISOString()
+      const extractCPF = () => {
+        const match = text.match(/\b\d{11}\b/);
+        return match ? match[0] : '';
+      };
+
+      const extractCNH = (excludeCpf: string) => {
+        const matches = text.match(/\b\d{11}\b/g) || [];
+        return matches.find(m => m !== excludeCpf) || '';
+      };
+
+      const extractPlacas = () => {
+        const regex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/g;
+        return text.match(regex) || [];
+      };
+
+      const extractPhone = () => {
+        const match = text.match(/\b\d{2}\s\d\s\d{8}\b/);
+        return match ? match[0] : '';
+      };
+
+      const extractPallets = () => {
+        // Look for capacity pallets which is usually a 2-digit number after/near headers
+        const match = text.match(/CAPACIDADE PALLETS.*?(\d{1,2})/i);
+        if (match) return match[1];
+        // fallback search for 28 in the block TRUCADO BAU 28 30
+        const blockMatch = text.match(/(?:TRUCADO|TOCO|SIMPLES)\s+(?:BAU|SIDER|GRADE)\s+(\d{1,2})\s+(\d{1,2})/i);
+        return blockMatch ? blockMatch[1] : '';
+      };
+
+      const extractToneladas = () => {
+        const match = text.match(/CAPACIDADE TONELADAS.*?(\d{1,2})/i);
+        if (match) return match[1];
+        const blockMatch = text.match(/(?:TRUCADO|TOCO|SIMPLES)\s+(?:BAU|SIDER|GRADE)\s+(\d{1,2})\s+(\d{1,2})/i);
+        return blockMatch ? blockMatch[2] : '';
+      };
+
+      const extractRG = () => {
+        const match = text.match(/\b[A-Z0-9]{7,10}\b/g) || [];
+        // RG usually starts with a letter or has 7-9 digits, and is NOT a placa or CNH/CPF
+        const placaRegex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/;
+        return match.find(m => m.length >= 7 && m.length <= 10 && !placaRegex.test(m) && isNaN(Number(m))) || 
+               match.find(m => m.length >= 7 && m.length <= 9 && !placaRegex.test(m)) || '';
+      };
+
+      // Mapeamento
+      const dataStr = extractDate();
+      const transportador = text.includes('TRANSMAGNA') ? 'TRANSMAGNA' : '';
+      const origem = text.match(/SANTA LUZIA\s+MG/i) ? 'SANTA LUZIA MG' : '';
+      const destino = text.match(/GUARULHOS\s+SP/i) ? 'GUARULHOS SP' : '';
+      const motoristaMatch = text.match(/NOME\s+([A-Z\s]{10,})/i);
+      // Often the name appears in a block: "NOME CPF ... WISTOR FRANKLIN ..."
+      // We can also look for the long string before CPF
+      const cpf = extractCPF();
+      const motoristaNameMatch = text.match(new RegExp(`([A-Z\\s]{10,})\\s+${cpf}`, 'i'));
+      const motorista = motoristaNameMatch ? motoristaNameMatch[1].trim() : '';
+      
+      const placas = extractPlacas();
+      const cavalo = placas[0] || '';
+      const carreta = placas[1] || '';
+      const segundaCarreta = placas[2] || '';
+      
+      const modeloCavalo = text.includes('TRUCADO') ? 'TRUCADO' : text.includes('TOCO') ? 'TOCO' : '';
+      const modeloCarreta = text.includes('BAU') ? 'BAU' : text.includes('SIDER') ? 'SIDER' : '';
+      const tecnologia = text.includes('SIGHRA') ? 'SIGHRA' : text.includes('AUTOTRAC') ? 'AUTOTRAC' : text.includes('ONIXSAT') ? 'ONIXSAT' : '';
+      
+      const ocRef = ref(db, 'patio/ordem_coleta');
+      
+      const row1Data: Partial<OrdemColetaItem> = {
+        mes: 'JUL|26',
+        origem: origem || 'SANTA LUZIA MG',
+        dia: 'sexta-feira', // Poderia ser calculado da data
+        data: dataStr || '24/07/2026',
+        contatoWhats: '08:00:00',
+        horaLiberado: '08:00:00',
+        status: 'LIBERADO CARREGAMENTO',
+        modeloCarreta: modeloCarreta || 'BAU',
+        modeloCavalo: modeloCavalo || 'TRUCADO',
+        fezContato: 'SIM',
+        destino: destino || 'GUARULHOS SP',
+        transportador: transportador || 'TRANSMAGNA',
+        cavalo: cavalo,
+        carreta: carreta,
+        cargaLiberacao: motorista,
+        estadoMotorista: 'SC',
+        estadoCavalo: 'SC',
+        estadoCarreta: 'SC',
+        pendencia: '',
+        checkList: 'OK',
+        dias: '180',
+        segundaCarreta: segundaCarreta,
+        cpf: cpf,
+        rg: extractRG(),
+        cnh: extractCNH(cpf),
+        telefone: extractPhone(),
+        tecnologia: tecnologia || 'SIGHRA',
+        pallets: extractPallets() || '28',
+        toneladas: extractToneladas() || '30',
+        inseridoEm: new Date().toISOString()
+      };
+
+      const newItem1Ref = push(ocRef);
+      await set(newItem1Ref, row1Data);
+
+      const createdItems: OrdemColetaItem[] = [{ id: newItem1Ref.key || '1', ...row1Data } as OrdemColetaItem];
+
+      if (segundaCarreta) {
+        const row2Data = {
+          ...row1Data,
+          carreta: segundaCarreta,
+          segundaCarreta: ''
         };
-
-        const newItem1Ref = push(ocRef);
-        await set(newItem1Ref, row1Data);
-
-        const createdItems: OrdemColetaItem[] = [{ id: newItem1Ref.key || '1', ...row1Data }];
-
-        if (hasSegundaCarreta) {
-          // Rule: if there are plates in both carreta 1 and carreta 2, create 2 rows
-          const row2Data = {
-            ...row1Data,
-            carreta: extracted.segundaCarreta,
-            segundaCarreta: ''
-          };
-          const newItem2Ref = push(ocRef);
-          await set(newItem2Ref, row2Data);
-          createdItems.push({ id: newItem2Ref.key || '2', ...row2Data });
-        }
-
-        setLastImportedOrdemColetaItems(createdItems);
-        setOrdemColetaPdfFile(null);
-        setOrdemColetaStatusMsg({
-          type: 'success',
-          text: `Ordem de Coleta importada com sucesso! ${createdItems.length === 2 ? '2 linhas geradas (Placa Carreta 1 e 2)' : '1 linha gerada'}. Clique no botão verde para copiar para a Planilha Google.`
-        });
-        setTimeout(() => setOrdemColetaStatusMsg(null), 6000);
-      } else {
-        throw new Error("Não foi possível ler as informações do PDF da Ordem de Coleta.");
+        const newItem2Ref = push(ocRef);
+        await set(newItem2Ref, row2Data);
+        createdItems.push({ id: newItem2Ref.key || '2', ...row2Data } as OrdemColetaItem);
       }
+
+      setLastImportedOrdemColetaItems(createdItems);
+      setOrdemColetaPdfFile(null);
+      setOrdemColetaStatusMsg({
+        type: 'success',
+        text: `Ordem de Coleta importada com sucesso! ${createdItems.length === 2 ? '2 linhas geradas (Placa Carreta 1 e 2)' : '1 linha gerada'}.`
+      });
+      setTimeout(() => setOrdemColetaStatusMsg(null), 6000);
+
     } catch (err: any) {
       console.error("Erro no processamento da Ordem de Coleta:", err);
       setOrdemColetaStatusMsg({ type: 'error', text: err.message || 'Erro ao processar PDF da Ordem de Coleta.' });
@@ -672,6 +751,13 @@ export default function Patio({ onBack }: PatioProps) {
         checkList: 'OK',
         dias: '180',
         segundaCarreta: '',
+        cpf: '',
+        rg: '',
+        cnh: '',
+        telefone: '',
+        tecnologia: '',
+        pallets: '',
+        toneladas: '',
         inseridoEm: new Date().toISOString()
       });
       setOrdemColetaStatusMsg({ type: 'success', text: 'Nova linha adicionada com sucesso!' });
@@ -915,9 +1001,7 @@ export default function Patio({ onBack }: PatioProps) {
 
   useEffect(() => {
     // Escutar rtdb
-    const path = 'patio/veiculos';
-    const patioRef = ref(db, path);
-    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
+    const patioRef = ref(db, 'patio/veiculos');
     const unsubscribe = onValue(patioRef, (snapshot) => {
       const data = snapshot.val();
       const items: PatioItem[] = [];
@@ -936,9 +1020,7 @@ export default function Patio({ onBack }: PatioProps) {
 
   useEffect(() => {
     // Escutar cubagem do rtdb
-    const path = 'patio/cubagem';
-    const cubagemRef = ref(db, path);
-    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
+    const cubagemRef = ref(db, 'patio/cubagem');
     const unsubscribe = onValue(cubagemRef, (snapshot) => {
       const data = snapshot.val();
       const items: CubagemItem[] = [];
@@ -1398,9 +1480,7 @@ export default function Patio({ onBack }: PatioProps) {
 
   useEffect(() => {
     // Escutar referências para cruzamento de dados de destino e outros valores
-    const path = 'pre_alertas/referencias';
-    const refsRef = ref(db, path);
-    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
+    const refsRef = ref(db, 'pre_alertas/referencias');
     const unsubscribeRefs = onValue(refsRef, (snapshot) => {
       if (snapshot.exists()) {
         setReferencias(snapshot.val() || {});
@@ -3189,6 +3269,13 @@ export default function Patio({ onBack }: PatioProps) {
                     <th className="px-3 py-2.5">CAVALO</th>
                     <th className="px-3 py-2.5">CARRETA</th>
                     <th className="px-3 py-2.5">CARGA / LIBERAÇÃO</th>
+                    <th className="px-3 py-2.5">CPF</th>
+                    <th className="px-3 py-2.5">RG</th>
+                    <th className="px-3 py-2.5">CNH</th>
+                    <th className="px-3 py-2.5">TELEFONE</th>
+                    <th className="px-3 py-2.5">TECNOLOGIA</th>
+                    <th className="px-3 py-2.5">PALLETS</th>
+                    <th className="px-3 py-2.5">TONELADAS</th>
                     <th className="px-3 py-2.5">ESTADO MOTORISTA</th>
                     <th className="px-3 py-2.5">ESTADO CAVALO</th>
                     <th className="px-3 py-2.5">ESTADO CARRETA</th>
@@ -3420,6 +3507,90 @@ export default function Patio({ onBack }: PatioProps) {
                                 className="w-48 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs"
                               />
                             ) : row.cargaLiberacao || '-'}
+                          </td>
+
+                          {/* CPF */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.cpf}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cpf: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.cpf || '-'}
+                          </td>
+
+                          {/* RG */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.rg}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, rg: e.target.value })}
+                                className="w-20 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.rg || '-'}
+                          </td>
+
+                          {/* CNH */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.cnh}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, cnh: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.cnh || '-'}
+                          </td>
+
+                          {/* TELEFONE */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.telefone}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, telefone: e.target.value })}
+                                className="w-28 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.telefone || '-'}
+                          </td>
+
+                          {/* TECNOLOGIA */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.tecnologia}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, tecnologia: e.target.value })}
+                                className="w-24 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.tecnologia || '-'}
+                          </td>
+
+                          {/* PALLETS */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.pallets}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, pallets: e.target.value })}
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.pallets || '-'}
+                          </td>
+
+                          {/* TONELADAS */}
+                          <td className="px-2.5 py-2 font-mono text-slate-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editState.toneladas}
+                                onChange={(e) => setEditingOrdemColetaRow({ ...editState, toneladas: e.target.value })}
+                                className="w-12 bg-slate-800 text-white border border-blue-500 rounded px-1.5 py-0.5 text-xs text-center"
+                              />
+                            ) : row.toneladas || '-'}
                           </td>
 
                           {/* ESTADO MOTORISTA */}

@@ -15,7 +15,7 @@ import {
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
 import mockupImg from '../assets/images/averba_o_interface_mockup_1780899726248.png';
-import { ref, get, set } from 'firebase/database';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface RawData {
@@ -88,10 +88,10 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
       }
 
       try {
-        const dbRef = ref(db, DATA_PATH);
-        const snapshot = await get(dbRef);
-        if (snapshot.exists()) {
-          const data = snapshot.val();
+        const docRef = doc(db, DATA_PATH);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
           if (data.parsedRows) setParsedRows(data.parsedRows);
           if (data.extraData) setExtraData(data.extraData);
           // Sync back to local backup
@@ -107,7 +107,7 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
           }));
         }
       } catch (error) {
-        console.warn("Realtime Database offline or inaccessible. Operating with local backup:", error);
+        console.warn("Firestore offline or inaccessible. Operating with local backup:", error);
       }
     };
     fetchData();
@@ -121,9 +121,9 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
     localStorage.setItem('backup_averbacao_data', JSON.stringify({ parsedRows: rows, extraData: extra }));
 
     try {
-      await set(ref(db, DATA_PATH), { parsedRows: rows, extraData: extra });
+      await setDoc(doc(db, DATA_PATH), { parsedRows: rows, extraData: extra });
     } catch (error) {
-      console.warn("Failed to sync with Realtime Database (client might be offline):", error);
+      console.warn("Failed to sync with Firestore (client might be offline):", error);
     }
   };
 

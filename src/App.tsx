@@ -118,9 +118,7 @@ export default function App() {
   const [isAlertDismissed, setIsAlertDismissed] = useState(false);
 
   useEffect(() => {
-    const path = 'presence_list/appointments';
-    const appsRef = ref(db, path);
-    console.log(`[Realtime Database] Tentando acessar caminho: ${path}`);
+    const appsRef = ref(db, 'presence_list/appointments');
     const unsubscribe = onValue(appsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {

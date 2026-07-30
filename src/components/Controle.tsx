@@ -1361,7 +1361,7 @@ Embarque: ${
       {/* TAB CONTENT: Gerador PGR */}
       {activeTab === "gerador" && (
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px_380px] gap-6 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
       {/* LEFT AREA: Template Generator (expanded dynamically) */}
       <div className="col-span-1 xl:col-span-1 flex flex-col">
         <div className="flex-1 rounded-3xl bg-white border border-slate-200/80 shadow-xl relative overflow-hidden flex flex-col p-6 sm:p-8">
