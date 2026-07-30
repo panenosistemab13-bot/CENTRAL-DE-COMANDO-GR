@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import PDFWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker&inline';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Initialize PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 import { PatioItem } from '../data/patioData';
 import { cn } from '../lib/utils';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from '../utils/principles';
+
 import { 
   Truck, 
   Trash2, 
@@ -30,6 +30,9 @@ import {
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
+
+// Initialize PDF.js worker locally using inlined worker
+pdfjsLib.GlobalWorkerOptions.workerPort = new PDFWorker();
 
 interface PatioProps {
   onBack?: () => void;
