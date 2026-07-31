@@ -29,7 +29,8 @@ import {
   Calendar,
   Sliders,
   Lock,
-  Unlock
+  Unlock,
+  Settings
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -101,11 +102,23 @@ export default function App() {
   const [showPresenceList, setShowPresenceList] = useState<boolean>(() => {
     return localStorage.getItem('show_presence_list') === 'true';
   });
+  const [showRotasPage, setShowRotasPage] = useState<boolean>(() => {
+    return localStorage.getItem('show_rotas_page') === 'true' || localStorage.getItem('show_presence_list') === 'true';
+  });
+
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
+  const [showPageSelectorModal, setShowPageSelectorModal] = useState<boolean>(false);
+  const [tempPresence, setTempPresence] = useState<boolean>(showPresenceList);
+  const [tempRotas, setTempRotas] = useState<boolean>(showRotasPage);
+
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
 
-  const visibleTabs = tabs.filter(tab => tab.id !== 'presence' || showPresenceList);
+  const visibleTabs = tabs.filter(tab => {
+    if (tab.id === 'presence') return showPresenceList;
+    if (tab.id === 'rotas') return showRotasPage;
+    return true;
+  });
 
   const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
@@ -158,7 +171,7 @@ export default function App() {
           case '2': e.preventDefault(); if (showPresenceList) setActiveTab('presence'); return;
           case '3': e.preventDefault(); setActiveTab('averbacao'); return;
           case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
-          case '5': e.preventDefault(); setActiveTab('rotas'); return;
+          case '5': e.preventDefault(); if (showPresenceList) setActiveTab('rotas'); return;
           case '6': e.preventDefault(); setActiveTab('checklist'); return;
           case '7': e.preventDefault(); setActiveTab('controle'); return;
         }
@@ -240,6 +253,7 @@ export default function App() {
         <MobileMenu 
           onSelect={(id) => setActiveTab(id as Tab)} 
           showPresenceList={showPresenceList}
+          showRotasPage={showRotasPage}
           onUnlockPresenceList={() => setShowPasswordModal(true)}
         />
       );
@@ -253,6 +267,7 @@ export default function App() {
             focusedIndex={focusedCardIndex}
             setFocusedIndex={setFocusedCardIndex}
             showPresenceList={showPresenceList}
+            showRotasPage={showRotasPage}
             onUnlockPresenceList={() => setShowPasswordModal(true)}
           />
         );
@@ -761,18 +776,18 @@ export default function App() {
               </h3>
 
               <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Digite a senha de administrador para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença</strong> no menu principal.
+                Digite a senha de administrador para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença e Rotas</strong> no menu principal.
               </p>
 
               <form onSubmit={(e) => {
                 e.preventDefault();
                 if (passwordInput === '#trescafe2027') {
-                  const newShowValue = !showPresenceList;
-                  setShowPresenceList(newShowValue);
-                  localStorage.setItem('show_presence_list', String(newShowValue));
+                  setTempPresence(showPresenceList);
+                  setTempRotas(showRotasPage);
                   setShowPasswordModal(false);
                   setPasswordInput('');
                   setPasswordError(false);
+                  setShowPageSelectorModal(true);
                 } else {
                   setPasswordError(true);
                 }
@@ -820,6 +835,114 @@ export default function App() {
                   </button>
                 </div>
               </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Global Page Selector / Suggestion Modal */}
+      {showPageSelectorModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[999] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-2xl rounded-3xl p-6 relative ring-4 ring-[#1c1109]/30 text-[#2D1A10]"
+          >
+            {/* Corner rivets */}
+            <div className="absolute top-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute top-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute bottom-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute bottom-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+
+            <div className="flex flex-col items-center text-center mt-2">
+              <div className="w-14 h-14 rounded-full bg-[#311f14] flex items-center justify-center mb-4 border-2 border-[#bfa27a] text-[#fdefd1] shadow-lg">
+                <Settings size={24} className="stroke-[2.5]" />
+              </div>
+              
+              <h3 className="text-2xl font-serif font-black uppercase tracking-tight text-[#2D1A10] mb-1">
+                Sugestão de Páginas Restritas
+              </h3>
+
+              <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
+                Escolha quais páginas administrativas você deseja exibir no menu principal:
+              </p>
+
+              {/* Suggestion Quick Actions */}
+              <div className="grid grid-cols-3 gap-2 w-full mb-4">
+                <button
+                  type="button"
+                  onClick={() => { setTempPresence(true); setTempRotas(true); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                >
+                  🌟 Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTempPresence(true); setTempRotas(false); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                >
+                  📋 Só Presença
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTempPresence(false); setTempRotas(true); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                >
+                  🗺️ Só Rotas
+                </button>
+              </div>
+
+              {/* Checkboxes */}
+              <div className="w-full space-y-2.5 bg-[#f5e8d3] p-3.5 rounded-2xl border border-[#311f14]/20 text-left mb-6 shadow-inner">
+                <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
+                  <input 
+                    type="checkbox"
+                    checked={tempPresence}
+                    onChange={(e) => setTempPresence(e.target.checked)}
+                    className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Lista de Presença</span>
+                    <span className="text-[10px] text-[#5c3e29] block">Controle diário e presença de equipe</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
+                  <input 
+                    type="checkbox"
+                    checked={tempRotas}
+                    onChange={(e) => setTempRotas(e.target.checked)}
+                    className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Rotas</span>
+                    <span className="text-[10px] text-[#5c3e29] block">Painel e mapeamento de rotas logísticas</span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  type="button"
+                  onClick={() => setShowPageSelectorModal(false)}
+                  className="flex-1 py-3 px-4 rounded-xl bg-black/10 hover:bg-black/20 text-[#2D1A10] font-black uppercase text-xs tracking-wider transition-colors border border-[#311f14]/20 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPresenceList(tempPresence);
+                    setShowRotasPage(tempRotas);
+                    localStorage.setItem('show_presence_list', String(tempPresence));
+                    localStorage.setItem('show_rotas_page', String(tempRotas));
+                    setShowPageSelectorModal(false);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"
+                >
+                  Salvar & Aplicar
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

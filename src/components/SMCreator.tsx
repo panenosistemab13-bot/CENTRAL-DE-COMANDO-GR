@@ -782,9 +782,12 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           trecho = invertRoute(trecho);
         }
 
+        const motoristaRaw = parts[1] || '';
+        const motoristaClean = motoristaRaw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+
         newRows.push({
           dataSaida: parts[0] || '',
-          motorista: parts[1] || '',
+          motorista: motoristaClean,
           placa: (parts[2] || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase(),
           bau1: parts[3] || '',
           bau2: parts[4] || '',
@@ -830,6 +833,8 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       finalValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     } else if (field === 'trecho' && typeof value === 'string') {
       finalValue = value.toUpperCase();
+    } else if (field === 'motorista' && typeof value === 'string') {
+      finalValue = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
     }
 
     if (section === 'ida') {

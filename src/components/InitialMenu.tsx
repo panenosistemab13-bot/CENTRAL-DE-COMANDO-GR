@@ -41,6 +41,7 @@ interface InitialMenuProps {
   focusedIndex: number;
   setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
   showPresenceList: boolean;
+  showRotasPage: boolean;
   onUnlockPresenceList: () => void;
 }
 
@@ -373,29 +374,41 @@ function ModuleGraphic({ id }: { id: string }) {
   }
 }
 
-export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, onUnlockPresenceList }: InitialMenuProps) {
+export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, onUnlockPresenceList }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
-  const filteredMenuItems = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.id === 'presence') return showPresenceList;
+    if (item.id === 'rotas') return showRotasPage;
+    return true;
+  });
   const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);
   const activeItem = filteredMenuItems[safeFocusedIndex] || filteredMenuItems[0];
 
   const paginate = useCallback((newDirection: number) => {
     setDirection(newDirection);
     setFocusedIndex((prev) => {
-      const items = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
+      const items = menuItems.filter(item => {
+        if (item.id === 'presence') return showPresenceList;
+        if (item.id === 'rotas') return showRotasPage;
+        return true;
+      });
       let next = prev + newDirection;
       if (next < 0) next = items.length - 1;
       if (next >= items.length) next = 0;
       return next;
     });
-  }, [setFocusedIndex, showPresenceList]);
+  }, [setFocusedIndex, showPresenceList, showRotasPage]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
 
-      const items = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
+      const items = menuItems.filter(item => {
+        if (item.id === 'presence') return showPresenceList;
+        if (item.id === 'rotas') return showRotasPage;
+        return true;
+      });
       if (e.key === 'ArrowRight') paginate(1);
       if (e.key === 'ArrowLeft') paginate(-1);
       if (e.key === 'Enter') {
@@ -405,7 +418,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, paginate, onSelect, showPresenceList]);
+  }, [focusedIndex, paginate, onSelect, showPresenceList, showRotasPage]);
 
   return (
     <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">

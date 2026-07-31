@@ -465,7 +465,71 @@ export default function Checklist() {
   };
 
   return (
-    <div className="space-y-6 pb-20 font-sans text-[#D8C3A5]">
+    <div className="flex flex-col min-h-screen bg-[#2D1A10] text-stone-100 overflow-hidden font-sans" style={{ zoom: 0.85 }}>
+      {/* Top Header / Quick Codes Bar */}
+      <header className="bg-[#3A2414] border-b-2 border-[#6B4423] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xl z-20">
+        <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10 shrink-0 pointer-events-none">
+            <svg className="w-full h-full filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffd700" />
+                  <stop offset="40%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#b45309" />
+                </linearGradient>
+                <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#d92d33" />
+                  <stop offset="100%" stopColor="#7a0307" />
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r="54" fill="none" stroke="url(#goldGrad)" strokeWidth="4" />
+              <circle cx="60" cy="60" r="50" fill="url(#redGrad)" />
+              <g transform="translate(60, 56) scale(0.72)">
+                <path d="M-12,-10 C-17,-15 -25,-12 -25,-4 C-25,4 -15,10 0,22 C15,10 25,4 25,-4 C25,-12 17,-15 12,-10 C8,-6 2,-6 0,-6 C-2,-6 -8,-6 -12,-10 Z" fill="url(#goldGrad)" />
+              </g>
+            </svg>
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-sm sm:text-base font-serif font-black text-white uppercase tracking-wider">
+              CENTRAL DE CHECKLIST PGR
+            </h1>
+            <p className="text-[10px] text-[#C7A26A] font-serif uppercase tracking-widest">
+              MONITORAMENTO DE FROTA E VALIDADE
+            </p>
+          </div>
+        </div>
+
+        {/* View Mode Switch Tabs */}
+        <div className="flex bg-[#120702] rounded-xl p-1 border border-[#3d2011]">
+          <button
+            onClick={() => setActiveView('monitoring')}
+            className={cn(
+              "px-5 py-2 text-xs font-bold font-serif uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+              activeView === 'monitoring' 
+                ? "bg-gradient-to-b from-[#B32025] to-[#800609] text-white shadow-md border-t border-[#F93E47]/30" 
+                : "text-[#8c7465] hover:text-[#d8c3a5]"
+            )}
+          >
+            <CoffeeBean className="w-3.5 h-3.5" />
+            Monitoramento
+          </button>
+          <button
+            onClick={() => setActiveView('generator')}
+            className={cn(
+              "px-5 py-2 text-xs font-bold font-serif uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+              activeView === 'generator' 
+                ? "bg-gradient-to-b from-[#B32025] to-[#800609] text-white shadow-md border-t border-[#F93E47]/30" 
+                : "text-[#8c7465] hover:text-[#d8c3a5]"
+            )}
+          >
+            <CoffeeBean className="w-3.5 h-3.5" />
+            Solicitação
+          </button>
+        </div>
+      </header>
+
+      {/* Main Workspace Scroll Area */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Dynamic styles injected for real cup of coffee steam rising effect */}
       <style>{`
         @keyframes rise {
@@ -487,55 +551,6 @@ export default function Checklist() {
         <CoffeeBean className="w-96 h-96 text-white" />
       </div>
 
-      {/* ================= HEADER AREA ================= */}
-      <div className="hidden w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0 px-4">
-        
-        {/* Left title and logo stack */}
-        <div className="flex items-center gap-5 text-left w-full md:w-auto">
-          {/* Logo stamp SVG */}
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 pointer-events-none hover:scale-105 transition-transform duration-500">
-            <svg className="w-full h-full filter drop-shadow-[0_4px_8px_rgba(58,36,20,0.35)]" viewBox="0 0 120 120">
-              <defs>
-                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ffd700" />
-                  <stop offset="40%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#b45309" />
-                </linearGradient>
-                <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#d92d33" />
-                  <stop offset="100%" stopColor="#7a0307" />
-                </linearGradient>
-              </defs>
-              {/* Embossed metal rim */}
-              <circle cx="60" cy="60" r="54" fill="none" stroke="url(#goldGrad)" strokeWidth="4" />
-              <circle cx="60" cy="60" r="50" fill="url(#redGrad)" />
-              <circle cx="60" cy="60" r="44" fill="none" stroke="url(#goldGrad)" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
-              
-              {/* Outer heart bundle */}
-              <g transform="translate(60, 56) scale(0.72)">
-                <path d="M-12,-10 C-17,-15 -25,-12 -25,-4 C-25,4 -15,10 0,22 C15,10 25,4 25,-4 C25,-12 17,-15 12,-10 C8,-6 2,-6 0,-6 C-2,-6 -8,-6 -12,-10 Z" fill="url(#goldGrad)" />
-                {/* Embedded hearts inside */}
-                <path d="M-6,-4 C-8.5,-6.5 -12.5,-5 -12.5,-1 C-12.5,3 -7.5,6 0,12 C7.5,6 12.5,3 12.5,-1 C12.5,-5 8.5,-6.5 6,-4 C4,-2 1,-2 0,-2 C-1,-2 -3,-2 -6,-4 Z" fill="#7a0307" />
-                <path d="M-3,-1.5 C-4.2,-2.7 -6.2,-2 -6.2,0 C-6.2,2 -3.7,3.5 0,6 C3.7,3.5 6.2,2 6.2,0 C6.2,-2 4.2,-2.7 3,-1.5 C2,-0.5 0.5,-0.5 0,-0.5 C-0.5,-0.5 -1,-0.5 -3,-1.5 Z" fill="url(#goldGrad)" />
-              </g>
-
-              {/* Gold text border on top */}
-              <path id="brandPath" d="M 18,60 A 42,42 0 0,0 102,60" fill="none" />
-              <text fontFamily="Oswald" fontSize="9" fontWeight="bold" fill="url(#goldGrad)" textAnchor="middle">
-                <textPath href="#brandPath" startOffset="50%">3 CORAÇÕES</textPath>
-              </text>
-            </svg>
-          </div>
-
-          {/* Page title next to the logo */}
-          <div className="flex flex-col">
-            <h1 className="text-3xl font-rustic-title font-black text-[#2b180d] uppercase tracking-wide leading-none drop-shadow-[1px_2px_1px_rgba(255,255,255,0.45)]">
-              CHECKLIST
-            </h1>
-          </div>
-        </div>
-      </div>
-
       {/* CORE CONTROL BOARD CARD - MADEIRA ENVELHECIDA */}
       <div className="relative z-10 bg-gradient-to-br from-[#2A1408] to-[#120703] border-[6px] border-[#3D2012] rounded-[2.5rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_1px_1px_3px_rgba(255,255,255,0.08)]">
         {/* Metal decorative corner hinges */}
@@ -545,39 +560,9 @@ export default function Checklist() {
         <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_2px_black]" />
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-[#160B05]/95 border border-[#3e1f0e] rounded-[1.8rem] p-5 sm:p-6 shadow-inner">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-            <div className="items-center gap-2 hidden">
-              <ClipboardCheck size={28} className="text-[#B58A4C]" />
-              <span className="text-xl font-bold font-serif text-white tracking-tight uppercase">CHECKLIST</span>
-            </div>
-
-            {/* View Mode Switch Tabs */}
-            <div className="flex bg-[#120702] rounded-xl p-1 border border-[#3d2011]">
-              <button
-                onClick={() => setActiveView('monitoring')}
-                className={cn(
-                  "px-5 py-2 text-xs font-bold font-serif uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5",
-                  activeView === 'monitoring' 
-                    ? "bg-gradient-to-b from-[#B32025] to-[#800609] text-white shadow-md border-t border-[#F93E47]/30" 
-                    : "text-[#8c7465] hover:text-[#d8c3a5]"
-                )}
-              >
-                <CoffeeBean className="w-3.5 h-3.5" />
-                Monitoramento
-              </button>
-              <button
-                onClick={() => setActiveView('generator')}
-                className={cn(
-                  "px-5 py-2 text-xs font-bold font-serif uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5",
-                  activeView === 'generator' 
-                    ? "bg-gradient-to-b from-[#B32025] to-[#800609] text-white shadow-md border-t border-[#F93E47]/30" 
-                    : "text-[#8c7465] hover:text-[#d8c3a5]"
-                )}
-              >
-                <CoffeeBean className="w-3.5 h-3.5" />
-                Solicitação
-              </button>
-            </div>
+          <div className="flex items-center gap-3">
+            <ClipboardCheck size={26} className="text-[#B58A4C]" />
+            <span className="text-lg font-bold font-serif text-white tracking-tight uppercase">PAINEL DE CONTROLE CHECKLIST</span>
           </div>
 
           {activeView === 'monitoring' && (
@@ -595,14 +580,14 @@ export default function Checklist() {
               
               <button 
                 onClick={() => setIsAdding(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border-y border-t-[#F93E47]/20 border-b-black/40"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-b from-[#B32025] to-[#7f0003] text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border-y border-t-[#F93E47]/20 border-b-black/40 cursor-pointer"
               >
                 <Plus size={16} /> NOVO REGISTRO
               </button>
 
               <button 
                 onClick={handleClearAll}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-red-950/80 hover:bg-red-900 text-red-200 hover:text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border border-red-800/60"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-red-950/80 hover:bg-red-900 text-red-200 hover:text-white rounded-xl text-xs font-serif font-black uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-98 transition-all border border-red-800/60 cursor-pointer"
                 title="Limpar todos os registros de checklist"
               >
                 <Trash2 size={16} /> LIMPAR TUDO
@@ -1201,29 +1186,17 @@ export default function Checklist() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-              }}
-              className="bg-black/85 backdrop-blur-md"
+              className="absolute inset-0 bg-black/85 backdrop-blur-md"
               onClick={() => {
                 setIsAdding(false);
               }}
             />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              style={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-              }}
-              className="w-full max-w-xl bg-[#FAF0DE] border-[6px] border-[#3A2414] rounded-[2.5rem] p-7 md:p-9 shadow-[0_30px_70px_rgba(58,36,20,0.5)] space-y-6 text-[#3A2414] max-h-[92vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              style={{ zoom: 0.65 }}
+              className="relative z-10 w-full max-w-xl bg-[#FAF0DE] border-[6px] border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-[0_30px_70px_rgba(58,36,20,0.5)] space-y-4 text-[#3A2414] my-auto"
             >
               {/* Corner decorative rivet screws */}
               <div className="absolute top-4 left-4 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#6a4220] to-[#b89467] border border-[#3A2414]/30 shadow-sm" />
@@ -1393,6 +1366,7 @@ export default function Checklist() {
             <Heart size={10} className="fill-current" />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

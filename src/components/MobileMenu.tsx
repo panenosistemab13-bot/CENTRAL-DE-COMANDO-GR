@@ -76,11 +76,16 @@ const menuItems: MenuItem[] = [
 interface MobileMenuProps {
   onSelect: (id: string) => void;
   showPresenceList: boolean;
+  showRotasPage: boolean;
   onUnlockPresenceList: () => void;
 }
 
-export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenceList }: MobileMenuProps) {
-  const visibleMenuItems = menuItems.filter(item => item.id !== 'presence' || showPresenceList);
+export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, onUnlockPresenceList }: MobileMenuProps) {
+  const visibleMenuItems = menuItems.filter(item => {
+    if (item.id === 'presence') return showPresenceList;
+    if (item.id === 'rotas') return showRotasPage;
+    return true;
+  });
   return (
     <div className="w-full min-h-screen bg-transparent relative flex flex-col items-center justify-between overflow-hidden select-none pb-8">
       
