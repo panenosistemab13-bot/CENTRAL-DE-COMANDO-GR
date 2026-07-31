@@ -107,11 +107,15 @@ export default function App() {
   const [showRotasPage, setShowRotasPage] = useState<boolean>(() => {
     return localStorage.getItem('show_rotas_page') === 'true' || localStorage.getItem('show_presence_list') === 'true';
   });
+  const [showIscasPage, setShowIscasPage] = useState<boolean>(() => {
+    return localStorage.getItem('show_iscas_page') === 'true';
+  });
 
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [showPageSelectorModal, setShowPageSelectorModal] = useState<boolean>(false);
   const [tempPresence, setTempPresence] = useState<boolean>(showPresenceList);
   const [tempRotas, setTempRotas] = useState<boolean>(showRotasPage);
+  const [tempIscas, setTempIscas] = useState<boolean>(showIscasPage);
 
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
@@ -119,6 +123,7 @@ export default function App() {
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'presence') return showPresenceList;
     if (tab.id === 'rotas') return showRotasPage;
+    if (tab.id === 'iscas') return showIscasPage;
     return true;
   });
 
@@ -173,9 +178,10 @@ export default function App() {
           case '2': e.preventDefault(); if (showPresenceList) setActiveTab('presence'); return;
           case '3': e.preventDefault(); setActiveTab('averbacao'); return;
           case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
-          case '5': e.preventDefault(); if (showPresenceList) setActiveTab('rotas'); return;
+          case '5': e.preventDefault(); if (showRotasPage) setActiveTab('rotas'); return;
           case '6': e.preventDefault(); setActiveTab('checklist'); return;
           case '7': e.preventDefault(); setActiveTab('controle'); return;
+          case '8': e.preventDefault(); if (showIscasPage) setActiveTab('iscas'); return;
         }
       }
 
@@ -232,6 +238,12 @@ export default function App() {
   }, [activeTab, showPresenceList, visibleTabs]);
 
   useEffect(() => {
+    if (activeTab === 'iscas' && !showIscasPage) setActiveTab('menu');
+    if (activeTab === 'presence' && !showPresenceList) setActiveTab('menu');
+    if (activeTab === 'rotas' && !showRotasPage) setActiveTab('menu');
+  }, [activeTab, showIscasPage, showPresenceList, showRotasPage]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
     }, 1000);
@@ -256,6 +268,7 @@ export default function App() {
           onSelect={(id) => setActiveTab(id as Tab)} 
           showPresenceList={showPresenceList}
           showRotasPage={showRotasPage}
+          showIscasPage={showIscasPage}
           onUnlockPresenceList={() => setShowPasswordModal(true)}
         />
       );
@@ -270,6 +283,7 @@ export default function App() {
             setFocusedIndex={setFocusedCardIndex}
             showPresenceList={showPresenceList}
             showRotasPage={showRotasPage}
+            showIscasPage={showIscasPage}
             onUnlockPresenceList={() => setShowPasswordModal(true)}
           />
         );
@@ -778,7 +792,7 @@ export default function App() {
               </h3>
 
               <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Digite a senha de administrador para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença e Rotas</strong> no menu principal.
+                Digite a senha de administrador para alternar a exibição de páginas restritas (<strong className="text-[#800609]">Lista de Presença, Rotas e Iscas</strong>) no menu principal.
               </p>
 
               <form onSubmit={(e) => {
@@ -786,6 +800,7 @@ export default function App() {
                 if (passwordInput === '#trescafe2027') {
                   setTempPresence(showPresenceList);
                   setTempRotas(showRotasPage);
+                  setTempIscas(showIscasPage);
                   setShowPasswordModal(false);
                   setPasswordInput('');
                   setPasswordError(false);
@@ -873,24 +888,24 @@ export default function App() {
               <div className="grid grid-cols-3 gap-2 w-full mb-4">
                 <button
                   type="button"
-                  onClick={() => { setTempPresence(true); setTempRotas(true); }}
+                  onClick={() => { setTempPresence(true); setTempRotas(true); setTempIscas(true); }}
                   className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  🌟 Todas
+                  🌟 Exibir Todas
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setTempPresence(true); setTempRotas(false); }}
+                  onClick={() => { setTempPresence(true); setTempRotas(false); setTempIscas(false); }}
                   className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
                   📋 Só Presença
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setTempPresence(false); setTempRotas(true); }}
+                  onClick={() => { setTempPresence(false); setTempRotas(false); setTempIscas(true); }}
                   className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  🗺️ Só Rotas
+                  🎯 Só Iscas
                 </button>
               </div>
 
@@ -921,6 +936,19 @@ export default function App() {
                     <span className="text-[10px] text-[#5c3e29] block">Painel e mapeamento de rotas logísticas</span>
                   </div>
                 </label>
+
+                <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
+                  <input 
+                    type="checkbox"
+                    checked={tempIscas}
+                    onChange={(e) => setTempIscas(e.target.checked)}
+                    className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Iscas & Rastreio</span>
+                    <span className="text-[10px] text-[#5c3e29] block">Gestão de iscas, planilhas e gráficos 3D</span>
+                  </div>
+                </label>
               </div>
 
               <div className="flex gap-3 w-full">
@@ -936,8 +964,10 @@ export default function App() {
                   onClick={() => {
                     setShowPresenceList(tempPresence);
                     setShowRotasPage(tempRotas);
+                    setShowIscasPage(tempIscas);
                     localStorage.setItem('show_presence_list', String(tempPresence));
                     localStorage.setItem('show_rotas_page', String(tempRotas));
+                    localStorage.setItem('show_iscas_page', String(tempIscas));
                     setShowPageSelectorModal(false);
                   }}
                   className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"

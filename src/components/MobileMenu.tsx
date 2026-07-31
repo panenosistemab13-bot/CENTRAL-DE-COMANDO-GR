@@ -8,7 +8,9 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Grid3X3,
+  Route
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -22,7 +24,7 @@ interface MenuItem {
   badge?: string;
 }
 
-const mobileMenuItems: MenuItem[] = [
+const allMobileMenuItems: MenuItem[] = [
   { 
     id: 'patio', 
     subtitle: 'CONTROLE LOGÍSTICO', 
@@ -42,6 +44,15 @@ const mobileMenuItems: MenuItem[] = [
     badge: 'Diário'
   },
   { 
+    id: 'rotas', 
+    subtitle: 'MAPA DE ROTAS', 
+    title: 'ROTAS', 
+    icon: Route,
+    styleClass: "bg-gradient-to-br from-[#3a2618] via-[#2d1d12] to-[#190f09] border border-[#7a5338]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.15)] text-[#f5ebd6]",
+    iconStyle: "bg-gradient-to-br from-[#3a2618] to-[#190f09] border-[#e6c29b]/40 text-[#e6c29b]",
+    badge: 'Mapeamento'
+  },
+  { 
     id: 'checklist', 
     subtitle: 'VISTORIAS & FROTA', 
     title: 'CHECKLIST', 
@@ -49,17 +60,33 @@ const mobileMenuItems: MenuItem[] = [
     styleClass: "bg-gradient-to-br from-[#331e11] via-[#24130a] to-[#150a06] border border-[#6b472e]/70 shadow-[0_12px_30px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.12)] text-[#edd9bf]",
     iconStyle: "bg-gradient-to-br from-[#24130a] to-[#0f0704] border-[#dac2ad]/30 text-[#dac2ad]",
     badge: 'Inspeção'
+  },
+  { 
+    id: 'iscas', 
+    subtitle: 'GESTÃO DE ISCAS', 
+    title: 'ISCAS & RASTREIO', 
+    icon: Grid3X3,
+    styleClass: "bg-gradient-to-br from-[#1e3a2b] via-[#14281d] to-[#0a1710] border border-[#3e6b52]/70 shadow-[0_12px_30px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.12)] text-[#d1f5e0]",
+    iconStyle: "bg-gradient-to-br from-[#14281d] to-[#07120c] border-[#92d4ad]/30 text-[#92d4ad]",
+    badge: 'Rastreio'
   }
 ];
 
 interface MobileMenuProps {
   onSelect: (id: string) => void;
   showPresenceList: boolean;
-  showRotasPage: boolean;
+  showRotasPage?: boolean;
+  showIscasPage?: boolean;
   onUnlockPresenceList: () => void;
 }
 
-export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenceList }: MobileMenuProps) {
+export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, showIscasPage, onUnlockPresenceList }: MobileMenuProps) {
+  const visibleMobileItems = allMobileMenuItems.filter(item => {
+    if (item.id === 'presence') return showPresenceList;
+    if (item.id === 'rotas') return showRotasPage;
+    if (item.id === 'iscas') return showIscasPage;
+    return true;
+  });
   return (
     <div className="w-full min-h-screen bg-[#140b07] relative flex flex-col justify-between overflow-x-hidden select-none px-5 py-6">
       
@@ -109,7 +136,7 @@ export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenc
           </h2>
         </div>
 
-        {mobileMenuItems.map((item, index) => {
+        {visibleMobileItems.map((item, index) => {
           const IconComponent = item.icon;
           return (
             <motion.button
