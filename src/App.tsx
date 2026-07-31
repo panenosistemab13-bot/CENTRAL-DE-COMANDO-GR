@@ -30,7 +30,8 @@ import {
   Sliders,
   Lock,
   Unlock,
-  Settings
+  Settings,
+  Grid3X3
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -82,6 +83,7 @@ const tabs = [
   { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'controle', label: 'Controle', icon: Sliders },
+  { id: 'iscas', label: 'Iscas', icon: Grid3X3 },
 ];
 
 function Screw({ className }: { className?: string }) {

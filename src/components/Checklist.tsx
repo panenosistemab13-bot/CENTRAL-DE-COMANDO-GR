@@ -55,53 +55,19 @@ const CoffeeBean = ({ className = "w-6 h-6", ...props }: { className?: string; [
   </svg>
 );
 
-const LicensePlate = ({ plate, size = 'normal' }: { plate: string; size?: 'normal' | 'large' }) => (
-  <div className={cn(
-    "relative bg-gradient-to-b from-[#ffffff] via-[#f2f2f2] to-[#e4e4e4] border-[4px] sm:border-[5px] border-[#d4d4d4] rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.4),0_2px_6px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-3px_4px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col items-stretch select-none transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_16px_35px_rgba(179,32,37,0.35)]",
-    size === 'large' ? "w-[210px] sm:w-[260px]" : "w-[140px]"
-  )}>
-    {/* Mercosul Top Blue Banner */}
-    <div className={cn(
-      "bg-gradient-to-r from-[#002b7a] via-[#003d99] to-[#002b7a] flex items-center justify-between px-3 text-white uppercase font-sans font-black shadow-inner border-b border-[#001845]",
-      size === 'large' ? "h-[28px] text-[11px]" : "h-[20px] text-[8.5px]"
-    )}>
-      {/* Left BR flag badge */}
-      <div className="flex items-center gap-1.5">
-        <div className={cn(
-          "bg-[#009739] rounded-sm flex items-center justify-center shadow-sm relative overflow-hidden",
-          size === 'large' ? "w-[16px] h-[11px]" : "w-[12px] h-[8px]"
-        )}>
-          <div className="w-[6px] h-[4px] bg-[#FEDD00] rotate-45 flex items-center justify-center">
-            <div className="w-[2px] h-[2px] bg-[#002776] rounded-full"></div>
-          </div>
-        </div>
-        <span className="tracking-[0.25em] font-extrabold text-[#f0f4ff]">BR</span>
-      </div>
-
-      {/* Center title */}
-      <span className="tracking-[0.3em] font-serif font-black text-[#fdfdfd] drop-shadow">BRASIL</span>
-
-      {/* Right Mercosul Symbol / State Badge */}
-      <div className="flex items-center gap-1">
-        <div className={cn(
-          "rounded-full bg-[#1e40af] border border-white/40 flex items-center justify-center text-[7px] font-black text-white",
-          size === 'large' ? "w-4 h-4 text-[9px]" : "w-3 h-3 text-[6px]"
-        )}>
-          M
+const LicensePlate = ({ plate }: { plate: string }) => (
+  <div className="relative w-[130px] bg-[#f2f2f2] border-2 border-[#8c7465] rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col items-stretch select-none">
+    <div className="bg-[#003399] h-[15px] flex items-center justify-between px-1.5 text-[8px] font-sans font-black text-white uppercase tracking-tight">
+      <span>BRASIL</span>
+      <div className="w-[10px] h-[7px] bg-[#009739] relative flex items-center justify-center">
+        <div className="w-[6px] h-[4px] bg-[#FEDD00] rotate-45 relative flex items-center justify-center">
+          <div className="w-[2.5px] h-[2.5px] bg-[#002776] rounded-full"></div>
         </div>
       </div>
     </div>
-
-    {/* Main Plate Character Display (Embossed 3D Metallic Style) */}
-    <div className={cn(
-      "bg-gradient-to-b from-[#ffffff] via-[#f7f4ed] to-[#ede5d8] text-[#110905] font-black text-center leading-none font-mono uppercase tracking-[0.2em] py-2.5 sm:py-3.5 relative flex items-center justify-center shadow-inner",
-      size === 'large' ? "text-[28px] sm:text-[34px]" : "text-[20px]"
-    )} style={{ textShadow: '0 2px 2px rgba(255,255,255,0.9), 0 -1px 1px rgba(0,0,0,0.25), 1px 1px 0px rgba(0,0,0,0.1)' }}>
+    <div className="bg-[#fcf8f2] text-[#1a0f08] font-black text-[18px] text-center leading-none py-1.5 font-mono uppercase border-t border-[#d8c3a5]">
       {plate}
     </div>
-
-    {/* Bottom holographic / security striping detail */}
-    <div className="h-1 bg-gradient-to-r from-transparent via-[#c0c0c0]/40 to-transparent w-full"></div>
   </div>
 );
 
@@ -1048,103 +1014,220 @@ export default function Checklist() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    onClick={() => setEditingItem(item)}
-                    className="cursor-pointer bg-gradient-to-br from-[#fcf8f0] via-[#f2e6d6] to-[#ebd4bc] border-2 sm:border-[4px] border-[#3A2414] rounded-[2rem] p-4 sm:p-6 shadow-[0_16px_36px_rgba(58,36,20,0.18)] relative overflow-hidden group hover:border-[#B32025] transition-all duration-300 hover:scale-[1.01]"
+                    className="bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-2 sm:border-[4px] border-[#3A2414] rounded-[1.5rem] sm:rounded-[2.2rem] p-3.5 sm:p-5 shadow-[0_12px_28px_rgba(58,36,20,0.15)] relative overflow-hidden group"
                   >
                     {/* Metal rivets in corners */}
-                    <div className="absolute top-3 left-3 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow" />
-                    <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow" />
-                    <div className="absolute bottom-3 left-3 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow" />
-                    <div className="absolute bottom-3 right-3 w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow" />
+                    <div className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
+                    <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
+                    <div className="absolute bottom-2.5 left-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
+                    <div className="absolute bottom-2.5 right-2.5 w-2 h-2 rounded-full bg-gradient-to-tr from-[#5a3e1b] to-[#cfae7c] shadow-[1px_1px_1px_rgba(0,0,0,0.15)]" />
 
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+                    {/* Bento Layout Grid representing 6 information cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-3.5">
                       
-                      {/* Left: Huge License Plates */}
-                      <div className="flex flex-wrap items-center justify-center gap-4">
-                        <div className="flex flex-col items-center">
-                          <span className="text-[10px] font-black font-serif text-[#3A2414] uppercase tracking-[0.2em] mb-2">CAVALO (TRATOR)</span>
-                          <div className="transform transition-transform group-hover:scale-105 duration-300">
-                            <LicensePlate plate={item.cavalo} size="large" />
-                          </div>
-                        </div>
-
-                        {item.carretas && (
-                          <div className="flex flex-col items-center">
-                            <span className="text-[10px] font-black font-serif text-[#3A2414] uppercase tracking-[0.2em] mb-2">CARRETA(S) DO CONJUNTO</span>
-                            <div className="bg-[#fdfcf9] border-2 border-[#8c7465] rounded-xl px-4 py-3.5 shadow-md flex items-center gap-2">
-                              <Truck size={20} className="text-[#3A2414]" />
-                              <span className="font-mono font-black text-base text-[#2D1A10] uppercase tracking-wider">{item.carretas}</span>
-                            </div>
-                          </div>
-                        )}
+                      {/* IDENTIFICADOR (BRASIL LICENSE PLATE) */}
+                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3 min-h-24 md:h-28 relative shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest mb-1.5">IDENTIFICADOR</span>
+                        <LicensePlate plate={item.cavalo} />
                       </div>
 
-                      {/* Center: Status & Expiration Details */}
-                      <div className="flex flex-col items-center lg:items-start gap-2.5 text-center lg:text-left flex-1 px-2">
-                        <div className="flex items-center gap-2.5 flex-wrap justify-center lg:justify-start">
-                          {diasParaVencer < 0 || status.label === 'VENCIDO' || status.label === 'REPROVADO' ? (
-                            <div className="px-3.5 py-1.5 rounded-xl bg-[#B32025] text-white font-serif font-black text-xs uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-pulse">
-                              <span>🚨 VENCIDO (EXPIROU)</span>
-                            </div>
-                          ) : (
-                            <div className="px-3.5 py-1.5 rounded-xl bg-[#2e7d32] text-white font-serif font-black text-xs uppercase tracking-widest shadow-md flex items-center gap-1.5">
-                              <span>✅ EM DIA (APROVADO)</span>
+                      {/* STATUS (ROTATED DISTRESSED RUBBER STAMP) */}
+                      <div className="flex flex-col items-center justify-center bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3 min-h-24 md:h-28 relative overflow-hidden shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest mb-1">STATUS</span>
+                        <div className="flex items-center justify-center flex-1 w-full mt-1.5 select-none z-10">
+                          {status.label === 'APROVADO' && (
+                            <div className="transform -rotate-6 border-[3px] border-dashed border-[#55a360] text-[#55a360] font-serif font-black text-xs px-2.5 py-1 uppercase tracking-widest rounded bg-white/60">
+                              APROVADO
                             </div>
                           )}
-
-                          {item.periferico && (
-                            <span className="px-3 py-1 rounded-xl bg-[#3A2414]/10 text-[#3A2414] font-mono font-bold text-[10px] uppercase">
-                              {item.periferico}
-                            </span>
+                          {(status.label === 'VENCIDO' || status.label === 'REPROVADO') && (
+                            <div className="transform -rotate-[8deg] border-[3px] border-dashed border-[#B32025] text-[#B32025] font-serif font-black text-xs px-2.5 py-1 uppercase tracking-widest rounded bg-white/60 animate-pulse">
+                              VENCIDO
+                            </div>
                           )}
-
-                          {item.manutencaoOs && (
-                            <span className="px-3 py-1 rounded-xl bg-amber-500/25 text-amber-900 font-mono font-bold text-[10px]">
-                              OS: {item.manutencaoOs}
-                            </span>
+                          {status.label === 'NEGATIVADO' && (
+                            <div className="transform -rotate-[10deg] border-[3px] border-dashed border-amber-500 text-amber-500 font-serif font-black text-[10px] px-2 py-1 uppercase tracking-wider rounded bg-white/60">
+                              NEGATIVADO
+                            </div>
+                          )}
+                          {status.label === 'URGENTE' && (
+                            <div className="transform -rotate-3 border-[3px] border-dashed border-amber-500 text-amber-500 font-serif font-black text-xs px-2 py-1 uppercase tracking-widest rounded bg-white/60 animate-pulse">
+                              URGENTE
+                            </div>
                           )}
                         </div>
+                      </div>
 
-                        <div className="flex items-center gap-4 text-xs font-serif text-[#3A2414]/90 mt-1">
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={15} className="text-[#B32025]" />
-                            <span>Vencimento: <strong className="font-mono font-black text-sm">{format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}</strong></span>
-                          </div>
-                          <span className={cn(
-                            "font-mono font-bold text-xs",
-                            diasParaVencer < 0 ? "text-[#B32025]" : "text-[#2e7d32]"
+                      {/* VALIDADE (CLOCK & DATE) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">VALIDADE</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <div className={cn(
+                            "flex items-center gap-1.5 font-mono font-black text-xs sm:text-sm",
+                            diasParaVencer < 0 ? "text-[#B32025]" : "text-[#55a360]"
                           )}>
-                            ({diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias restantes`})
-                          </span>
+                            <Clock size={15} />
+                            <span>{format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}</span>
+                          </div>
+                          <span className="text-[9px] text-[#3A2414]/70 font-serif mt-1 block tracking-wider uppercase">Teste base: {format(parseISO(item.dataTeste), 'dd/MM')}</span>
                         </div>
-
-                        {item.observacao && (
-                          <p className="text-xs text-[#3A2414]/80 italic mt-1 max-w-md line-clamp-1">
-                            "{item.observacao}"
-                          </p>
-                        )}
                       </div>
 
-                      {/* Right: Action prompt */}
-                      <div className="flex flex-col items-center justify-center gap-2 border-t lg:border-t-0 lg:border-l border-[#3A2414]/15 pt-4 lg:pt-0 lg:pl-6 w-full lg:w-auto">
-                        <span className="text-[10px] font-serif font-bold text-[#3A2414]/70 uppercase tracking-wider text-center">
-                          Clique na placa para detalhes
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingItem(item);
-                            }}
-                            className="px-4.5 py-2.5 bg-[#3A2414] hover:bg-[#B32025] text-[#fdf8f0] font-serif font-black text-xs rounded-xl shadow transition-colors cursor-pointer flex items-center gap-1.5 uppercase tracking-wider"
-                          >
-                            <Edit2 size={13} />
-                            <span>Ver Detalhes / Editar</span>
-                          </button>
+                      {/* CARRETAS (TRUCK MODEL ICON) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">CARRETAS</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <div className="flex items-center gap-1.5 text-[#2D1A10] font-mono font-bold text-xs">
+                            <Truck size={15} className="text-[#3A2414] shrink-0" />
+                            <span className="truncate max-w-[100px] sm:max-w-none">{item.carretas || 'Nenhuma'}</span>
+                          </div>
+                          {item.manutencaoOs && (
+                            <span className="text-[9px] text-[#B32025] font-bold tracking-wider truncate block mt-1">OS: {item.manutencaoOs}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* PERIFÉRICO (WRENCH TOOL CONTROLS) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">PERIFÉRICO</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <div className="flex items-center gap-1.5 text-[#2D1A10] font-bold text-xs truncate">
+                            <Wrench size={15} className="text-[#3A2414]" />
+                            <span className="uppercase">{item.periferico || 'Padrão'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RESTANTES (CALENDAR DAYS REMAINING COUNTDOWN) */}
+                      <div className="flex flex-col justify-between bg-[#fdfcf9] border border-[#3A2414]/15 rounded-2xl p-2.5 sm:p-3.5 min-h-24 md:h-28 shadow-sm">
+                        <span className="text-[9px] font-black font-serif text-[#3A2414] uppercase tracking-widest">RESTANTES</span>
+                        <div className="flex flex-col flex-1 justify-center mt-1">
+                          <span className={cn(
+                            "text-[13px] font-mono font-black",
+                            diasParaVencer < 0 ? "text-[#B32025] animate-pulse" : diasParaVencer <= 7 ? "text-amber-500" : "text-[#55a360]"
+                          )}>
+                            {diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias`}
+                          </span>
+                          <span className="text-[9px] text-[#3A2414]/70 font-serif uppercase block mt-1 tracking-wider">de checklist</span>
                         </div>
                       </div>
 
                     </div>
+
+                    {/* PDF FILES SECTION */}
+                    <div className="mt-4 pt-3 border-t border-[#3A2414]/10">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-black font-serif text-[#3A2414] uppercase tracking-[0.1em] flex items-center gap-2">
+                          <FileText size={14} className="text-[#B32025]" />
+                          Planilhas Anexadas
+                        </span>
+                        
+                        <label className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 bg-[#fdfcf9] border border-[#3A2414]/20 text-[#3A2414] font-serif font-black text-[9px] rounded-lg tracking-wider transition-colors shadow-sm cursor-pointer hover:bg-[#B32025]/10",
+                          uploadingItemId === item.id && "opacity-50 pointer-events-none"
+                        )}>
+                          {uploadingItemId === item.id ? (
+                            <Loader2 size={11} className="animate-spin text-[#B32025]" />
+                          ) : (
+                            <Upload size={11} className="text-[#B32025]" />
+                          )}
+                          <span>{uploadingItemId === item.id ? 'ENVIANDO...' : 'ANEXAR PDF'}</span>
+                          <input 
+                            type="file" 
+                            accept="application/pdf" 
+                            className="hidden" 
+                            onChange={(e) => handlePdfUpload(e, item.id)}
+                            disabled={uploadingItemId === item.id}
+                          />
+                        </label>
+                      </div>
+
+                      {item.pdfs && item.pdfs.length > 0 && (
+                        <div className="flex overflow-x-auto gap-4 pb-1 snap-x" style={{ scrollbarWidth: 'thin' }}>
+                          {item.pdfs.map(pdf => (
+                            <div key={pdf.id} className="relative w-[320px] h-[180px] shrink-0 bg-white border border-[#3A2414]/15 shadow-sm snap-start group overflow-hidden transition-all hover:shadow-md hover:border-[#B32025]/30">
+                              <PdfThumbnail pdfUrl={pdf.url} title={pdf.name} />
+                              
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors z-10 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3">
+                                
+                                <button
+                                  onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'view')}
+                                  className="w-10 h-10 flex items-center justify-center bg-white text-[#3A2414] hover:bg-stone-100 rounded-full shadow-lg transition-transform hover:scale-110"
+                                  title="Visualizar"
+                                >
+                                  <Eye size={18} className="stroke-[2.5]" />
+                                </button>
+                                
+                                <button
+                                  onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'download')}
+                                  className="w-10 h-10 flex items-center justify-center bg-white text-[#3A2414] hover:bg-stone-100 rounded-full shadow-lg transition-transform hover:scale-110"
+                                  title="Baixar"
+                                >
+                                  <Download size={18} className="stroke-[2.5]" />
+                                </button>
+
+                                <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handlePdfDelete(item.id, pdf.id);
+                                  }}
+                                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white text-[#B32025] hover:bg-[#B32025] hover:text-white rounded-full shadow-md transition-all border border-[#3A2414]/10"
+                                  title="Remover anexo"
+                                >
+                                  <X size={16} className="stroke-[2.5]" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CONTROL SHELF: INLINE PÁTIO/ASSINADO DROPDOWNS & ACTIONS */}
+                    <div className="mt-3 pt-3 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-5">
+                        {item.observacao && (
+                          <div className="bg-[#fdfbf6] border border-[#3A2414]/15 rounded-xl px-3 py-1.5 text-xs text-[#2D1A10] max-w-xs font-serif italic truncate" title={item.observacao}>
+                            <span className="font-sans font-black text-[#B32025] not-italic mr-1.5 uppercase text-[9px] tracking-widest">Obs:</span>
+                            "{item.observacao}"
+                          </div>
+                        )}
+
+                        {/* Options hidden by user request */}
+                      </div>
+
+                      {/* Administrative control actions buttons */}
+                      <div className="flex items-center gap-2 self-end sm:self-auto uppercase">
+                        <button 
+                          onClick={() => setEditingItem(item)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#fdfcf9] hover:bg-[#B32025]/10 border border-[#3A2414]/20 text-[#3A2414] font-serif font-black text-[10px] rounded-lg tracking-wider transition-colors shadow-sm cursor-pointer"
+                        >
+                          <Edit2 size={11} className="text-[#B32025]" />
+                          <span>Editar</span>
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const note = prompt("Atualizar observação:", item.observacao);
+                            if (note !== null) {
+                              update(ref(rtdb, `checklist_veiculos/${item.id}`), { observacao: note });
+                            }
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#fdfcf9] hover:bg-[#B32025]/10 border border-[#3A2414]/20 text-[#3A2414] font-serif font-black text-[10px] rounded-lg tracking-wider transition-colors shadow-sm cursor-pointer"
+                        >
+                          <MessageSquare size={11} className="text-[#B32025]" />
+                          <span>Obs</span>
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(item.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#B32025] hover:bg-[#8c060d] text-white border border-[#B32025] font-serif font-black text-[10px] rounded-lg tracking-wider transition-colors shadow cursor-pointer"
+                        >
+                          <Trash2 size={11} />
+                          <span>Excluir</span>
+                        </button>
+                      </div>
+                    </div>
+
                   </motion.div>
                 );
               })}

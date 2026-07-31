@@ -11,7 +11,8 @@ import {
   ClipboardCheck,
   Sliders,
   Lock,
-  Unlock
+  Unlock,
+  Grid3X3
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -34,6 +35,7 @@ const menuItems: MenuItem[] = [
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
   { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
+  { id: 'iscas', label: 'Iscas', buttonLabel: 'Rastreio', icon: Grid3X3, color: 'text-zinc-300', description: 'Gestão de iscas, colagem de planilha, gráficos 3D e controle Santa Luzia/MG.' },
 ];
 
 interface InitialMenuProps {
@@ -366,6 +368,32 @@ function ModuleGraphic({ id }: { id: string }) {
           {/* Indicator needle */}
           <line x1="100" y1="108" x2="108" y2="101" stroke="#e53e3e" strokeWidth="1.5" strokeLinecap="round" />
           <circle cx="100" cy="108" r="2" fill="#fff" />
+        </svg>
+      );
+
+    case 'iscas':
+      return (
+        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
+          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
+          {/* 3D Isometric Chart Platform */}
+          <polygon points="45,115 100,140 155,115 100,90" fill="#1b120c" />
+          <polygon points="45,115 100,140 100,143 45,118" fill="#120a06" />
+          <polygon points="100,140 155,115 155,118 100,143" fill="#120a06" />
+
+          {/* 3D Bar 1 (Blue) */}
+          <polygon points="70,105 82,111 82,90 70,84" fill="#2563eb" />
+          <polygon points="82,111 94,105 94,84 82,90" fill="#1d4ed8" />
+          <polygon points="70,84 82,90 94,84 82,78" fill="#60a5fa" />
+
+          {/* 3D Bar 2 (Amber/Gold) */}
+          <polygon points="94,95 106,101 106,75 94,69" fill="#d97706" />
+          <polygon points="106,101 118,95 118,69 106,75" fill="#b45309" />
+          <polygon points="94,69 106,75 118,69 106,63" fill="#fbbf24" />
+
+          {/* 3D Bar 3 (Emerald) */}
+          <polygon points="118,100 130,106 130,82 118,76" fill="#059669" />
+          <polygon points="130,106 142,100 142,76 130,82" fill="#047857" />
+          <polygon points="118,76 130,82 142,76 130,70" fill="#34d399" />
         </svg>
       );
 
