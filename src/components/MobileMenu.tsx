@@ -3,13 +3,12 @@ import { motion } from 'motion/react';
 import { 
   Package, 
   Users2, 
-  Mail, 
-  CalendarDays, 
-  Route, 
   ClipboardCheck,
   Heart,
   Lock,
-  Unlock
+  Unlock,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -20,56 +19,36 @@ interface MenuItem {
   icon: React.ElementType;
   styleClass: string;
   iconStyle: string;
+  badge?: string;
 }
 
-const menuItems: MenuItem[] = [
+const mobileMenuItems: MenuItem[] = [
   { 
     id: 'patio', 
-    subtitle: 'LOGÍSTICA', 
+    subtitle: 'CONTROLE LOGÍSTICO', 
     title: 'PÁTIO', 
     icon: Package,
-    styleClass: "wood-button bg-gradient-to-r from-[#2a170b] via-[#3a2214] to-[#2a170b] border-y border-[#4a2e1c] shadow-[inset_0_1px_3px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.6)] text-[#e6c29b] transition-all duration-300",
-    iconStyle: "border-[#e6c29b]/35 text-[#e6c29b]"
+    styleClass: "bg-gradient-to-br from-[#26150b] via-[#3a2214] to-[#1c0f0a] border border-[#5c3e29]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.15)] text-[#f5ebd6]",
+    iconStyle: "bg-gradient-to-br from-[#3a2214] to-[#1c0f0a] border-[#e6c29b]/40 text-[#e6c29b]",
+    badge: 'Gerenciar Pátio'
   },
   { 
     id: 'presence', 
-    subtitle: 'EFETIVO', 
-    title: 'PRESENÇA', 
+    subtitle: 'EQUIPE & ESCALA', 
+    title: 'LISTA DE PRESENÇA', 
     icon: Users2,
-    styleClass: "canvas-button bg-gradient-to-r from-[#d2bd9a] to-[#ba9e74] border-y border-[#eddcc4]/30 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.45),0_4px_10px_rgba(0,0,0,0.55)] text-[#4a2e1b] transition-all duration-300",
-    iconStyle: "border-[#4a2e1b]/30 text-[#4a2e1b]"
-  },
-  { 
-    id: 'averbacao', 
-    subtitle: 'SEGUROS', 
-    title: 'AVERBAÇÃO', 
-    icon: Mail,
-    styleClass: "paper-button bg-[#FAF7F2] border border-[#d0c2b2] shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.5)] text-[#4a2e1b] transition-all duration-300 relative overflow-visible",
-    iconStyle: "border-[#6b4a34]/30 text-[#6b4a34]"
-  },
-  { 
-    id: 'sm_creator', 
-    subtitle: 'EVENTOS', 
-    title: 'SM', 
-    icon: CalendarDays,
-    styleClass: "copper-button bg-gradient-to-r from-[#b35d25] via-[#d48148] to-[#9c4c1a] border-y border-[#e69f73]/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.35),0_4px_12px_rgba(0,0,0,0.65)] text-[#FAF7F2] transition-all duration-300",
-    iconStyle: "border-[#FAF7F2]/45 text-[#FAF7F2]"
-  },
-  { 
-    id: 'rotas', 
-    subtitle: 'LOGÍSTICA TEMPORAL', 
-    title: 'SISTEMA DE ROTAS', 
-    icon: Route,
-    styleClass: "map-button bg-gradient-to-r from-[#dfd0b2] to-[#c5b394] border-y border-[#eddcc4]/20 shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_4px_10px_rgba(0,0,0,0.52)] text-[#3a2214] transition-all duration-300",
-    iconStyle: "border-[#3a2214]/25 text-[#3a2214]"
+    styleClass: "bg-gradient-to-br from-[#d4bc96] via-[#c2a67e] to-[#ab8f66] border border-[#f5ebd6]/40 shadow-[0_12px_30px_rgba(0,0,0,0.5),inset_0_1px_2px_rgba(255,255,255,0.6)] text-[#2d1a0e]",
+    iconStyle: "bg-gradient-to-br from-[#bda37d] to-[#997e57] border-[#2d1a0e]/20 text-[#2d1a0e]",
+    badge: 'Diário'
   },
   { 
     id: 'checklist', 
-    subtitle: 'VISTORIAS', 
+    subtitle: 'VISTORIAS & FROTA', 
     title: 'CHECKLIST', 
     icon: ClipboardCheck,
-    styleClass: "leather-button bg-gradient-to-r from-[#4d301b] to-[#2d1a0e] border-[1.5px] border-[#5c3e29] shadow-[inset_0_2px_3px_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.7)] text-[#dac2ad] transition-all duration-300 relative",
-    iconStyle: "border-[#dac2ad]/30 text-[#dac2ad]"
+    styleClass: "bg-gradient-to-br from-[#331e11] via-[#24130a] to-[#150a06] border border-[#6b472e]/70 shadow-[0_12px_30px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.12)] text-[#edd9bf]",
+    iconStyle: "bg-gradient-to-br from-[#24130a] to-[#0f0704] border-[#dac2ad]/30 text-[#dac2ad]",
+    badge: 'Inspeção'
   }
 ];
 
@@ -80,185 +59,122 @@ interface MobileMenuProps {
   onUnlockPresenceList: () => void;
 }
 
-export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, onUnlockPresenceList }: MobileMenuProps) {
-  const visibleMenuItems = menuItems.filter(item => {
-    if (item.id === 'presence') return showPresenceList;
-    if (item.id === 'rotas') return showRotasPage;
-    return true;
-  });
+export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenceList }: MobileMenuProps) {
   return (
-    <div className="w-full min-h-screen bg-transparent relative flex flex-col items-center justify-between overflow-hidden select-none pb-8">
+    <div className="w-full min-h-screen bg-[#140b07] relative flex flex-col justify-between overflow-x-hidden select-none px-5 py-6">
       
-      {/* 100% Immersive Full screen overlay to enforce the dark, rich oak wood background tone and shadows */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Dark warm chocolate vignette */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1c0f0a]/98 via-[#2d1a0f]/95 to-[#1c0f0a]/98" />
-        
-        {/* High-end wood planks pattern lines */}
-        <div className="absolute inset-y-0 left-1/4 w-[1px] bg-black/30 shadow-l" />
-        <div className="absolute inset-y-0 left-2/4 w-[1px] bg-black/30 shadow-l" />
-        <div className="absolute inset-y-0 left-3/4 w-[1px] bg-black/30 shadow-l" />
+      {/* Background ambient lighting and luxury depth */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-[#B32025]/15 rounded-full blur-[90px]" />
+        <div className="absolute top-1/2 -right-32 w-80 h-80 bg-[#c2a67e]/10 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(10,5,3,0.85)_100%)]" />
       </div>
 
-      {/* TOP DECORATIVE ELEMENT: Curved top coarse burlap jute fabric banner with realistic shadow */}
-      <div className="w-full relative z-20 pointer-events-none">
-        <svg 
-          viewBox="30 20 100 24" 
-          className="w-full filter drop-shadow-[0_8px_15px_rgba(0,0,0,0.92)] fill-[#a88d75] opacity-95 animate-fade-in"
-          xmlns="http://www.w3.org/2000/svg"
+      {/* TOP HEADER: Sophisticated Branding & Status */}
+      <div className="relative z-10 w-full flex items-center justify-between pt-2 pb-6 border-b border-[#ffffff]/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#730c10] flex items-center justify-center shadow-lg border border-white/20">
+            <ShieldCheck size={20} className="text-white" />
+          </div>
+          <div>
+            <h1 className="font-serif text-lg font-black tracking-wider text-[#F5EFE6] uppercase leading-none">
+              Três Corações
+            </h1>
+            <span className="text-[9px] font-mono tracking-[0.2em] text-[#c2a67e] uppercase font-bold mt-1 block">
+              Painel Executivo Mobile
+            </span>
+          </div>
+        </div>
+
+        {/* Secret Unlock Button */}
+        <button
+          type="button"
+          onClick={onUnlockPresenceList}
+          className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-[#c2a67e] transition-colors cursor-pointer"
+          title="Acesso Administrativo"
         >
-          {/* Wave top resembling textured burlap arch */}
-          <path d="M 0 0 L 160 0 L 160 30 Q 80 44, 0 30 Z" fill="#917359" />
-          {/* Subtle fabric design contours to make it look realistic */}
-          <path d="M 0 0 L 160 0 L 160 28 Q 80 41, 0 28 Z" fill="#b99f86" opacity="0.15" />
-          <path d="M 0 0 L 160 0 L 160 26 Q 80 38, 0 26 Z" fill="#ffffff" opacity="0.08" />
-        </svg>
-
-        {/* Real floating fabric threads using absolute elements */}
-        <div className="absolute bottom-1.5 inset-x-0 flex justify-around opacity-40">
-          {[...Array(8)].map((_, i) => (
-            <span key={i} className="text-[#5c3e29] font-mono text-[6px] select-none">-</span>
-          ))}
-        </div>
+          {showPresenceList ? <Unlock size={15} className="text-green-400" /> : <Lock size={15} />}
+        </button>
       </div>
 
-      {/* HEADER: Bold, rustic, premium branding focused on Café 3 Corações aesthetic */}
-      <div className="w-full text-center px-6 relative z-10 my-4">
-        <div className="flex items-center justify-center gap-1.5 mb-1.5 opacity-90 animate-fade-in relative max-w-[12rem] mx-auto">
-          <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
-          <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
-          <Heart size={14} className="fill-[#B32025] text-[#B32025] filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
-          {/* Secret unlock button */}
-          <button
-            type="button"
-            onClick={onUnlockPresenceList}
-            className="absolute -right-10 top-1/2 -translate-y-1/2 p-1 text-[#cca07d]/40 active:text-white transition-colors cursor-pointer"
-            title="Acesso Secreto"
-          >
-            {showPresenceList ? <Unlock size={11} className="text-green-500" /> : <Lock size={11} />}
-          </button>
+      {/* CENTER CONTENT: 3 Professional, High-End Cards */}
+      <div className="relative z-10 w-full max-w-sm mx-auto flex flex-col gap-4 my-auto py-4">
+        
+        <div className="text-center mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#c2a67e] text-[10px] font-mono tracking-widest uppercase mb-2">
+            <Sparkles size={11} /> Módulos Oficiais
+          </div>
+          <h2 className="text-2xl font-serif font-black text-[#F5EFE6] uppercase tracking-tight">
+            Selecione o Serviço
+          </h2>
         </div>
-        <h2 className="text-[34px] sm:text-4xl font-extrabold text-[#F5EFE6] tracking-[0.22em] uppercase leading-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)] pr-[-0.22em]">
-          MÓDULOS
-        </h2>
-        <p className="text-[#E8DCCB] text-[9.5px] font-black uppercase tracking-[0.18em] mt-2.5 opacity-90 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.85)]">
-          SELECIONE UMA CATEGORIA PARA INICIAR
-        </p>
-        <div className="w-20 h-[2px] bg-gradient-to-r from-transparent via-[#B32025] to-transparent mx-auto mt-4" />
-      </div>
 
-      {/* CENTER STACK: 6 uniquely textured realistic rectangular buttons */}
-      <div className="w-full max-w-[390px] px-5 flex flex-col gap-[14px] relative z-10 my-4 flex-1 justify-center">
-        {visibleMenuItems.map((item, index) => {
+        {mobileMenuItems.map((item, index) => {
           const IconComponent = item.icon;
           return (
             <motion.button
               key={item.id}
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.08, duration: 0.45, ease: "easeOut" }}
-              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => onSelect(item.id)}
               className={cn(
-                "w-full h-[72px] rounded-2.5xl flex items-center justify-between px-4 cursor-pointer select-none relative group overflow-hidden border border-black/35 shadow-lg active:scale-95",
+                "w-full rounded-3xl p-5 flex items-center justify-between text-left relative overflow-hidden group cursor-pointer transition-all duration-300",
                 item.styleClass
               )}
             >
-              {/* Special details inside buttons for outstanding photorealism */}
-              {item.id === 'patio' && (
-                /* Wood grain pattern lines overlay */
-                <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[repeating-linear-gradient(0deg,#000_0px,#000_4px,transparent_4px,transparent_8px)]" />
-              )}
-              
-              {item.id === 'presence' && (
-                /* Canvas raw fabric crosshatching */
-                <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[linear-gradient(45deg,#000_25%,transparent_25%),linear-gradient(-45deg,#000_25%,transparent_25%)] [background-size:6px_6px]" />
-              )}
+              {/* Subtle light sheen on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-              {item.id === 'averbacao' && (
-                <>
-                  {/* Subtle ancient crumpled sheet textures */}
-                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#000 12%, transparent 12%)", backgroundSize: "8px 8px" }} />
-                  {/* Realistic small 3D Red wax/stamp seal at top right of button */}
-                  <div className="absolute right-3.5 top-[11.5px] w-6 h-6 rounded-full bg-gradient-to-br from-[#cb1a21] via-[#8c060b] to-[#4e0205] shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_2px_4px_rgba(0,0,0,0.55)] border border-[#8C060B]/10 flex items-center justify-center transform rotate-12 z-20">
-                    <Heart size={8} className="fill-white/70 text-transparent" />
-                  </div>
-                </>
-              )}
-
-              {item.id === 'sm_creator' && (
-                /* Hammered copper highlights overlay */
-                <div className="absolute inset-0 opacity-[0.16] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.2) 30%, transparent 60%)", backgroundSize: "14px 14px" }} />
-              )}
-
-              {item.id === 'rotas' && (
-                /* Faint historical grid/atlas path overlay */
-                <svg className="absolute inset-0 w-full h-full opacity-[0.18] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path d="M10,20 Q48,5 90,30 T10,80" stroke="#4a2e1b" strokeWidth="0.8" fill="none" strokeDasharray="3 3" />
-                  <circle cx="90" cy="30" r="1.5" fill="#B32025" />
-                </svg>
-              )}
-
-              {item.id === 'checklist' && (
-                /* Inset stitched border matching classic distressed leather */
-                <div className="absolute inset-1.5 rounded-[1.1rem] border border-dashed border-[#FAF7F2]/20 pointer-events-none" />
-              )}
-
-              {/* LADO ESQUERDO DA TECLA: Rounded square dark metallic badge containing the bronze icon */}
               <div className="flex items-center gap-4 relative z-10">
                 <div className={cn(
-                  "w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1c0f0a] to-[#0a0502] border border-white/5 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.8),0_1.5px_2.5px_rgba(255,255,255,0.12)] flex items-center justify-center shrink-0",
+                  "w-14 h-14 rounded-2xl border flex items-center justify-center shadow-md shrink-0 transition-transform group-hover:scale-105 duration-300",
                   item.iconStyle
                 )}>
-                  <IconComponent size={20} strokeWidth={2.1} className="transition-transform group-hover:scale-110 duration-300" />
+                  <IconComponent size={26} strokeWidth={2.2} />
                 </div>
 
-                {/* TEXT CONTAINER (Subtitle & Module Title) */}
-                <div className="flex flex-col items-start text-left">
-                  <span className={cn(
-                    "font-mono text-[7px] tracking-[0.25em] font-black uppercase mb-0.5 opacity-90",
-                    item.id === 'averbacao' ? "text-[#B32025]" : ""
-                  )}>
-                    {item.subtitle}
-                  </span>
-                  <span className="font-serif text-[15px] font-extrabold uppercase tracking-wide leading-none filter drop-shadow-[0_0.8px_0.8px_rgba(255,255,255,0.1)]">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-mono font-black tracking-[0.2em] uppercase opacity-80">
+                      {item.subtitle}
+                    </span>
+                    {item.badge && (
+                      <span className="px-2 py-0.5 rounded-full bg-black/20 text-[8px] font-bold uppercase tracking-wider border border-white/10">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-serif text-lg font-black tracking-wide uppercase leading-tight">
                     {item.title}
                   </span>
                 </div>
               </div>
 
-              {/* Dynamic little hover/click detail */}
-              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-40 mr-1.5" />
+              <div className="w-8 h-8 rounded-full bg-black/20 flex items-center justify-center border border-white/10 relative z-10 group-hover:translate-x-1 transition-transform">
+                <span className="text-xs font-bold">→</span>
+              </div>
             </motion.button>
           );
         })}
       </div>
 
-      {/* BOTTOM DECORATIVE ELEMENT: Coarse jute fabric sacks arch framed correctly at the absolute bottom */}
-      <div className="w-full relative z-20 pointer-events-none">
-        
-        {/* Subtle cursive branding of Café Três Corações at bottom center, elevated elegantly */}
-        <div className="absolute bottom-[28px] inset-x-0 w-full flex flex-col items-center justify-center text-center">
-          <p className="font-serif italic text-xs text-[#FAF7F2]/80 tracking-widest drop-shadow-[0_1.5px_2px_rgba(0,0,0,1)] select-none">
-            Café Três Corações
-          </p>
-          <span className="text-[7px] font-mono text-[#E8DCCB]/50 uppercase tracking-[0.3em] mt-1 block">
-            Paixão que move • Qualidade que entrega
-          </span>
+      {/* FOOTER: Professional Signature */}
+      <div className="relative z-10 w-full text-center pt-6 pb-2 border-t border-white/10">
+        <div className="flex items-center justify-center gap-1.5 mb-1">
+          <Heart size={12} className="fill-[#B32025] text-[#B32025]" />
+          <Heart size={12} className="fill-[#B32025] text-[#B32025]" />
+          <Heart size={12} className="fill-[#B32025] text-[#B32025]" />
         </div>
-
-        <svg 
-          viewBox="30 0 100 24" 
-          className="w-full filter drop-shadow-[0_-8px_15px_rgba(0,0,0,0.95)] fill-[#917359] opacity-95"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Wave bottom arch mirroring top jute sacks */}
-          <path d="M 0 24 L 160 24 L 160 2 Q 80 14, 0 2 Z" fill="#7d6049" />
-          <path d="M 0 24 L 160 24 L 160 4 Q 80 16, 0 4 Z" fill="#917359" opacity="0.25" />
-        </svg>
+        <p className="font-serif italic text-xs text-[#F5EFE6]/90 tracking-widest">
+          Café Três Corações
+        </p>
+        <span className="text-[8px] font-mono text-[#c2a67e]/70 uppercase tracking-[0.25em] mt-1 block">
+          Sistema Profissional de Logística & Vistorias
+        </span>
       </div>
 
     </div>
   );
 }
-

@@ -124,32 +124,96 @@ export default function Checklist() {
   const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
 
   const handleImportData = async () => {
-    const lines = pasteData.trim().split('\n').slice(1);
+    const lines = pasteData.trim().split('\n');
     const updates: Record<string, any> = {};
 
-    for (const line of lines) {
-      const match = line.match(/^(\S+)\s+(.*?)\s+(APROVADO|NEGATIVADO|REPROVADO)\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})/);
-      if (match) {
-        const [_, cavalo, carretas, status, dataTeste, dataVencimento] = match;
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      const parts = line.split('\t').map(p => p.trim()).filter(Boolean);
+      
+      let cavalo = '';
+      let carretas = '';
+      let statusStr = 'APROVADO';
+      let dataTesteStr = '';
+      let dataVencStr = '';
+
+      if (parts.length >= 5) {
+        cavalo = parts[0];
+        carretas = parts[1];
+        statusStr = parts[2].toUpperCase();
+        dataTesteStr = parts[3];
+        dataVencStr = parts[4];
+      } else if (parts.length === 4) {
+        cavalo = parts[0];
+        carretas = '';
+        statusStr = parts[1].toUpperCase();
+        dataTesteStr = parts[2];
+        dataVencStr = parts[3];
+      } else {
+        const tokens = line.split(/\s+/);
+        if (tokens.length >= 5) {
+          cavalo = tokens[0];
+          const dateIndices = tokens.reduce((acc, t, idx) => {
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(t)) acc.push(idx);
+            return acc;
+          }, [] as number[]);
+
+          if (dateIndices.length >= 2) {
+            const tIdx1 = dateIndices[0];
+            const tIdx2 = dateIndices[1];
+            dataTesteStr = tokens[tIdx1];
+            dataVencStr = tokens[tIdx2];
+            statusStr = tokens.slice(tIdx1 - 2, tIdx1).join(' ').toUpperCase();
+            carretas = tokens.slice(1, tIdx1 - 2).join(' ');
+          }
+        }
+      }
+
+      if (cavalo) {
+        cavalo = cavalo.replace(/[^a-zA-Z0-9\s-]/g, '').toUpperCase();
         
-        const existing = items.find(item => item.cavalo === cavalo);
+        const parseDate = (d: string) => {
+          if (!d || d === 'REPROVADO' || d === 'VENCIDO' || d === '#VALUE!') return format(new Date(), 'yyyy-MM-dd');
+          const [dd, mm, yyyy] = d.split('/');
+          if (yyyy && mm && dd) return `${yyyy}-${mm}-${dd}`;
+          return format(new Date(), 'yyyy-MM-dd');
+        };
+
+        const parsedTeste = parseDate(dataTesteStr);
+        const parsedVenc = (dataVencStr === 'REPROVADO' || dataVencStr === 'VENCIDO' || dataVencStr === '#VALUE!') 
+          ? format(addDays(new Date(), -1), 'yyyy-MM-dd') 
+          : parseDate(dataVencStr);
+
+        const isNegated = statusStr.includes('VENCIDO') || statusStr.includes('NEGATIVADO') || statusStr.includes('REPROVADO') || dataVencStr === 'REPROVADO';
+        const resolvedStatus = isNegated ? 'NEGATIVADO' : 'APROVADO';
+
+        const existing = items.find(item => item.cavalo.toUpperCase() === cavalo.toUpperCase());
         if (existing) {
-          const fmtDate = (d: string) => {
-             const [dd, mm, yyyy] = d.split('/');
-             return `${yyyy}-${mm}-${dd}`;
-          };
-          
           updates[`checklist_veiculos/${existing.id}`] = {
             ...existing,
-            carretas,
-            statusOverride: status as ChecklistItem['statusOverride'],
-            dataTeste: fmtDate(dataTeste),
-            dataVencimento: fmtDate(dataVencimento)
+            carretas: carretas || existing.carretas,
+            statusOverride: resolvedStatus as ChecklistItem['statusOverride'],
+            dataTeste: parsedTeste,
+            dataVencimento: parsedVenc
+          };
+        } else {
+          const newId = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+          updates[`checklist_veiculos/${newId}`] = {
+            cavalo,
+            carretas: carretas || '',
+            statusOverride: resolvedStatus as ChecklistItem['statusOverride'],
+            dataTeste: parsedTeste,
+            dataVencimento: parsedVenc,
+            manutencaoOs: '',
+            periferico: '',
+            observacao: ''
           };
         }
       }
     }
-    
+
     if (Object.keys(updates).length > 0) {
       try {
         await update(ref(rtdb), updates);
@@ -158,6 +222,8 @@ export default function Checklist() {
         console.error('Erro ao atualizar:', error);
         alert('Erro ao atualizar checklist.');
       }
+    } else {
+      alert('Nenhum dado válido encontrado para importação. Verifique o formato colado.');
     }
     setPasteData('');
   };
@@ -1195,7 +1261,7 @@ export default function Checklist() {
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              style={{ zoom: 0.65 }}
+              style={{ zoom: 0.9 }}
               className="relative z-10 w-full max-w-xl bg-[#FAF0DE] border-[6px] border-[#3A2414] rounded-[2.5rem] p-6 md:p-8 shadow-[0_30px_70px_rgba(58,36,20,0.5)] space-y-4 text-[#3A2414] my-auto"
             >
               {/* Corner decorative rivet screws */}
