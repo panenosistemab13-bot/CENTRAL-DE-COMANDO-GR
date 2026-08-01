@@ -12,7 +12,7 @@ import {
   Sliders,
   Lock,
   Unlock,
-  Grid3X3
+  Globe
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -28,6 +28,7 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
+  { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
   { id: 'patio', label: 'Pátio', buttonLabel: 'Logística', icon: Container, color: 'text-zinc-300', description: 'Gestão inteligente de entrada e saída de veículos.' },
   { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'text-zinc-300', description: 'Gestão de apólices e seguros integrados.' },
@@ -35,7 +36,6 @@ const menuItems: MenuItem[] = [
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
   { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
-  { id: 'iscas', label: 'Iscas', buttonLabel: 'Rastreio', icon: Grid3X3, color: 'text-zinc-300', description: 'Gestão de iscas, colagem de planilha, gráficos 3D e controle Santa Luzia/MG.' },
 ];
 
 interface InitialMenuProps {
@@ -44,7 +44,6 @@ interface InitialMenuProps {
   setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
   showPresenceList: boolean;
   showRotasPage: boolean;
-  showIscasPage: boolean;
   onUnlockPresenceList: () => void;
 }
 
@@ -66,6 +65,27 @@ function Screw({ className }: { className?: string }) {
 // Interactive render of gorgeous photorealistic 3D/Isometric modular vectors
 function ModuleGraphic({ id }: { id: string }) {
   switch (id) {
+    case 'slides':
+      return (
+        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_0_25px_rgba(0,240,255,0.6)]">
+          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.6)" filter="blur(8px)" />
+          {/* Holographic 3D Globe HUD Base */}
+          <polygon points="40,120 100,145 160,120 100,95" fill="#030712" stroke="#00f0ff" strokeWidth="1.5" />
+          <polygon points="40,120 100,145 100,149 40,124" fill="#00f0ff" />
+          <polygon points="100,145 160,120 160,124 100,149" fill="#0066ff" />
+          
+          {/* Globe Mesh */}
+          <circle cx="100" cy="85" r="34" fill="#050b18" stroke="#00f0ff" strokeWidth="2" />
+          <circle cx="100" cy="85" r="40" fill="none" stroke="#00f0ff" strokeWidth="1" strokeDasharray="4 2" />
+          <line x1="66" y1="85" x2="134" y2="85" stroke="#00f0ff" strokeWidth="1" opacity="0.6" />
+          <line x1="100" y1="51" x2="100" y2="119" stroke="#00f0ff" strokeWidth="1" opacity="0.6" />
+          
+          {/* Active Nodes */}
+          <circle cx="100" cy="85" r="5" fill="#00f0ff" />
+          <circle cx="116" cy="74" r="3.5" fill="#3b82f6" />
+          <circle cx="84" cy="96" r="3.5" fill="#10b981" />
+        </svg>
+      );
     case 'presence':
       // The Legendary 3D Wooden Crate with Gold Edge angle-irons and a glowing crimson light band
       return (
@@ -372,44 +392,17 @@ function ModuleGraphic({ id }: { id: string }) {
         </svg>
       );
 
-    case 'iscas':
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* 3D Isometric Chart Platform */}
-          <polygon points="45,115 100,140 155,115 100,90" fill="#1b120c" />
-          <polygon points="45,115 100,140 100,143 45,118" fill="#120a06" />
-          <polygon points="100,140 155,115 155,118 100,143" fill="#120a06" />
-
-          {/* 3D Bar 1 (Blue) */}
-          <polygon points="70,105 82,111 82,90 70,84" fill="#2563eb" />
-          <polygon points="82,111 94,105 94,84 82,90" fill="#1d4ed8" />
-          <polygon points="70,84 82,90 94,84 82,78" fill="#60a5fa" />
-
-          {/* 3D Bar 2 (Amber/Gold) */}
-          <polygon points="94,95 106,101 106,75 94,69" fill="#d97706" />
-          <polygon points="106,101 118,95 118,69 106,75" fill="#b45309" />
-          <polygon points="94,69 106,75 118,69 106,63" fill="#fbbf24" />
-
-          {/* 3D Bar 3 (Emerald) */}
-          <polygon points="118,100 130,106 130,82 118,76" fill="#059669" />
-          <polygon points="130,106 142,100 142,76 130,82" fill="#047857" />
-          <polygon points="118,76 130,82 142,76 130,70" fill="#34d399" />
-        </svg>
-      );
-
     default:
       return null;
   }
 }
 
-export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, showIscasPage, onUnlockPresenceList }: InitialMenuProps) {
+export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, onUnlockPresenceList }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
   const filteredMenuItems = menuItems.filter(item => {
     if (item.id === 'presence') return showPresenceList;
     if (item.id === 'rotas') return showRotasPage;
-    if (item.id === 'iscas') return showIscasPage;
     return true;
   });
   const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);
@@ -421,7 +414,6 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       const items = menuItems.filter(item => {
         if (item.id === 'presence') return showPresenceList;
         if (item.id === 'rotas') return showRotasPage;
-        if (item.id === 'iscas') return showIscasPage;
         return true;
       });
       let next = prev + newDirection;
@@ -429,7 +421,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       if (next >= items.length) next = 0;
       return next;
     });
-  }, [setFocusedIndex, showPresenceList, showRotasPage, showIscasPage]);
+  }, [setFocusedIndex, showPresenceList, showRotasPage]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -438,7 +430,6 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       const items = menuItems.filter(item => {
         if (item.id === 'presence') return showPresenceList;
         if (item.id === 'rotas') return showRotasPage;
-        if (item.id === 'iscas') return showIscasPage;
         return true;
       });
       if (e.key === 'ArrowRight') paginate(1);
@@ -450,7 +441,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, paginate, onSelect, showPresenceList, showRotasPage, showIscasPage]);
+  }, [focusedIndex, paginate, onSelect, showPresenceList, showRotasPage]);
 
   return (
     <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">

@@ -30,8 +30,7 @@ import {
   Sliders,
   Lock,
   Unlock,
-  Settings,
-  Grid3X3
+  Settings
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -54,14 +53,17 @@ import Envio from './components/Envio';
 import Checklist from './components/Checklist';
 import Iscas from './components/Iscas';
 import Controle from './components/Controle';
+import Slides from './components/Slides';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
+import { Globe } from 'lucide-react';
 
-type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
+type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
+  slides: '',
   presence: '/images/bg_presence.jpg', // Notebook and coffee on rustic wood table
   risk: '/images/bg_risk.jpg',
   averbacao: '/images/bg_averbacao.jpg', // Coffee sacks stacked with rich roast beans
@@ -76,6 +78,7 @@ const backgroundImages: Record<Tab, string> = {
 
 const tabs = [
   { id: 'menu', label: 'Início', icon: LayoutGrid },
+  { id: 'slides', label: 'Slides 4K HUD', icon: Globe },
   { id: 'patio', label: 'Pátio', icon: Container },
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
@@ -83,7 +86,6 @@ const tabs = [
   { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'controle', label: 'Controle', icon: Sliders },
-  { id: 'iscas', label: 'Iscas', icon: Grid3X3 },
 ];
 
 function Screw({ className }: { className?: string }) {
@@ -107,27 +109,36 @@ export default function App() {
   const [showRotasPage, setShowRotasPage] = useState<boolean>(() => {
     return localStorage.getItem('show_rotas_page') === 'true' || localStorage.getItem('show_presence_list') === 'true';
   });
-  const [showIscasPage, setShowIscasPage] = useState<boolean>(() => {
-    return localStorage.getItem('show_iscas_page') === 'true';
+  const [showSlidesPage, setShowSlidesPage] = useState<boolean>(() => {
+    return localStorage.getItem('show_slides_page') === 'true';
   });
 
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [showPageSelectorModal, setShowPageSelectorModal] = useState<boolean>(false);
   const [tempPresence, setTempPresence] = useState<boolean>(showPresenceList);
   const [tempRotas, setTempRotas] = useState<boolean>(showRotasPage);
-  const [tempIscas, setTempIscas] = useState<boolean>(showIscasPage);
+  const [tempSlides, setTempSlides] = useState<boolean>(showSlidesPage);
 
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
 
+  // When password modal opens, set temp states to current states
+  useEffect(() => {
+    if (showPasswordModal) {
+      setTempPresence(showPresenceList);
+      setTempRotas(showRotasPage);
+      setTempSlides(showSlidesPage);
+    }
+  }, [showPasswordModal]);
+
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'presence') return showPresenceList;
     if (tab.id === 'rotas') return showRotasPage;
-    if (tab.id === 'iscas') return showIscasPage;
+    if (tab.id === 'slides') return showSlidesPage;
     return true;
   });
 
-  const [activeTab, setActiveTab] = useState<Tab>('menu');
+  const [activeTab, setActiveTab] = useState<Tab>('slides');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
   const [smCreatorView, setSmCreatorView] = useState<'generator' | 'codes'>('generator');
@@ -178,10 +189,10 @@ export default function App() {
           case '2': e.preventDefault(); if (showPresenceList) setActiveTab('presence'); return;
           case '3': e.preventDefault(); setActiveTab('averbacao'); return;
           case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
-          case '5': e.preventDefault(); if (showRotasPage) setActiveTab('rotas'); return;
+          case '5': e.preventDefault(); if (showPresenceList) setActiveTab('rotas'); return;
           case '6': e.preventDefault(); setActiveTab('checklist'); return;
           case '7': e.preventDefault(); setActiveTab('controle'); return;
-          case '8': e.preventDefault(); if (showIscasPage) setActiveTab('iscas'); return;
+          case '8': e.preventDefault(); if (showSlidesPage) setActiveTab('slides'); return;
         }
       }
 
@@ -238,12 +249,6 @@ export default function App() {
   }, [activeTab, showPresenceList, visibleTabs]);
 
   useEffect(() => {
-    if (activeTab === 'iscas' && !showIscasPage) setActiveTab('menu');
-    if (activeTab === 'presence' && !showPresenceList) setActiveTab('menu');
-    if (activeTab === 'rotas' && !showRotasPage) setActiveTab('menu');
-  }, [activeTab, showIscasPage, showPresenceList, showRotasPage]);
-
-  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
     }, 1000);
@@ -268,7 +273,6 @@ export default function App() {
           onSelect={(id) => setActiveTab(id as Tab)} 
           showPresenceList={showPresenceList}
           showRotasPage={showRotasPage}
-          showIscasPage={showIscasPage}
           onUnlockPresenceList={() => setShowPasswordModal(true)}
         />
       );
@@ -283,10 +287,11 @@ export default function App() {
             setFocusedIndex={setFocusedCardIndex}
             showPresenceList={showPresenceList}
             showRotasPage={showRotasPage}
-            showIscasPage={showIscasPage}
             onUnlockPresenceList={() => setShowPasswordModal(true)}
           />
         );
+      case 'slides':
+        return showSlidesPage ? <Slides /> : null;
       case 'presence':
         return <PresenceList onBack={() => setActiveTab('menu')} />;
       case 'averbacao':
@@ -412,20 +417,45 @@ export default function App() {
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
-                  className="flex items-center gap-2 px-3.5 py-2 bg-[#24160E] border-2 border-[#543b28] rounded-full shadow-[0_12px_32px_rgba(0,0,0,0.85)] relative select-none"
+                  className={cn(
+                    "flex items-center gap-2 px-3.5 py-2 border-2 rounded-full relative select-none transition-all duration-300",
+                    activeTab === 'slides'
+                      ? "bg-[#020617]/95 border-cyan-500/50 shadow-[0_0_35px_rgba(0,240,255,0.25)] backdrop-blur-2xl"
+                      : "bg-[#24160E] border-[#543b28] shadow-[0_12px_32px_rgba(0,0,0,0.85)]"
+                  )}
                 >
                   {/* Decorative corner metallic rivets */}
-                  <div className="absolute top-1 left-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
-                    <div className="w-1.5 h-[1px] bg-[#221004] rotate-45" />
+                  <div className={cn(
+                    "absolute top-1 left-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
+                    activeTab === 'slides'
+                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
+                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
+                  )}>
+                    <div className={cn("w-1.5 h-[1px] rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
                   </div>
-                  <div className="absolute bottom-1 left-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
-                    <div className="w-1.5 h-[1px] bg-[#221004] rotate-45" />
+                  <div className={cn(
+                    "absolute bottom-1 left-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
+                    activeTab === 'slides'
+                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
+                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
+                  )}>
+                    <div className={cn("w-1.5 h-[1px] rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
                   </div>
-                  <div className="absolute top-1 right-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
-                    <div className="w-1.5 h-[1px] bg-[#221004] -rotate-45" />
+                  <div className={cn(
+                    "absolute top-1 right-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
+                    activeTab === 'slides'
+                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
+                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
+                  )}>
+                    <div className={cn("w-1.5 h-[1px] -rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
                   </div>
-                  <div className="absolute bottom-1 right-2.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40 flex items-center justify-center">
-                    <div className="w-1.5 h-[1px] bg-[#221004] -rotate-45" />
+                  <div className={cn(
+                    "absolute bottom-1 right-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
+                    activeTab === 'slides'
+                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
+                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
+                  )}>
+                    <div className={cn("w-1.5 h-[1px] -rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
                   </div>
 
                   {/* First button: LayoutGrid inside rounded square pill container */}
@@ -434,21 +464,31 @@ export default function App() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveTab('menu')}
                     className={cn(
-                      "p-3 rounded-2xl transition-all duration-200 relative group flex items-center justify-center",
+                      "p-3 rounded-2xl transition-all duration-200 relative group flex items-center justify-center cursor-pointer",
                       (activeTab as string) === 'menu'
                         ? "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30"
-                        : "bg-[#3d2719] text-[#e0ba85] hover:bg-[#4d3220] hover:text-[#f5d5aa]"
+                        : activeTab === 'slides'
+                          ? "bg-slate-900/80 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 border border-cyan-500/30"
+                          : "bg-[#3d2719] text-[#e0ba85] hover:bg-[#4d3220] hover:text-[#f5d5aa]"
                     )}
                   >
                     <LayoutGrid size={21} strokeWidth={(activeTab as string) === 'menu' ? 2.5 : 2} />
                     {/* Tooltip */}
-                    <div className="absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#24160E] border border-[#543b28] rounded-xl text-[9px] font-extrabold uppercase tracking-widest text-[#fdefd1] shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
+                    <div className={cn(
+                      "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
+                      activeTab === 'slides'
+                        ? "bg-slate-950 border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                        : "bg-[#24160E] border-[#543b28] text-[#fdefd1]"
+                    )}>
                       Início
                     </div>
                   </motion.button>
                   
                   {/* Vertical Divider */}
-                  <div className="w-[1px] h-7 bg-[#543b29]/90 mx-1 shrink-0" />
+                  <div className={cn(
+                    "w-[1px] h-7 mx-1 shrink-0 transition-all",
+                    activeTab === 'slides' ? "bg-cyan-500/40" : "bg-[#543b29]/90"
+                  )} />
 
                   {/* Module Icons */}
                   {visibleTabs.filter(t => t.id !== 'menu').map((tab) => {
@@ -460,16 +500,25 @@ export default function App() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={cn(
-                          "relative p-3 rounded-2xl transition-all duration-200 group flex items-center justify-center",
-                          isActive 
-                            ? "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30" 
-                            : "bg-transparent text-[#e0ba85] hover:bg-[#3d2719] hover:text-[#f5d5aa]"
+                          "relative p-3 rounded-2xl transition-all duration-200 group flex items-center justify-center cursor-pointer",
+                          isActive
+                            ? activeTab === 'slides'
+                              ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_#00f0ff] border border-cyan-300 font-black"
+                              : "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30" 
+                            : activeTab === 'slides'
+                              ? "bg-transparent text-cyan-400/70 hover:bg-cyan-500/10 hover:text-cyan-200"
+                              : "bg-transparent text-[#e0ba85] hover:bg-[#3d2719] hover:text-[#f5d5aa]"
                         )}
                       >
                         <tab.icon size={21} strokeWidth={isActive ? 2.5 : 2} />
                         
                         {/* Tooltip */}
-                        <div className="absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#24160E] border border-[#543b28] rounded-xl text-[9px] font-extrabold uppercase tracking-widest text-[#fdefd1] shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
+                        <div className={cn(
+                          "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
+                          activeTab === 'slides'
+                            ? "bg-slate-950 border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                            : "bg-[#24160E] border-[#543b28] text-[#fdefd1]"
+                        )}>
                           {tab.label}
                         </div>
                       </motion.button>
@@ -487,15 +536,20 @@ export default function App() {
                    initial={{ opacity: 0, x: 20 }}
                    animate={{ opacity: 1, x: 0 }}
                    exit={{ opacity: 0, x: 20 }}
-                   className="hidden sm:flex items-center gap-3 px-6 py-2 bg-[#E8D4B0] border-2 border-[#3A2414] rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-[#3a1d0f] shadow-sm"
+                   className={cn(
+                     "hidden sm:flex items-center gap-3 px-6 py-2 border-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] transition-all",
+                     activeTab === 'slides'
+                       ? "bg-[#020617]/90 border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
+                       : "bg-[#E8D4B0] border-[#3A2414] text-[#3a1d0f] shadow-sm"
+                   )}
                  >
                     <span>PGR</span> 
-                    <ChevronRight size={12} className="text-[#3A2414]/40" /> 
+                    <ChevronRight size={12} className={activeTab === 'slides' ? "text-cyan-500/50" : "text-[#3A2414]/40"} /> 
                     <motion.span 
                       key={activeTab}
                       initial={{ opacity: 0, x: -5 }} 
                       animate={{ opacity: 1, x: 0 }}
-                      className="text-[#B32025]"
+                      className={activeTab === 'slides' ? "text-cyan-400 font-extrabold" : "text-[#B32025]"}
                     >
                       {activeTabInfo?.label}
                     </motion.span>
@@ -503,8 +557,13 @@ export default function App() {
                </AnimatePresence>
 
                {/* Clock Box */}
-               <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 bg-[#E8D4B0] border-2 border-[#3A2414] rounded-full text-[10px] leading-[14px] font-mono text-[#2D1A10] shadow-md">
-                 <Clock size={14} className="text-[#B32025]" />
+               <div className={cn(
+                 "hidden sm:flex items-center gap-3 px-5 py-2.5 border-2 rounded-full text-[10px] leading-[14px] font-mono transition-all",
+                 activeTab === 'slides'
+                   ? "bg-[#020617]/90 border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
+                   : "bg-[#E8D4B0] border-[#3A2414] text-[#2D1A10] shadow-md"
+               )}>
+                 <Clock size={14} className={activeTab === 'slides' ? "text-cyan-400" : "text-[#B32025]"} />
                  {formatDate(currentDateTime)}
                </div>
             </div>
@@ -791,8 +850,8 @@ export default function App() {
                 Acesso Restrito
               </h3>
 
-              <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Digite a senha de administrador para alternar a exibição de páginas restritas (<strong className="text-[#800609]">Lista de Presença, Rotas e Iscas</strong>) no menu principal.
+            <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
+                Digite a senha de administrador para alternar a exibição das páginas restritas no menu principal.
               </p>
 
               <form onSubmit={(e) => {
@@ -800,7 +859,7 @@ export default function App() {
                 if (passwordInput === '#trescafe2027') {
                   setTempPresence(showPresenceList);
                   setTempRotas(showRotasPage);
-                  setTempIscas(showIscasPage);
+                  setTempSlides(showSlidesPage);
                   setShowPasswordModal(false);
                   setPasswordInput('');
                   setPasswordError(false);
@@ -885,27 +944,34 @@ export default function App() {
               </p>
 
               {/* Suggestion Quick Actions */}
-              <div className="grid grid-cols-3 gap-2 w-full mb-4">
+              <div className="grid grid-cols-4 gap-2 w-full mb-4">
                 <button
                   type="button"
-                  onClick={() => { setTempPresence(true); setTempRotas(true); setTempIscas(true); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                  onClick={() => { setTempPresence(true); setTempRotas(true); setTempSlides(true); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  🌟 Exibir Todas
+                  🌟 Todas
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setTempPresence(true); setTempRotas(false); setTempIscas(false); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                  onClick={() => { setTempPresence(true); setTempRotas(false); setTempSlides(false); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  📋 Só Presença
+                  📋 Presença
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setTempPresence(false); setTempRotas(false); setTempIscas(true); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                  onClick={() => { setTempPresence(false); setTempRotas(true); setTempSlides(false); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  🎯 Só Iscas
+                  🗺️ Rotas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTempPresence(false); setTempRotas(false); setTempSlides(true); }}
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                >
+                  🌐 Slides
                 </button>
               </div>
 
@@ -940,13 +1006,13 @@ export default function App() {
                 <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
                   <input 
                     type="checkbox"
-                    checked={tempIscas}
-                    onChange={(e) => setTempIscas(e.target.checked)}
+                    checked={tempSlides}
+                    onChange={(e) => setTempSlides(e.target.checked)}
                     className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
                   />
                   <div>
-                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Iscas & Rastreio</span>
-                    <span className="text-[10px] text-[#5c3e29] block">Gestão de iscas, planilhas e gráficos 3D</span>
+                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Slides</span>
+                    <span className="text-[10px] text-[#5c3e29] block">Painel de Slides 4K</span>
                   </div>
                 </label>
               </div>
@@ -964,10 +1030,10 @@ export default function App() {
                   onClick={() => {
                     setShowPresenceList(tempPresence);
                     setShowRotasPage(tempRotas);
-                    setShowIscasPage(tempIscas);
+                    setShowSlidesPage(tempSlides);
                     localStorage.setItem('show_presence_list', String(tempPresence));
                     localStorage.setItem('show_rotas_page', String(tempRotas));
-                    localStorage.setItem('show_iscas_page', String(tempIscas));
+                    localStorage.setItem('show_slides_page', String(tempSlides));
                     setShowPageSelectorModal(false);
                   }}
                   className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"

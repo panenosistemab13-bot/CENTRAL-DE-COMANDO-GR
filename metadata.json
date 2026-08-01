@@ -1,6 +1,6 @@
 {
   "name": "Sistema PGR",
-  "description": "Sistema PGR - Controle de Pátio, Pré-Alerta e Gerenciamento de Risco Operacional.",
+  "description": "Sistema PGR - Dashboard Executivo Slides 4K HUD Command Center, Controle de Pátio e Gerenciamento de Risco.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
