@@ -350,6 +350,15 @@ export default function Slides() {
                 </div>
                 <Database className="w-5 h-5 text-cyan-400 opacity-60" />
               </div>
+
+              {/* Limpar Tudo Button */}
+              <button
+                onClick={() => setData([])}
+                className="bg-slate-900/80 border border-rose-500/30 rounded-2xl px-4 py-3 flex items-center gap-2 font-mono hover:bg-rose-950/30 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                <span className="text-xs font-black uppercase tracking-wider text-rose-300">LIMPAR TUDO</span>
+              </button>
             </div>
           </div>
 
