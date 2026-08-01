@@ -66,10 +66,17 @@ interface MobileMenuProps {
   onSelect: (id: string) => void;
   showPresenceList: boolean;
   showRotasPage: boolean;
+  showSlides: boolean;
   onUnlockPresenceList: () => void;
 }
 
-export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenceList }: MobileMenuProps) {
+export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList }: MobileMenuProps) {
+  const filteredMenuItems = mobileMenuItems.filter(item => {
+    if (item.id === 'presence') return showPresenceList;
+    if (item.id === 'rotas') return showRotasPage;
+    if (item.id === 'slides') return showSlides;
+    return true;
+  });
   return (
     <div className="w-full min-h-screen bg-[#140b07] relative flex flex-col justify-between overflow-x-hidden select-none px-5 py-6">
       
@@ -119,7 +126,7 @@ export default function MobileMenu({ onSelect, showPresenceList, onUnlockPresenc
           </h2>
         </div>
 
-        {mobileMenuItems.map((item, index) => {
+        {filteredMenuItems.map((item, index) => {
           const IconComponent = item.icon;
           return (
             <motion.button

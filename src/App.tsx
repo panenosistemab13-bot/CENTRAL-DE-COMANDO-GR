@@ -109,36 +109,27 @@ export default function App() {
   const [showRotasPage, setShowRotasPage] = useState<boolean>(() => {
     return localStorage.getItem('show_rotas_page') === 'true' || localStorage.getItem('show_presence_list') === 'true';
   });
-  const [showSlidesPage, setShowSlidesPage] = useState<boolean>(() => {
-    return localStorage.getItem('show_slides_page') === 'true';
+  const [showSlides, setShowSlides] = useState<boolean>(() => {
+    return localStorage.getItem('show_slides') === 'true';
   });
 
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [showPageSelectorModal, setShowPageSelectorModal] = useState<boolean>(false);
   const [tempPresence, setTempPresence] = useState<boolean>(showPresenceList);
   const [tempRotas, setTempRotas] = useState<boolean>(showRotasPage);
-  const [tempSlides, setTempSlides] = useState<boolean>(showSlidesPage);
+  const [tempSlides, setTempSlides] = useState<boolean>(showSlides);
 
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
 
-  // When password modal opens, set temp states to current states
-  useEffect(() => {
-    if (showPasswordModal) {
-      setTempPresence(showPresenceList);
-      setTempRotas(showRotasPage);
-      setTempSlides(showSlidesPage);
-    }
-  }, [showPasswordModal]);
-
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'presence') return showPresenceList;
     if (tab.id === 'rotas') return showRotasPage;
-    if (tab.id === 'slides') return showSlidesPage;
+    if (tab.id === 'slides') return showSlides;
     return true;
   });
 
-  const [activeTab, setActiveTab] = useState<Tab>('slides');
+  const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
   const [smCreatorView, setSmCreatorView] = useState<'generator' | 'codes'>('generator');
@@ -192,7 +183,6 @@ export default function App() {
           case '5': e.preventDefault(); if (showPresenceList) setActiveTab('rotas'); return;
           case '6': e.preventDefault(); setActiveTab('checklist'); return;
           case '7': e.preventDefault(); setActiveTab('controle'); return;
-          case '8': e.preventDefault(); if (showSlidesPage) setActiveTab('slides'); return;
         }
       }
 
@@ -273,6 +263,7 @@ export default function App() {
           onSelect={(id) => setActiveTab(id as Tab)} 
           showPresenceList={showPresenceList}
           showRotasPage={showRotasPage}
+          showSlides={showSlides}
           onUnlockPresenceList={() => setShowPasswordModal(true)}
         />
       );
@@ -287,11 +278,12 @@ export default function App() {
             setFocusedIndex={setFocusedCardIndex}
             showPresenceList={showPresenceList}
             showRotasPage={showRotasPage}
+            showSlides={showSlides}
             onUnlockPresenceList={() => setShowPasswordModal(true)}
           />
         );
       case 'slides':
-        return showSlidesPage ? <Slides /> : null;
+        return <Slides />;
       case 'presence':
         return <PresenceList onBack={() => setActiveTab('menu')} />;
       case 'averbacao':
@@ -850,8 +842,8 @@ export default function App() {
                 Acesso Restrito
               </h3>
 
-            <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Digite a senha de administrador para alternar a exibição das páginas restritas no menu principal.
+              <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
+                Digite a senha de administrador para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença e Rotas</strong> no menu principal.
               </p>
 
               <form onSubmit={(e) => {
@@ -859,7 +851,7 @@ export default function App() {
                 if (passwordInput === '#trescafe2027') {
                   setTempPresence(showPresenceList);
                   setTempRotas(showRotasPage);
-                  setTempSlides(showSlidesPage);
+                  setTempSlides(showSlides);
                   setShowPasswordModal(false);
                   setPasswordInput('');
                   setPasswordError(false);
@@ -944,34 +936,27 @@ export default function App() {
               </p>
 
               {/* Suggestion Quick Actions */}
-              <div className="grid grid-cols-4 gap-2 w-full mb-4">
+              <div className="grid grid-cols-3 gap-2 w-full mb-4">
                 <button
                   type="button"
                   onClick={() => { setTempPresence(true); setTempRotas(true); setTempSlides(true); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
                   🌟 Todas
                 </button>
                 <button
                   type="button"
                   onClick={() => { setTempPresence(true); setTempRotas(false); setTempSlides(false); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  📋 Presença
+                  📋 Só Presença
                 </button>
                 <button
                   type="button"
                   onClick={() => { setTempPresence(false); setTempRotas(true); setTempSlides(false); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
+                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
                 >
-                  🗺️ Rotas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setTempPresence(false); setTempRotas(false); setTempSlides(true); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[9px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
-                >
-                  🌐 Slides
+                  🗺️ Só Rotas
                 </button>
               </div>
 
@@ -1012,7 +997,7 @@ export default function App() {
                   />
                   <div>
                     <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Slides</span>
-                    <span className="text-[10px] text-[#5c3e29] block">Painel de Slides 4K</span>
+                    <span className="text-[10px] text-[#5c3e29] block">Painel e mapeamento de Slides</span>
                   </div>
                 </label>
               </div>
@@ -1030,10 +1015,10 @@ export default function App() {
                   onClick={() => {
                     setShowPresenceList(tempPresence);
                     setShowRotasPage(tempRotas);
-                    setShowSlidesPage(tempSlides);
+                    setShowSlides(tempSlides);
                     localStorage.setItem('show_presence_list', String(tempPresence));
                     localStorage.setItem('show_rotas_page', String(tempRotas));
-                    localStorage.setItem('show_slides_page', String(tempSlides));
+                    localStorage.setItem('show_slides', String(tempSlides));
                     setShowPageSelectorModal(false);
                   }}
                   className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"

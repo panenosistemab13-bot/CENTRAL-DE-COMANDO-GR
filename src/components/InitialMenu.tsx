@@ -44,6 +44,7 @@ interface InitialMenuProps {
   setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
   showPresenceList: boolean;
   showRotasPage: boolean;
+  showSlides: boolean;
   onUnlockPresenceList: () => void;
 }
 
@@ -397,12 +398,13 @@ function ModuleGraphic({ id }: { id: string }) {
   }
 }
 
-export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, onUnlockPresenceList }: InitialMenuProps) {
+export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
   const filteredMenuItems = menuItems.filter(item => {
     if (item.id === 'presence') return showPresenceList;
     if (item.id === 'rotas') return showRotasPage;
+    if (item.id === 'slides') return showSlides;
     return true;
   });
   const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);
@@ -414,6 +416,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       const items = menuItems.filter(item => {
         if (item.id === 'presence') return showPresenceList;
         if (item.id === 'rotas') return showRotasPage;
+        if (item.id === 'slides') return showSlides;
         return true;
       });
       let next = prev + newDirection;
@@ -421,7 +424,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       if (next >= items.length) next = 0;
       return next;
     });
-  }, [setFocusedIndex, showPresenceList, showRotasPage]);
+  }, [setFocusedIndex, showPresenceList, showRotasPage, showSlides]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -430,6 +433,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
       const items = menuItems.filter(item => {
         if (item.id === 'presence') return showPresenceList;
         if (item.id === 'rotas') return showRotasPage;
+        if (item.id === 'slides') return showSlides;
         return true;
       });
       if (e.key === 'ArrowRight') paginate(1);
@@ -441,7 +445,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, paginate, onSelect, showPresenceList, showRotasPage]);
+  }, [focusedIndex, paginate, onSelect, showPresenceList, showRotasPage, showSlides]);
 
   return (
     <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">
