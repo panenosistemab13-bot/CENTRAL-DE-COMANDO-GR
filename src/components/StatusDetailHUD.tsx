@@ -19,6 +19,7 @@ export const StatusDetailHUD: React.FC<StatusDetailHUDProps> = ({
   STATUS_CATEGORIES
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,15 +65,15 @@ export const StatusDetailHUD: React.FC<StatusDetailHUDProps> = ({
       )}
 
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3 gap-4">
+      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3 gap-4 cursor-pointer" onClick={() => setIsMinimized(!isMinimized)}>
         <h3 className="text-xs font-black uppercase tracking-widest text-cyan-300 flex items-center gap-2">
           <Zap className="w-4 h-4 text-cyan-400" />
-          DETALHAMENTO DE ISCAS POR STATUS ({filteredData.length})
+          DETALHAMENTO DE ISCAS POR STATUS ({filteredData.length}) - {isMinimized ? "MAXIMIZAR" : "MINIMIZAR"}
         </h3>
 
         {/* Full Screen Toggle Button */}
         <button
-          onClick={toggleFullscreen}
+          onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
           title={isFullscreen ? "Sair da Tela Cheia" : "Expandir Detalhamento em Tela Cheia"}
           className={cn(
             "px-3 py-1.5 rounded-xl border font-mono font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer text-[10px]",
@@ -96,47 +97,49 @@ export const StatusDetailHUD: React.FC<StatusDetailHUDProps> = ({
       </div>
 
       {/* Table Container */}
-      <div className={cn("overflow-x-auto", isFullscreen && "flex-1 overflow-y-auto")}>
-        <table className="w-full text-left text-xs">
-          <thead className="sticky top-0 bg-slate-950 z-10">
-            <tr className="border-b border-cyan-500/20 text-cyan-400/70 text-[10px] uppercase tracking-wider">
-              <th className="p-3">ID ISCA</th>
-              <th className="p-3">DESTINO</th>
-              <th className="p-3">STATUS</th>
-              <th className="p-3">MOTORISTA</th>
-              <th className="p-3">PLACA (CAVALO)</th>
-              <th className="p-3">CARRETA</th>
-              <th className="p-3">UNIDADE</th>
-              <th className="p-3">OBSERVACAO</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-cyan-500/10 text-slate-300">
-            {filteredData.map(row => {
-              const norm = normalizeStatus(row.status);
-              const cat = STATUS_CATEGORIES.find(c => c.key === norm) || { color: '#00f0ff' };
-              return (
-                <tr key={row.id} className="hover:bg-cyan-500/5 transition-colors">
-                  <td className="p-3 font-bold text-cyan-300">{row.idIsca}</td>
-                  <td className="p-3 font-bold text-white">{row.destino || '---'}</td>
-                  <td className="p-3">
-                    <span 
-                      className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border"
-                      style={{ backgroundColor: `${cat.color}15`, color: cat.color, borderColor: `${cat.color}40` }}
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-slate-200">{row.motorista || '---'}</td>
-                  <td className="p-3 text-cyan-400 font-bold">{row.cavalo || '---'}</td>
-                  <td className="p-3 text-slate-400">{row.carreta || '---'}</td>
-                  <td className="p-3 text-emerald-400 font-bold">{row.unidade}</td>
-                  <td className="p-3 text-slate-400">{row.obs1 || '---'}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {!isMinimized && (
+        <div className={cn("overflow-x-auto", isFullscreen && "flex-1 overflow-y-auto")}>
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 bg-slate-950 z-10">
+              <tr className="border-b border-cyan-500/20 text-cyan-400/70 text-[10px] uppercase tracking-wider">
+                <th className="p-3">ID ISCA</th>
+                <th className="p-3">DESTINO</th>
+                <th className="p-3">STATUS</th>
+                <th className="p-3">MOTORISTA</th>
+                <th className="p-3">PLACA (CAVALO)</th>
+                <th className="p-3">CARRETA</th>
+                <th className="p-3">UNIDADE</th>
+                <th className="p-3">OBSERVACAO</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-cyan-500/10 text-slate-300">
+              {filteredData.map(row => {
+                const norm = normalizeStatus(row.status);
+                const cat = STATUS_CATEGORIES.find(c => c.key === norm) || { color: '#00f0ff' };
+                return (
+                  <tr key={row.id} className="hover:bg-cyan-500/5 transition-colors">
+                    <td className="p-3 font-bold text-cyan-300">{row.idIsca}</td>
+                    <td className="p-3 font-bold text-white">{row.destino || '---'}</td>
+                    <td className="p-3">
+                      <span 
+                        className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border"
+                        style={{ backgroundColor: `${cat.color}15`, color: cat.color, borderColor: `${cat.color}40` }}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-slate-200">{row.motorista || '---'}</td>
+                    <td className="p-3 text-cyan-400 font-bold">{row.cavalo || '---'}</td>
+                    <td className="p-3 text-slate-400">{row.carreta || '---'}</td>
+                    <td className="p-3 text-emerald-400 font-bold">{row.unidade}</td>
+                    <td className="p-3 text-slate-400">{row.obs1 || '---'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
