@@ -12,7 +12,8 @@ import {
   Sliders,
   Lock,
   Unlock,
-  Globe
+  Globe,
+  Shield
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -36,6 +37,7 @@ const menuItems: MenuItem[] = [
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
   { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
+  { id: 'dados', label: 'Dados', buttonLabel: 'Auditoria', icon: Shield, color: 'text-red-400', description: 'Painel oculto de monitoramento de usuários online e último acesso ao sistema.' },
 ];
 
 interface InitialMenuProps {
@@ -393,6 +395,21 @@ function ModuleGraphic({ id }: { id: string }) {
         </svg>
       );
 
+    case 'dados':
+      return (
+        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
+          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
+          {/* Shield Base */}
+          <path d="M 100,45 L 145,65 L 145,105 C 145,130 120,145 100,155 C 80,145 55,130 55,105 L 55,65 Z" fill="#1C1008" stroke="#B32025" strokeWidth="3" />
+          <path d="M 100,50 L 140,68 L 140,103 C 140,125 118,139 100,148 C 82,139 60,125 60,103 L 60,68 Z" fill="#2A160A" stroke="#E6C79C" strokeWidth="1.5" />
+          {/* Glowing Lock core */}
+          <circle cx="100" cy="95" r="16" fill="#120A05" stroke="#B32025" strokeWidth="2" />
+          <path d="M 93,95 L 93,91 C 93,87 96,84 100,84 C 104,84 107,87 107,91 L 107,95" fill="none" stroke="#E6C79C" strokeWidth="2.5" strokeLinecap="round" />
+          <rect x="91" y="95" width="18" height="13" rx="2" fill="#B32025" />
+          <circle cx="100" cy="101" r="2" fill="#F9F1E6" />
+        </svg>
+      );
+
     default:
       return null;
   }
@@ -405,6 +422,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
     if (item.id === 'presence') return showPresenceList;
     if (item.id === 'rotas') return showRotasPage;
     if (item.id === 'slides') return showSlides;
+    if (item.id === 'dados') return showPresenceList;
     return true;
   });
   const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);

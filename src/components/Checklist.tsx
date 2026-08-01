@@ -6,12 +6,10 @@ import {
   Clock, 
   Search,
   Truck,
-  MessageSquare,
   Wrench,
   Edit2,
   Copy,
   Check,
-  Heart,
   Upload,
   FileText,
   X,
@@ -21,8 +19,8 @@ import {
   Sparkles,
   ShieldAlert,
   FileSpreadsheet,
-  UserCheck,
-  RefreshCw
+  RefreshCw,
+  Clipboard
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
@@ -46,101 +44,75 @@ interface ChecklistItem {
   periferico: string;
   observacao: string;
   statusOverride?: 'APROVADO' | 'VENCIDO' | 'NEGATIVADO' | 'REPROVADO';
-  estaNoPatio?: 'SIM' | 'NÃO';
-  assinou?: 'SIM' | 'NÃO';
   pdfs?: PdfFile[];
 }
 
-const LicensePlate = ({ plate, size = 'normal' }: { plate: string; size?: 'normal' | 'large' }) => (
-  <div className={cn(
-    "relative bg-gradient-to-b from-[#ffffff] via-[#f2f2f2] to-[#e4e4e4] border-[4px] sm:border-[5px] border-[#d4d4d4] rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.5),0_2px_6px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-3px_4px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col items-stretch select-none transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_16px_35px_rgba(179,32,37,0.4)]",
-    size === 'large' ? "w-[210px] sm:w-[260px]" : "w-[140px]"
-  )}>
-    {/* Mercosul Top Blue Banner */}
+const QUICK_CODES = [
+  { label: 'Cápsula', value: '9000000982' },
+  { label: 'Máquina', value: '000000901' },
+  { label: 'Embalagem', value: '132' }
+];
+
+function Screw({ className }: { className?: string }) {
+  return (
     <div className={cn(
-      "bg-gradient-to-r from-[#002b7a] via-[#003d99] to-[#002b7a] flex items-center justify-between px-3 text-white uppercase font-sans font-black shadow-inner border-b border-[#001845]",
-      size === 'large' ? "h-[28px] text-[11px]" : "h-[20px] text-[8.5px]"
+      "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+      className
     )}>
-      <div className="flex items-center gap-1.5">
-        <div className={cn(
-          "bg-[#009739] rounded-sm flex items-center justify-center shadow-sm relative overflow-hidden",
-          size === 'large' ? "w-[16px] h-[11px]" : "w-[12px] h-[8px]"
-        )}>
-          <div className="w-[6px] h-[4px] bg-[#FEDD00] rotate-45 flex items-center justify-center">
-            <div className="w-[2px] h-[2px] bg-[#002776] rounded-full"></div>
-          </div>
-        </div>
-        <span className="tracking-[0.25em] font-extrabold text-[#f0f4ff]">BR</span>
-      </div>
-
-      <span className="tracking-[0.3em] font-serif font-black text-[#fdfdfd] drop-shadow">BRASIL</span>
-
-      <div className="flex items-center gap-1">
-        <div className={cn(
-          "rounded-full bg-[#1e40af] border border-white/40 flex items-center justify-center text-[7px] font-black text-white",
-          size === 'large' ? "w-4 h-4 text-[9px]" : "w-3 h-3 text-[6px]"
-        )}>
-          M
-        </div>
-      </div>
-    </div>
-
-    {/* Main Plate Character Display (Embossed 3D Metallic Style) */}
-    <div className={cn(
-      "bg-gradient-to-b from-[#ffffff] via-[#f7f4ed] to-[#ede5d8] text-[#110905] font-black text-center leading-none font-mono uppercase tracking-[0.2em] py-2.5 sm:py-3.5 relative flex items-center justify-center shadow-inner",
-      size === 'large' ? "text-[28px] sm:text-[34px]" : "text-[20px]"
-    )} style={{ textShadow: '0 2px 2px rgba(255,255,255,0.9), 0 -1px 1px rgba(0,0,0,0.25), 1px 1px 0px rgba(0,0,0,0.1)' }}>
-      {plate}
-    </div>
-
-    <div className="h-1 bg-gradient-to-r from-transparent via-[#c0c0c0]/40 to-transparent w-full"></div>
-  </div>
-);
-
-const PdfThumbnail = ({ pdfUrl, title }: { pdfUrl: string, title: string }) => {
-  const [objectUrl, setObjectUrl] = useState<string>('');
-
-  useEffect(() => {
-    if (!pdfUrl) return;
-    
-    if (pdfUrl.startsWith('data:application/pdf;base64,')) {
-      try {
-        const base64Data = pdfUrl.split(',')[1];
-        const byteCharacters = atob(base64Data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        setObjectUrl(url + '#view=FitH&toolbar=0&navpanes=0&scrollbar=0');
-        
-        return () => URL.revokeObjectURL(url);
-      } catch (e) {
-        console.error("Error creating blob from data URL", e);
-        setObjectUrl(pdfUrl);
-      }
-    } else {
-      setObjectUrl(pdfUrl + '#view=FitH&toolbar=0&navpanes=0&scrollbar=0');
-    }
-  }, [pdfUrl]);
-
-  if (!objectUrl) return (
-    <div className="w-full h-full flex items-center justify-center bg-stone-900">
-      <Loader2 size={20} className="animate-spin text-amber-500/60" />
+      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
     </div>
   );
+}
 
+const WoodenPlaque: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  screwSize?: string;
+}> = ({ children, className, screwSize }) => {
   return (
-    <div className="w-full h-full overflow-hidden relative bg-stone-900">
-      <iframe 
-        src={objectUrl}
-        className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left pointer-events-none border-0"
-        style={{ transform: 'scale(0.25)' }}
-        title={title}
-        scrolling="no"
-      />
+    <div className={cn(
+      "rounded-2xl bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[6px] border-[#311f14] shadow-[0_22px_45px_rgba(0,0,0,0.88),inset_1.5px_1.5px_3px_rgba(255,255,255,0.45)] relative p-6 flex flex-col justify-between ring-2 ring-[#1c1109]/30",
+      className
+    )}>
+      <Screw className={cn("absolute top-3 left-3 w-3 h-3", screwSize)} />
+      <Screw className={cn("absolute top-3 right-3 w-3 h-3", screwSize)} />
+      <Screw className={cn("absolute bottom-3 left-3 w-3 h-3", screwSize)} />
+      <Screw className={cn("absolute bottom-3 right-3 w-3 h-3", screwSize)} />
+      <div className="relative z-10 w-full h-full flex flex-col justify-between">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const LicensePlate: React.FC<{ plate: string; type?: 'cavalo' | 'carreta' }> = ({ plate, type }) => {
+  if (!plate || plate === '-') return <span className="text-[#5c3c24] font-mono font-bold">-</span>;
+  const cleanPlate = plate.trim().toUpperCase();
+  const isCarreta = type === 'carreta';
+  const isCavalo = type === 'cavalo';
+  const headerText = isCavalo ? 'CAVALO' : isCarreta ? 'CARRETA' : 'BRASIL';
+  
+  return (
+    <div className={cn(
+      "inline-flex flex-col items-center justify-center overflow-hidden select-none font-mono tracking-wider w-[140px] h-[46px] shrink-0 transform transition-transform hover:scale-105 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.35)] border-2",
+      isCarreta ? "bg-[#fffde7] border-[#e6b800]" : "bg-[#f7f4ed] border-[#5c3c24]/80"
+    )}>
+      <div className="w-full bg-[#0051A2] h-[11px] flex items-center justify-between px-1.5 leading-none relative">
+        <span className="text-[5.5px] text-white font-sans font-bold">BR</span>
+        <span className="text-[7px] text-white font-sans font-black tracking-widest uppercase absolute left-1/2 -translate-x-1/2">
+          {headerText}
+        </span>
+        <div className="w-[8px] h-[5.5px] bg-[#009b3a] border border-white/20 flex items-center justify-center relative rounded-[1px] overflow-hidden">
+          <div className="w-[4.5px] h-[3px] bg-yellow-400 rotate-45 transform flex items-center justify-center">
+            <div className="w-[1.5px] h-[1.5px] bg-blue-800 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+      <div className={cn("w-full flex-1 flex items-center justify-center px-2", isCarreta ? "bg-gradient-to-b from-[#fff176] to-[#fbc02d]" : "bg-gradient-to-b from-[#ffffff] to-[#e8e4db]")}>
+        <span className="text-[#1a1c1d] font-black text-[17px] tracking-wide leading-none select-all" style={{ textShadow: '0.5px 0.5px 0px rgba(255, 255, 255, 0.8)' }}>
+          {cleanPlate}
+        </span>
+      </div>
     </div>
   );
 };
@@ -153,6 +125,7 @@ export default function Checklist() {
   const [filter, setFilter] = useState<'TODOS' | 'EM DIA' | 'VENCIDO' | 'NEGATIVADOS'>('TODOS');
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<ChecklistItem | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   
   const [newItem, setNewItem] = useState<Omit<ChecklistItem, 'id'>>({
     cavalo: '',
@@ -173,6 +146,16 @@ export default function Checklist() {
   const [genCopied, setGenCopied] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
 
+  const copyCodeToClipboard = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedCode(label);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (e) {
+      console.error("Erro ao copiar código:", e);
+    }
+  };
+
   const handleImportData = async () => {
     const lines = pasteData.trim().split('\n');
     const updates: Record<string, any> = {};
@@ -182,7 +165,6 @@ export default function Checklist() {
       if (!line) continue;
 
       const parts = line.split('\t').map(p => p.trim()).filter(Boolean);
-      
       let cavalo = '';
       let carretas = '';
       let statusStr = 'APROVADO';
@@ -223,7 +205,6 @@ export default function Checklist() {
 
       if (cavalo) {
         cavalo = cavalo.replace(/[^a-zA-Z0-9\s-]/g, '').toUpperCase();
-        
         const parseDate = (d: string) => {
           if (!d || d === 'REPROVADO' || d === 'VENCIDO' || d === '#VALUE!') return format(new Date(), 'yyyy-MM-dd');
           const [dd, mm, yyyy] = d.split('/');
@@ -273,7 +254,7 @@ export default function Checklist() {
         alert('Erro ao atualizar checklist.');
       }
     } else {
-      alert('Nenhum dado válido encontrado para importação. Verifique o formato colado.');
+      alert('Nenhum dado válido encontrado para importação.');
     }
     setPasteData('');
   };
@@ -290,12 +271,10 @@ export default function Checklist() {
     setUploadingItemId(itemId);
     try {
       const reader = new FileReader();
-      
       reader.onloadend = async () => {
         try {
           const base64String = reader.result as string;
           const fileId = Date.now().toString();
-          
           const item = items.find(i => i.id === itemId);
           if (item) {
             const newPdf = { id: fileId, name: file.name, url: base64String };
@@ -304,48 +283,23 @@ export default function Checklist() {
           }
         } catch (error) {
           console.error("Erro ao salvar PDF:", error);
-          alert("Erro ao fazer upload do arquivo. O arquivo pode ser muito grande.");
+          alert("Erro ao fazer upload do arquivo.");
         } finally {
           setUploadingItemId(null);
           event.target.value = '';
         }
       };
-
-      reader.onerror = () => {
-        console.error("Erro ao ler o arquivo PDF");
-        alert("Erro ao ler o arquivo.");
-        setUploadingItemId(null);
-        event.target.value = '';
-      };
-
       reader.readAsDataURL(file);
     } catch (error) {
       console.error("Erro ao processar PDF:", error);
-      alert("Erro ao processar o arquivo.");
       setUploadingItemId(null);
       event.target.value = '';
-    }
-  };
-
-  const handlePdfDelete = async (itemId: string, pdfId: string) => {
-    if (!confirm('Deseja realmente remover este arquivo?')) return;
-    
-    try {
-      const item = items.find(i => i.id === itemId);
-      if (!item || !item.pdfs) return;
-
-      const updatedPdfs = item.pdfs.filter(p => p.id !== pdfId);
-      await update(ref(rtdb, `checklist_veiculos/${itemId}`), { pdfs: updatedPdfs });
-    } catch (error) {
-      console.error("Erro ao deletar PDF:", error);
-      alert("Erro ao remover o arquivo.");
     }
   };
 
   const handlePdfAction = (e: React.MouseEvent, pdfUrl: string, title: string, action: 'view' | 'download') => {
     e.stopPropagation();
     e.preventDefault();
-    
     let urlToUse = pdfUrl;
     if (pdfUrl.startsWith('data:application/pdf;base64,')) {
       try {
@@ -359,7 +313,7 @@ export default function Checklist() {
         const blob = new Blob([byteArray], { type: 'application/pdf' });
         urlToUse = URL.createObjectURL(blob);
       } catch (err) {
-        console.error("Error creating blob for action", err);
+        console.error("Error creating blob", err);
       }
     }
 
@@ -391,26 +345,7 @@ export default function Checklist() {
         }));
         setItems(list);
       } else {
-        const initialized = localStorage.getItem('checklist_initialized');
-        if (!initialized) {
-          localStorage.setItem('checklist_initialized', 'true');
-          const seedData = [
-            { cavalo: "POZ4431", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-            { cavalo: "POZ3241", carretas: "", dataTeste: "2026-02-03", dataVencimento: "2026-04-04", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-            { cavalo: "POD0255", carretas: "", dataTeste: "2026-03-24", dataVencimento: "2026-05-23", manutencaoOs: "", periferico: "SENSOR", observacao: "" },
-            { cavalo: "PNY2605", carretas: "PNE7353 / PNE7433", dataTeste: "2026-03-31", dataVencimento: "2026-05-30", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - POF9075 / POF8375" },
-            { cavalo: "SAR8D82", carretas: "SBF9G98 / TIC0F85", dataTeste: "2026-04-03", dataVencimento: "2026-06-02", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
-            { cavalo: "THX5I51", carretas: "POG0685 / POG0545", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TRAVA BAU", observacao: "" },
-            { cavalo: "TYT8A14", carretas: "QOX3164 / QOX3168", dataTeste: "2026-04-08", dataVencimento: "2026-06-07", manutencaoOs: "", periferico: "TECLADO", observacao: "" },
-            { cavalo: "SBK4142", carretas: "POF9785 / POR5E42", dataTeste: "2026-04-13", dataVencimento: "2026-06-12", manutencaoOs: "", periferico: "BAU", observacao: "CHECKLIST COM OS BAUS - MIN8723 / TIC0D95" },
-          ];
-          seedData.forEach((item, idx) => {
-            const id = (Date.now() + idx).toString();
-            set(ref(rtdb, `checklist_veiculos/${id}`), { ...item, id });
-          });
-        } else {
-          setItems([]);
-        }
+        setItems([]);
       }
     });
     return () => unsubscribe();
@@ -458,31 +393,28 @@ export default function Checklist() {
   };
 
   const handleClearAll = async () => {
-    if (!confirm("Tem certeza de que deseja apagar TODOS os registros do checklist? Esta ação não pode ser desfeita.")) return;
+    if (!confirm("Tem certeza de que deseja apagar TODOS os registros do checklist?")) return;
     try {
-      localStorage.setItem('checklist_initialized', 'true');
       await remove(ref(rtdb, 'checklist_veiculos'));
       setItems([]);
-      alert("Todos os registros do checklist foram apagados com sucesso!");
     } catch (error) {
-      console.error("Erro ao limpar registros:", error);
-      alert("Erro ao apagar os registros do checklist.");
+      console.error("Erro ao limpar:", error);
     }
   };
 
   const getStatus = (item: ChecklistItem) => {
     if (item.statusOverride) {
       if (item.statusOverride === 'VENCIDO' || item.statusOverride === 'REPROVADO' || item.statusOverride === 'NEGATIVADO') {
-        return { label: item.statusOverride, color: 'text-rose-400', bg: 'bg-rose-500/15', border: 'border-rose-500/30' };
+        return { label: item.statusOverride, color: 'text-rose-600', bg: 'bg-rose-100', border: 'border-rose-300' };
       }
-      return { label: item.statusOverride, color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' };
+      return { label: item.statusOverride, color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' };
     }
     const today = new Date();
     const expiry = parseISO(item.dataVencimento);
     const diff = differenceInDays(expiry, today);
-    if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-400', bg: 'bg-rose-500/15', border: 'border-rose-500/30' };
-    if (diff <= 7) return { label: 'URGENTE', color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30' };
-    return { label: 'APROVADO', color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' };
+    if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-600', bg: 'bg-rose-100', border: 'border-rose-300' };
+    if (diff <= 7) return { label: 'URGENTE', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' };
+    return { label: 'APROVADO', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' };
   };
 
   const filteredItems = items.filter(item => {
@@ -496,51 +428,29 @@ export default function Checklist() {
     return true;
   });
 
-  const sortedCavalos = [...items].sort((a, b) => {
-    const statusA = getStatus(a).label;
-    const statusB = getStatus(b).label;
-    const aIsVencido = statusA === 'VENCIDO' || statusA === 'NEGATIVADO' || statusA === 'REPROVADO';
-    const bIsVencido = statusB === 'VENCIDO' || statusB === 'NEGATIVADO' || statusB === 'REPROVADO';
-    if (aIsVencido && !bIsVencido) return -1;
-    if (!aIsVencido && bIsVencido) return 1;
-    return a.cavalo.localeCompare(b.cavalo);
-  });
+  const sortedCavalos = [...items].sort((a, b) => a.cavalo.localeCompare(b.cavalo));
 
   const handleCopyGenerator = () => {
     const htmlContent = `
-      <div style="font-family: Georgia, serif; color: #f4ede2; font-size: 15px; max-width: 550px; background-color: #16120f; padding: 30px; border: 2px solid #b45309; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <p style="margin-bottom: 16px; font-size: 15px; color: #f4ede2; margin-top: 0;">${genData.greeting},</p>
-        <p style="margin-bottom: 24px; font-size: 15px; color: #d6ccc2;">Solicito o <span style="font-weight: bold; text-decoration: underline; text-decoration-color: #b45309;">checklist</span> para os conjuntos abaixo:</p>
-        
-        <table style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #3a322b; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+      <div style="font-family: Calibri, Arial, sans-serif; color: #000000; font-size: 11pt; padding: 20px;">
+        <p style="margin: 0 0 16px 0;">${genData.greeting},</p>
+        <p style="margin: 0 0 16px 0;">Solicito o <strong>checklist</strong> para os conjuntos abaixo:</p>
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #000000; margin-bottom: 20px;">
           <thead>
-            <tr style="background-color: #1c1815; color: #f4ede2;">
-              <th style="padding: 12px 14px; border-bottom: 1px solid #3a322b; font-weight: bold; width: 50%; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-right: 1px solid #3a322b;">VEÍCULO CAVALO</th>
-              <th style="padding: 12px 14px; border-bottom: 1px solid #3a322b; font-weight: bold; width: 50%; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">CARRETAS DO CONJUNTO</th>
+            <tr style="background-color: #000000; color: #ffffff;">
+              <th style="padding: 8px 12px; border: 1px solid #000000; text-align: center;">VEÍCULO CAVALO</th>
+              <th style="padding: 8px 12px; border: 1px solid #000000; text-align: center;">CARRETAS DO CONJUNTO</th>
             </tr>
           </thead>
           <tbody>
-            <tr style="background-color: #211c18; color: #f4ede2; font-size: 15px; font-weight: bold; font-family: monospace;">
-              <td style="padding: 14px; border-right: 1px solid #3a322b; text-transform: uppercase; letter-spacing: 0.5px;">${genData.cavalo || "—"}</td>
-              <td style="padding: 14px; text-transform: uppercase; letter-spacing: 0.5px;">${genData.carretas || "—"}</td>
+            <tr>
+              <td style="padding: 8px 12px; border: 1px solid #000000; text-align: center; font-weight: bold;">${genData.cavalo || "—"}</td>
+              <td style="padding: 8px 12px; border: 1px solid #000000; text-align: center; font-weight: bold;">${genData.carretas || "—"}</td>
             </tr>
           </tbody>
         </table>
-
-        <div style="background-color: #1c1815; border-radius: 12px; padding: 12px 16px; border: 1px solid #3a322b; margin-bottom: 30px;">
-          <div style="font-family: monospace; font-size: 14px; font-weight: bold; color: #d6ccc2; text-align: left;">
-            Canal de Atendimento: ${genData.contato}
-          </div>
-        </div>
-
-        <div style="margin-top: 30px; border-top: 1px solid #3a322b; padding-top: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
-           <p style="color: #a89f91; font-size: 13px; margin: 0;">Atenciosamente,</p>
-           <div style="text-align: center; margin-right: 8px;">
-              <p style="font-style: italic; font-size: 24px; font-family: 'Brush Script MT', cursive; color: #f4ede2; margin: 0 0 2px 0;">Jefferson Augusto</p>
-              <div style="width: 128px; height: 1px; background-color: #b45309; margin: 4px auto;"></div>
-              <p style="font-size: 9px; color: #b45309; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Agente de Risco</p>
-           </div>
-        </div>
+        <p style="margin: 0 0 8px 0;">Canal de Atendimento: ${genData.contato}</p>
+        <p style="margin: 20px 0 0 0;">Atenciosamente,<br/><strong>Jefferson Augusto</strong> - Agente de Risco</p>
       </div>
     `;
     const textContent = `*${genData.greeting}*,\n\nSolicito o *checklist* para os conjuntos abaixo:\n\n*VEÍCULO CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS DO CONJUNTO*: ${genData.carretas || "—"}\n\n*Canal de Atendimento*: ${genData.contato}\n\nAtenciosamente,\n*Jefferson Augusto* - Agente de Risco`;
@@ -566,149 +476,155 @@ export default function Checklist() {
   const totalEmDia = totalVeiculos - totalVencidos;
 
   return (
-    <div className="w-full min-h-screen bg-[#0c0a09] text-[#f4ede2] font-sans selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="flex flex-col min-h-screen bg-[#2D1A10] text-stone-100 font-sans" style={{ zoom: 0.88 }}>
       
-      {/* Background ambient lighting */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-600/10 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 -right-40 w-96 h-96 bg-rose-600/10 rounded-full blur-[140px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(12,10,9,0.92)_100%)]" />
+      {/* HEADER IDÊNTICO AO PATIO */}
+      <header className="bg-[#3A2414] border-b-4 border-[#6B4423] px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-2xl relative z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-3.5 h-3.5 rounded-full bg-[#B32025] animate-pulse"></div>
+          <h1 className="text-base font-black tracking-wider text-[#fdf8f0] uppercase font-serif flex items-center gap-2">
+            <ClipboardCheck size={20} className="text-[#C7A26A]" />
+            CENTRAL DE CHECKLIST E VISTORIAS DE FROTA
+          </h1>
+        </div>
+
+        {/* Quick Codes */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-[11px] font-black uppercase text-[#C7A26A] tracking-wider hidden sm:inline">CÓDIGOS RÁPIDOS:</span>
+          {QUICK_CODES.map((item) => (
+            <div 
+              key={item.label}
+              className="flex items-center gap-2 bg-[#21120B] border border-[#6B4423] rounded-xl px-3 py-1.5 shadow-inner"
+            >
+              <span className="text-[11px] font-black text-[#eddaba] uppercase">{item.label}:</span>
+              <code className="text-xs font-mono font-black text-amber-300 bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                {item.value}
+              </code>
+              <button
+                type="button"
+                onClick={() => copyCodeToClipboard(item.label, item.value)}
+                className={cn(
+                  "px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 cursor-pointer border shadow-sm",
+                  copiedCode === item.label
+                    ? "bg-green-600 border-green-500 text-white"
+                    : "bg-[#B32025] hover:bg-[#8c060a] border-[#5a0f12] text-white"
+                )}
+              >
+                {copiedCode === item.label ? <Check size={11} /> : <Copy size={11} />}
+                <span>{copiedCode === item.label ? 'OK' : 'COPIAR'}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </header>
+
+      {/* SUBHEADER & METRICS RIBBON */}
+      <div className="bg-[#21120B] border-b border-[#6B4423]/60 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md">
+        <div className="flex items-center gap-2 p-1.5 bg-[#3A2414] border border-[#6B4423] rounded-2xl shadow-inner">
+          <button
+            onClick={() => setActiveView('monitoring')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              activeView === 'monitoring'
+                ? "bg-[#B32025] text-white shadow-md border border-[#ff4d4d]/40"
+                : "text-[#eddaba] hover:text-white"
+            )}
+          >
+            <ClipboardCheck size={16} />
+            <span>Monitoramento de Frota</span>
+          </button>
+          <button
+            onClick={() => setActiveView('generator')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              activeView === 'generator'
+                ? "bg-[#B32025] text-white shadow-md border border-[#ff4d4d]/40"
+                : "text-[#eddaba] hover:text-white"
+            )}
+          >
+            <Sparkles size={16} />
+            <span>Gerador / Checkpoint</span>
+          </button>
+        </div>
+
+        {/* Metrics */}
+        <div className="flex items-center gap-3">
+          <div className="bg-[#3A2414] border border-[#6B4423] rounded-2xl px-4 py-2 flex items-center gap-3 shadow-inner">
+            <Truck size={18} className="text-[#C7A26A]" />
+            <div>
+              <span className="text-[9px] font-mono tracking-widest text-[#eddaba]/70 uppercase block">Total Frota</span>
+              <span className="text-sm font-serif font-black text-white">{totalVeiculos}</span>
+            </div>
+          </div>
+          <div className="bg-[#3A2414] border border-[#6B4423] rounded-2xl px-4 py-2 flex items-center gap-3 shadow-inner">
+            <Check size={18} className="text-emerald-400" />
+            <div>
+              <span className="text-[9px] font-mono tracking-widest text-[#eddaba]/70 uppercase block">Em Dia</span>
+              <span className="text-sm font-serif font-black text-emerald-400">{totalEmDia}</span>
+            </div>
+          </div>
+          <div className="bg-[#3A2414] border border-[#6B4423] rounded-2xl px-4 py-2 flex items-center gap-3 shadow-inner">
+            <ShieldAlert size={18} className="text-rose-400" />
+            <div>
+              <span className="text-[9px] font-mono tracking-widest text-[#eddaba]/70 uppercase block">Vencidos</span>
+              <span className="text-sm font-serif font-black text-rose-400">{totalVencidos}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Search & Action Buttons */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {activeView === 'monitoring' && (
+            <div className="relative flex-1 md:w-64">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C7A26A]" />
+              <input 
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar placa cavalo..."
+                className="w-full bg-[#3A2414] border border-[#6B4423] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-[#eddaba]/40 outline-none focus:border-[#B32025] font-mono uppercase shadow-inner"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={() => setIsAdding(true)}
+            className="px-5 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-serif font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 cursor-pointer transition-all border border-[#ff4d4d]/30 shrink-0"
+          >
+            <Plus size={16} />
+            <span>Novo Registro</span>
+          </button>
+
+          {items.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="px-3.5 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl font-serif font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Apagar todos"
+            >
+              <Trash2 size={16} />
+              <span className="hidden sm:inline">Limpar</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        {/* EXECUTIVE OFFICE HEADER */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-[#29221d]">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1c1815] to-[#120f0d] border border-[#3a322b] flex items-center justify-center shadow-xl">
-              <ClipboardCheck size={28} className="text-amber-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[9px] uppercase tracking-widest font-bold">
-                  Painel Corporativo
-                </span>
-                <span className="text-stone-500 text-[10px] font-mono">• Três Corações Logística</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-[#f4ede2] uppercase">
-                Central de Checklist & Vistorias
-              </h1>
-            </div>
-          </div>
-
-          {/* Quick Metrics Ribbon */}
-          <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-            <div className="bg-[#16120f] border border-[#3a322b] rounded-2xl px-4 py-3 flex items-center gap-3 shrink-0 shadow-lg">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
-                <Truck size={18} />
-              </div>
-              <div>
-                <span className="text-[9px] font-mono tracking-widest text-stone-400 uppercase block">Total Frota</span>
-                <span className="text-lg font-serif font-bold text-[#f4ede2]">{totalVeiculos}</span>
-              </div>
-            </div>
-
-            <div className="bg-[#16120f] border border-[#3a322b] rounded-2xl px-4 py-3 flex items-center gap-3 shrink-0 shadow-lg">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                <Check size={18} />
-              </div>
-              <div>
-                <span className="text-[9px] font-mono tracking-widest text-stone-400 uppercase block">Em Dia</span>
-                <span className="text-lg font-serif font-bold text-emerald-400">{totalEmDia}</span>
-              </div>
-            </div>
-
-            <div className="bg-[#16120f] border border-[#3a322b] rounded-2xl px-4 py-3 flex items-center gap-3 shrink-0 shadow-lg">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
-                <ShieldAlert size={18} />
-              </div>
-              <div>
-                <span className="text-[9px] font-mono tracking-widest text-stone-400 uppercase block">Vencidos</span>
-                <span className="text-lg font-serif font-bold text-rose-400">{totalVencidos}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* NAVIGATION TABS & ACTION TOOLBAR */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 p-1.5 bg-[#16120f] border border-[#3a322b] rounded-2xl w-fit shadow-md">
-            <button
-              onClick={() => setActiveView('monitoring')}
-              className={cn(
-                "px-5 py-2.5 rounded-xl text-xs font-serif font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
-                activeView === 'monitoring'
-                  ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-md border border-amber-500/40"
-                  : "text-stone-400 hover:text-white"
-              )}
-            >
-              <ClipboardCheck size={15} />
-              <span>Monitoramento de Frota</span>
-            </button>
-            <button
-              onClick={() => setActiveView('generator')}
-              className={cn(
-                "px-5 py-2.5 rounded-xl text-xs font-serif font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
-                activeView === 'generator'
-                  ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-md border border-amber-500/40"
-                  : "text-stone-400 hover:text-white"
-              )}
-            >
-              <Sparkles size={15} />
-              <span>Adicionar Checkpoint</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {activeView === 'monitoring' && (
-              <div className="relative flex-1 sm:w-80">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-                <input 
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar placa cavalo ou carreta..."
-                  className="w-full bg-[#16120f] border border-[#3a322b] rounded-2xl pl-10 pr-4 py-3 text-xs text-stone-200 placeholder-stone-500 outline-none focus:border-amber-500/50 shadow-inner"
-                />
-              </div>
-            )}
-
-            <button
-              onClick={() => setIsAdding(true)}
-              className="px-5 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white rounded-2xl font-serif font-bold text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 cursor-pointer transition-all shrink-0"
-            >
-              <Plus size={16} />
-              <span>Novo Registro</span>
-            </button>
-
-            {items.length > 0 && (
-              <button
-                onClick={handleClearAll}
-                className="px-4 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl font-serif font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
-                title="Apagar todos os registros"
-              >
-                <Trash2 size={16} />
-                <span className="hidden sm:inline">Limpar Base</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* CONTENT AREA */}
+      {/* MAIN CONTAINER */}
+      <div className="flex-1 p-6 max-w-[1600px] w-full mx-auto space-y-6">
         {activeView === 'generator' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 rounded-[2.5rem] bg-gradient-to-br from-[#16120f] to-[#0e0c0a] border border-[#3a322b] p-6 sm:p-8 shadow-2xl">
-            <div className="lg:col-span-1 space-y-6 bg-[#110f0d] border border-[#2e2621] p-6 rounded-3xl shadow-inner">
-              <h3 className="text-xs font-bold font-serif text-amber-400 uppercase tracking-widest border-b border-[#2e2621] pb-3">
-                Configurar Solicitação
+          <WoodenPlaque className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1 space-y-5 bg-[#3A2414] border-2 border-[#6B4423] p-6 rounded-3xl shadow-inner text-[#eddaba]">
+              <h3 className="text-xs font-bold font-serif uppercase tracking-widest border-b border-[#6B4423] pb-3 flex items-center gap-2 text-[#fdf8f0]">
+                <Sparkles size={16} className="text-[#C7A26A]" />
+                Configurar Solicitação de Checklist
               </h3>
               
               <div className="space-y-4 font-serif">
                 <div>
-                  <label className="text-[10px] font-black text-stone-400 uppercase mb-1.5 block tracking-wider">Saudação</label>
+                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Saudação</label>
                   <select
                     value={genData.greeting}
                     onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
-                    className="w-full bg-[#16120f] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-stone-200 focus:border-amber-500 outline-none transition-colors cursor-pointer"
+                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B32025] outline-none cursor-pointer font-serif"
                   >
                     <option value="Bom dia">Bom dia</option>
                     <option value="Boa tarde">Boa tarde</option>
@@ -717,7 +633,7 @@ export default function Checklist() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-stone-400 uppercase mb-1.5 block tracking-wider">Veículo (Cavalo)</label>
+                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Veículo (Cavalo)</label>
                   <select
                     value={genData.cavalo}
                     onChange={(e) => {
@@ -729,7 +645,7 @@ export default function Checklist() {
                         carretas: relatedItem ? relatedItem.carretas : prev.carretas 
                       }));
                     }}
-                    className="w-full bg-[#16120f] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-stone-200 font-bold focus:border-amber-500 outline-none transition-colors cursor-pointer uppercase font-mono"
+                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white font-bold focus:border-[#B32025] outline-none cursor-pointer uppercase font-mono"
                   >
                     <option value="">Selecione veículo...</option>
                     {sortedCavalos.map(item => (
@@ -741,23 +657,23 @@ export default function Checklist() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-stone-400 uppercase mb-1.5 block tracking-wider">Carretas Relacionadas</label>
+                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Carretas Relacionadas</label>
                   <input
                     type="text"
                     value={genData.carretas}
                     onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
                     placeholder="EX: PNE7353 / PNE7433"
-                    className="w-full bg-[#16120f] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-stone-200 focus:border-amber-500 outline-none placeholder-stone-600 uppercase font-mono"
+                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B32025] outline-none uppercase font-mono placeholder-[#eddaba]/30"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-stone-400 uppercase mb-1.5 block tracking-wider">Celular Contato</label>
+                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Celular Contato</label>
                   <input
                     type="text"
                     value={genData.contato}
                     onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
-                    className="w-full bg-[#16120f] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-stone-200 focus:border-amber-500 outline-none font-mono"
+                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B32025] outline-none font-mono"
                   />
                 </div>
               </div>
@@ -765,10 +681,10 @@ export default function Checklist() {
               <button 
                 onClick={handleCopyGenerator}
                 className={cn(
-                  "w-full mt-6 py-3.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition-all duration-300 shadow-lg cursor-pointer",
+                  "w-full mt-6 py-3.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition-all shadow-lg cursor-pointer",
                   genCopied 
-                    ? "bg-emerald-600 text-white border-emerald-500 shadow-[0_2px_15px_rgba(16,185,129,0.4)]" 
-                    : "bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-500 hover:brightness-110 active:scale-95"
+                    ? "bg-green-600 text-white border-green-500 shadow-xl" 
+                    : "bg-[#B32025] text-white border-[#ff4d4d]/40 hover:bg-[#8c060a]"
                 )}
               >
                 {genCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -776,67 +692,59 @@ export default function Checklist() {
               </button>
             </div>
 
-            <div className="lg:col-span-2 relative z-10 flex items-center justify-center h-full">
-              <div className="w-full max-w-xl bg-[#16120f] p-2 rounded-3xl border border-[#3a322b] shadow-2xl relative">
-                <div className="border border-[#3a322b] rounded-2xl p-6 sm:p-10 bg-[#1c1815] shadow-inner relative min-h-[350px]">
-                  <div className="relative z-10 space-y-6 font-serif text-stone-200 text-sm sm:text-base">
-                    <p className="leading-relaxed">{genData.greeting},</p>
-                    <p className="leading-relaxed">Solicito o <strong className="font-bold underline decoration-amber-500 decoration-2 underline-offset-4">checklist</strong> para os conjuntos abaixo:</p>
+            <div className="lg:col-span-2 flex items-center justify-center">
+              <div className="w-full max-w-xl bg-white text-stone-900 p-8 rounded-3xl border-4 border-[#311f14] shadow-2xl relative font-serif">
+                <p className="mb-4 text-base font-medium">{genData.greeting},</p>
+                <p className="mb-6 text-base">Solicito o <strong className="font-bold underline text-[#B32025]">checklist</strong> para os conjuntos abaixo:</p>
+                
+                <table className="w-full border-collapse border border-stone-300 text-center mb-6">
+                  <thead>
+                    <tr className="bg-stone-900 text-white text-xs uppercase font-serif">
+                      <th className="p-3 border border-stone-300">VEÍCULO CAVALO</th>
+                      <th className="p-3 border border-stone-300">CARRETAS DO CONJUNTO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-stone-50 font-mono font-bold text-stone-900">
+                      <td className="p-3.5 border border-stone-300 uppercase">{genData.cavalo || "—"}</td>
+                      <td className="p-3.5 border border-stone-300 uppercase">{genData.carretas || "—"}</td>
+                    </tr>
+                  </tbody>
+                </table>
 
-                    <div className="overflow-hidden rounded-xl border border-[#3a322b] shadow-sm my-6">
-                      <table className="w-full text-center">
-                        <thead>
-                          <tr className="bg-[#120f0d] text-amber-400">
-                            <th className="p-3 font-serif font-black text-xs tracking-wider uppercase border-r border-[#3a322b]">VEÍCULO CAVALO</th>
-                            <th className="p-3 font-serif font-black text-xs tracking-wider uppercase">CARRETAS DO CONJUNTO</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="bg-[#16120f] text-stone-200 font-bold font-mono">
-                            <td className="p-4 border-r border-t border-[#3a322b] uppercase tracking-wide">{genData.cavalo || "—"}</td>
-                            <td className="p-4 border-t border-[#3a322b] uppercase tracking-wide">{genData.carretas || "—"}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                <div className="bg-stone-100 p-3 rounded-xl border border-stone-200 text-stone-800 font-mono text-xs mb-8">
+                  Canal de Atendimento: {genData.contato}
+                </div>
 
-                    <div className="bg-[#16120f] rounded-xl p-3.5 border border-[#3a322b] text-stone-300">
-                      <p className="font-mono font-bold text-xs sm:text-[14px]">Canal de Atendimento: {genData.contato}</p>
-                    </div>
-
-                    <div className="pt-8 flex justify-between items-end border-t border-[#3a322b]">
-                      <p className="text-stone-400 text-xs">Atenciosamente,</p>
-                      <div className="text-center mr-2">
-                        <p className="italic text-2xl font-serif text-stone-200 leading-none pb-1" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson Augusto</p>
-                        <div className="w-32 h-[1px] bg-amber-600/50 my-1 mx-auto"></div>
-                        <p className="text-[9px] uppercase tracking-widest text-amber-400 font-bold font-sans">Agente de Risco</p>
-                      </div>
-                    </div>
+                <div className="border-t border-stone-300 pt-6 flex justify-between items-end">
+                  <p className="text-stone-600 text-xs">Atenciosamente,</p>
+                  <div className="text-center mr-2">
+                    <p className="italic text-2xl font-serif text-stone-900" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson Augusto</p>
+                    <div className="w-32 h-[1px] bg-[#B32025] my-1 mx-auto"></div>
+                    <p className="text-[9px] uppercase tracking-widest text-[#B32025] font-bold font-sans">Agente de Risco</p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </WoodenPlaque>
         ) : (
           <div className="space-y-6">
             
-            {/* FILTER PILLS & SPREADSHEET PASTE TOOL */}
+            {/* FILTER & IMPORT PLAQUE */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Filter Pills */}
-              <div className="lg:col-span-1 bg-[#16120f] border border-[#3a322b] rounded-3xl p-5 shadow-xl flex flex-col justify-between gap-4">
+              <WoodenPlaque className="lg:col-span-1">
                 <div>
-                  <span className="text-[10px] font-mono tracking-widest text-stone-400 uppercase block mb-3 font-bold">Filtrar Status</span>
+                  <span className="text-[10px] font-mono tracking-widest text-[#5c3c24] uppercase block mb-3 font-extrabold">Filtrar Status</span>
                   <div className="grid grid-cols-2 gap-2">
                     {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
                       <button
                         key={f}
                         onClick={() => setFilter(f)}
                         className={cn(
-                          "px-4 py-2.5 rounded-xl text-[11px] font-bold font-serif uppercase tracking-widest transition-all cursor-pointer text-center",
+                          "px-4 py-2.5 rounded-xl text-[11px] font-bold font-serif uppercase tracking-widest transition-all cursor-pointer text-center border shadow-sm",
                           filter === f 
-                            ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-md border border-amber-500/40" 
-                            : "bg-[#110f0d] text-stone-400 hover:text-white border border-[#2e2621]"
+                            ? "bg-[#B32025] text-white shadow-md border-[#ff4d4d]/40" 
+                            : "bg-[#f4ede2] text-[#311f14] hover:bg-[#eddaba] border-[#d4bc96]"
                         )}
                       >
                         {f}
@@ -844,42 +752,38 @@ export default function Checklist() {
                     ))}
                   </div>
                 </div>
-                <div className="text-[11px] text-stone-400 font-serif italic border-t border-[#2e2621] pt-3">
-                  Mostrando <strong className="text-amber-400">{filteredItems.length}</strong> de {items.length} veículos cadastrados.
+                <div className="text-[11px] text-[#5c3c24] font-serif italic border-t border-[#d4bc96] pt-3 mt-4">
+                  Mostrando <strong className="text-[#311f14]">{filteredItems.length}</strong> de {items.length} veículos.
                 </div>
-              </div>
+              </WoodenPlaque>
 
-              {/* Spreadsheet Paste Import Box */}
-              <div className="lg:col-span-2 bg-[#16120f] border border-[#3a322b] rounded-3xl p-5 shadow-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[10px] font-mono tracking-widest text-stone-400 uppercase font-bold flex items-center gap-1.5">
-                      <FileSpreadsheet size={14} className="text-amber-400" />
-                      Atualizar Checklist via Colagem (Tabela)
-                    </label>
-                    <span className="text-[9px] text-stone-500 font-mono">Cole sem cabeçalhos</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <textarea
-                      value={pasteData}
-                      onChange={(e) => setPasteData(e.target.value)}
-                      placeholder="Cole aqui as informações copiadas da planilha Excel..."
-                      className="w-full h-20 bg-[#110f0d] border border-[#2e2621] rounded-2xl px-4 py-3 text-xs text-stone-200 placeholder-stone-600 outline-none focus:border-amber-500/50 resize-none font-mono"
-                    />
-                    <button 
-                      onClick={handleImportData}
-                      className="px-6 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-2xl text-xs font-serif font-bold uppercase tracking-wider shadow-lg transition-all active:scale-95 shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <RefreshCw size={16} />
-                      <span>Atualizar</span>
-                    </button>
-                  </div>
+              <WoodenPlaque className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-mono tracking-widest text-[#5c3c24] uppercase font-extrabold flex items-center gap-1.5">
+                    <FileSpreadsheet size={15} className="text-[#B32025]" />
+                    Atualizar Checklist via Colagem (Planilha)
+                  </label>
+                  <span className="text-[9px] text-[#5c3c24]/70 font-mono">Cole sem cabeçalhos</span>
                 </div>
-              </div>
-
+                <div className="flex gap-3">
+                  <textarea
+                    value={pasteData}
+                    onChange={(e) => setPasteData(e.target.value)}
+                    placeholder="Cole aqui as informações copiadas do Excel..."
+                    className="w-full h-20 bg-white border border-[#d4bc96] rounded-2xl px-4 py-3 text-xs text-[#311f14] placeholder-stone-400 outline-none focus:border-[#B32025] resize-none font-mono shadow-inner"
+                  />
+                  <button 
+                    onClick={handleImportData}
+                    className="px-6 bg-emerald-700 hover:bg-emerald-600 text-white rounded-2xl text-xs font-serif font-bold uppercase tracking-wider shadow-lg transition-all active:scale-95 shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer border border-emerald-500/40"
+                  >
+                    <RefreshCw size={16} />
+                    <span>Atualizar</span>
+                  </button>
+                </div>
+              </WoodenPlaque>
             </div>
 
-            {/* VEHICLES CARDS GRID WITH GIANT 4K MERCOSUL PLATES */}
+            {/* VEHICLES CARDS LIST */}
             <div className="space-y-4">
               <AnimatePresence>
                 {filteredItems.map((item) => {
@@ -887,449 +791,339 @@ export default function Checklist() {
                   const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
 
                   return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      className="bg-gradient-to-br from-[#1c1815] via-[#16120f] to-[#110f0d] border border-[#3a322b] rounded-[2rem] p-5 sm:p-6 shadow-2xl relative overflow-hidden group hover:border-amber-500/50 transition-all duration-300"
-                    >
-                      {/* Metallic rivets */}
-                      <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-gradient-to-tr from-[#3a322b] to-amber-500 opacity-60" />
-                      <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-gradient-to-tr from-[#3a322b] to-amber-500 opacity-60" />
-
-                      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+                    <WoodenPlaque key={item.id} className="p-6 transition-all duration-300 hover:scale-[1.01]">
+                      <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                         
-                        {/* Giant Mercosul Plates & Carretas */}
                         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 w-full lg:w-auto">
                           <div className="flex flex-col items-center">
-                            <span className="text-[10px] font-mono tracking-[0.2em] text-stone-400 uppercase mb-2 font-bold">PLACA CAVALO</span>
-                            <LicensePlate plate={item.cavalo} size="large" />
+                            <span className="text-[10px] font-mono tracking-[0.2em] text-[#5c3c24] uppercase mb-2 font-extrabold">PLACA CAVALO</span>
+                            <LicensePlate plate={item.cavalo} type="cavalo" />
                           </div>
 
                           {item.carretas && (
                             <div className="flex flex-col items-center">
-                              <span className="text-[10px] font-mono tracking-[0.2em] text-stone-400 uppercase mb-2 font-bold">CARRETAS DO CONJUNTO</span>
-                              <div className="bg-[#110f0d] border-2 border-[#3a322b] rounded-2xl px-5 py-4 shadow-inner flex items-center gap-3">
-                                <Truck size={22} className="text-amber-400" />
-                                <span className="font-mono font-black text-sm sm:text-base text-stone-200 uppercase tracking-wider">{item.carretas}</span>
+                              <span className="text-[10px] font-mono tracking-[0.2em] text-[#5c3c24] uppercase mb-2 font-extrabold">CARRETAS DO CONJUNTO</span>
+                              <div className="bg-white border-2 border-[#d4bc96] rounded-2xl px-5 py-3 shadow-inner flex items-center gap-3">
+                                <Truck size={22} className="text-[#B32025]" />
+                                <span className="font-mono font-black text-sm sm:text-base text-[#311f14] uppercase tracking-wider">{item.carretas}</span>
                               </div>
                             </div>
                           )}
                         </div>
 
-                        {/* Status & Dates Details */}
                         <div className="flex flex-col items-center lg:items-start gap-3 flex-1 px-2 text-center lg:text-left">
                           <div className="flex items-center gap-2.5 flex-wrap justify-center lg:justify-start">
                             {diasParaVencer < 0 || status.label === 'VENCIDO' || status.label === 'REPROVADO' ? (
-                              <div className="px-4 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 font-serif font-black text-xs uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-pulse">
+                              <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
                                 <ShieldAlert size={14} />
                                 <span>VENCIDO (EXPIROU)</span>
                               </div>
                             ) : (
-                              <div className="px-4 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-serif font-black text-xs uppercase tracking-widest shadow-md flex items-center gap-1.5">
+                              <div className="px-4 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5">
                                 <Check size={14} />
                                 <span>EM DIA (APROVADO)</span>
                               </div>
                             )}
 
                             {item.periferico && (
-                              <span className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                              <span className="px-3 py-1.5 rounded-xl bg-white border border-[#d4bc96] text-[#311f14] font-mono font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                                 <Wrench size={12} /> {item.periferico}
                               </span>
                             )}
 
                             {item.manutencaoOs && (
-                              <span className="px-3 py-1.5 rounded-xl bg-stone-800 border border-stone-700 text-stone-300 font-mono font-bold text-[10px] tracking-wider">
+                              <span className="px-3 py-1.5 rounded-xl bg-stone-200 border border-stone-300 text-stone-800 font-mono font-bold text-[10px]">
                                 OS: {item.manutencaoOs}
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-5 text-xs font-serif text-stone-300 mt-1 flex-wrap justify-center lg:justify-start">
+                          <div className="flex items-center gap-5 text-xs font-serif text-[#5c3c24] mt-1 flex-wrap justify-center lg:justify-start">
                             <div className="flex items-center gap-1.5">
-                              <Clock size={15} className="text-amber-500" />
-                              <span>Vencimento: <strong className="font-mono font-black text-sm text-white">{format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}</strong></span>
+                              <Clock size={15} className="text-[#B32025]" />
+                              <span>Vencimento: <strong className="font-mono font-black text-sm text-[#311f14]">{format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}</strong></span>
                             </div>
                             <span className={cn(
                               "font-mono font-bold text-xs",
-                              diasParaVencer < 0 ? "text-rose-400" : "text-emerald-400"
+                              diasParaVencer < 0 ? "text-rose-700" : "text-emerald-700"
                             )}>
                               ({diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias restantes`})
                             </span>
                           </div>
 
                           {item.observacao && (
-                            <p className="text-xs text-stone-400 italic mt-1 max-w-lg line-clamp-1">
+                            <p className="text-xs text-[#5c3c24] italic mt-1 max-w-lg">
                               "{item.observacao}"
                             </p>
                           )}
                         </div>
 
-                        {/* Action buttons drawer */}
-                        <div className="flex flex-col items-center justify-center gap-2 border-t lg:border-t-0 lg:border-l border-[#3a322b] pt-4 lg:pt-0 lg:pl-6 w-full lg:w-auto shrink-0">
-                          <div className="flex items-center gap-2">
-                            <label className={cn(
-                              "px-3.5 py-2.5 bg-[#120f0d] hover:bg-amber-500/10 border border-[#3a322b] text-stone-300 font-serif font-black text-[11px] rounded-xl tracking-wider transition-colors shadow cursor-pointer flex items-center gap-1.5",
-                              uploadingItemId === item.id && "opacity-50 pointer-events-none"
-                            )}>
-                              {uploadingItemId === item.id ? <Loader2 size={13} className="animate-spin text-amber-400" /> : <Upload size={13} className="text-amber-400" />}
-                              <span>{uploadingItemId === item.id ? 'ENVIANDO...' : 'ANEXAR PDF'}</span>
-                              <input 
-                                type="file" 
-                                accept="application/pdf" 
-                                className="hidden" 
-                                onChange={(e) => handlePdfUpload(e, item.id)}
-                                disabled={uploadingItemId === item.id}
-                              />
-                            </label>
+                        {/* Actions */}
+                        <div className="flex flex-col items-center justify-center gap-2 border-t lg:border-t-0 lg:border-l border-[#d4bc96] pt-4 lg:pt-0 lg:pl-6 shrink-0">
+                          <label className="px-4 py-2 bg-[#311f14] hover:bg-[#4a2e1f] text-white rounded-xl text-xs font-serif font-bold uppercase tracking-wider cursor-pointer shadow-md flex items-center gap-1.5 transition-all">
+                            {uploadingItemId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                            <span>Anexar PDF</span>
+                            <input 
+                              type="file" 
+                              accept="application/pdf" 
+                              className="hidden" 
+                              onChange={(e) => handlePdfUpload(e, item.id)}
+                            />
+                          </label>
 
+                          <div className="flex items-center gap-1.5 mt-1">
                             <button
                               onClick={() => setEditingItem(item)}
-                              className="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-serif font-black text-[11px] rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5 uppercase tracking-wider"
+                              className="p-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl transition-all cursor-pointer border border-stone-300"
+                              title="Editar"
                             >
-                              <Edit2 size={13} />
-                              <span>Editar</span>
+                              <Edit2 size={14} />
                             </button>
-
                             <button
                               onClick={() => handleDelete(item.id)}
-                              className="w-9 h-9 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl flex items-center justify-center transition-all cursor-pointer"
+                              className="p-2 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl transition-all cursor-pointer border border-rose-300"
                               title="Excluir"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
 
                       </div>
 
-                      {/* PDF Files Carousel / Row if attached */}
+                      {/* PDF Attachments List */}
                       {item.pdfs && item.pdfs.length > 0 && (
-                        <div className="mt-5 pt-4 border-t border-[#3a322b]">
-                          <span className="text-[10px] font-mono tracking-widest text-stone-400 uppercase font-bold block mb-3 flex items-center gap-1.5">
-                            <FileText size={13} className="text-amber-400" />
-                            Planilhas & Vistorias Anexadas ({item.pdfs.length})
-                          </span>
-                          <div className="flex overflow-x-auto gap-4 pb-1" style={{ scrollbarWidth: 'thin' }}>
-                            {item.pdfs.map(pdf => (
-                              <div key={pdf.id} className="relative w-[280px] h-[150px] shrink-0 bg-[#110f0d] border border-[#3a322b] rounded-2xl overflow-hidden group shadow-md">
-                                <PdfThumbnail pdfUrl={pdf.url} title={pdf.name} />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 z-10">
-                                  <button
-                                    onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'view')}
-                                    className="w-9 h-9 rounded-full bg-white text-stone-900 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                                    title="Visualizar PDF"
-                                  >
-                                    <Eye size={16} />
-                                  </button>
-                                  <button
-                                    onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'download')}
-                                    className="w-9 h-9 rounded-full bg-white text-stone-900 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                                    title="Baixar PDF"
-                                  >
-                                    <Download size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => handlePdfDelete(item.id, pdf.id)}
-                                    className="w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                                    title="Remover"
-                                  >
-                                    <X size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                        <div className="mt-4 pt-4 border-t border-[#d4bc96] flex items-center gap-3 flex-wrap">
+                          <span className="text-[10px] font-mono font-bold text-[#5c3c24] uppercase">PDFs Anexados:</span>
+                          {item.pdfs.map(pdf => (
+                            <div key={pdf.id} className="flex items-center gap-2 bg-white border border-[#d4bc96] px-3 py-1.5 rounded-xl shadow-xs">
+                              <FileText size={13} className="text-[#B32025]" />
+                              <span className="text-xs font-mono font-bold text-[#311f14] max-w-[150px] truncate">{pdf.name}</span>
+                              <button 
+                                onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'view')} 
+                                className="text-blue-600 hover:underline text-[10px] font-bold uppercase ml-1 cursor-pointer"
+                              >
+                                Ver
+                              </button>
+                              <button 
+                                onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'download')} 
+                                className="text-emerald-700 hover:underline text-[10px] font-bold uppercase ml-1 cursor-pointer"
+                              >
+                                Baixar
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       )}
-
-                    </motion.div>
+                    </WoodenPlaque>
                   );
                 })}
               </AnimatePresence>
             </div>
-
           </div>
         )}
-
       </div>
 
-      {/* EDIT MODAL DIALOG */}
-      <AnimatePresence>
-        {editingItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="w-full max-w-xl bg-gradient-to-br from-[#1c1815] to-[#110f0d] border-2 border-[#3a322b] rounded-3xl p-6 sm:p-8 shadow-[0_30px_70px_rgba(0,0,0,0.8)] space-y-6 text-[#f4ede2] relative"
-            >
-              <div className="flex items-center justify-between border-b border-[#3a322b] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
-                    <Edit2 size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-serif font-black uppercase text-white tracking-wide">
-                      Editar Checkpoint: {editingItem.cavalo}
-                    </h3>
-                    <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">
-                      Atualização de Dados PGR
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setEditingItem(null)}
-                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-stone-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
+      {/* EDIT MODAL */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#f8f1e5] border-4 border-[#311f14] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
+            <h3 className="text-base font-serif font-black uppercase text-[#311f14] mb-6 flex items-center justify-between border-b border-[#d4bc96] pb-3">
+              <span>Editar Checklist: {editingItem.cavalo}</span>
+              <button onClick={() => setEditingItem(null)} className="text-[#5c3c24] hover:text-[#311f14] cursor-pointer">
+                <X size={20} />
+              </button>
+            </h3>
+
+            <div className="space-y-4 font-serif text-sm">
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Placa Cavalo</label>
+                <input
+                  type="text"
+                  value={editingItem.cavalo}
+                  onChange={(e) => setEditingItem({ ...editingItem, cavalo: e.target.value.toUpperCase() })}
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-serif">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Placa Cavalo</label>
-                  <input 
-                    type="text" 
-                    value={editingItem.cavalo}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, cavalo: e.target.value.toUpperCase() }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono uppercase outline-none focus:border-amber-500"
-                  />
-                </div>
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Carretas do Conjunto</label>
+                <input
+                  type="text"
+                  value={editingItem.carretas}
+                  onChange={(e) => setEditingItem({ ...editingItem, carretas: e.target.value.toUpperCase() })}
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                />
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Placas Carretas</label>
-                  <input 
-                    type="text" 
-                    value={editingItem.carretas}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, carretas: e.target.value.toUpperCase() }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono uppercase outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Data Teste</label>
-                  <input 
-                    type="date" 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Teste</label>
+                  <input
+                    type="date"
                     value={editingItem.dataTeste}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, dataTeste: e.target.value }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
+                    onChange={(e) => setEditingItem({ ...editingItem, dataTeste: e.target.value })}
+                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
                   />
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Data Vencimento</label>
-                  <input 
-                    type="date" 
+                <div>
+                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Vencimento</label>
+                  <input
+                    type="date"
                     value={editingItem.dataVencimento}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, dataVencimento: e.target.value }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Item Periférico</label>
-                  <select 
-                    value={editingItem.periferico}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, periferico: e.target.value }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="TECLADO">TECLADO</option>
-                    <option value="TRAVA BAU">TRAVA BAU</option>
-                    <option value="SENSOR">SENSOR</option>
-                    <option value="BAU">BAU</option>
-                    <option value="PAINEL">PAINEL</option>
-                    <option value="OUTROS">OUTROS</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Ordem de Serviço (OS)</label>
-                  <input 
-                    type="text" 
-                    value={editingItem.manutencaoOs || ''}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, manutencaoOs: e.target.value }) : null)}
-                    placeholder="OS #98221"
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Status do Checklist</label>
-                  <select 
-                    value={editingItem.statusOverride || ''}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, statusOverride: e.target.value as ChecklistItem['statusOverride'] || undefined }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
-                  >
-                    <option value="">Automático (Por Data)</option>
-                    <option value="APROVADO">APROVADO (EM DIA)</option>
-                    <option value="NEGATIVADO">NEGATIVADO / REPROVADO</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Observação</label>
-                  <textarea 
-                    value={editingItem.observacao || ''}
-                    onChange={(e) => setEditingItem(prev => prev ? ({ ...prev, observacao: e.target.value }) : null)}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500 min-h-[80px] resize-none"
+                    onChange={(e) => setEditingItem({ ...editingItem, dataVencimento: e.target.value })}
+                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 border-t border-[#3a322b]">
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Status Manual</label>
+                <select
+                  value={editingItem.statusOverride || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, statusOverride: e.target.value as any || undefined })}
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] outline-none focus:border-[#B32025]"
+                >
+                  <option value="">Automático (Calculado pela Data)</option>
+                  <option value="APROVADO">APROVADO</option>
+                  <option value="VENCIDO">VENCIDO</option>
+                  <option value="NEGATIVADO">NEGATIVADO</option>
+                  <option value="REPROVADO">REPROVADO</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Periférico</label>
+                <input
+                  type="text"
+                  value={editingItem.periferico || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, periferico: e.target.value.toUpperCase() })}
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] uppercase font-mono outline-none focus:border-[#B32025]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Observação</label>
+                <textarea
+                  value={editingItem.observacao || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, observacao: e.target.value })}
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] outline-none focus:border-[#B32025] h-20 resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#d4bc96]">
                 <button
                   onClick={() => setEditingItem(null)}
-                  className="flex-1 py-3 text-xs font-serif font-bold text-stone-400 hover:text-white uppercase tracking-wider cursor-pointer transition-colors"
+                  className="px-5 py-2.5 bg-stone-300 hover:bg-stone-400 text-stone-800 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleUpdate}
-                  className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-serif font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-md cursor-pointer"
                 >
                   Salvar Alterações
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
-      {/* ADD MODAL DIALOG */}
-      <AnimatePresence>
-        {isAdding && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="w-full max-w-xl bg-gradient-to-br from-[#1c1815] to-[#110f0d] border-2 border-[#3a322b] rounded-3xl p-6 sm:p-8 shadow-[0_30px_70px_rgba(0,0,0,0.8)] space-y-6 text-[#f4ede2] relative"
-            >
-              <div className="flex items-center justify-between border-b border-[#3a322b] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
-                    <Plus size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-serif font-black uppercase text-white tracking-wide">
-                      Adicionar Novo Checkpoint
-                    </h3>
-                    <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">
-                      Registro de Frota PGR
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsAdding(false)}
-                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-stone-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
+      {/* NEW REGISTRATION MODAL */}
+      {isAdding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#f8f1e5] border-4 border-[#311f14] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
+            <h3 className="text-base font-serif font-black uppercase text-[#311f14] mb-6 flex items-center justify-between border-b border-[#d4bc96] pb-3">
+              <span>Novo Registro de Checklist</span>
+              <button onClick={() => setIsAdding(false)} className="text-[#5c3c24] hover:text-[#311f14] cursor-pointer">
+                <X size={20} />
+              </button>
+            </h3>
+
+            <div className="space-y-4 font-serif text-sm">
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Placa Cavalo *</label>
+                <input
+                  type="text"
+                  value={newItem.cavalo}
+                  onChange={(e) => setNewItem({ ...newItem, cavalo: e.target.value.toUpperCase() })}
+                  placeholder="EX: POZ4431"
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-serif">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Placa Cavalo *</label>
-                  <input 
-                    type="text" 
-                    value={newItem.cavalo}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, cavalo: e.target.value.toUpperCase() }))}
-                    placeholder="EX: POZ4431"
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono uppercase outline-none focus:border-amber-500"
-                  />
-                </div>
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Carretas do Conjunto</label>
+                <input
+                  type="text"
+                  value={newItem.carretas}
+                  onChange={(e) => setNewItem({ ...newItem, carretas: e.target.value.toUpperCase() })}
+                  placeholder="EX: PNE7353 / PNE7433"
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                />
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Placas Carretas</label>
-                  <input 
-                    type="text" 
-                    value={newItem.carretas}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
-                    placeholder="EX: PNE7353 / PNE7433"
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono uppercase outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Data Teste</label>
-                  <input 
-                    type="date" 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Teste</label>
+                  <input
+                    type="date"
                     value={newItem.dataTeste}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, dataTeste: e.target.value }))}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
+                    onChange={(e) => setNewItem({ ...newItem, dataTeste: e.target.value })}
+                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
                   />
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Data Vencimento</label>
-                  <input 
-                    type="date" 
+                <div>
+                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Vencimento</label>
+                  <input
+                    type="date"
                     value={newItem.dataVencimento}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, dataVencimento: e.target.value }))}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Item Periférico</label>
-                  <select 
-                    value={newItem.periferico}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, periferico: e.target.value }))}
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500 cursor-pointer"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="TECLADO">TECLADO</option>
-                    <option value="TRAVA BAU">TRAVA BAU</option>
-                    <option value="SENSOR">SENSOR</option>
-                    <option value="BAU">BAU</option>
-                    <option value="PAINEL">PAINEL</option>
-                    <option value="OUTROS">OUTROS</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Ordem de Serviço (OS)</label>
-                  <input 
-                    type="text" 
-                    value={newItem.manutencaoOs}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, manutencaoOs: e.target.value }))}
-                    placeholder="OS #98221"
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white font-mono outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block">Observação</label>
-                  <textarea 
-                    value={newItem.observacao}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, observacao: e.target.value }))}
-                    placeholder="Observações adicionais..."
-                    className="w-full bg-[#110f0d] border border-[#3a322b] rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500 min-h-[80px] resize-none"
+                    onChange={(e) => setNewItem({ ...newItem, dataVencimento: e.target.value })}
+                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 border-t border-[#3a322b]">
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Periférico</label>
+                <input
+                  type="text"
+                  value={newItem.periferico}
+                  onChange={(e) => setNewItem({ ...newItem, periferico: e.target.value.toUpperCase() })}
+                  placeholder="EX: TECLADO / SENSOR"
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] uppercase font-mono outline-none focus:border-[#B32025]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Observação</label>
+                <textarea
+                  value={newItem.observacao}
+                  onChange={(e) => setNewItem({ ...newItem, observacao: e.target.value })}
+                  placeholder="Observações adicionais..."
+                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] outline-none focus:border-[#B32025] h-20 resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#d4bc96]">
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="flex-1 py-3 text-xs font-serif font-bold text-stone-400 hover:text-white uppercase tracking-wider cursor-pointer transition-colors"
+                  className="px-5 py-2.5 bg-stone-300 hover:bg-stone-400 text-stone-800 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAdd}
-                  className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-serif font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-md cursor-pointer"
                 >
-                  Adicionar Checkpoint
+                  Cadastrar Checklist
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
     </div>
   );

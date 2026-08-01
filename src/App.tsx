@@ -54,12 +54,13 @@ import Checklist from './components/Checklist';
 import Iscas from './components/Iscas';
 import Controle from './components/Controle';
 import Slides from './components/Slides';
+import DadosPage from './components/DadosPage';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 import { Globe } from 'lucide-react';
 
-type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
+type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas' | 'dados';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -73,7 +74,8 @@ const backgroundImages: Record<Tab, string> = {
   checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
   controle: '/images/bg_presence.jpg',
   envio: '',
-  iscas: ''
+  iscas: '',
+  dados: ''
 };
 
 const tabs = [
@@ -86,6 +88,7 @@ const tabs = [
   { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'controle', label: 'Controle', icon: Sliders },
+  { id: 'dados', label: 'Dados', icon: ShieldAlert },
 ];
 
 function Screw({ className }: { className?: string }) {
@@ -103,15 +106,9 @@ function Screw({ className }: { className?: string }) {
 
 export default function App() {
   const principle = useCurrentPrinciple();
-  const [showPresenceList, setShowPresenceList] = useState<boolean>(() => {
-    return localStorage.getItem('show_presence_list') === 'true';
-  });
-  const [showRotasPage, setShowRotasPage] = useState<boolean>(() => {
-    return localStorage.getItem('show_rotas_page') === 'true' || localStorage.getItem('show_presence_list') === 'true';
-  });
-  const [showSlides, setShowSlides] = useState<boolean>(() => {
-    return localStorage.getItem('show_slides') === 'true';
-  });
+  const [showPresenceList, setShowPresenceList] = useState<boolean>(false);
+  const [showRotasPage, setShowRotasPage] = useState<boolean>(false);
+  const [showSlides, setShowSlides] = useState<boolean>(false);
 
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [showPageSelectorModal, setShowPageSelectorModal] = useState<boolean>(false);
@@ -126,6 +123,7 @@ export default function App() {
     if (tab.id === 'presence') return showPresenceList;
     if (tab.id === 'rotas') return showRotasPage;
     if (tab.id === 'slides') return showSlides;
+    if (tab.id === 'dados') return showPresenceList; // Hidden by default, appears when admin unlocked
     return true;
   });
 
@@ -302,6 +300,8 @@ export default function App() {
         return <Iscas />;
       case 'controle':
         return <Controle onBack={() => setActiveTab('menu')} />;
+      case 'dados':
+        return <DadosPage onBack={() => setActiveTab('menu')} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-20 text-zinc-500">
