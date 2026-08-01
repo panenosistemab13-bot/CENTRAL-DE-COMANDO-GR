@@ -17,7 +17,7 @@ interface BrazilMapHUDProps {
   hoveredCity: string | null;
   setHoveredCity: (city: string | null) => void;
   count: number;
-  data: any[];
+  data?: any[];
 }
 
 export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
@@ -425,19 +425,12 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
             { id: 'GRAVATAI', name: 'Gravataí', state: 'RS', cx: 500, cy: 485, lx: 550, ly: 510, anchor: 'start' }
           ].map((city) => {
             const isSelected = selectedMapNode === city.id;
-            const cityIscas = data.filter(r => 
-              (r.destino && r.destino.trim().toUpperCase() === city.id.toUpperCase()) || 
-              (r.unidade && r.unidade.trim().toUpperCase() === city.id.toUpperCase()) ||
-              (city.id === 'GOVERNADOR VALADARES' && r.destino && r.destino.trim().toUpperCase() === 'GOV') ||
-              (city.id === 'SANTA LUZIA' && (!r.destino || !r.destino.trim() || r.unidade.trim().toUpperCase() === 'SANTA LUZIA'))
-            );
-
             return (
               <g 
                 key={city.id} 
                 className="cursor-pointer group/pin"
                 onClick={() => setSelectedMapNode(selectedMapNode === city.id ? null : city.id)}
-                onMouseEnter={() => setHoveredCity(`${city.name} - ${city.state} (${cityIscas.length} iscas)`)}
+                onMouseEnter={() => setHoveredCity(`${city.name} - ${city.state}`)}
                 onMouseLeave={() => setHoveredCity(null)}
               >
                 {/* Micro Connector Leader Line */}
@@ -452,35 +445,50 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
                   opacity={isSelected ? 1 : 0.6} 
                 />
 
-                {/* Small Red Bait Symbols (each isca gets a small red dot/marker around the city) */}
-                {cityIscas.map((isca, idx) => {
-                  const angle = (idx / Math.max(cityIscas.length, 1)) * 2 * Math.PI;
-                  const radius = 6 + (Math.floor(idx / 8) * 3);
-                  const offsetX = Math.cos(angle) * radius;
-                  const offsetY = Math.sin(angle) * radius;
-                  return (
-                    <circle
-                      key={isca.id || idx}
-                      cx={city.cx + offsetX}
-                      cy={city.cy + offsetY}
-                      r="2"
-                      fill="#ef4444"
-                      stroke="#ffffff"
-                      strokeWidth="0.4"
-                      className="drop-shadow-[0_0_4px_#ef4444]"
-                    />
-                  );
-                })}
+                {/* Microchip / Bait Symbol for State */}
+                <g transform={`translate(${city.cx}, ${city.cy})`}>
+                  <rect x="-4.5" y="-4.5" width="9" height="9" rx="1.5" fill={isSelected ? "#00f0ff" : "#1e293b"} stroke={isSelected ? "#ffffff" : "#00f0ff"} strokeWidth="1" filter={isSelected ? "url(#hudNeonFilter)" : undefined} />
+                  <line x1="-7" y1="-2" x2="-4.5" y2="-2" stroke="#00f0ff" strokeWidth="1" />
+                  <line x1="-7" y1="2" x2="-4.5" y2="2" stroke="#00f0ff" strokeWidth="1" />
+                  <line x1="4.5" y1="-2" x2="7" y2="-2" stroke="#00f0ff" strokeWidth="1" />
+                  <line x1="4.5" y1="2" x2="7" y2="2" stroke="#00f0ff" strokeWidth="1" />
+                  <circle cx="0" cy="0" r="2" fill={isSelected ? "#ffffff" : "#00f0ff"} />
+                </g>
 
-                {/* Node Dot */}
-                <circle 
-                  cx={city.cx} 
-                  cy={city.cy} 
-                  r={isSelected ? 5 : 3.5} 
-                  fill={isSelected ? "#00f0ff" : "#3b82f6"} 
-                  className="transition-all" 
-                  filter={isSelected ? "url(#hudNeonFilter)" : undefined}
-                />
+                {/* Tiny Red Bait Symbols (Iscas) representing each bait in this city */}
+                {(() => {
+                  const cityBaitsCount = data ? data.filter(row => {
+                    const dest = (row.destino || '').trim().toUpperCase();
+                    const unit = (row.unidade || '').trim().toUpperCase();
+                    const cityName = city.id.toUpperCase();
+                    if (cityName === 'GUARULHOS' && (dest === 'GUARULHOS' || unit === 'GUARULHOS')) return true;
+                    return dest === cityName || unit === cityName;
+                  }).length : 0;
+
+                  if (cityBaitsCount <= 0) return null;
+
+                  return (
+                    <g transform={`translate(${city.cx}, ${city.cy})`}>
+                      {Array.from({ length: Math.min(cityBaitsCount, 25) }).map((_, idx) => {
+                        const col = idx % 5;
+                        const row = Math.floor(idx / 5);
+                        const offsetX = (col - 2) * 5.5;
+                        const offsetY = 10 + row * 5.5;
+                        return (
+                          <g key={idx} transform={`translate(${offsetX}, ${offsetY})`} className="transition-all hover:scale-125">
+                            <rect x="-2" y="-2" width="4" height="4" rx="0.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="0.5" />
+                            <circle cx="0" cy="0" r="0.75" fill="#ffffff" />
+                          </g>
+                        );
+                      })}
+                      {cityBaitsCount > 25 && (
+                        <text x="0" y="32" fill="#ef4444" fontSize="7" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
+                          +{cityBaitsCount - 25}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })()}
 
                 {/* HUD Label Text Pill */}
                 <text 
@@ -493,7 +501,7 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
                   fontWeight={isSelected ? "bold" : "medium"}
                   className="drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] transition-colors hover:fill-cyan-300"
                 >
-                  {city.name.toUpperCase()} ({city.state}){cityIscas.length > 0 ? ` [${cityIscas.length}]` : ''}
+                  {city.name.toUpperCase()} ({city.state})
                 </text>
               </g>
             );
