@@ -65,32 +65,20 @@ export interface IscaDataRow {
 }
 
 // Initial sample dataset pre-loaded directly from attached image.png + additional status samples
-export const INITIAL_SLIDES_DATA: IscaDataRow[] = [
-  { id: '1', idIsca: 'R100000783', destino: 'BRASILIA', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'POF9075', cavalo: 'PNY2605', motorista: 'RENATO LÚCIO FERREIRA', unidade: 'SANTA LUZIA' },
-  { id: '2', idIsca: 'R100000579', destino: 'GUARULHOS', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'MGL9787', cavalo: 'TAX0F37', motorista: 'ROBERTO DA SILVA SOBREIRA', unidade: 'SANTA LUZIA' },
-  { id: '3', idIsca: 'R100000586', destino: 'RIO DE JANEIRO', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'QOX3168', cavalo: 'THX8C51', motorista: 'SAMUEL ALVES PEREIRA DA SILVA', unidade: 'SANTA LUZIA' },
-  { id: '4', idIsca: 'R100000682', destino: 'BRASILIA', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'POF8375', cavalo: 'PNY2605', motorista: 'RENATO LÚCIO FERREIRA', unidade: 'SANTA LUZIA' },
-  { id: '5', idIsca: 'R100000582', destino: 'GUARULHOS', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'QTL8222', cavalo: 'SFA8H52', motorista: 'AGNALDO DA SILVA', unidade: 'SANTA LUZIA' },
-  { id: '6', idIsca: 'R100000609', destino: 'RIO DE JANEIRO', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'QOX3164', cavalo: 'THX8C51', motorista: 'SAMUEL ALVES PEREIRA DA SILVA', unidade: 'SANTA LUZIA' },
-  { id: '7', idIsca: 'R100000815', destino: 'SUMARE', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'RLF2I61', cavalo: 'TAS2H49', motorista: 'VALDIR DA SILVA PASSOS', unidade: 'SANTA LUZIA' },
-  { id: '8', idIsca: 'R100000882', destino: '', status: 'PREPARAÇÃO', obs1: '', dataStatus: '31.jul.', carreta: '', cavalo: '', motorista: '', unidade: 'SANTA LUZIA' },
-  { id: '9', idIsca: 'R100002495', destino: 'GUARULHOS', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'PNE7353', cavalo: 'TYQ6F51', motorista: 'WARLEY OLIVEIRA DOS SANTOS', unidade: 'SANTA LUZIA' },
-  { id: '10', idIsca: 'R100002334', destino: 'GUARULHOS', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '31.jul.', carreta: 'POF8075', cavalo: 'POD0345', motorista: 'Lucio Roberto Cardoso dos Anjos', unidade: 'SANTA LUZIA' },
-  { id: '11', idIsca: 'R100000876', destino: '', status: 'DISPONIVEL', obs1: '', dataStatus: '30.jul.', carreta: '', cavalo: '', motorista: '', unidade: 'SANTA LUZIA' },
-  { id: '12', idIsca: 'R100000902', destino: 'MONTES CLAROS', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '31.jul.', carreta: 'SBI8C02', cavalo: 'SAS2D02', motorista: 'Sidney Costa Lidorio', unidade: 'SANTA LUZIA' },
-  { id: '13', idIsca: 'R100000792', destino: '', status: 'DISPONIVEL', obs1: '', dataStatus: '30.jul.', carreta: '', cavalo: '', motorista: '', unidade: 'SANTA LUZIA' },
-  { id: '14', idIsca: 'R100000850', destino: '', status: 'DISPONIVEL', obs1: '', dataStatus: '30.jul.', carreta: '', cavalo: '', motorista: '', unidade: 'SANTA LUZIA' },
-  { id: '15', idIsca: 'R100000835', destino: '', status: 'DISPONIVEL', obs1: '', dataStatus: '30.jul.', carreta: '', cavalo: '', motorista: '', unidade: 'SANTA LUZIA' },
-  { id: '16', idIsca: 'R100002336', destino: 'RIO DE JANEIRO', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '31.jul.', carreta: 'SBF9G98', cavalo: 'SAR8D82', motorista: 'ADILSON DOS REIS SILVA', unidade: 'SANTA LUZIA' },
-  { id: '17', idIsca: 'R100000571', destino: 'GOVERNADOR VALADARES', status: 'EM ROTA(IDA)', obs1: 'PRÉ ALERTA OK', dataStatus: '30.jul.', carreta: 'EIH6I81', cavalo: 'SJL8H32', motorista: 'ALAN SANTOS SOARES', unidade: 'SANTA LUZIA' },
-  // Extra rows to enrich status categories (Em Rota Volta, No Destino, Extraviada, Possível Extravio)
-  { id: '18', idIsca: 'R100000910', destino: 'BELO HORIZONTE', status: 'EM ROTA(VOLTA)', obs1: 'RETORNO BASE', dataStatus: '31.jul.', carreta: 'KGW4210', cavalo: 'HGF9021', motorista: 'MARCELO SILVA', unidade: 'BELO HORIZONTE' },
-  { id: '19', idIsca: 'R100000922', destino: 'CURITIBA', status: 'NO DESTINO', obs1: 'DESCARREGADO', dataStatus: '31.jul.', carreta: 'JHG5512', cavalo: 'KKI9082', motorista: 'CARLOS ALBERTO', unidade: 'CURITIBA' },
-  { id: '20', idIsca: 'R100000940', destino: 'CAMPINAS', status: 'POSSÍVEL EXTRAVIO', obs1: 'SINAL INTERMITENTE', dataStatus: '31.jul.', carreta: 'HGF1122', cavalo: 'LLP9012', motorista: 'PAULO SOUZA', unidade: 'SANTA LUZIA' },
-  { id: '21', idIsca: 'R100000955', destino: 'SALVADOR', status: 'EXTRAVIADA', obs1: 'SEM ALERTA GPS', dataStatus: '30.jul.', carreta: 'OPQ9920', cavalo: 'PLM3341', motorista: 'DENIS BARBOSA', unidade: 'SALVADOR' },
-];
+export const INITIAL_SLIDES_DATA: IscaDataRow[] = [];
 
 export type ActiveTabType = 'status' | 'destinos' | 'unidade' | 'import';
+
+// List of all units based on user requirement
+export const ALL_UNIDADES = [
+  'MONTES CLAROS',
+  'SANTA LUZIA',
+  'VIANA',
+  'VIANA (OP. RG)',
+  'VIANA (OP. TIMS)',
+  'VIANA (OP. APEX)',
+  'CUIABÁ'
+];
 
 // Standardized Status Categories requested by prompt
 export const STATUS_CATEGORIES = [
@@ -117,7 +105,15 @@ export function normalizeStatus(statusRaw: string): string {
 }
 
 export default function Slides() {
-  const [data, setData] = useState<IscaDataRow[]>(INITIAL_SLIDES_DATA);
+  const [data, setData] = useState<IscaDataRow[]>(() => {
+    const saved = localStorage.getItem('slides_data');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  React.useEffect(() => {
+    localStorage.setItem('slides_data', JSON.stringify(data));
+  }, [data]);
+  
   const [activeTab, setActiveTab] = useState<ActiveTabType>('status');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
@@ -173,7 +169,10 @@ export default function Slides() {
   const destinoStats = useMemo(() => {
     const counts: Record<string, { count: number; iscas: string[]; drivers: string[] }> = {};
     filteredData.forEach(row => {
-      const dest = row.destino.trim() || 'SEM DESTINO';
+      let dest = row.destino.trim();
+      if (dest.toUpperCase() === 'GOVERNADOR VALADARES') dest = 'GOV';
+      else if (!dest) dest = 'DISPONIVEL';
+      
       if (!counts[dest]) {
         counts[dest] = { count: 0, iscas: [], drivers: [] };
       }
@@ -198,16 +197,16 @@ export default function Slides() {
   const unidadeStats = useMemo(() => {
     const counts: Record<string, number> = {};
     filteredData.forEach(row => {
-      const unit = row.unidade.trim() || 'DESCONHECIDA';
-      counts[unit] = (counts[unit] || 0) + 1;
+      const unit = row.unidade.trim();
+      if (unit) {
+        counts[unit] = (counts[unit] || 0) + 1;
+      }
     });
 
-    return Object.entries(counts)
-      .map(([name, count]) => ({
-        name,
-        count
-      }))
-      .sort((a, b) => b.count - a.count);
+    return ALL_UNIDADES.map(name => ({
+      name,
+      count: counts[name] || 0
+    }));
   }, [filteredData]);
 
   // Parse TSV / CSV text pasted from user spreadsheet
@@ -241,7 +240,7 @@ export default function Slides() {
           carreta: cols[5] || '',
           cavalo: cols[6] || '',
           motorista: cols[7] || '',
-          unidade: cols[8] || 'SANTA LUZIA'
+          unidade: (cols[8] && cols[8].trim().toUpperCase() === 'BELO HORIZONTE') ? 'SANTA LUZIA' : (cols[8] || 'SANTA LUZIA')
         });
       }
     });
@@ -475,6 +474,7 @@ export default function Slides() {
               hoveredCity={hoveredCity}
               setHoveredCity={setHoveredCity}
               count={filteredData.length}
+              data={filteredData}
             />
             {/* GROUPED STATUS ANALYTICS HUD WITH FULL SCREEN TOGGLE */}
             <StatusAnalyticsHUD
