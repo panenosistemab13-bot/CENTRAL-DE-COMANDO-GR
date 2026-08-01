@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { 
   Clipboard, 
@@ -21,7 +21,8 @@ import {
   Upload,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
@@ -304,20 +305,90 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     };
   }, []);
 
-  const saveIda = (rows: SMRow[]) => {
+  const historyRef = useRef<Array<{ ida: SMRow[]; volta: SMRow[]; calc: string[] }>>([]);
+  const lastPushTimeRef = useRef<number>(0);
+  const [historyCount, setHistoryCount] = useState<number>(0);
+  const [showUndoToast, setShowUndoToast] = useState<boolean>(false);
+
+  const pushHistory = (forcePush = false) => {
+    const currentSnapshot = {
+      ida: JSON.parse(JSON.stringify(idaRows)),
+      volta: JSON.parse(JSON.stringify(voltaRows)),
+      calc: [...calcValues]
+    };
+
+    const history = historyRef.current;
+    const last = history[history.length - 1];
+    const now = Date.now();
+
+    const isDifferent = !last || JSON.stringify(last) !== JSON.stringify(currentSnapshot);
+
+    if (isDifferent) {
+      if (!forcePush && history.length > 0 && now - lastPushTimeRef.current < 800) {
+        // Keeps the state prior to the rapid typing sequence
+      } else {
+        if (history.length >= 50) history.shift();
+        history.push(currentSnapshot);
+        lastPushTimeRef.current = now;
+        setHistoryCount(history.length);
+      }
+    }
+  };
+
+  const saveIda = (rows: SMRow[], forcePush = false) => {
+    pushHistory(forcePush);
     setIdaRows(rows);
     set(ref(db, 'sm_creator_data/ida'), rows);
   };
 
-  const saveVolta = (rows: SMRow[]) => {
+  const saveVolta = (rows: SMRow[], forcePush = false) => {
+    pushHistory(forcePush);
     setVoltaRows(rows);
     set(ref(db, 'sm_creator_data/volta'), rows);
   };
 
-  const saveCalc = (vals: string[]) => {
+  const saveCalc = (vals: string[], forcePush = false) => {
+    pushHistory(forcePush);
     setCalcValues(vals);
     set(ref(db, 'sm_creator_data/calc'), vals);
   };
+
+  const handleUndo = () => {
+    const history = historyRef.current;
+    if (history.length === 0) return;
+
+    const previousState = history.pop();
+    setHistoryCount(history.length);
+
+    if (previousState) {
+      setIdaRows(previousState.ida);
+      setVoltaRows(previousState.volta);
+      setCalcValues(previousState.calc);
+
+      set(ref(db, 'sm_creator_data'), {
+        ida: previousState.ida,
+        volta: previousState.volta,
+        calc: previousState.calc
+      });
+
+      setShowUndoToast(true);
+      setTimeout(() => setShowUndoToast(false), 2500);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+        if (historyRef.current.length > 0) {
+          e.preventDefault();
+          handleUndo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [totalRawCopied, setTotalRawCopied] = useState(false);
   const [copied, setCopied] = useState(false);
   const [idaCopied, setIdaCopied] = useState(false);
@@ -661,9 +732,9 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
 
     if (section === 'calc') {
       if (calcValues.length === 1 && (!calcValues[0] || calcValues[0] === '')) {
-        saveCalc([totalValStr]);
+        saveCalc([totalValStr], true);
       } else {
-        saveCalc([...calcValues, totalValStr]);
+        saveCalc([...calcValues, totalValStr], true);
       }
     } else {
       const targetRows = section === 'ida' ? idaRows : voltaRows;
@@ -675,14 +746,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           ...updatedRows[pdfTargetRowIndex],
           valorNf: totalValStr
         };
-        saveFunc(updatedRows);
+        saveFunc(updatedRows, true);
       } else if (targetRows.length > 0) {
         const updatedRows = [...targetRows];
         updatedRows[updatedRows.length - 1] = {
           ...updatedRows[updatedRows.length - 1],
           valorNf: totalValStr
         };
-        saveFunc(updatedRows);
+        saveFunc(updatedRows, true);
       } else {
         const newRow: SMRow = {
           dataSaida: new Date().toLocaleDateString('pt-BR'),
@@ -693,7 +764,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           trecho: '',
           valorNf: totalValStr
         };
-        saveFunc([newRow]);
+        saveFunc([newRow], true);
       }
     }
 
@@ -704,9 +775,9 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     const validValues = parsedPdfItems.filter(i => i.valor > 0).map(i => i.valorFormatado);
     if (validValues.length > 0) {
       if (calcValues.length === 1 && (!calcValues[0] || calcValues[0] === '')) {
-        saveCalc(validValues);
+        saveCalc(validValues, true);
       } else {
-        saveCalc([...calcValues, ...validValues]);
+        saveCalc([...calcValues, ...validValues], true);
       }
     }
     setIsPdfModalOpen(false);
@@ -770,7 +841,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     </div>
   );
 
-  const parseInput = (text: string, saveFunc: (rows: SMRow[]) => void, existingRows: SMRow[], section: 'ida' | 'volta') => {
+  const parseInput = (text: string, saveFunc: (rows: SMRow[], forcePush?: boolean) => void, existingRows: SMRow[], section: 'ida' | 'volta') => {
     const lines = text.trim().split('\n');
     const newRows: SMRow[] = [];
 
@@ -798,7 +869,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     });
 
     if (newRows.length > 0) {
-      saveFunc([...existingRows, ...newRows]);
+      saveFunc([...existingRows, ...newRows], true);
     }
   };
 
@@ -818,13 +889,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       valorNf: '0,00'
     };
     if (section === 'ida') {
-      saveIda([...idaRows, newRow]);
+      saveIda([...idaRows, newRow], true);
     } else {
-      saveVolta([...voltaRows, newRow]);
+      saveVolta([...voltaRows, newRow], true);
     }
   };
 
-  const updateRowValue = (index: number, field: keyof SMRow, value: any, section: 'ida' | 'volta') => {
+  const updateRowValue = (index: number, field: keyof SMRow, value: any, section: 'ida' | 'volta', forcePush = false) => {
     let finalValue = value;
     
     if (field === 'valorNf' && typeof value === 'string') {
@@ -837,14 +908,16 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       finalValue = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
     }
 
+    const isDiscrete = forcePush || field === 'ok';
+
     if (section === 'ida') {
       const newRows = [...idaRows];
       newRows[index] = { ...newRows[index], [field]: finalValue };
-      saveIda(newRows);
+      saveIda(newRows, isDiscrete);
     } else {
       const newRows = [...voltaRows];
       newRows[index] = { ...newRows[index], [field]: finalValue };
-      saveVolta(newRows);
+      saveVolta(newRows, isDiscrete);
     }
   };
 
@@ -866,7 +939,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     setTimeout(() => setTotalRawCopied(false), 2000);
   };
 
-  const addCalcLine = () => saveCalc([...calcValues, '']);
+  const addCalcLine = () => saveCalc([...calcValues, ''], true);
   const updateCalcValue = (index: number, val: string) => {
     const newVals = [...calcValues];
     newVals[index] = val;
@@ -987,6 +1060,20 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         
         {/* Global actions */}
         <div className="flex items-center gap-3 ml-auto">
+          <button 
+            onClick={handleUndo}
+            disabled={historyCount === 0}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm border",
+              historyCount > 0 
+                ? "bg-amber-600 hover:bg-amber-700 text-white border-amber-700 cursor-pointer" 
+                : "bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-60"
+            )}
+            title="Restaurar informação modificada (Ctrl + Z)"
+          >
+            <RotateCcw size={16} /> Desfazer (Ctrl+Z)
+          </button>
+
           {(idaRows.length > 0 || voltaRows.length > 0) && (
             <button 
               onClick={copyToEmail}
@@ -1060,7 +1147,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         {idaCopied ? 'Copiado!' : 'Copiar Ida'}
                       </button>
                     )}
-                    <button onClick={() => saveIda([])} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
+                    <button onClick={() => saveIda([], true)} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
                   </div>
                 </div>
 
@@ -1220,7 +1307,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                               </td>
                               <td className="p-1.5 text-center">
                                 <button 
-                                  onClick={() => saveIda(idaRows.filter((_, idx) => idx !== i))} 
+                                  onClick={() => saveIda(idaRows.filter((_, idx) => idx !== i), true)} 
                                   className="p-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-lg transition-colors cursor-pointer"
                                   title="Remover Linha"
                                 >
@@ -1277,7 +1364,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         {voltaCopied ? 'Copiado!' : 'Copiar Volta'}
                       </button>
                     )}
-                    <button onClick={() => saveVolta([])} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
+                    <button onClick={() => saveVolta([], true)} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
                   </div>
                 </div>
 
@@ -1449,7 +1536,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                               </td>
                               <td className="p-1.5 text-center">
                                 <button 
-                                  onClick={() => saveVolta(voltaRows.filter((_, idx) => idx !== i))} 
+                                  onClick={() => saveVolta(voltaRows.filter((_, idx) => idx !== i), true)} 
                                   className="p-1.5 text-rose-700 hover:bg-rose-600 hover:text-white rounded-lg transition-colors cursor-pointer"
                                   title="Remover Linha"
                                 >
@@ -1483,7 +1570,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       <FileText size={11} /> PDF
                     </button>
                     <button 
-                      onClick={() => saveCalc(calcValues.map(() => ''))}
+                      onClick={() => saveCalc(calcValues.map(() => ''), true)}
                       className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                       title="Resetar calculadora"
                     >
@@ -1535,7 +1622,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         )}
                         {calcValues.length > 1 && (
                           <button 
-                            onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i))}
+                            onClick={() => saveCalc(calcValues.filter((_, idx) => idx !== i), true)}
                             className="text-slate-400 hover:text-rose-600 p-1 transition-all cursor-pointer"
                             title="Remover Linha"
                           >
@@ -1773,6 +1860,24 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           </div>
         </div>
       )}
+
+      {/* Toast feedback when Ctrl+Z is activated */}
+      <AnimatePresence>
+        {showUndoToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700"
+          >
+            <RotateCcw className="text-amber-400 w-5 h-5" />
+            <div>
+              <p className="text-xs font-bold font-sans">Informação restaurada!</p>
+              <p className="text-[10px] text-slate-400 font-sans">Desfazer (Ctrl + Z) aplicado com sucesso.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

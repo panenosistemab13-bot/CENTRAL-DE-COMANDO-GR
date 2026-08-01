@@ -433,7 +433,7 @@ export default function Checklist() {
     }
     const diff = differenceInDays(expiry, today);
     if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-600', bg: 'bg-rose-100', border: 'border-rose-300' };
-    if (diff <= 7) return { label: 'URGENTE', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' };
+    if (diff <= 3) return { label: 'A VENCER', color: 'text-amber-800', bg: 'bg-amber-100', border: 'border-amber-300' };
     return { label: 'APROVADO', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' };
   };
 
@@ -442,7 +442,7 @@ export default function Checklist() {
                           item.carretas.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
     const status = getStatus(item);
-    if (filter === 'EM DIA') return status.label === 'APROVADO' || status.label === 'URGENTE';
+    if (filter === 'EM DIA') return status.label === 'APROVADO' || status.label === 'A VENCER';
     if (filter === 'VENCIDO') return status.label === 'VENCIDO';
     if (filter === 'NEGATIVADOS') return status.label === 'NEGATIVADO' || status.label === 'REPROVADO';
     return true;
@@ -835,15 +835,30 @@ export default function Checklist() {
 
                         <div className="flex flex-col items-center lg:items-start gap-3 flex-1 px-2 text-center lg:text-left">
                           <div className="flex items-center gap-2.5 flex-wrap justify-center lg:justify-start">
-                            {diasParaVencer < 0 || status.label === 'VENCIDO' || status.label === 'REPROVADO' ? (
+                            {status.label === 'NEGATIVADO' ? (
                               <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
                                 <ShieldAlert size={14} />
-                                <span>VENCIDO (EXPIROU)</span>
+                                <span>NEGATIVADO</span>
+                              </div>
+                            ) : status.label === 'REPROVADO' ? (
+                              <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                                <ShieldAlert size={14} />
+                                <span>REPROVADO</span>
+                              </div>
+                            ) : diasParaVencer < 0 || status.label === 'VENCIDO' ? (
+                              <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                                <ShieldAlert size={14} />
+                                <span>VENCIDO</span>
+                              </div>
+                            ) : status.label === 'A VENCER' ? (
+                              <div className="px-4 py-1.5 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                                <Clock size={14} />
+                                <span>A VENCER</span>
                               </div>
                             ) : (
                               <div className="px-4 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5">
                                 <Check size={14} />
-                                <span>EM DIA (APROVADO)</span>
+                                <span>APROVADO</span>
                               </div>
                             )}
 
@@ -867,7 +882,7 @@ export default function Checklist() {
                             </div>
                             <span className={cn(
                               "font-mono font-bold text-xs",
-                              diasParaVencer < 0 ? "text-rose-700" : "text-emerald-700"
+                              diasParaVencer < 0 ? "text-rose-700" : diasParaVencer <= 3 ? "text-amber-700" : "text-emerald-700"
                             )}>
                               ({diasParaVencer < 0 ? `${Math.abs(diasParaVencer)} dias vencido` : `${diasParaVencer} dias restantes`})
                             </span>
