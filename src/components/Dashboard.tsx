@@ -141,11 +141,16 @@ export default function Dashboard() {
       
       items.forEach(item => {
         if (!item.dataVencimento) return;
-        const vencimento = parseISO(item.dataVencimento);
-        if (isBefore(vencimento, today)) {
-          expired.push(item);
-        } else if (isBefore(vencimento, nextWeek)) {
-          soon.push(item);
+        try {
+          const vencimento = parseISO(item.dataVencimento);
+          if (isNaN(vencimento.getTime())) return;
+          if (isBefore(vencimento, today)) {
+            expired.push(item);
+          } else if (isBefore(vencimento, nextWeek)) {
+            soon.push(item);
+          }
+        } catch {
+          // Ignore invalid dates
         }
       });
       

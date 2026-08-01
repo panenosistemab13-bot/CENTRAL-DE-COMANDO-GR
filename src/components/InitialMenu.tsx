@@ -13,7 +13,8 @@ import {
   Lock,
   Unlock,
   Globe,
-  Shield
+  Database,
+  LogOut
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -32,12 +33,12 @@ const menuItems: MenuItem[] = [
   { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
   { id: 'patio', label: 'Pátio', buttonLabel: 'Logística', icon: Container, color: 'text-zinc-300', description: 'Gestão inteligente de entrada e saída de veículos.' },
   { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
+  { id: 'dados', label: 'Dados', buttonLabel: 'Conexões', icon: Database, color: 'text-emerald-400', description: 'Monitoramento em tempo real de usuários online e último acesso ao app.' },
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'text-zinc-300', description: 'Gestão de apólices e seguros integrados.' },
   { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'text-zinc-300', description: 'Criação e agendamento de solicitações de monitoramento.' },
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
   { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
-  { id: 'dados', label: 'Dados', buttonLabel: 'Auditoria', icon: Shield, color: 'text-red-400', description: 'Painel oculto de monitoramento de usuários online e último acesso ao sistema.' },
 ];
 
 interface InitialMenuProps {
@@ -48,6 +49,7 @@ interface InitialMenuProps {
   showRotasPage: boolean;
   showSlides: boolean;
   onUnlockPresenceList: () => void;
+  onLogout?: () => void;
 }
 
 // Slotted Vintage Flat-head Screw Component for authentic industrial look
@@ -87,6 +89,19 @@ function ModuleGraphic({ id }: { id: string }) {
           <circle cx="100" cy="85" r="5" fill="#00f0ff" />
           <circle cx="116" cy="74" r="3.5" fill="#3b82f6" />
           <circle cx="84" cy="96" r="3.5" fill="#10b981" />
+        </svg>
+      );
+    case 'dados':
+      return (
+        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.6)" filter="blur(8px)" />
+          <polygon points="40,110 100,135 160,110 100,85" fill="#064e3b" stroke="#10b981" strokeWidth="1.5" />
+          <polygon points="40,110 100,135 100,142 40,117" fill="#047857" />
+          <polygon points="100,135 160,110 160,117 100,142" fill="#059669" />
+          
+          <circle cx="100" cy="75" r="28" fill="#022c22" stroke="#10b981" strokeWidth="2" />
+          <circle cx="100" cy="75" r="34" fill="none" stroke="#34d399" strokeWidth="1" strokeDasharray="3 3" />
+          <circle cx="100" cy="75" r="6" fill="#10b981" />
         </svg>
       );
     case 'presence':
@@ -395,34 +410,18 @@ function ModuleGraphic({ id }: { id: string }) {
         </svg>
       );
 
-    case 'dados':
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Shield Base */}
-          <path d="M 100,45 L 145,65 L 145,105 C 145,130 120,145 100,155 C 80,145 55,130 55,105 L 55,65 Z" fill="#1C1008" stroke="#B32025" strokeWidth="3" />
-          <path d="M 100,50 L 140,68 L 140,103 C 140,125 118,139 100,148 C 82,139 60,125 60,103 L 60,68 Z" fill="#2A160A" stroke="#E6C79C" strokeWidth="1.5" />
-          {/* Glowing Lock core */}
-          <circle cx="100" cy="95" r="16" fill="#120A05" stroke="#B32025" strokeWidth="2" />
-          <path d="M 93,95 L 93,91 C 93,87 96,84 100,84 C 104,84 107,87 107,91 L 107,95" fill="none" stroke="#E6C79C" strokeWidth="2.5" strokeLinecap="round" />
-          <rect x="91" y="95" width="18" height="13" rx="2" fill="#B32025" />
-          <circle cx="100" cy="101" r="2" fill="#F9F1E6" />
-        </svg>
-      );
-
     default:
       return null;
   }
 }
 
-export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList }: InitialMenuProps) {
+export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList, onLogout }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
   const filteredMenuItems = menuItems.filter(item => {
     if (item.id === 'presence') return showPresenceList;
     if (item.id === 'rotas') return showRotasPage;
     if (item.id === 'slides') return showSlides;
-    if (item.id === 'dados') return showPresenceList;
     return true;
   });
   const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);
@@ -502,10 +501,11 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
           </div>
         </div>
 
-        {/* TOP RIGHT BRAND PLATE: "Feito com paixão. Feito para entregar." */}
-        <div 
-          className="relative px-5 py-2.5 rounded-2xl bg-gradient-to-br from-[#4a3222]/85 to-[#1c0e06]/95 border-2 border-[#bfa27a]/60 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_4px_rgba(255,255,255,0.15)] max-w-sm w-full md:w-auto shrink-0 transition-transform duration-300 hover:scale-[1.02]"
-        >
+        {/* TOP RIGHT BRAND PLATE */}
+        <div className="flex items-center gap-4">
+          <div 
+            className="relative px-5 py-2.5 rounded-2xl bg-gradient-to-br from-[#4a3222]/85 to-[#1c0e06]/95 border-2 border-[#bfa27a]/60 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_4px_rgba(255,255,255,0.15)] max-w-sm w-full md:w-auto shrink-0 transition-transform duration-300 hover:scale-[1.02]"
+          >
           {/* Metal plate screws */}
           <Screw className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5" />
           
@@ -560,7 +560,7 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
             </div>
           </div>
         </div>
-
+      </div>
       </div>
 
       {/* ================= CENTRAL CAROUSEL CONTAINER ================= */}
@@ -669,10 +669,22 @@ export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, s
             </div>
           </div>
 
-          {/* Right author attribution */}
-          <span className="sm:pr-8 text-center sm:text-right font-semibold select-none text-[#cca285]">
-            Sistema Web • Criado por <span className="text-[#f1daaf] font-black tracking-wide">Jefferson Augusto</span>
-          </span>
+          {/* Right author attribution & Logout */}
+          <div className="flex items-center gap-3 sm:pr-8">
+            <span className="text-center sm:text-right font-semibold select-none text-[#cca285]">
+              Sistema Web • <span className="text-[#f1daaf] font-black tracking-wide">Jefferson Augusto</span>
+            </span>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="px-3.5 py-1.5 bg-gradient-to-br from-[#B32025] to-[#800609] hover:from-[#c9262b] hover:to-[#960a0e] text-white border-2 border-[#cead80] rounded-xl font-serif font-black text-xs shadow-lg flex items-center gap-1.5 uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                title="Sair e voltar para a tela de login"
+              >
+                <LogOut size={14} /> Sair
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

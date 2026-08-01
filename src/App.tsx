@@ -44,6 +44,7 @@ interface Appointment {
   type: 'pessoal' | 'corporativo';
 }
 import PresenceList from './components/PresenceList';
+import Dados from './components/Dados';
 import Dashboard from './components/Dashboard';
 import Averbacao from './components/Averbacao';
 import SMCreator from './components/SMCreator';
@@ -54,18 +55,19 @@ import Checklist from './components/Checklist';
 import Iscas from './components/Iscas';
 import Controle from './components/Controle';
 import Slides from './components/Slides';
-import DadosPage from './components/DadosPage';
+import LoginScreen from './components/LoginScreen';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
-import { Globe } from 'lucide-react';
+import { Globe, Database } from 'lucide-react';
 
-type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas' | 'dados';
+type Tab = 'menu' | 'slides' | 'presence' | 'dados' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
   slides: '',
   presence: '/images/bg_presence.jpg', // Notebook and coffee on rustic wood table
+  dados: '/images/bg_presence.jpg',
   risk: '/images/bg_risk.jpg',
   averbacao: '/images/bg_averbacao.jpg', // Coffee sacks stacked with rich roast beans
   sm_creator: '/images/bg_sm_creator.jpg', // Quality checker analyzing coffee beans
@@ -74,8 +76,7 @@ const backgroundImages: Record<Tab, string> = {
   checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
   controle: '/images/bg_presence.jpg',
   envio: '',
-  iscas: '',
-  dados: ''
+  iscas: ''
 };
 
 const tabs = [
@@ -83,12 +84,12 @@ const tabs = [
   { id: 'slides', label: 'Slides 4K HUD', icon: Globe },
   { id: 'patio', label: 'Pátio', icon: Container },
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
+  { id: 'dados', label: 'Dados', icon: Database },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
   { id: 'rotas', label: 'Rotas', icon: Route },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'controle', label: 'Controle', icon: Sliders },
-  { id: 'dados', label: 'Dados', icon: ShieldAlert },
 ];
 
 function Screw({ className }: { className?: string }) {
@@ -106,6 +107,14 @@ function Screw({ className }: { className?: string }) {
 
 export default function App() {
   const principle = useCurrentPrinciple();
+  const [currentUser, setCurrentUser] = useState<{ email: string; name: string; role: string } | null>(() => {
+    const saved = localStorage.getItem('logged_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { return null; }
+    }
+    return null;
+  });
+
   const [showPresenceList, setShowPresenceList] = useState<boolean>(false);
   const [showRotasPage, setShowRotasPage] = useState<boolean>(false);
   const [showSlides, setShowSlides] = useState<boolean>(false);
@@ -123,7 +132,6 @@ export default function App() {
     if (tab.id === 'presence') return showPresenceList;
     if (tab.id === 'rotas') return showRotasPage;
     if (tab.id === 'slides') return showSlides;
-    if (tab.id === 'dados') return showPresenceList; // Hidden by default, appears when admin unlocked
     return true;
   });
 
@@ -254,6 +262,12 @@ export default function App() {
 
   const activeTabInfo = visibleTabs.find(t => t.id === activeTab);
 
+  const handleLogout = () => {
+    localStorage.removeItem('logged_user');
+    setCurrentUser(null);
+    setActiveTab('menu');
+  };
+
   const renderContent = () => {
     if (isMobile && activeTab === 'menu') {
       return (
@@ -263,6 +277,7 @@ export default function App() {
           showRotasPage={showRotasPage}
           showSlides={showSlides}
           onUnlockPresenceList={() => setShowPasswordModal(true)}
+          onLogout={handleLogout}
         />
       );
     }
@@ -278,12 +293,15 @@ export default function App() {
             showRotasPage={showRotasPage}
             showSlides={showSlides}
             onUnlockPresenceList={() => setShowPasswordModal(true)}
+            onLogout={handleLogout}
           />
         );
       case 'slides':
         return <Slides />;
       case 'presence':
         return <PresenceList onBack={() => setActiveTab('menu')} />;
+      case 'dados':
+        return <Dados />;
       case 'averbacao':
         return <Averbacao view={averbacaoView} onBack={() => setActiveTab('menu')} />;
       case 'sm_creator':
@@ -300,8 +318,6 @@ export default function App() {
         return <Iscas />;
       case 'controle':
         return <Controle onBack={() => setActiveTab('menu')} />;
-      case 'dados':
-        return <DadosPage onBack={() => setActiveTab('menu')} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-20 text-zinc-500">
@@ -359,6 +375,10 @@ export default function App() {
   const activeTodayApps = todayAppointments.filter(app => app.urgency !== 'past');
   const maxUrgencyApp = activeTodayApps[0];
   const maxUrgencyScore = maxUrgencyApp ? maxUrgencyApp.urgencyScore : 0;
+
+  if (!currentUser) {
+    return <LoginScreen onLoginSuccess={(u) => setCurrentUser(u)} />;
+  }
 
   return (
     <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">

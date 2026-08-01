@@ -3,10 +3,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
-import { createRequire } from "module";
+import * as pdfParse from "pdf-parse";
 
-const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
+const pdf = (pdfParse as any).default || pdfParse;
 
 const app = express();
 const PORT = 3000;

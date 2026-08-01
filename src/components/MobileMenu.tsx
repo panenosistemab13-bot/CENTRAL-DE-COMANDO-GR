@@ -9,7 +9,8 @@ import {
   Unlock,
   ShieldCheck,
   Sparkles,
-  Globe
+  Globe,
+  LogOut
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -68,9 +69,10 @@ interface MobileMenuProps {
   showRotasPage: boolean;
   showSlides: boolean;
   onUnlockPresenceList: () => void;
+  onLogout?: () => void;
 }
 
-export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList }: MobileMenuProps) {
+export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList, onLogout }: MobileMenuProps) {
   const filteredMenuItems = mobileMenuItems.filter(item => {
     if (item.id === 'presence') return showPresenceList;
     if (item.id === 'rotas') return showRotasPage;
@@ -103,15 +105,28 @@ export default function MobileMenu({ onSelect, showPresenceList, showRotasPage, 
           </div>
         </div>
 
-        {/* Secret Unlock Button */}
-        <button
-          type="button"
-          onClick={onUnlockPresenceList}
-          className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-[#c2a67e] transition-colors cursor-pointer"
-          title="Acesso Administrativo"
-        >
-          {showPresenceList ? <Unlock size={15} className="text-green-400" /> : <Lock size={15} />}
-        </button>
+        <div className="flex items-center gap-2">
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="px-3 py-2 rounded-xl bg-[#B32025] hover:bg-[#9a1a1e] border border-white/25 flex items-center gap-1.5 text-white font-serif font-black text-xs transition-colors cursor-pointer shadow"
+              title="Sair"
+            >
+              <LogOut size={14} /> Sair
+            </button>
+          )}
+
+          {/* Secret Unlock Button */}
+          <button
+            type="button"
+            onClick={onUnlockPresenceList}
+            className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-[#c2a67e] transition-colors cursor-pointer"
+            title="Acesso Administrativo"
+          >
+            {showPresenceList ? <Unlock size={15} className="text-green-400" /> : <Lock size={15} />}
+          </button>
+        </div>
       </div>
 
       {/* CENTER CONTENT: 3 Professional, High-End Cards */}

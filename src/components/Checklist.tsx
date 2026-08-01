@@ -402,6 +402,23 @@ export default function Checklist() {
     }
   };
 
+  const safeParseDate = (dateStr?: string): Date | null => {
+    if (!dateStr) return null;
+    let d = parseISO(dateStr);
+    if (!isNaN(d.getTime())) return d;
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+    const timestampDate = new Date(dateStr);
+    if (!isNaN(timestampDate.getTime())) return timestampDate;
+    return null;
+  };
+
   const getStatus = (item: ChecklistItem) => {
     if (item.statusOverride) {
       if (item.statusOverride === 'VENCIDO' || item.statusOverride === 'REPROVADO' || item.statusOverride === 'NEGATIVADO') {
@@ -410,7 +427,10 @@ export default function Checklist() {
       return { label: item.statusOverride, color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' };
     }
     const today = new Date();
-    const expiry = parseISO(item.dataVencimento);
+    const expiry = safeParseDate(item.dataVencimento);
+    if (!expiry) {
+      return { label: 'PENDENTE', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' };
+    }
     const diff = differenceInDays(expiry, today);
     if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-600', bg: 'bg-rose-100', border: 'border-rose-300' };
     if (diff <= 7) return { label: 'URGENTE', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' };
@@ -788,7 +808,9 @@ export default function Checklist() {
               <AnimatePresence>
                 {filteredItems.map((item) => {
                   const status = getStatus(item);
-                  const diasParaVencer = differenceInDays(parseISO(item.dataVencimento), new Date());
+                  const parsedExpiry = safeParseDate(item.dataVencimento);
+                  const diasParaVencer = parsedExpiry ? differenceInDays(parsedExpiry, new Date()) : 0;
+                  const formattedVencimento = parsedExpiry ? format(parsedExpiry, 'dd/MM/yyyy') : (item.dataVencimento || '—');
 
                   return (
                     <WoodenPlaque key={item.id} className="p-6 transition-all duration-300 hover:scale-[1.01]">
@@ -841,7 +863,7 @@ export default function Checklist() {
                           <div className="flex items-center gap-5 text-xs font-serif text-[#5c3c24] mt-1 flex-wrap justify-center lg:justify-start">
                             <div className="flex items-center gap-1.5">
                               <Clock size={15} className="text-[#B32025]" />
-                              <span>Vencimento: <strong className="font-mono font-black text-sm text-[#311f14]">{format(parseISO(item.dataVencimento), 'dd/MM/yyyy')}</strong></span>
+                              <span>Vencimento: <strong className="font-mono font-black text-sm text-[#311f14]">{formattedVencimento}</strong></span>
                             </div>
                             <span className={cn(
                               "font-mono font-bold text-xs",
