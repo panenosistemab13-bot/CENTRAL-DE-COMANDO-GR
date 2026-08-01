@@ -44,7 +44,6 @@ interface Appointment {
   type: 'pessoal' | 'corporativo';
 }
 import PresenceList from './components/PresenceList';
-import Dados from './components/Dados';
 import Dashboard from './components/Dashboard';
 import Averbacao from './components/Averbacao';
 import SMCreator from './components/SMCreator';
@@ -61,13 +60,12 @@ import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 import { Globe, Database } from 'lucide-react';
 
-type Tab = 'menu' | 'slides' | 'presence' | 'dados' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
+type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
   slides: '',
   presence: '/images/bg_presence.jpg', // Notebook and coffee on rustic wood table
-  dados: '/images/bg_presence.jpg',
   risk: '/images/bg_risk.jpg',
   averbacao: '/images/bg_averbacao.jpg', // Coffee sacks stacked with rich roast beans
   sm_creator: '/images/bg_sm_creator.jpg', // Quality checker analyzing coffee beans
@@ -84,7 +82,6 @@ const tabs = [
   { id: 'slides', label: 'Slides 4K HUD', icon: Globe },
   { id: 'patio', label: 'Pátio', icon: Container },
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
-  { id: 'dados', label: 'Dados', icon: Database },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
   { id: 'rotas', label: 'Rotas', icon: Route },
@@ -107,12 +104,10 @@ function Screw({ className }: { className?: string }) {
 
 export default function App() {
   const principle = useCurrentPrinciple();
-  const [currentUser, setCurrentUser] = useState<{ email: string; name: string; role: string } | null>(() => {
-    const saved = localStorage.getItem('logged_user');
-    if (saved) {
-      try { return JSON.parse(saved); } catch { return null; }
-    }
-    return null;
+  const [currentUser] = useState<{ email: string; name: string; role: string }>({
+    email: 'admin@3coracoes.com.br',
+    name: 'Administrador 3C',
+    role: 'admin'
   });
 
   const [showPresenceList, setShowPresenceList] = useState<boolean>(false);
@@ -262,10 +257,11 @@ export default function App() {
 
   const activeTabInfo = visibleTabs.find(t => t.id === activeTab);
 
-  const handleLogout = () => {
-    localStorage.removeItem('logged_user');
-    setCurrentUser(null);
-    setActiveTab('menu');
+  const handleOpenPageSelector = () => {
+    setTempPresence(showPresenceList);
+    setTempRotas(showRotasPage);
+    setTempSlides(showSlides);
+    setShowPageSelectorModal(true);
   };
 
   const renderContent = () => {
@@ -276,8 +272,7 @@ export default function App() {
           showPresenceList={showPresenceList}
           showRotasPage={showRotasPage}
           showSlides={showSlides}
-          onUnlockPresenceList={() => setShowPasswordModal(true)}
-          onLogout={handleLogout}
+          onUnlockPresenceList={handleOpenPageSelector}
         />
       );
     }
@@ -292,16 +287,13 @@ export default function App() {
             showPresenceList={showPresenceList}
             showRotasPage={showRotasPage}
             showSlides={showSlides}
-            onUnlockPresenceList={() => setShowPasswordModal(true)}
-            onLogout={handleLogout}
+            onUnlockPresenceList={handleOpenPageSelector}
           />
         );
       case 'slides':
         return <Slides />;
       case 'presence':
         return <PresenceList onBack={() => setActiveTab('menu')} />;
-      case 'dados':
-        return <Dados />;
       case 'averbacao':
         return <Averbacao view={averbacaoView} onBack={() => setActiveTab('menu')} />;
       case 'sm_creator':
@@ -375,10 +367,6 @@ export default function App() {
   const activeTodayApps = todayAppointments.filter(app => app.urgency !== 'past');
   const maxUrgencyApp = activeTodayApps[0];
   const maxUrgencyScore = maxUrgencyApp ? maxUrgencyApp.urgencyScore : 0;
-
-  if (!currentUser) {
-    return <LoginScreen onLoginSuccess={(u) => setCurrentUser(u)} />;
-  }
 
   return (
     <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">

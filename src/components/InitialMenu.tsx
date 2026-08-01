@@ -33,7 +33,6 @@ const menuItems: MenuItem[] = [
   { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
   { id: 'patio', label: 'Pátio', buttonLabel: 'Logística', icon: Container, color: 'text-zinc-300', description: 'Gestão inteligente de entrada e saída de veículos.' },
   { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
-  { id: 'dados', label: 'Dados', buttonLabel: 'Conexões', icon: Database, color: 'text-emerald-400', description: 'Monitoramento em tempo real de usuários online e último acesso ao app.' },
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'text-zinc-300', description: 'Gestão de apólices e seguros integrados.' },
   { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'text-zinc-300', description: 'Criação e agendamento de solicitações de monitoramento.' },
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
