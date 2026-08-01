@@ -17,7 +17,6 @@ interface BrazilMapHUDProps {
   hoveredCity: string | null;
   setHoveredCity: (city: string | null) => void;
   count: number;
-  destinoStats?: Array<{ name: string; count: number; iscas: string[]; drivers: string[] }>;
 }
 
 export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
@@ -26,18 +25,9 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
   hoveredCity,
   setHoveredCity,
   count,
-  destinoStats = [],
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const getCityCount = (cityId: string) => {
-    if (!destinoStats) return 0;
-    let searchName = cityId;
-    if (cityId === 'GOVERNADOR VALADARES') searchName = 'GOV';
-    const found = destinoStats.find(d => d.name.toUpperCase() === searchName.toUpperCase() || d.name.toUpperCase() === cityId.toUpperCase());
-    return found ? found.count : 0;
-  };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -453,15 +443,15 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
                   opacity={isSelected ? 1 : 0.6} 
                 />
 
-                {/* Node Dot */}
-                <circle 
-                  cx={city.cx} 
-                  cy={city.cy} 
-                  r={isSelected ? 5 : 3.5} 
-                  fill={isSelected ? "#00f0ff" : "#3b82f6"} 
-                  className="transition-all" 
-                  filter={isSelected ? "url(#hudNeonFilter)" : undefined}
-                />
+                {/* Microchip / Bait Symbol for State */}
+                <g transform={`translate(${city.cx}, ${city.cy})`}>
+                  <rect x="-4.5" y="-4.5" width="9" height="9" rx="1.5" fill={isSelected ? "#00f0ff" : "#1e293b"} stroke={isSelected ? "#ffffff" : "#00f0ff"} strokeWidth="1" filter={isSelected ? "url(#hudNeonFilter)" : undefined} />
+                  <line x1="-7" y1="-2" x2="-4.5" y2="-2" stroke="#00f0ff" strokeWidth="1" />
+                  <line x1="-7" y1="2" x2="-4.5" y2="2" stroke="#00f0ff" strokeWidth="1" />
+                  <line x1="4.5" y1="-2" x2="7" y2="-2" stroke="#00f0ff" strokeWidth="1" />
+                  <line x1="4.5" y1="2" x2="7" y2="2" stroke="#00f0ff" strokeWidth="1" />
+                  <circle cx="0" cy="0" r="2" fill={isSelected ? "#ffffff" : "#00f0ff"} />
+                </g>
 
                 {/* HUD Label Text Pill */}
                 <text 
@@ -476,31 +466,6 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
                 >
                   {city.name.toUpperCase()} ({city.state})
                 </text>
-
-                {/* Highlighted Isca Symbols for each isca in this city */}
-                {(() => {
-                  const cityCount = getCityCount(city.id);
-                  if (cityCount === 0) return null;
-                  const isEnd = city.anchor === 'end';
-                  const startX = isEnd ? city.lx - (Math.min(cityCount, 10) * 11) - 18 : city.lx + 45;
-                  const startY = city.ly - 3;
-                  return (
-                    <g transform={`translate(${startX}, ${startY})`}>
-                      {Array.from({ length: Math.min(cityCount, 10) }).map((_, idx) => (
-                        <g key={idx} transform={`translate(${idx * 11}, 0)`}>
-                          {/* Highlighted Beacon / Tracker Icon */}
-                          <circle cx="4" cy="0" r="4.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="0.8" filter="url(#hudNeonFilter)" className="animate-pulse" />
-                          <circle cx="4" cy="0" r="1.5" fill="#020617" />
-                        </g>
-                      ))}
-                      {cityCount > 10 && (
-                        <text x={Math.min(cityCount, 10) * 11 + 2} y="3" fill="#00f0ff" fontSize="7" fontFamily="monospace" fontWeight="black">
-                          +{cityCount - 10}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })()}
               </g>
             );
           })}

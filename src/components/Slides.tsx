@@ -474,7 +474,6 @@ export default function Slides() {
               hoveredCity={hoveredCity}
               setHoveredCity={setHoveredCity}
               count={filteredData.length}
-              destinoStats={destinoStats}
             />
             {/* GROUPED STATUS ANALYTICS HUD WITH FULL SCREEN TOGGLE */}
             <StatusAnalyticsHUD
