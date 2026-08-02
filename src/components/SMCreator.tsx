@@ -13,6 +13,9 @@ import {
   Download,
   Info,
   Copy,
+  ChevronUp,
+  ChevronDown,
+  ArrowRightLeft,
   RefreshCw,
   Calendar as CalendarIcon,
   X,
@@ -22,9 +25,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  RotateCcw,
-  ArrowUp,
-  ArrowDown
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
@@ -391,41 +392,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const moveRow = (index: number, direction: 'up' | 'down', section: 'ida' | 'volta') => {
-    const rows = section === 'ida' ? [...idaRows] : [...voltaRows];
-    if (direction === 'up' && index > 0) {
-      [rows[index], rows[index - 1]] = [rows[index - 1], rows[index]];
-    } else if (direction === 'down' && index < rows.length - 1) {
-      [rows[index], rows[index + 1]] = [rows[index + 1], rows[index]];
-    } else {
-      return;
-    }
-    
-    if (section === 'ida') {
-      saveIda(rows, true);
-    } else {
-      saveVolta(rows, true);
-    }
-  };
-
-  const handleCopyIdaToVolta = () => {
-    if (idaRows.length === 0) return;
-    
-    const copiedRows: SMRow[] = idaRows.map(row => ({
-      dataSaida: row.dataSaida,
-      motorista: row.motorista,
-      placa: row.placa,
-      bau1: row.bau1,
-      bau2: row.bau2,
-      trecho: invertRoute(row.trecho),
-      valorNf: '0,00',
-      ok: false
-    }));
-    
-    saveVolta([...voltaRows, ...copiedRows], true);
-  };
-
   const [totalRawCopied, setTotalRawCopied] = useState(false);
   const [copied, setCopied] = useState(false);
   const [idaCopied, setIdaCopied] = useState(false);
@@ -958,6 +924,36 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     }
   };
 
+  const moveRow = (index: number, direction: 'up' | 'down', section: 'ida' | 'volta') => {
+    const rows = section === 'ida' ? [...idaRows] : [...voltaRows];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (newIndex < 0 || newIndex >= rows.length) return;
+
+    const temp = rows[index];
+    rows[index] = rows[newIndex];
+    rows[newIndex] = temp;
+
+    if (section === 'ida') {
+      saveIda(rows, true);
+    } else {
+      saveVolta(rows, true);
+    }
+  };
+
+  const copyIdaToVolta = () => {
+    if (idaRows.length === 0) return;
+    
+    const newVoltaRows: SMRow[] = idaRows.map(row => ({
+      ...row,
+      trecho: invertRoute(row.trecho),
+      valorNf: '0,00',
+      ok: false
+    }));
+
+    saveVolta([...voltaRows, ...newVoltaRows], true);
+  };
+
   const calculateTotal = () => {
     const sum = calcValues.reduce((acc, curr) => {
       const val = parseFloat(curr.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
@@ -1172,6 +1168,15 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     </button>
                     {idaRows.length > 0 && (
                       <button 
+                        onClick={copyIdaToVolta}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors text-[10px] font-bold uppercase tracking-tight cursor-pointer"
+                        title="Enviar dados da Ida para Volta (Invertendo Trecho)"
+                      >
+                        <ArrowRightLeft size={12} /> Enviar para Volta
+                      </button>
+                    )}
+                    {idaRows.length > 0 && (
+                      <button 
                         onClick={() => copySection(idaRows, 'ROTA IDA', setIdaCopied)}
                         className={cn(
                           "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
@@ -1344,6 +1349,30 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                               </td>
                               <td className="p-1.5 text-center">
                                 <div className="flex items-center justify-center gap-1">
+                                  <div className="flex flex-col gap-0.5">
+                                    <button 
+                                      onClick={() => moveRow(i, 'up', 'ida')}
+                                      disabled={i === 0}
+                                      className={cn(
+                                        "p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer",
+                                        i === 0 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:text-indigo-600"
+                                      )}
+                                      title="Mover para cima"
+                                    >
+                                      <ChevronUp size={14} />
+                                    </button>
+                                    <button 
+                                      onClick={() => moveRow(i, 'down', 'ida')}
+                                      disabled={i === idaRows.length - 1}
+                                      className={cn(
+                                        "p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer",
+                                        i === idaRows.length - 1 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:text-indigo-600"
+                                      )}
+                                      title="Mover para baixo"
+                                    >
+                                      <ChevronDown size={14} />
+                                    </button>
+                                  </div>
                                   <button 
                                     onClick={() => saveIda(idaRows.filter((_, idx) => idx !== i), true)} 
                                     className="p-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-lg transition-colors cursor-pointer"
@@ -1351,30 +1380,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   >
                                     <Trash2 size={15} />
                                   </button>
-                                  <div className="flex flex-col gap-0.5">
-                                    <button 
-                                      onClick={() => moveRow(i, 'up', 'ida')}
-                                      disabled={i === 0}
-                                      className={cn(
-                                        "p-0.5 rounded transition-colors",
-                                        i === 0 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:bg-slate-100 hover:text-[#0F2D59] cursor-pointer"
-                                      )}
-                                      title="Mover para cima"
-                                    >
-                                      <ArrowUp size={12} />
-                                    </button>
-                                    <button 
-                                      onClick={() => moveRow(i, 'down', 'ida')}
-                                      disabled={i === idaRows.length - 1}
-                                      className={cn(
-                                        "p-0.5 rounded transition-colors",
-                                        i === idaRows.length - 1 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:bg-slate-100 hover:text-[#0F2D59] cursor-pointer"
-                                      )}
-                                      title="Mover para baixo"
-                                    >
-                                      <ArrowDown size={12} />
-                                    </button>
-                                  </div>
                                 </div>
                               </td>
                             </tr>
@@ -1400,15 +1405,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {idaRows.length > 0 && (
-                      <button 
-                        onClick={handleCopyIdaToVolta}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-amber-600 hover:bg-amber-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-amber-500/30"
-                        title="Copiar dados da Rota Ida para Rota Volta (Invertendo o Trecho)"
-                      >
-                        <RefreshCw size={12} /> Copiar Ida
-                      </button>
-                    )}
                     <button 
                       onClick={() => openPdfModal('volta')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
@@ -1608,6 +1604,30 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                               </td>
                               <td className="p-1.5 text-center">
                                 <div className="flex items-center justify-center gap-1">
+                                  <div className="flex flex-col gap-0.5">
+                                    <button 
+                                      onClick={() => moveRow(i, 'up', 'volta')}
+                                      disabled={i === 0}
+                                      className={cn(
+                                        "p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer",
+                                        i === 0 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:text-rose-600"
+                                      )}
+                                      title="Mover para cima"
+                                    >
+                                      <ChevronUp size={14} />
+                                    </button>
+                                    <button 
+                                      onClick={() => moveRow(i, 'down', 'volta')}
+                                      disabled={i === voltaRows.length - 1}
+                                      className={cn(
+                                        "p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer",
+                                        i === voltaRows.length - 1 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:text-rose-600"
+                                      )}
+                                      title="Mover para baixo"
+                                    >
+                                      <ChevronDown size={14} />
+                                    </button>
+                                  </div>
                                   <button 
                                     onClick={() => saveVolta(voltaRows.filter((_, idx) => idx !== i), true)} 
                                     className="p-1.5 text-rose-700 hover:bg-rose-600 hover:text-white rounded-lg transition-colors cursor-pointer"
@@ -1615,30 +1635,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   >
                                     <Trash2 size={15} />
                                   </button>
-                                  <div className="flex flex-col gap-0.5">
-                                    <button 
-                                      onClick={() => moveRow(i, 'up', 'volta')}
-                                      disabled={i === 0}
-                                      className={cn(
-                                        "p-0.5 rounded transition-colors",
-                                        i === 0 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
-                                      )}
-                                      title="Mover para cima"
-                                    >
-                                      <ArrowUp size={12} />
-                                    </button>
-                                    <button 
-                                      onClick={() => moveRow(i, 'down', 'volta')}
-                                      disabled={i === voltaRows.length - 1}
-                                      className={cn(
-                                        "p-0.5 rounded transition-colors",
-                                        i === voltaRows.length - 1 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
-                                      )}
-                                      title="Mover para baixo"
-                                    >
-                                      <ArrowDown size={12} />
-                                    </button>
-                                  </div>
                                 </div>
                               </td>
                             </tr>
