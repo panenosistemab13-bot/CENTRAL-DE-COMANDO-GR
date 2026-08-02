@@ -128,6 +128,7 @@ export const cleanDestinoForPlanilha = (raw: string): string => {
 
   if (DESTINOS_PLANILHA_ISCAS.includes(clean)) return clean;
 
+  if (clean.includes("PINHAIS")) return "CURITIBA";
   if (clean.includes("GOV") || clean.includes("CELSO RAMOS") || clean.includes("GOVERNADOR")) return "GOVERNADOR CR";
   if (clean.includes("RIO DE JANEIRO")) return "RIO DE JANEIRO";
   if (clean.includes("GUARULHOS")) return "GUARULHOS";
