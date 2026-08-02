@@ -16,6 +16,7 @@ import {
   ChevronUp,
   ChevronDown,
   ArrowRightLeft,
+  Truck,
   RefreshCw,
   Calendar as CalendarIcon,
   X,
@@ -242,9 +243,9 @@ const findRouteCode = (trechoStr: string, section: 'ida' | 'volta', routes: Rout
   return '---';
 };
 
-const generateStyledTableHtml = (rows: SMRow[], isIda: boolean) => {
+const generateStyledTableHtml = (rows: SMRow[], type: 'ida' | 'volta' | 'vespasiano') => {
   if (rows.length === 0) return '';
-  const headerBg = isIda ? '#0F2D59' : '#801414';
+  const headerBg = type === 'ida' ? '#0F2D59' : type === 'volta' ? '#801414' : '#166534';
   
   let rowsHtml = '';
   rows.forEach((r, idx) => {
@@ -285,10 +286,12 @@ const generateStyledTableHtml = (rows: SMRow[], isIda: boolean) => {
 export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps) {
   const [idaRows, setIdaRows] = useState<SMRow[]>([]);
   const [voltaRows, setVoltaRows] = useState<SMRow[]>([]);
+  const [vespasianoRows, setVespasianoRows] = useState<SMRow[]>([]);
   const [calcValues, setCalcValues] = useState<string[]>(['']);
   const [routesList, setRoutesList] = useState<RouteItem[]>(DEFAULT_ROUTES);
   const [notes, setNotes] = useState<Note[]>([]);
   const [isNotepadOpen, setIsNotepadOpen] = useState(false);
+  const [isVespasianoMaximized, setIsVespasianoMaximized] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
 
   useEffect(() => {
@@ -298,6 +301,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       if (data) {
         if (data.ida) setIdaRows(data.ida);
         if (data.volta) setVoltaRows(data.volta);
+        if (data.vespasiano) setVespasianoRows(data.vespasiano);
         if (data.calc) setCalcValues(data.calc);
         if (data.notes) {
           const notesArray = Object.entries(data.notes).map(([id, note]: [string, any]) => ({
@@ -327,7 +331,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     };
   }, []);
 
-  const historyRef = useRef<Array<{ ida: SMRow[]; volta: SMRow[]; calc: string[] }>>([]);
+  const historyRef = useRef<Array<{ ida: SMRow[]; volta: SMRow[]; vespasiano: SMRow[]; calc: string[] }>>([]);
   const lastPushTimeRef = useRef<number>(0);
   const [historyCount, setHistoryCount] = useState<number>(0);
   const [showUndoToast, setShowUndoToast] = useState<boolean>(false);
@@ -336,6 +340,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     const currentSnapshot = {
       ida: JSON.parse(JSON.stringify(idaRows)),
       volta: JSON.parse(JSON.stringify(voltaRows)),
+      vespasiano: JSON.parse(JSON.stringify(vespasianoRows)),
       calc: [...calcValues]
     };
 
@@ -369,6 +374,12 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     set(ref(db, 'sm_creator_data/volta'), rows);
   };
 
+  const saveVespasiano = (rows: SMRow[], forcePush = false) => {
+    pushHistory(forcePush);
+    setVespasianoRows(rows);
+    set(ref(db, 'sm_creator_data/vespasiano'), rows);
+  };
+
   const saveCalc = (vals: string[], forcePush = false) => {
     pushHistory(forcePush);
     setCalcValues(vals);
@@ -400,11 +411,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     if (previousState) {
       setIdaRows(previousState.ida);
       setVoltaRows(previousState.volta);
+      setVespasianoRows(previousState.vespasiano || []);
       setCalcValues(previousState.calc);
 
       set(ref(db, 'sm_creator_data'), {
         ida: previousState.ida,
         volta: previousState.volta,
+        vespasiano: previousState.vespasiano || [],
         calc: previousState.calc
       });
 
@@ -433,7 +446,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
 
   // PDF Import Modal State
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
-  const [pdfTargetSection, setPdfTargetSection] = useState<'ida' | 'volta' | 'calc'>('ida');
+  const [pdfTargetSection, setPdfTargetSection] = useState<'ida' | 'volta' | 'vespasiano' | 'calc'>('ida');
   const [pdfTargetRowIndex, setPdfTargetRowIndex] = useState<number | null>(null);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const [parsedPdfItems, setParsedPdfItems] = useState<Array<{
@@ -448,11 +461,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   const [pdfTotalSomadoFormatado, setPdfTotalSomadoFormatado] = useState<string>('0,00');
   const [pdfCopied, setPdfCopied] = useState(false);
 
-  const openPdfModal = (section: 'ida' | 'volta' | 'calc' = 'ida', rowIndex: number | null = null) => {
+  const openPdfModal = (section: 'ida' | 'volta' | 'vespasiano' | 'calc' = 'ida', rowIndex: number | null = null) => {
     setPdfTargetSection(section);
     setPdfTargetRowIndex(rowIndex);
     setIsPdfModalOpen(true);
-  };  const processarNotasFiscaisClient = async (arquivos: File[]) => {
+  };
+
+  const processarNotasFiscaisClient = async (arquivos: File[]) => {
     await ensurePdfWorker();
 
     const extractedItems: Array<{
@@ -764,7 +779,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     setPdfTotalSomadoFormatado(newTotalFormatted);
   };
 
-  const applyPdfTotalToTarget = (section: 'ida' | 'volta' | 'calc') => {
+  const applyPdfTotalToTarget = (section: 'ida' | 'volta' | 'vespasiano' | 'calc') => {
     const totalValStr = pdfTotalSomadoFormatado;
 
     if (section === 'calc') {
@@ -774,8 +789,8 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         saveCalc([...calcValues, totalValStr], true);
       }
     } else {
-      const targetRows = section === 'ida' ? idaRows : voltaRows;
-      const saveFunc = section === 'ida' ? saveIda : saveVolta;
+      const targetRows = section === 'ida' ? idaRows : section === 'volta' ? voltaRows : vespasianoRows;
+      const saveFunc = section === 'ida' ? saveIda : section === 'volta' ? saveVolta : saveVespasiano;
 
       if (pdfTargetRowIndex !== null && targetRows[pdfTargetRowIndex]) {
         const updatedRows = [...targetRows];
@@ -910,12 +925,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent, section: 'ida' | 'volta') => {
+  const handlePaste = (e: React.ClipboardEvent, section: 'ida' | 'volta' | 'vespasiano') => {
     const text = e.clipboardData.getData('text');
-    parseInput(text, section === 'ida' ? saveIda : saveVolta, section === 'ida' ? idaRows : voltaRows, section);
+    const saveFunc = section === 'ida' ? saveIda : section === 'volta' ? saveVolta : saveVespasiano;
+    const rows = section === 'ida' ? idaRows : section === 'volta' ? voltaRows : vespasianoRows;
+    parseInput(text, saveFunc, rows, section === 'vespasiano' ? 'ida' : section);
   };
 
-  const addNewRow = (section: 'ida' | 'volta') => {
+  const addNewRow = (section: 'ida' | 'volta' | 'vespasiano') => {
     const newRow: SMRow = {
       dataSaida: new Date().toLocaleDateString('pt-BR'),
       motorista: '',
@@ -927,12 +944,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     };
     if (section === 'ida') {
       saveIda([...idaRows, newRow], true);
-    } else {
+    } else if (section === 'volta') {
       saveVolta([...voltaRows, newRow], true);
+    } else {
+      saveVespasiano([...vespasianoRows, newRow], true);
     }
   };
 
-  const updateRowValue = (index: number, field: keyof SMRow, value: any, section: 'ida' | 'volta', forcePush = false) => {
+  const updateRowValue = (index: number, field: keyof SMRow, value: any, section: 'ida' | 'volta' | 'vespasiano', forcePush = false) => {
     let finalValue = value;
     
     if (field === 'valorNf' && typeof value === 'string') {
@@ -951,15 +970,19 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       const newRows = [...idaRows];
       newRows[index] = { ...newRows[index], [field]: finalValue };
       saveIda(newRows, isDiscrete);
-    } else {
+    } else if (section === 'volta') {
       const newRows = [...voltaRows];
       newRows[index] = { ...newRows[index], [field]: finalValue };
       saveVolta(newRows, isDiscrete);
+    } else {
+      const newRows = [...vespasianoRows];
+      newRows[index] = { ...newRows[index], [field]: finalValue };
+      saveVespasiano(newRows, isDiscrete);
     }
   };
 
-  const moveRow = (index: number, direction: 'up' | 'down', section: 'ida' | 'volta') => {
-    const rows = section === 'ida' ? [...idaRows] : [...voltaRows];
+  const moveRow = (index: number, direction: 'up' | 'down', section: 'ida' | 'volta' | 'vespasiano') => {
+    const rows = section === 'ida' ? [...idaRows] : section === 'volta' ? [...voltaRows] : [...vespasianoRows];
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     
     if (newIndex < 0 || newIndex >= rows.length) return;
@@ -970,8 +993,10 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
 
     if (section === 'ida') {
       saveIda(rows, true);
-    } else {
+    } else if (section === 'volta') {
       saveVolta(rows, true);
+    } else {
+      saveVespasiano(rows, true);
     }
   };
 
@@ -981,7 +1006,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     const newVoltaRows: SMRow[] = idaRows.map(row => ({
       ...row,
       trecho: invertRoute(row.trecho),
-      valorNf: '0,00',
+      valorNf: '',
       ok: false
     }));
 
@@ -1040,20 +1065,27 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     const htmlContent = `
       <div style="font-family: sans-serif; color: #333;">
         <p>${greeting}!</p>
-        <p>Segue relatórios de SM - Ida e Volta.</p>
+        <p>Segue relatórios de SM - Ida, Volta e Vespasiano.</p>
         
         <div style="margin-top: 20px;">
           <h3 style="color: #14325c; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA IDA ---</h3>
           <p style="font-size: 13px;">${greeting},</p>
           <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: <strong>${getJourneyDate(idaRows)}</strong>!</p>
-          ${generateStyledTableHtml(idaRows, true)}
+          ${generateStyledTableHtml(idaRows, 'ida')}
         </div>
 
         <div style="margin-top: 30px;">
           <h3 style="color: #7f1d1d; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA VOLTA ---</h3>
           <p style="font-size: 13px;">${greeting},</p>
           <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: <strong>${getJourneyDate(voltaRows)}</strong>!</p>
-          ${generateStyledTableHtml(voltaRows, false)}
+          ${generateStyledTableHtml(voltaRows, 'volta')}
+        </div>
+
+        <div style="margin-top: 30px;">
+          <h3 style="color: #166534; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ROTA VESPASIANO ---</h3>
+          <p style="font-size: 13px;">${greeting},</p>
+          <p style="font-size: 13px;">Seguem em anexo as solicitações de monitoramento rota Vespasiano para as escalas de viagem para o dia: <strong>${getJourneyDate(vespasianoRows)}</strong>!</p>
+          ${generateStyledTableHtml(vespasianoRows, 'vespasiano')}
         </div>
 
         <p style="margin-top: 20px;"><strong>Total Calculado: ${calculateTotal()}</strong></p>
@@ -1061,7 +1093,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
       </div>
     `;
 
-    const textContent = `${greeting}!\n\nSegue relatórios de SM - Ida e Volta.\n\nROTA IDA\n${greeting}, Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: ${getJourneyDate(idaRows)}!\n${formatRowsText(idaRows, '')}\nROTA VOLTA\n${greeting}, Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${getJourneyDate(voltaRows)}!\n${formatRowsText(voltaRows, '')}\nTotal Calculado: ${calculateTotal()}\n\nAtt,`;
+    const textContent = `${greeting}!\n\nSegue relatórios de SM - Ida, Volta e Vespasiano.\n\nROTA IDA\n${greeting}, Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: ${getJourneyDate(idaRows)}!\n${formatRowsText(idaRows, '')}\nROTA VOLTA\n${greeting}, Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${getJourneyDate(voltaRows)}!\n${formatRowsText(voltaRows, '')}\nROTA VESPASIANO\n${greeting}, Seguem em anexo as solicitações de monitoramento rota Vespasiano para as escalas de viagem para o dia: ${getJourneyDate(vespasianoRows)}!\n${formatRowsText(vespasianoRows, '')}\nTotal Calculado: ${calculateTotal()}\n\nAtt,`;
 
     try {
       const typeHtml = "text/html";
@@ -1082,20 +1114,23 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   const copySection = async (rows: SMRow[], title: string, setCopiedStatus: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (rows.length === 0) return;
     
-    const color = title.includes('IDA') ? '#14325c' : '#7f1d1d';
-    const isIda = title.includes('IDA');
+    const color = title.includes('IDA') ? '#14325c' : title.includes('VOLTA') ? '#7f1d1d' : '#166534';
+    const type = title.includes('IDA') ? 'ida' : title.includes('VOLTA') ? 'volta' : 'vespasiano';
     const greeting = getGreeting();
     const date = getJourneyDate(rows);
     
-    const phrase = isIda 
+    const phrase = title.includes('IDA') 
       ? `Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: ${date}!`
-      : `Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${date}!`;
+      : title.includes('VOLTA')
+        ? `Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: ${date}!`
+        : `Seguem em anexo as solicitações de monitoramento rota Vespasiano para as escalas de viagem para o dia: ${date}!`;
 
     let html = `<div style="font-family: sans-serif; color: #333;">
       <h3 style="color: ${color}; margin-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">--- ${title} ---</h3>
       <p style="font-size: 13px;">${greeting},</p>
       <p style="font-size: 13px;">${phrase}</p>
-      ${generateStyledTableHtml(rows, isIda)}
+      ${generateStyledTableHtml(rows, type)}
+      <p style="margin-top: 15px;">Att,</p>
     </div>`;
 
     let text = `--- ${title} ---\n${greeting},\n${phrase}\n\n`;
@@ -1160,7 +1195,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
               )}
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? 'Tudo Copiado!' : 'Copiar Tudo (Ida + Volta)'}
+              {copied ? 'Tudo Copiado!' : 'Copiar Tudo (Ida + Volta + Vespasiano)'}
             </button>
           )}
 
@@ -1211,7 +1246,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     {idaRows.length > 0 && (
                       <button 
                         onClick={copyIdaToVolta}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors text-[10px] font-bold uppercase tracking-tight cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-emerald-500/30"
                         title="Enviar dados da Ida para Volta (Invertendo Trecho)"
                       >
                         <ArrowRightLeft size={12} /> Enviar para Volta
@@ -1687,6 +1722,237 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   )}
                 </div>
               </section>
+
+              {/* ================= ROTA VESPASIANO ================= */}
+              <section className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden font-sans transition-all">
+                <div className="bg-emerald-50/50 p-4 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-sm">
+                      <Truck size={18} />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-800 uppercase tracking-tight">Rota Vespasiano</h2>
+                      <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Controle de Saída</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setIsVespasianoMaximized(!isVespasianoMaximized)}
+                      className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-xs"
+                    >
+                      {isVespasianoMaximized ? 'Minimizar' : 'Maximizar'}
+                    </button>
+                    {vespasianoRows.length > 0 && (
+                      <button 
+                        onClick={() => copySection(vespasianoRows, 'ROTA VESPASIANO', setVoltaCopied)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
+                          voltaCopied 
+                            ? "bg-emerald-600 text-white border-emerald-700" 
+                            : "bg-white border-slate-200 text-emerald-700 hover:bg-emerald-50"
+                        )}
+                      >
+                        {voltaCopied ? <Check size={12} /> : <Copy size={12} />}
+                        {voltaCopied ? 'Copiado!' : 'Copiar Rota'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className={cn(
+                  "transition-all duration-300 ease-in-out",
+                  isVespasianoMaximized ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+                )}>
+                  <div className="p-4 bg-white">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                      <div className="relative group">
+                        <textarea
+                          placeholder="Cole aqui os dados da Rota Vespasiano..."
+                          className="w-full h-24 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none font-medium placeholder:text-slate-400"
+                          onPaste={(e) => handlePaste(e, 'vespasiano')}
+                        />
+                        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[9px] font-bold text-slate-400 bg-white/80 px-2 py-0.5 rounded-full border border-slate-100">Ctrl + V para colar</span>
+                        </div>
+                      </div>
+                      
+                      <div className="lg:col-span-3 flex items-end justify-start gap-3">
+                        <button 
+                          onClick={() => addNewRow('vespasiano')}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-emerald-100 cursor-pointer"
+                        >
+                          <Plus size={16} /> Adicionar Linha
+                        </button>
+                        <button 
+                          onClick={() => saveVespasiano([], true)}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                        >
+                          <Trash2 size={16} /> Limpar Tudo
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-xs">
+                      <table className="w-full border-collapse min-w-[1000px]">
+                        <thead>
+                          <tr className="bg-slate-900 text-white text-[10px] uppercase tracking-widest font-black">
+                            <th className="p-3 text-center border-r border-slate-800 w-8">#</th>
+                            <th className="p-3 text-center border-r border-slate-800 w-10">OK</th>
+                            <th className="p-3 text-center border-r border-slate-800">Data</th>
+                            <th className="p-3 text-left border-r border-slate-800">Motorista</th>
+                            <th className="p-3 text-center border-r border-slate-800">Placa</th>
+                            <th className="p-3 text-center border-r border-slate-800">Baú 1</th>
+                            <th className="p-3 text-center border-r border-slate-800">Baú 2</th>
+                            <th className="p-3 text-center border-r border-slate-800">Trecho</th>
+                            <th className="p-3 text-center border-r border-slate-800">Code</th>
+                            <th className="p-3 text-right border-r border-slate-800">Valor NF</th>
+                            <th className="p-3 text-center">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white">
+                          {vespasianoRows.map((row, i) => (
+                            <tr key={i} className="text-xs text-slate-900 group/row font-bold hover:bg-slate-50 transition-colors border-b border-slate-100">
+                              <td className="p-1.5 text-center text-slate-400 font-mono text-xs w-8">
+                                {i + 1}
+                              </td>
+                              <td className="p-1.5 text-center w-10">
+                                <button
+                                  type="button"
+                                  onClick={() => updateRowValue(i, 'ok', !row.ok, 'vespasiano')}
+                                  className={cn(
+                                    "w-5 h-5 mx-auto flex items-center justify-center rounded border transition-all cursor-pointer",
+                                    row.ok 
+                                      ? "bg-emerald-600 border-emerald-700 text-white shadow-xs" 
+                                      : "bg-slate-100 border-slate-300 text-transparent hover:border-emerald-600"
+                                  )}
+                                >
+                                  <Check size={12} className="stroke-[3]" />
+                                </button>
+                              </td>
+                              <td className="p-1.5">
+                                <input 
+                                  type="text"
+                                  value={row.dataSaida}
+                                  onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'vespasiano')}
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs"
+                                />
+                              </td>
+                              <td className="p-1.5 group/cell">
+                                <div className="flex items-center gap-1.5">
+                                  <input 
+                                    type="text"
+                                    value={row.motorista}
+                                    onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'vespasiano')}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2.5 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs"
+                                  />
+                                  <button 
+                                    onClick={() => navigator.clipboard.writeText(row.motorista)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 rounded text-emerald-700 transition-all shrink-0 cursor-pointer"
+                                    title="Copiar Motorista"
+                                  >
+                                    <Copy size={12} />
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="p-1.5 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.placa}
+                                  onChange={(e) => updateRowValue(i, 'placa', e.target.value, 'vespasiano')}
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs font-mono"
+                                />
+                              </td>
+                              <td className="p-1.5 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.bau1}
+                                  onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'vespasiano')}
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs"
+                                />
+                              </td>
+                              <td className="p-1.5 text-center">
+                                <input 
+                                  type="text"
+                                  value={row.bau2}
+                                  onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'vespasiano')}
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs"
+                                />
+                              </td>
+                              <td className="p-1.5 text-center">
+                                <div className="flex items-center gap-1 group/trecho">
+                                  <input 
+                                    type="text"
+                                    value={row.trecho}
+                                    onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'vespasiano')}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-1.5 text-center">
+                                <div className="bg-slate-100 border border-slate-200 text-slate-800 font-extrabold text-xs rounded-md py-1.5 px-2 inline-block min-w-[55px] text-center">
+                                  {findRouteCode(row.trecho, 'ida', routesList)}
+                                </div>
+                              </td>
+                              <td className="p-1.5 text-right font-extrabold group/cell">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button 
+                                    onClick={() => openPdfModal('vespasiano', i)}
+                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-emerald-600/10 hover:bg-emerald-600/25 rounded text-emerald-700 transition-all shrink-0 cursor-pointer"
+                                    title="Importar PDFs de NFs para esta linha"
+                                  >
+                                    <FileText size={12} />
+                                  </button>
+                                  <input 
+                                    type="text"
+                                    value={row.valorNf}
+                                    onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'vespasiano')}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-right focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all text-xs"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-1.5 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <div className="flex flex-col gap-0.5">
+                                    <button 
+                                      onClick={() => moveRow(i, 'up', 'vespasiano')}
+                                      disabled={i === 0}
+                                      className={cn(
+                                        "p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer",
+                                        i === 0 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:text-emerald-600"
+                                      )}
+                                      title="Mover para cima"
+                                    >
+                                      <ChevronUp size={14} />
+                                    </button>
+                                    <button 
+                                      onClick={() => moveRow(i, 'down', 'vespasiano')}
+                                      disabled={i === vespasianoRows.length - 1}
+                                      className={cn(
+                                        "p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer",
+                                        i === vespasianoRows.length - 1 ? "text-slate-200 cursor-not-allowed" : "text-slate-400 hover:text-emerald-600"
+                                      )}
+                                      title="Mover para baixo"
+                                    >
+                                      <ChevronDown size={14} />
+                                    </button>
+                                  </div>
+                                  <button 
+                                    onClick={() => saveVespasiano(vespasianoRows.filter((_, idx) => idx !== i), true)} 
+                                    className="p-1.5 text-rose-700 hover:bg-rose-600 hover:text-white rounded-lg transition-colors cursor-pointer"
+                                    title="Remover Linha"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
 
             {/* Calculator Sidebar */}
@@ -1960,7 +2226,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
             <div className="bg-[#3A2414]/5 p-5 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-xs text-[#3A2414]/70 font-serif font-bold text-center sm:text-left">
                 {pdfTargetRowIndex !== null ? (
-                  <span>Aplicando na linha #{pdfTargetRowIndex + 1} ({pdfTargetSection === 'ida' ? 'Rota Ida' : 'Rota Volta'})</span>
+                  <span>Aplicando na linha #{pdfTargetRowIndex + 1} ({pdfTargetSection === 'ida' ? 'Rota Ida' : pdfTargetSection === 'volta' ? 'Rota Volta' : 'Rota Vespasiano'})</span>
                 ) : (
                   <span>Selecione onde aplicar o valor total somado (R$ {pdfTotalSomadoFormatado})</span>
                 )}
@@ -1981,6 +2247,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   className="px-3.5 py-2 bg-[#7f1d1d] hover:bg-[#991b1b] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
                 >
                   Preencher Rota Volta
+                </button>
+
+                <button 
+                  onClick={() => applyPdfTotalToTarget('vespasiano')}
+                  disabled={parsedPdfItems.length === 0}
+                  className="px-3.5 py-2 bg-[#166534] hover:bg-[#14532d] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
+                >
+                  Preencher Rota Vespasiano
                 </button>
 
                 <button 
