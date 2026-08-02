@@ -2430,8 +2430,13 @@ Embarque: ${
                         value={iscaSuffix1}
                         onChange={(e) => {
                           const val = e.target.value.toUpperCase();
+                          let newPrefix = iscaPrefix1;
+                          if (val.length === 3) newPrefix = "R100000";
+                          else if (val.length === 4) newPrefix = "R10000";
+                          
                           setIscaSuffix1(val);
-                          setIsca1(iscaPrefix1 + val);
+                          setIscaPrefix1(newPrefix);
+                          setIsca1(newPrefix + val);
                         }}
                         className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
                         placeholder="RESTO..."
@@ -2486,8 +2491,13 @@ Embarque: ${
                           value={iscaSuffix2}
                           onChange={(e) => {
                             const val = e.target.value.toUpperCase();
+                            let newPrefix = iscaPrefix2;
+                            if (val.length === 3) newPrefix = "R100000";
+                            else if (val.length === 4) newPrefix = "R10000";
+                            
                             setIscaSuffix2(val);
-                            setIsca2(iscaPrefix2 + val);
+                            setIscaPrefix2(newPrefix);
+                            setIsca2(newPrefix + val);
                           }}
                           className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
                           placeholder="RESTO..."
