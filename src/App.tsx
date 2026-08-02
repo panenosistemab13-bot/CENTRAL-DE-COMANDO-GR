@@ -258,10 +258,7 @@ export default function App() {
   const activeTabInfo = visibleTabs.find(t => t.id === activeTab);
 
   const handleOpenPageSelector = () => {
-    setTempPresence(showPresenceList);
-    setTempRotas(showRotasPage);
-    setTempSlides(showSlides);
-    setShowPageSelectorModal(true);
+    setShowPasswordModal(true);
   };
 
   const renderContent = () => {
