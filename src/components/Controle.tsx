@@ -2528,21 +2528,40 @@ Embarque: ${
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
                   <Image size={12} className="text-slate-500" /> EMBARQUE (CARRETA 1: {carreta1})
                 </label>
-                <select
-                  value={sidebarEmbarque1}
-                  onChange={(e) => setSidebarEmbarque1(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none cursor-pointer transition-all shadow-2xs"
-                >
-                  {EMBARQUE_IMAGES.map((img) => (
-                    <option
-                      key={img.value}
-                      value={img.value}
-                      className="font-sans"
-                    >
-                      {img.label.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {EMBARQUE_IMAGES.map((img) => {
+                    const labelUpper = img.label.toUpperCase();
+                    const isZoomed = [
+                      "AMARELIN", 
+                      "CASTANHA", 
+                      "IZOTONICO", 
+                      "SUPERIOR BATIDO", 
+                      "CARGA BATIDA (PADRÃO)"
+                    ].includes(labelUpper);
+                    
+                    return (
+                      <button
+                        key={img.value}
+                        type="button"
+                        onClick={() => setSidebarEmbarque1(img.value)}
+                        className={cn(
+                          "px-2 py-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1 min-h-[50px]",
+                          sidebarEmbarque1 === img.value
+                            ? "bg-red-50 border-red-600 shadow-sm ring-2 ring-red-600/10"
+                            : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        )}
+                      >
+                        <span className={cn(
+                          "font-black uppercase tracking-tight leading-none",
+                          isZoomed ? "text-[13px] text-red-700" : "text-[9px] text-slate-600",
+                          sidebarEmbarque1 === img.value && !isZoomed ? "text-red-600" : ""
+                        )}>
+                          {img.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
                 {sidebarEmbarque1 && (
                   <div className="mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center shadow-2xs">
@@ -2565,21 +2584,40 @@ Embarque: ${
                   <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
                     <Image size={12} className="text-slate-500" /> EMBARQUE (CARRETA 2: {carreta2})
                   </label>
-                  <select
-                    value={sidebarEmbarque2}
-                    onChange={(e) => setSidebarEmbarque2(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none cursor-pointer transition-all shadow-2xs"
-                  >
-                    {EMBARQUE_IMAGES.map((img) => (
-                      <option
-                        key={img.value}
-                        value={img.value}
-                        className="font-sans"
-                      >
-                        {img.label.toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {EMBARQUE_IMAGES.map((img) => {
+                      const labelUpper = img.label.toUpperCase();
+                      const isZoomed = [
+                        "AMARELIN", 
+                        "CASTANHA", 
+                        "IZOTONICO", 
+                        "SUPERIOR BATIDO", 
+                        "CARGA BATIDA (PADRÃO)"
+                      ].includes(labelUpper);
+                      
+                      return (
+                        <button
+                          key={img.value}
+                          type="button"
+                          onClick={() => setSidebarEmbarque2(img.value)}
+                          className={cn(
+                            "px-2 py-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1 min-h-[50px]",
+                            sidebarEmbarque2 === img.value
+                              ? "bg-red-50 border-red-600 shadow-sm ring-2 ring-red-600/10"
+                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                          )}
+                        >
+                          <span className={cn(
+                            "font-black uppercase tracking-tight leading-none",
+                            isZoomed ? "text-[13px] text-red-700" : "text-[9px] text-slate-600",
+                            sidebarEmbarque2 === img.value && !isZoomed ? "text-red-600" : ""
+                          )}>
+                            {img.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   {sidebarEmbarque2 && (
                     <div className="mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center shadow-2xs">
