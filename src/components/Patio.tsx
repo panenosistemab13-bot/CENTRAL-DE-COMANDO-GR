@@ -417,6 +417,21 @@ export default function Patio({ onBack }: PatioProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
   const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas'>('patio');
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile && activeSubTab === 'disponibilidade') {
+        setActiveSubTab('patio');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeSubTab]);
+
   const [disponibilidadeGreeting, setDisponibilidadeGreeting] = useState<'bom dia' | 'boa tarde' | 'boa noite'>(getAutoGreeting);
   const [disponibilidadeInput, setDisponibilidadeInput] = useState('');
 
@@ -2067,7 +2082,7 @@ export default function Patio({ onBack }: PatioProps) {
     <div className="w-full min-h-full text-[#2b180d] relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden select-none">
       
        {/* ================= HEADER AREA ================= */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
+      <div className="hidden md:flex w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
         
         {/* Left title and logo stack */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 text-left w-full md:w-auto">
@@ -2118,7 +2133,7 @@ export default function Patio({ onBack }: PatioProps) {
       </div>
 
       {/* ================= NAVIGATION TABS ================= */}
-      <div className="w-full relative z-10 max-w-[94rem] mx-auto mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
+      <div className="hidden md:flex w-full relative z-10 max-w-[94rem] mx-auto mb-6 flex-col sm:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
         <div className="flex items-center gap-2 bg-[#e8d5bc]/80 p-1 border-2 border-[#5c3c24]/25 rounded-xl shadow-inner w-full sm:w-auto shrink-0">
           <button
             onClick={() => setActiveSubTab('patio')}
@@ -2132,18 +2147,20 @@ export default function Patio({ onBack }: PatioProps) {
             <Truck size={14} className="stroke-[2.5]" />
             <span>Gerenciar Pátio</span>
           </button>
-          <button
-            onClick={() => setActiveSubTab('disponibilidade')}
-            className={cn(
-              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
-              activeSubTab === 'disponibilidade'
-                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
-                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
-            )}
-          >
-            <Activity size={14} className="stroke-[2.5]" />
-            <span>Disponibilidade</span>
-          </button>
+          {!isMobile && (
+            <button
+              onClick={() => setActiveSubTab('disponibilidade')}
+              className={cn(
+                "hidden md:flex flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer items-center justify-center gap-2 select-none",
+                activeSubTab === 'disponibilidade'
+                  ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                  : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+              )}
+            >
+              <Activity size={14} className="stroke-[2.5]" />
+              <span>Disponibilidade</span>
+            </button>
+          )}
           <button
             onClick={() => setActiveSubTab('iscas')}
             className={cn(
@@ -2198,32 +2215,53 @@ export default function Patio({ onBack }: PatioProps) {
         </WoodenPlaque>
       </div>
 
-      {/* Mobile Tab Selector */}
-      <div className="hidden w-full lg:hidden bg-[#e8d5bc]/80 p-1 border-3 border-[#5c3c24]/25 rounded-2xl shadow-inner relative z-10 mt-4 shrink-0">
-        <button
-          onClick={() => setMobileTab('lista')}
-          className={cn(
-            "flex-1 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
-            mobileTab === 'lista'
-              ? "bg-gradient-to-b from-[#a27a5d] to-[#835835] text-[#fdefd1] shadow-md border-2 border-[#5c3c24]/40"
-              : "text-[#5c3c24] hover:bg-[#debfa0]/40"
-          )}
-        >
-          <Truck size={14} className="stroke-[2.5]" />
-          <span>Gerenciar Pátio ({filteredData.length})</span>
-        </button>
-        <button
-          onClick={() => setMobileTab('importar')}
-          className={cn(
-            "flex-1 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
-            mobileTab === 'importar'
-              ? "bg-gradient-to-b from-[#a27a5d] to-[#835835] text-[#fdefd1] shadow-md border-2 border-[#5c3c24]/40"
-              : "text-[#5c3c24] hover:bg-[#debfa0]/40"
-          )}
-        >
-          <Database size={14} className="stroke-[2.5]" />
-          <span>Importar Lote</span>
-        </button>
+      {/* Mobile Top Stats & Tab Selector */}
+      <div className="flex md:hidden flex-col gap-3 w-full relative z-10 mt-2 shrink-0">
+        
+        {/* Quick Stats Bar */}
+        <div className="grid grid-cols-3 gap-2 bg-[#1d120a]/90 backdrop-blur-md p-2.5 rounded-2xl border border-[#7a4f30]/40 shadow-lg text-center">
+          <div className="flex flex-col items-center justify-center p-1 rounded-xl bg-white/5 border border-white/5">
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-[#d4bc96]/80">Total</span>
+            <span className="text-base font-serif font-black text-white leading-none mt-0.5">{safeData.length}</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-emerald-300">No Pátio</span>
+            <span className="text-base font-serif font-black text-emerald-400 leading-none mt-0.5">{safeData.filter(i => i.estaNoPatio === 'Sim').length}</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-1 rounded-xl bg-red-950/40 border border-red-500/30">
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-red-300">Fora</span>
+            <span className="text-base font-serif font-black text-red-400 leading-none mt-0.5">{safeData.filter(i => i.estaNoPatio !== 'Sim').length}</span>
+          </div>
+        </div>
+
+        {/* Mobile Tab Segmented Switcher */}
+        <div className="w-full bg-[#180e08]/90 p-1 border-2 border-[#5c3c24]/50 rounded-2xl shadow-md flex items-center gap-1.5">
+          <button
+            onClick={() => setMobileTab('lista')}
+            className={cn(
+              "flex-1 py-2.5 text-[10px] font-serif font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
+              mobileTab === 'lista'
+                ? "bg-gradient-to-b from-[#B32025] to-[#780d11] text-white shadow-md border border-white/20"
+                : "text-[#d4bc96] hover:bg-white/5"
+            )}
+          >
+            <Truck size={15} strokeWidth={2.5} />
+            <span>Veículos ({filteredData.length})</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('importar')}
+            className={cn(
+              "flex-1 py-2.5 text-[10px] font-serif font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
+              mobileTab === 'importar'
+                ? "bg-gradient-to-b from-[#B32025] to-[#780d11] text-white shadow-md border border-white/20"
+                : "text-[#d4bc96] hover:bg-white/5"
+            )}
+          >
+            <Database size={15} strokeWidth={2.5} />
+            <span>Importar Lote</span>
+          </button>
+        </div>
+
       </div>
 
       {/* ================= CONTROLLER CODES & DATA GRID PANEL ================= */}
@@ -2479,92 +2517,100 @@ export default function Patio({ onBack }: PatioProps) {
             </div>
 
             {/* Mobile Cards List view */}
-            <div className="block md:hidden flex-1 space-y-4">
+            <div className="block md:hidden flex-1 space-y-3">
               {filteredData.length === 0 ? (
-                <div className="py-20 text-center bg-[#f0dfcc]/30 rounded-2xl border-2 border-[#5c3c24]/10">
-                  <span className="text-[#5c3c24]/40 font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">Aguardando Sincronização</span>
+                <div className="py-16 text-center bg-[#f0dfcc]/30 rounded-2xl border-2 border-[#5c3c24]/10 p-6 flex flex-col items-center justify-center gap-2">
+                  <Truck size={32} className="text-[#5c3c24]/40" />
+                  <span className="text-[#5c3c24]/60 font-serif font-bold uppercase tracking-wider text-xs">
+                    {searchTerm ? 'Nenhum veículo encontrado' : 'Nenhum registro no pátio'}
+                  </span>
+                  <p className="text-[10px] text-[#5c3c24]/50">Importe um lote ou altere os filtros de busca.</p>
                 </div>
               ) : (
-                filteredData.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-2xl p-4 shadow-md flex flex-col gap-4 relative hover:border-[#8c060a]/40 transition-colors text-left font-sans"
-                  >
-                    {/* Delete action button */}
-                    <button 
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="absolute top-3.5 right-3.5 p-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
-                      title="Deletar Registro"
+                filteredData.map((item) => {
+                  const isInPatio = item.estaNoPatio === 'Sim';
+                  const isSigned = item.assinado === 'Sim';
+
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-2xl p-3.5 shadow-md flex flex-col gap-3 relative hover:border-[#8c060a]/40 transition-colors text-left font-sans"
                     >
-                      <Trash2 size={13} className="stroke-[2.5]" />
-                    </button>
+                      {/* Delete action button */}
+                      <button 
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-red-50 active:bg-red-100 border border-red-200 text-red-600 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
+                        title="Deletar Registro"
+                      >
+                        <Trash2 size={14} className="stroke-[2.5]" />
+                      </button>
 
-                    {/* Plates & identifiers details */}
-                    <div className="flex items-start gap-3.5">
-                      <LicensePlate plate={item.cavalo} />
-                      <div className="flex flex-col min-w-0 pr-6 select-text">
-                        <div className="hidden items-center gap-1.5 flex-wrap">
-                          <span className="text-[9px] font-black text-[#5c3c24]/60 uppercase tracking-wider">Carreta:</span>
-                          <span className="text-xs font-black text-[#311f14] font-mono bg-[#ebd9c3]/30 px-1.5 py-0.5 rounded border border-[#5c3c24]/10">{item.carreta || '---'}</span>
-                        </div>
-                        {item.motorista && (
-                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                            <span className="text-[9px] font-black text-[#5c3c24]/60 uppercase tracking-wider">Mot:</span>
-                            <span className="text-xs font-bold text-[#311f14] truncate max-w-[155px]">{item.motorista}</span>
-                          </div>
-                        )}
-                        <div className="hidden items-center gap-1.5 mt-1.5 flex-wrap">
-                          <span className="text-[9px] font-black text-[#5c3c24]/60 uppercase tracking-wider">Destino:</span>
-                          <span className="text-xs font-black text-[#8c060a] uppercase tracking-wide font-sans truncate max-w-[155px]">{item.destino || '---'}</span>
-                        </div>
-                      </div>
-                    </div>
+                      {/* Header with Mercosul Plate & Info */}
+                      <div className="flex items-start gap-3 pr-10">
+                        <LicensePlate plate={item.cavalo} />
+                        
+                        <div className="flex flex-col min-w-0">
+                          {item.motorista ? (
+                            <span className="text-xs font-serif font-black text-[#311f14] leading-tight truncate">
+                              {item.motorista}
+                            </span>
+                          ) : (
+                            <span className="text-xs font-serif font-bold text-[#5c3c24]/60 leading-tight">
+                              Motorista não inf.
+                            </span>
+                          )}
 
-                    {/* Interactive Dropdown Tap Zones */}
-                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#5c3c24]/10">
-                      {/* Está no Pátio select zone */}
-                      <div className="flex flex-col gap-1 text-left">
-                        <span className="text-[8.5px] font-black text-[#5c3c24]/75 uppercase tracking-wider pl-1 font-sans">No Pátio?</span>
-                        <div className="relative">
-                          <select 
-                            value={item.estaNoPatio} 
-                            onChange={(e) => updatePatioData(item.id, 'estaNoPatio', e.target.value as 'Sim' | 'Não')} 
-                            className={cn(
-                              "w-full bg-gradient-to-b from-[#a27a5d] to-[#835835] border-2 border-[#5c3c24]/50 text-[#fdefd1] font-black text-[10.5px] uppercase tracking-widest rounded-xl py-2 pl-3 pr-7 shadow-sm outline-none cursor-pointer hover:from-[#bfa186] hover:to-[#926b4c] transition-all appearance-none text-center"
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            {item.carreta && (
+                              <span className="text-[9px] font-mono font-bold bg-[#ebd9c3]/50 text-[#5c3c24] px-1.5 py-0.5 rounded border border-[#5c3c24]/20">
+                                Carreta: {item.carreta}
+                              </span>
                             )}
-                          >
-                            <option value="Sim" className="bg-[#5c3c24] text-[#fdefd1]">SIM</option>
-                            <option value="Não" className="bg-[#5c3c24] text-[#fdefd1]">NÃO</option>
-                          </select>
-                          <div className="absolute top-1/2 right-2.5 -translate-y-1/2 pointer-events-none text-[#fdefd1] text-[7.5px]">
-                            ▼
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Assinou select zone */}
-                      <div className="flex flex-col gap-1 text-left">
-                        <span className="text-[8.5px] font-black text-[#5c3c24]/75 uppercase tracking-wider pl-1 font-sans">Assinado?</span>
-                        <div className="relative">
-                          <select 
-                            value={item.assinado} 
-                            onChange={(e) => handleAssinadoChange(item.id, e.target.value)} 
-                            className={cn(
-                              "w-full bg-gradient-to-b from-[#a27a5d] to-[#835835] border-2 border-[#5c3c24]/50 text-[#fdefd1] font-black text-[10.5px] uppercase tracking-widest rounded-xl py-2 pl-3 pr-7 shadow-sm outline-none cursor-pointer hover:from-[#bfa186] hover:to-[#926b4c] transition-all appearance-none text-center"
+                            {item.destino && (
+                              <span className="text-[9px] font-bold text-[#8c060a] bg-red-50 px-1.5 py-0.5 rounded border border-red-200 truncate max-w-[120px]">
+                                {item.destino}
+                              </span>
                             )}
-                          >
-                            <option value="Sim" className="bg-[#5c3c24] text-[#fdefd1]">SIM</option>
-                            <option value="Não" className="bg-[#5c3c24] text-[#fdefd1]">NÃO</option>
-                          </select>
-                          <div className="absolute top-1/2 right-2.5 -translate-y-1/2 pointer-events-none text-[#fdefd1] text-[7.5px]">
-                            ▼
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                  </div>
-                ))
+                      {/* 1-Tap Mobile Action Toggles */}
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#5c3c24]/10">
+                        {/* No Pátio Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => updatePatioData(item.id, 'estaNoPatio', isInPatio ? 'Não' : 'Sim')}
+                          className={cn(
+                            "py-2 px-3 rounded-xl border text-[10px] font-serif font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer",
+                            isInPatio
+                              ? "bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-900 shadow-emerald-900/20"
+                              : "bg-[#ebd9c3]/60 hover:bg-[#ebd9c3] text-[#5c3c24] border-[#5c3c24]/30"
+                          )}
+                        >
+                          <span className={cn("w-2 h-2 rounded-full", isInPatio ? "bg-white animate-pulse" : "bg-[#5c3c24]/40")} />
+                          <span>{isInPatio ? "No Pátio: SIM" : "No Pátio: NÃO"}</span>
+                        </button>
+
+                        {/* Assinado Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => handleAssinadoChange(item.id, isSigned ? 'Não' : 'Sim')}
+                          className={cn(
+                            "py-2 px-3 rounded-xl border text-[10px] font-serif font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer",
+                            isSigned
+                              ? "bg-sky-700 hover:bg-sky-800 text-white border-sky-900 shadow-sky-900/20"
+                              : "bg-[#ebd9c3]/60 hover:bg-[#ebd9c3] text-[#5c3c24] border-[#5c3c24]/30"
+                          )}
+                        >
+                          <span className={cn("w-2 h-2 rounded-full", isSigned ? "bg-white animate-pulse" : "bg-[#5c3c24]/40")} />
+                          <span>{isSigned ? "Assinado: SIM" : "Assinado: NÃO"}</span>
+                        </button>
+                      </div>
+
+                    </div>
+                  );
+                })
               )}
             </div>
 

@@ -54,6 +54,7 @@ import Controle from './components/Controle';
 import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
+import { MobileBottomDock, MobileTopBar } from './components/MobileDock';
 import { 
   PageDefinition, 
   getAllAvailablePages, 
@@ -123,28 +124,44 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
 
-  // Dynamic visible tabs calculation
-  const visibleTabs = [
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  const mobileTabs = [
     { id: 'menu', label: 'Início', icon: LayoutGrid },
-    ...availablePages
-      .filter(p => Boolean(pageVisibility[p.id]))
-      .map(p => {
-        const found = allTabs.find(t => t.id === p.id);
-        const IconComponent = ICON_MAP[p.iconName] || found?.icon || Sliders;
-        return {
-          id: p.id,
-          label: p.label,
-          icon: IconComponent
-        };
-      })
+    { id: 'presence', label: 'Lista de Presença', icon: Users2 },
+    { id: 'patio', label: 'Pátio', icon: Container }
   ];
+
+  // Dynamic visible tabs calculation (mobile strictly limits to Início, Lista de Presença, and Pátio)
+  const visibleTabs = isMobile
+    ? mobileTabs
+    : [
+        { id: 'menu', label: 'Início', icon: LayoutGrid },
+        ...availablePages
+          .filter(p => Boolean(pageVisibility[p.id]))
+          .map(p => {
+            const found = allTabs.find(t => t.id === p.id);
+            const IconComponent = ICON_MAP[p.iconName] || found?.icon || Sliders;
+            return {
+              id: p.id,
+              label: p.label,
+              icon: IconComponent
+            };
+          })
+      ];
 
   const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
   const [smCreatorView, setSmCreatorView] = useState<'generator' | 'codes'>('generator');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
-  const [isMobile, setIsMobile] = useState(false);
+
+  // Enforce mobile restriction: only menu, presence, and patio
+  useEffect(() => {
+    if (isMobile && activeTab !== 'menu' && activeTab !== 'presence' && activeTab !== 'patio') {
+      setActiveTab('menu');
+    }
+  }, [isMobile, activeTab]);
 
   const [appointments, setAppointments] = useState<Record<string, Appointment>>({});
   const [isAlertDismissed, setIsAlertDismissed] = useState(false);
@@ -405,11 +422,20 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full">
+      <div className={cn("flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full", isMobile ? "pb-24" : "")}>
         
-        {/* Top Header (Only on active modules) */}
-        {activeTab !== 'menu' && (
-          <header className="py-3 shrink-0 flex items-center justify-center px-4 sm:px-8 z-50 relative pointer-events-none w-full">
+        {/* Mobile Top Header (When in subpage on mobile) */}
+        {isMobile && activeTab !== 'menu' && (
+          <MobileTopBar 
+            activeTab={activeTab} 
+            onBack={() => setActiveTab('menu')} 
+            onSelectTab={(tabId) => setActiveTab(tabId as Tab)} 
+          />
+        )}
+
+        {/* Desktop Top Header (Only on active modules) */}
+        {!isMobile && activeTab !== 'menu' && (
+          <header className="hidden md:flex py-3 shrink-0 items-center justify-center px-4 sm:px-8 z-50 relative pointer-events-none w-full">
             {/* Centered Navigation Dock */}
             <div className="flex items-center justify-center pointer-events-auto max-w-full overflow-x-auto no-scrollbar py-1">
               <AnimatePresence>
@@ -750,7 +776,7 @@ export default function App() {
         )}>
           <div className={cn(
             "w-full max-w-[102rem] mx-auto relative z-10 flex flex-col transition-all duration-500",
-            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-4 sm:p-6 md:p-8"
+            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-2.5 sm:p-6 md:p-8 pb-28 md:pb-8"
           )}>
 
 
@@ -823,6 +849,15 @@ export default function App() {
               <span className="hidden sm:inline">Criado por </span><span className="text-[#e2c19e] font-black">Jefferson</span>
             </span>
           </footer>
+        )}
+
+        {/* Mobile Bottom Navigation Dock */}
+        {isMobile && (
+          <MobileBottomDock
+            activeTab={activeTab}
+            onSelectTab={(tabId) => setActiveTab(tabId as Tab)}
+            appointmentsCount={activeTodayApps.length}
+          />
         )}
 
       </div>

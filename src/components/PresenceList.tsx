@@ -86,6 +86,18 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   const [newAppType, setNewAppType] = useState<'pessoal' | 'corporativo'>('corporativo');
   const [showAllAppsDropdown, setShowAllAppsDropdown] = useState(false);
 
+  // Mobile navigation state
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const [mobileTab, setMobileTab] = useState<'calendario' | 'agenda'>('calendario');
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Modal para Agendar Lembrete ao Clicar em um Dia do Calendário
   const [showDayReminderModal, setShowDayReminderModal] = useState(false);
   const [reminderTitle, setReminderTitle] = useState('');
@@ -679,11 +691,44 @@ export default function PresenceList({ onBack }: PresenceListProps) {
               </div>
             </div>
 
+            {/* Mobile Segmented Switcher */}
+            <div className="flex md:hidden w-full bg-[#3d2516]/90 p-1 border-2 border-[#5c3e29] rounded-2xl shadow-md gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setMobileTab('calendario')}
+                className={cn(
+                  "flex-1 py-2.5 text-[10px] font-serif font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                  mobileTab === 'calendario'
+                    ? "bg-gradient-to-b from-[#B32025] to-[#780d11] text-white shadow-md border border-white/20"
+                    : "text-[#d4bc96] hover:bg-white/5"
+                )}
+              >
+                <Calendar size={14} />
+                <span>Calendário & Escala</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileTab('agenda')}
+                className={cn(
+                  "flex-1 py-2.5 text-[10px] font-serif font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                  mobileTab === 'agenda'
+                    ? "bg-gradient-to-b from-[#B32025] to-[#780d11] text-white shadow-md border border-white/20"
+                    : "text-[#d4bc96] hover:bg-white/5"
+                )}
+              >
+                <Clock size={14} />
+                <span>Agenda ({(Object.values(appointments || {}) as Appointment[]).filter(a => a && a.date === selectedDate).length})</span>
+              </button>
+            </div>
+
             {/* Bottom 2-Panel Area */}
             <div className="flex flex-col md:flex-row gap-5 flex-1 min-h-0 pt-2">
               
               {/* Left Inner: Calendar */}
-              <div className="w-full md:w-[48%] md:max-w-[340px] md:self-start flex flex-col shrink-0 rounded-3xl overflow-hidden border border-[#eedecb] shadow-xl bg-gradient-to-b from-[#fffbf7] to-[#FAF6ED]">
+              <div className={cn(
+                "w-full md:w-[48%] md:max-w-[340px] md:self-start flex flex-col shrink-0 rounded-3xl overflow-hidden border border-[#eedecb] shadow-xl bg-gradient-to-b from-[#fffbf7] to-[#FAF6ED]",
+                mobileTab === 'calendario' ? "flex" : "hidden md:flex"
+              )}>
                 
                 {/* Calendar Header with premium brand look */}
                 <div className="bg-[#1c1008] text-white flex items-center justify-between py-3 px-4 select-none shadow-sm relative">
@@ -779,10 +824,69 @@ export default function PresenceList({ onBack }: PresenceListProps) {
                     ))}
                   </div> {/* Days cells */}
                 </div> {/* Calendar Grid */}
+
+                {/* Mobile Day Status Quick Actions (when viewing calendar on mobile) */}
+                <div className="flex md:hidden flex-col gap-2.5 p-3.5 bg-[#FAF6ED] border-t border-[#eedecb]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-serif font-bold uppercase text-[#3e2516]">
+                      {formatLocalDate(selectedDate)}
+                    </span>
+                    <span className="text-[9px] font-mono text-[#8c6b4e] font-bold">18:00 - 06:00</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, 'trabalhei')}
+                      className={cn(
+                        "py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 shadow-sm",
+                        dayStatuses[selectedDate] === 'trabalhei'
+                          ? "bg-emerald-700 text-white border-emerald-800 font-black"
+                          : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50"
+                      )}
+                    >
+                      🟢 Trabalhei
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, 'folga')}
+                      className={cn(
+                        "py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 shadow-sm",
+                        dayStatuses[selectedDate] === 'folga'
+                          ? "bg-amber-700 text-white border-amber-800 font-black"
+                          : "bg-white text-amber-800 border-amber-200 hover:bg-amber-50"
+                      )}
+                    >
+                      🟡 Folga
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, 'falta')}
+                      className={cn(
+                        "py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 shadow-sm",
+                        dayStatuses[selectedDate] === 'falta'
+                          ? "bg-red-700 text-white border-red-800 font-black"
+                          : "bg-white text-red-800 border-red-200 hover:bg-red-50"
+                      )}
+                    >
+                      🔴 Falta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, '')}
+                      className="py-2 px-1 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 bg-white text-stone-600 border-stone-300 hover:bg-stone-100 shadow-sm"
+                    >
+                      ⚪ Limpar
+                    </button>
+                  </div>
+                </div>
+
               </div> {/* Left Inner: Calendar */}
 
               {/* Right Inner: Stats & Interactive Controls */}
-              <div className="flex flex-col flex-1 gap-4 relative min-h-[300px] w-full">
+              <div className={cn(
+                "flex flex-col flex-1 gap-4 relative min-h-[300px] w-full",
+                mobileTab === 'agenda' ? "flex" : "hidden md:flex"
+              )}>
                 
                 {/* AGENDA DE COMPROMISSOS (Novo Módulo Solicitado) */}
                 <div className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-2xl p-5 shadow-lg flex flex-col gap-4">

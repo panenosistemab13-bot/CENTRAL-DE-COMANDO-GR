@@ -1,268 +1,353 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
-  Package, 
   Users2, 
-  ClipboardCheck,
-  Heart,
-  Lock,
-  Unlock,
-  ShieldCheck,
-  Sparkles,
-  Globe,
-  LogOut,
-  Container,
-  FileCheck2,
-  CalendarDays,
-  Route,
-  Sliders,
-  ShieldAlert
+  Container, 
+  Heart, 
+  Lock, 
+  Unlock, 
+  ShieldCheck, 
+  Sparkles, 
+  LogOut, 
+  Clock, 
+  Calendar, 
+  Truck, 
+  ChevronRight,
+  Activity,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { PageDefinition, ICON_MAP, getAllAvailablePages } from '../data/pagesConfig';
-
-interface MobileMenuItem {
-  id: string;
-  subtitle: string;
-  title: string;
-  icon: React.ElementType;
-  styleClass: string;
-  iconStyle: string;
-  badge?: string;
-}
-
-const baseMobileItems: Record<string, { subtitle: string; title: string; icon: React.ElementType; styleClass: string; iconStyle: string; badge?: string }> = {
-  slides: { 
-    subtitle: 'COMMAND CENTER 4K HUD', 
-    title: 'SLIDES HUD', 
-    icon: Globe,
-    styleClass: "bg-gradient-to-br from-[#030712] via-[#0b1329] to-[#050b18] border border-cyan-500/60 shadow-[0_12px_30px_rgba(0,240,255,0.35),inset_0_1px_1px_rgba(0,240,255,0.3)] text-cyan-200",
-    iconStyle: "bg-gradient-to-br from-cyan-950 to-slate-900 border-cyan-400/50 text-cyan-300",
-    badge: '4K HUD 3D'
-  },
-  patio: { 
-    subtitle: 'CONTROLE LOGÍSTICO', 
-    title: 'PÁTIO', 
-    icon: Container,
-    styleClass: "bg-gradient-to-br from-[#26150b] via-[#3a2214] to-[#1c0f0a] border border-[#5c3e29]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.15)] text-[#f5ebd6]",
-    iconStyle: "bg-gradient-to-br from-[#3a2214] to-[#1c0f0a] border-[#e6c29b]/40 text-[#e6c29b]",
-    badge: 'Gerenciar Pátio'
-  },
-  checklist: { 
-    subtitle: 'VISTORIAS & FROTA', 
-    title: 'CHECKLIST', 
-    icon: ClipboardCheck,
-    styleClass: "bg-gradient-to-br from-[#331e11] via-[#24130a] to-[#150a06] border border-[#6b472e]/70 shadow-[0_12px_30px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.12)] text-[#edd9bf]",
-    iconStyle: "bg-gradient-to-br from-[#24130a] to-[#0f0704] border-[#dac2ad]/30 text-[#dac2ad]",
-    badge: 'Inspeção'
-  },
-  averbacao: { 
-    subtitle: 'SEGUROS & APÓLICES', 
-    title: 'AVERBAÇÃO', 
-    icon: FileCheck2,
-    styleClass: "bg-gradient-to-br from-[#2d1a0e] via-[#3d2414] to-[#1c0f0a] border border-[#7a4f30]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65)] text-[#f5ebd6]",
-    iconStyle: "bg-gradient-to-br from-[#4a2e1d] to-[#26150b] border-[#e6c29b]/40 text-[#e6c29b]",
-    badge: 'Seguros'
-  },
-  sm_creator: { 
-    subtitle: 'EVENTOS & PGR', 
-    title: 'SM MONITORAMENTO', 
-    icon: CalendarDays,
-    styleClass: "bg-gradient-to-br from-[#2a170b] via-[#382011] to-[#190c06] border border-[#6b4428]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65)] text-[#f5ebd6]",
-    iconStyle: "bg-gradient-to-br from-[#3d2414] to-[#1e0e06] border-[#e6c29b]/40 text-[#e6c29b]",
-    badge: 'Viagens'
-  },
-  controle: { 
-    subtitle: 'OPERAÇÕES GERAIS', 
-    title: 'CONTROLE', 
-    icon: Sliders,
-    styleClass: "bg-gradient-to-br from-[#311b0e] via-[#422513] to-[#1f0f07] border border-[#85532f]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65)] text-[#f5ebd6]",
-    iconStyle: "bg-gradient-to-br from-[#4d2d18] to-[#24130a] border-[#e6c29b]/40 text-[#e6c29b]",
-    badge: 'Gerais'
-  },
-  presence: { 
-    subtitle: 'EQUIPE & ESCALA', 
-    title: 'LISTA DE PRESENÇA', 
-    icon: Users2,
-    styleClass: "bg-gradient-to-br from-[#d4bc96] via-[#c2a67e] to-[#ab8f66] border border-[#f5ebd6]/40 shadow-[0_12px_30px_rgba(0,0,0,0.5),inset_0_1px_2px_rgba(255,255,255,0.6)] text-[#2d1a0e]",
-    iconStyle: "bg-gradient-to-br from-[#bda37d] to-[#997e57] border-[#2d1a0e]/20 text-[#2d1a0e]",
-    badge: 'Diário'
-  },
-  rotas: { 
-    subtitle: 'LOGÍSTICA & TRAJETOS', 
-    title: 'ROTAS', 
-    icon: Route,
-    styleClass: "bg-gradient-to-br from-[#2f1b0f] via-[#3f2414] to-[#1c0e07] border border-[#784a29]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65)] text-[#f5ebd6]",
-    iconStyle: "bg-gradient-to-br from-[#472a17] to-[#211107] border-[#e6c29b]/40 text-[#e6c29b]",
-    badge: 'Mapeamento'
-  }
-};
+import { rtdb as db } from '../firebase';
+import { ref, onValue } from 'firebase/database';
 
 interface MobileMenuProps {
   onSelect: (id: string) => void;
-  showPresenceList?: boolean;
-  showRotasPage?: boolean;
-  showSlides?: boolean;
   pageVisibility?: Record<string, boolean>;
-  availablePages?: PageDefinition[];
-  onUnlockPresenceList: () => void;
+  availablePages?: any[];
+  onUnlockPresenceList?: () => void;
   onLogout?: () => void;
 }
 
 export default function MobileMenu({ 
   onSelect, 
-  showPresenceList, 
-  showRotasPage, 
-  showSlides, 
   pageVisibility,
-  availablePages,
   onUnlockPresenceList, 
   onLogout 
 }: MobileMenuProps) {
-  const allPages = availablePages || getAllAvailablePages();
+  const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
+  const [patioCount, setPatioCount] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [isEscalaWorkDay, setIsEscalaWorkDay] = useState<boolean>(true);
 
-  const menuItemsList: MobileMenuItem[] = allPages.map(page => {
-    const config = baseMobileItems[page.id];
-    const IconComp = ICON_MAP[page.iconName] || config?.icon || Sliders;
-    
-    return {
-      id: page.id,
-      subtitle: config?.subtitle || page.category?.toUpperCase() || 'MÓDULO PGR',
-      title: page.label?.toUpperCase() || 'MÓDULO',
-      icon: IconComp,
-      styleClass: config?.styleClass || "bg-gradient-to-br from-[#26150b] via-[#3a2214] to-[#1c0f0a] border border-[#5c3e29]/60 shadow-[0_12px_30px_rgba(0,0,0,0.65)] text-[#f5ebd6]",
-      iconStyle: config?.iconStyle || "bg-gradient-to-br from-[#3a2214] to-[#1c0f0a] border-[#e6c29b]/40 text-[#e6c29b]",
-      badge: page.badge || config?.badge || 'Oficial'
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch appointments for mobile preview
+  useEffect(() => {
+    const appsRef = ref(db, 'presence_list/appointments');
+    const unsubApps = onValue(appsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setAppointmentsCount(Object.keys(data).length);
+      } else {
+        setAppointmentsCount(0);
+      }
+    });
+
+    const patioRef = ref(db, 'patio_items');
+    const unsubPatio = onValue(patioRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setPatioCount(Object.keys(data).length);
+      } else {
+        setPatioCount(0);
+      }
+    });
+
+    const escalaRef = ref(db, 'presence_list/escalaConfig');
+    const unsubEscala = onValue(escalaRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.startDate) {
+        const refDate = new Date(data.startDate + 'T12:00:00');
+        const today = new Date();
+        const diffDays = Math.round((today.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24));
+        setIsEscalaWorkDay(Math.abs(diffDays) % 2 === 0);
+      }
+    });
+
+    return () => {
+      unsubApps();
+      unsubPatio();
+      unsubEscala();
     };
-  });
+  }, []);
 
-  const filteredMenuItems = menuItemsList.filter(item => {
-    if (pageVisibility && pageVisibility[item.id] !== undefined) {
-      return Boolean(pageVisibility[item.id]);
-    }
-    if (item.id === 'presence') return Boolean(showPresenceList);
-    if (item.id === 'rotas') return Boolean(showRotasPage);
-    if (item.id === 'slides') return Boolean(showSlides);
-    return true;
-  });
+  const formattedDate = currentTime.toLocaleDateString('pt-BR', { 
+    weekday: 'short', 
+    day: '2-digit', 
+    month: 'short' 
+  }).toUpperCase();
 
-  const itemsToRender = filteredMenuItems.length > 0 ? filteredMenuItems : menuItemsList.slice(0, 1);
+  const formattedTime = currentTime.toLocaleTimeString('pt-BR', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
 
   return (
-    <div className="w-full min-h-screen bg-[#140b07] relative flex flex-col justify-between overflow-x-hidden select-none px-5 py-6">
+    <div className="w-full min-h-screen bg-[#120905] text-[#f5ebd6] relative flex flex-col justify-between overflow-x-hidden select-none pb-28">
       
-      {/* Background ambient lighting and luxury depth */}
+      {/* Immersive Mobile Background Ambient Lighting */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-80 h-80 bg-[#B32025]/15 rounded-full blur-[90px]" />
-        <div className="absolute top-1/2 -right-32 w-80 h-80 bg-[#c2a67e]/10 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(10,5,3,0.85)_100%)]" />
+        <div className="absolute -top-24 -left-20 w-72 h-72 bg-[#B32025]/20 rounded-full blur-[80px]" />
+        <div className="absolute top-1/3 -right-20 w-72 h-72 bg-[#d4a373]/15 rounded-full blur-[90px]" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-80 h-80 bg-[#422212]/30 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(10,5,3,0.95)_100%)]" />
       </div>
 
-      {/* TOP HEADER: Sophisticated Branding & Status */}
-      <div className="relative z-10 w-full flex items-center justify-between pt-2 pb-6 border-b border-[#ffffff]/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#730c10] flex items-center justify-center shadow-lg border border-white/20">
-            <ShieldCheck size={20} className="text-white" />
+      {/* TOP HEADER: Mobile Native Status & Header Bar */}
+      <header className="relative z-10 w-full px-4 pt-4 pb-3 border-b border-white/10 bg-[#1a0e08]/80 backdrop-blur-md sticky top-0 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#730c10] flex items-center justify-center shadow-lg border border-white/20 shrink-0">
+              <ShieldCheck size={22} className="text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-serif text-base font-black tracking-wider text-[#F5EFE6] uppercase leading-none">
+                  Três Corações
+                </h1>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="RTDB Online" />
+              </div>
+              <p className="text-[10px] font-mono tracking-widest text-[#c2a67e] uppercase font-bold mt-0.5">
+                App Mobile PGR
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-serif text-lg font-black tracking-wider text-[#F5EFE6] uppercase leading-none">
-              Três Corações
-            </h1>
-            <span className="text-[9px] font-mono tracking-[0.2em] text-[#c2a67e] uppercase font-bold mt-1 block">
-              Painel Executivo Mobile
+
+          <div className="flex items-center gap-2">
+            <div className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-right">
+              <div className="text-[11px] font-mono font-bold text-[#F5EFE6] leading-none">
+                {formattedTime}
+              </div>
+              <div className="text-[8px] font-mono text-[#c2a67e] uppercase">
+                {formattedDate}
+              </div>
+            </div>
+
+            {onUnlockPresenceList && (
+              <button
+                type="button"
+                onClick={onUnlockPresenceList}
+                className="w-9 h-9 rounded-xl bg-white/5 active:bg-white/15 border border-white/10 flex items-center justify-center text-[#c2a67e] transition-colors cursor-pointer"
+                title="Configurações"
+              >
+                <Lock size={15} />
+              </button>
+            )}
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="w-9 h-9 rounded-xl bg-[#B32025]/80 active:bg-[#B32025] border border-white/20 flex items-center justify-center text-white transition-colors cursor-pointer shadow"
+                title="Sair"
+              >
+                <LogOut size={15} />
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* MAIN CONTAINER */}
+      <main className="relative z-10 w-full max-w-md mx-auto px-4 pt-4 flex flex-col gap-4">
+        
+        {/* WELCOME & SHIFT SUMMARY WIDGET */}
+        <div className="w-full rounded-2xl bg-gradient-to-br from-[#2a170d] via-[#1f1008] to-[#140a05] border border-[#7a4f30]/40 p-3.5 shadow-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#c2a67e] font-bold flex items-center gap-1.5">
+              <Activity size={12} className="text-amber-400" /> Visão Geral do Turno
+            </span>
+            <span className={cn(
+              "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border",
+              isEscalaWorkDay 
+                ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40" 
+                : "bg-amber-950/80 text-amber-300 border-amber-500/40"
+            )}>
+              {isEscalaWorkDay ? "Escala: Dia de Trabalho" : "Escala: Folga"}
             </span>
           </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="bg-[#120804]/80 rounded-xl p-2.5 border border-white/5 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#d4a373]/20 flex items-center justify-center text-[#e6c29b]">
+                <Calendar size={16} />
+              </div>
+              <div>
+                <div className="text-[9px] font-mono uppercase text-[#c2a67e]/80">Agendamentos</div>
+                <div className="text-sm font-serif font-black text-white">{appointmentsCount} registros</div>
+              </div>
+            </div>
+
+            <div className="bg-[#120804]/80 rounded-xl p-2.5 border border-white/5 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#B32025]/20 flex items-center justify-center text-[#ff6b6b]">
+                <Truck size={16} />
+              </div>
+              <div>
+                <div className="text-[9px] font-mono uppercase text-[#c2a67e]/80">Pátio Ativo</div>
+                <div className="text-sm font-serif font-black text-white">{patioCount} veículos</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onLogout && (
+        {/* SECTION TITLE */}
+        <div className="flex items-center justify-between px-1 pt-1">
+          <div>
+            <h2 className="text-xs font-mono uppercase tracking-[0.2em] text-[#c2a67e] font-black">
+              Módulos Disponíveis
+            </h2>
+            <p className="text-lg font-serif font-black text-[#F5EFE6]">
+              Acesse as Operações
+            </p>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-[#c2a67e] border border-white/10">
+            Mobile 2 de 2
+          </span>
+        </div>
+
+        {/* 100% MOBILE CARD 1: LISTA DE PRESENÇA */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onSelect('presence')}
+          className="w-full text-left rounded-3xl p-5 bg-gradient-to-br from-[#3b2314] via-[#28150a] to-[#160a04] border-2 border-[#8c5a35]/60 shadow-[0_16px_35px_rgba(0,0,0,0.7)] relative overflow-hidden group cursor-pointer transition-all duration-200"
+        >
+          {/* Subtle light accent */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="flex items-start justify-between relative z-10 mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#d4bc96] via-[#c2a67e] to-[#ab8f66] flex items-center justify-center text-[#2d1a0e] shadow-lg border border-amber-200/40 shrink-0">
+              <Users2 size={28} strokeWidth={2.3} />
+            </div>
+
+            <div className="flex flex-col items-end">
+              <span className="px-2.5 py-1 rounded-full bg-amber-900/40 border border-amber-500/30 text-[#e6c29b] text-[9px] font-mono font-bold uppercase tracking-wider mb-1">
+                Controle Diário
+              </span>
+              <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#B32025] flex items-center justify-center text-white transition-colors duration-200">
+                <ChevronRight size={18} />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10">
+            <span className="text-[9px] font-mono tracking-[0.2em] uppercase font-bold text-[#c2a67e] block mb-1">
+              ESCALA & EFETIVO
+            </span>
+            <h3 className="text-xl font-serif font-black uppercase text-[#F5EFE6] tracking-tight leading-tight">
+              Lista de Presença
+            </h3>
+            <p className="text-xs text-[#d9c7b2]/80 mt-1 line-clamp-2 leading-relaxed">
+              Escala 12x36, registro diário de jornada, banco de horas e agenda corporativa.
+            </p>
+
+            <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-white/10">
+              <span className="px-2 py-0.5 rounded-lg bg-black/40 text-[9px] font-mono text-[#c2a67e] border border-white/5">
+                📅 Escala Automática
+              </span>
+              <span className="px-2 py-0.5 rounded-lg bg-black/40 text-[9px] font-mono text-[#c2a67e] border border-white/5">
+                ⏱️ Banco de Horas
+              </span>
+              <span className="px-2 py-0.5 rounded-lg bg-black/40 text-[9px] font-mono text-[#c2a67e] border border-white/5">
+                🔔 Agendamentos
+              </span>
+            </div>
+          </div>
+        </motion.button>
+
+        {/* 100% MOBILE CARD 2: PÁTIO */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onSelect('patio')}
+          className="w-full text-left rounded-3xl p-5 bg-gradient-to-br from-[#2f180d] via-[#200f07] to-[#120703] border-2 border-[#7a4826]/60 shadow-[0_16px_35px_rgba(0,0,0,0.7)] relative overflow-hidden group cursor-pointer transition-all duration-200"
+        >
+          {/* Subtle light accent */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#B32025]/15 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-start justify-between relative z-10 mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4d2816] via-[#381a0b] to-[#240e04] flex items-center justify-center text-[#f5ebd6] shadow-lg border border-[#e6c29b]/30 shrink-0">
+              <Container size={28} strokeWidth={2.3} className="text-[#e6c29b]" />
+            </div>
+
+            <div className="flex flex-col items-end">
+              <span className="px-2.5 py-1 rounded-full bg-red-950/60 border border-red-500/30 text-red-300 text-[9px] font-mono font-bold uppercase tracking-wider mb-1">
+                Logística & Docas
+              </span>
+              <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#B32025] flex items-center justify-center text-white transition-colors duration-200">
+                <ChevronRight size={18} />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10">
+            <span className="text-[9px] font-mono tracking-[0.2em] uppercase font-bold text-[#c2a67e] block mb-1">
+              MOVIMENTAÇÃO DE VEÍCULOS
+            </span>
+            <h3 className="text-xl font-serif font-black uppercase text-[#F5EFE6] tracking-tight leading-tight">
+              Gestão de Pátio
+            </h3>
+            <p className="text-xs text-[#d9c7b2]/80 mt-1 line-clamp-2 leading-relaxed">
+              Controle de fluxo de caminhões, conferência de placas Mercosul, docas e motoristas.
+            </p>
+
+            <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-white/10">
+              <span className="px-2 py-0.5 rounded-lg bg-black/40 text-[9px] font-mono text-[#c2a67e] border border-white/5">
+                🚛 Entradas & Saídas
+              </span>
+              <span className="px-2 py-0.5 rounded-lg bg-black/40 text-[9px] font-mono text-[#c2a67e] border border-white/5">
+                🏷️ Placas Mercosul
+              </span>
+              <span className="px-2 py-0.5 rounded-lg bg-black/40 text-[9px] font-mono text-[#c2a67e] border border-white/5">
+                📦 Status de Carga
+              </span>
+            </div>
+          </div>
+        </motion.button>
+
+        {/* QUICK SHORTCUT ACTION BAR FOR MOBILE */}
+        <div className="w-full bg-[#1c0e07]/90 rounded-2xl p-3 border border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles size={14} className="text-amber-400" />
+            <span className="text-xs font-mono uppercase font-bold text-[#e6c29b]">
+              Ações Rápidas
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onLogout}
-              className="px-3 py-2 rounded-xl bg-[#B32025] hover:bg-[#9a1a1e] border border-white/25 flex items-center gap-1.5 text-white font-serif font-black text-xs transition-colors cursor-pointer shadow"
-              title="Sair"
+              onClick={() => onSelect('presence')}
+              className="px-3 py-1.5 rounded-xl bg-amber-900/30 hover:bg-amber-900/50 border border-amber-500/30 text-[10px] font-bold text-amber-200 uppercase tracking-wide transition-colors"
             >
-              <LogOut size={14} /> Sair
+              Presença
             </button>
-          )}
-
-          {/* Secret Unlock Button */}
-          <button
-            type="button"
-            onClick={onUnlockPresenceList}
-            className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-[#c2a67e] transition-colors cursor-pointer"
-            title="Acesso Administrativo / Páginas Restritas"
-          >
-            {pageVisibility?.presence || showPresenceList ? <Unlock size={15} className="text-green-400" /> : <Lock size={15} />}
-          </button>
-        </div>
-      </div>
-
-      {/* CENTER CONTENT: High-End Dynamic Cards */}
-      <div className="relative z-10 w-full max-w-sm mx-auto flex flex-col gap-4 my-auto py-4">
-        
-        <div className="text-center mb-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#c2a67e] text-[10px] font-mono tracking-widest uppercase mb-2">
-            <Sparkles size={11} /> Módulos Ativos ({itemsToRender.length})
-          </div>
-          <h2 className="text-2xl font-serif font-black text-[#F5EFE6] uppercase tracking-tight">
-            Selecione o Serviço
-          </h2>
-        </div>
-
-        {itemsToRender.map((item, index) => {
-          const IconComponent = item.icon;
-          return (
-            <motion.button
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.06, duration: 0.35 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onSelect(item.id)}
-              className={cn(
-                "w-full rounded-3xl p-4.5 flex items-center justify-between text-left relative overflow-hidden group cursor-pointer transition-all duration-300",
-                item.styleClass
-              )}
+            <button
+              type="button"
+              onClick={() => onSelect('patio')}
+              className="px-3 py-1.5 rounded-xl bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-[10px] font-bold text-red-200 uppercase tracking-wide transition-colors"
             >
-              {/* Subtle light sheen on hover */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              Pátio
+            </button>
+          </div>
+        </div>
 
-              <div className="flex items-center gap-3.5 relative z-10 min-w-0">
-                <div className={cn(
-                  "w-13 h-13 rounded-2xl border flex items-center justify-center shadow-md shrink-0 transition-transform group-hover:scale-105 duration-300",
-                  item.iconStyle
-                )}>
-                  <IconComponent size={24} strokeWidth={2.2} />
-                </div>
+      </main>
 
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-mono font-black tracking-[0.2em] uppercase opacity-80 truncate">
-                      {item.subtitle}
-                    </span>
-                    {item.badge && (
-                      <span className="px-2 py-0.5 rounded-full bg-black/20 text-[8px] font-bold uppercase tracking-wider border border-white/10 shrink-0">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-serif text-base font-black tracking-wide uppercase leading-tight truncate">
-                    {item.title}
-                  </span>
-                </div>
-              </div>
-
-              <div className="w-8 h-8 rounded-full bg-black/20 flex items-center justify-center border border-white/10 relative z-10 group-hover:translate-x-1 transition-transform shrink-0 ml-2">
-                <span className="text-xs font-bold">→</span>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* FOOTER: Professional Signature */}
-      <div className="relative z-10 w-full text-center pt-6 pb-2 border-t border-white/10">
+      {/* FOOTER */}
+      <footer className="relative z-10 w-full text-center px-4 pt-6 pb-2 border-t border-white/10 mt-6">
         <div className="flex items-center justify-center gap-1.5 mb-1">
           <Heart size={12} className="fill-[#B32025] text-[#B32025]" />
           <Heart size={12} className="fill-[#B32025] text-[#B32025]" />
@@ -271,10 +356,10 @@ export default function MobileMenu({
         <p className="font-serif italic text-xs text-[#F5EFE6]/90 tracking-widest">
           Café Três Corações
         </p>
-        <span className="text-[8px] font-mono text-[#c2a67e]/70 uppercase tracking-[0.25em] mt-1 block">
-          Sistema Profissional de Logística & Vistorias
+        <span className="text-[8px] font-mono text-[#c2a67e]/70 uppercase tracking-[0.25em] mt-0.5 block">
+          Sistema Operacional PGR • Mobile
         </span>
-      </div>
+      </footer>
 
     </div>
   );

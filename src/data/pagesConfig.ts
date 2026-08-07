@@ -88,7 +88,7 @@ export const DEFAULT_PAGES: PageDefinition[] = [
   },
   { 
     id: 'sm_creator', 
-    label: 'SM (Monitoramento)', 
+    label: 'SM', 
     buttonLabel: 'Eventos', 
     category: 'Eventos & PGR',
     iconName: 'CalendarDays',
