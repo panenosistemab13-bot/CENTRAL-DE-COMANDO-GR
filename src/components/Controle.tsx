@@ -31,7 +31,7 @@ import {
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
 import { ref, onValue, set, update } from "firebase/database";
-import Prancheta, { PranchetaRow } from "./Prancheta";
+
 
 // Vintage Screw component
 function Screw({ className }: { className?: string }) {
@@ -80,6 +80,9 @@ const EMBARQUE_IMAGES = [
   { value: "https://lh3.googleusercontent.com/d/17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh", label: "SUPERIOR BATIDO" },
   { value: "https://lh3.googleusercontent.com/d/1JGe0rvxIMqBpMMxclgFpQj47GqVl1VMX", label: "CASTANHA" },
   { value: "https://lh3.googleusercontent.com/d/1kI3l33NFrTlqnDveMgKWHfFfU5WA6OTQ", label: "IZOTONICO" },
+  { value: "https://lh3.googleusercontent.com/d/1EQ5fMDDHViGvBd8-ehlwhyE4yyOc_peH", label: "ALMOFADA" },
+  { value: "https://lh3.googleusercontent.com/d/1-OVNvrvxJ_t6RCj8hQpU0ZDtk3BfVWBV", label: "LADO DIREITO SUPERIOR BATIDO (PORTA)" },
+  { value: "https://lh3.googleusercontent.com/d/14F4wPXwU607GmwqphSzlXk7xZ_EhOdWS", label: "LADO ESQUERDO SUPERIOR BATIDO" },
   { value: "none", label: "Nenhum Embarque" },
 ];
 
@@ -1284,35 +1287,15 @@ Embarque: ${
     }
   };
 
-  const handleUsePranchetaRow = (row: PranchetaRow) => {
-    if (row.noIsca) handleIsca1Change(row.noIsca);
-    if (row.cavalo) setCavalo(row.cavalo);
-    if (row.carreta) setCarreta1(row.carreta);
-    if (row.noNf) setNfInicio(row.noNf);
-    if (row.produto) setProduto1(row.produto);
-    if (row.uma) setUma1(formatUMA(row.uma));
-    if (row.destino) {
-      const destUpper = row.destino.toUpperCase();
-      const matched = DESTINOS_OPCOES.find((d) => d.toUpperCase().includes(destUpper));
-      if (matched) {
-        setDestino(matched);
-      } else {
-        setDestino(row.destino);
-      }
-    }
-    setActiveTab("gerador");
-    alert(`Informações da ISCA ${row.noIsca} aplicadas no Gerador de Controle PGR!`);
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-[#2D1A10] text-stone-100 overflow-hidden font-sans" style={{ zoom: 0.85 }}>
+    <div className="flex flex-col min-h-screen bg-[#F4F8FA] text-[#1E293B] overflow-hidden font-sans" style={{ zoom: 0.85 }}>
       {/* Top Header / Quick Tabs Bar */}
-      <header className="bg-[#3A2414] border-b-2 border-[#6B4423] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xl z-20">
+      <header className="bg-white border-b border-[#D1E1EB] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm z-20">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#B32025] animate-pulse inline-block"></span>
-            <h1 className="text-sm font-black tracking-wider text-[#E8D4B0] uppercase font-serif flex items-center gap-2">
-              <Sliders size={16} className="text-[#C7A26A]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#1E293B] animate-pulse inline-block"></span>
+            <h1 className="text-sm font-black tracking-wider text-[#1E293B] uppercase font-sans flex items-center gap-2">
+              <Sliders size={16} className="text-[#64748B]" />
               CENTRAL DE CONTROLE PGR
             </h1>
           </div>
@@ -1326,37 +1309,18 @@ Embarque: ${
             className={cn(
               "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border shadow-sm",
               activeTab === "gerador"
-                ? "bg-[#B32025] text-white border-[#8c060a]"
-                : "bg-[#21120B] text-[#E8D4B0] border-[#C7A26A]/30 hover:border-[#C7A26A]"
+                ? "bg-[#B32025] text-white border-[#B32025]"
+                : "bg-white text-[#1E293B] border-[#D1E1EB] hover:border-[#64748B]"
             )}
           >
             <Sliders size={14} />
             Gerador PGR
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("prancheta")}
-            className={cn(
-              "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border shadow-sm relative",
-              activeTab === "prancheta"
-                ? "bg-[#B32025] text-white border-[#8c060a]"
-                : "bg-[#21120B] text-[#E8D4B0] border-[#C7A26A]/30 hover:border-[#C7A26A]"
-            )}
-          >
-            <FileText size={14} />
-            Prancheta Digitalizada
           </button>
         </div>
       </header>
 
       {/* Main Workspace Layout */}
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-canvas">
-      {/* TAB CONTENT: Prancheta */}
-      {activeTab === "prancheta" && (
-        <Prancheta onUseRowInControle={handleUsePranchetaRow} />
-      )}
-
       {/* TAB CONTENT: Gerador PGR */}
       {activeTab === "gerador" && (
         <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full">
@@ -1406,12 +1370,12 @@ Embarque: ${
             </div>
 
             {/* EMAIL SUBJECT HEADER BLOCK */}
-            <div className="bg-[#3A2414] border-2 border-[#6B4423] rounded-2xl p-5 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl text-white">
+            <div className="bg-[#F4F8FA] border border-[#D1E1EB] rounded-2xl p-5 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm text-[#1E293B]">
               <div className="flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#E8D4B0] block mb-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B] block mb-1">
                   Assunto do E-mail (Copiar separadamente)
                 </span>
-                <h1 className="text-lg font-serif font-black text-white uppercase tracking-tight m-0 select-all">
+                <h1 className="text-lg font-serif font-black text-[#1E293B] uppercase tracking-tight m-0 select-all">
                   PRÉ-ALERTA DE ISCA - {destino || "BRASÍLIA"} -{" "}
                   {cavalo.replace(/-/g, "") || "TYQ6F51"}
                 </h1>
@@ -1420,10 +1384,10 @@ Embarque: ${
                 type="button"
                 onClick={handleCopySubject}
                 className={cn(
-                  "flex items-center gap-2 font-black uppercase text-[10px] tracking-wider px-5 py-3 rounded-xl shadow-md transition-all cursor-pointer select-none active:scale-95 shrink-0 border-2",
+                  "flex items-center gap-2 font-black uppercase text-[10px] tracking-wider px-5 py-3 rounded-xl shadow-sm transition-all cursor-pointer select-none active:scale-95 shrink-0 border",
                   copiedAssunto
                     ? "bg-emerald-600 text-white border-emerald-500"
-                    : "bg-[#B32025] hover:bg-[#8c060a] text-white border-[#3A2414]/30",
+                    : "bg-[#B32025] hover:bg-[#8c060a] text-white border-[#B32025]/30",
                 )}
               >
                 {copiedAssunto ? (
@@ -1439,8 +1403,8 @@ Embarque: ${
             </div>
 
             {/* PREVIEW CONTAINER - CORPORATE EXECUTIVE OFFICE PREVIEW */}
-            <div className="bg-[#FAF6F0] border-2 border-[#3A2414]/20 rounded-[2rem] p-6 sm:p-7 shadow-xl overflow-x-auto relative">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#3A2414]/70 block mb-5 border-b-2 border-[#3A2414]/10 pb-2">
+            <div className="bg-[#F4F8FA] border border-[#D1E1EB] rounded-[2rem] p-6 sm:p-7 shadow-sm overflow-x-auto relative">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#64748B] block mb-5 border-b border-[#D1E1EB] pb-2">
                 Visualização do Pré-Alerta (Template do E-mail)
               </span>
 
@@ -1887,16 +1851,16 @@ Embarque: ${
                           />
                         </td>
                         <td className="p-1.5 text-center font-bold text-xs bg-slate-50 align-middle">
-                          <div className="flex items-center justify-center gap-1.5">
+                          <div className="flex items-center justify-center gap-1.5 mx-auto w-fit">
                             <input
                               type="text"
                               value={isca2 === "SEM ISCA" ? "" : isca2Bateria}
                               onChange={(e) => setIsca2Bateria(e.target.value)}
                               disabled={isca2 === "SEM ISCA"}
-                              className="w-10 bg-transparent border-none outline-none hover:bg-slate-200/50 focus:bg-slate-200 rounded px-1 py-0.5 text-xs text-right text-slate-900 font-bold transition-all duration-200 disabled:opacity-50"
+                              className="w-12 bg-transparent border-none outline-none hover:bg-slate-200/50 focus:bg-slate-200 rounded px-1 py-0.5 text-xs text-center text-slate-900 font-bold transition-all duration-200 disabled:opacity-50"
                               placeholder={isca2 === "SEM ISCA" ? "" : "100%"}
                             />
-                            <div className="relative flex items-center">
+                            <div className="relative flex items-center shrink-0">
                               <Battery className="w-5 h-5 text-emerald-600 fill-emerald-600/20" />
                               <div 
                                 className="absolute left-[3px] top-[6.5px] h-[7px] bg-emerald-500 rounded-[1px]"
@@ -1931,15 +1895,15 @@ Embarque: ${
                         />
                       </td>
                       <td className="p-1.5 text-center font-bold text-xs bg-white align-middle">
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-center gap-1.5 mx-auto w-fit">
                           <input
                             type="text"
                             value={isca1Bateria}
                             onChange={(e) => setIsca1Bateria(e.target.value)}
-                            className="w-full bg-transparent border-none outline-none hover:bg-slate-100 focus:bg-slate-200/70 rounded px-1 py-0.5 text-xs text-right text-slate-900 font-bold transition-all duration-200"
+                            className="w-12 bg-transparent border-none outline-none hover:bg-slate-100 focus:bg-slate-200/70 rounded px-1 py-0.5 text-xs text-center text-slate-900 font-bold transition-all duration-200"
                             placeholder="100%"
                           />
-                          <div className="relative flex items-center">
+                          <div className="relative flex items-center shrink-0">
                             <Battery className="w-5 h-5 text-emerald-600 fill-emerald-600/20" />
                             <div 
                               className="absolute left-[3px] top-[6.5px] h-[7px] bg-emerald-500 rounded-[1px]"
@@ -2403,7 +2367,7 @@ Embarque: ${
                   <span className="text-[9px] font-extrabold uppercase text-red-600 block mb-1">
                     DISPOSITIVO ISCA 1:
                   </span>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
                         PREFIXO:
@@ -2443,18 +2407,6 @@ Embarque: ${
                         placeholder="RESTO..."
                       />
                     </div>
-                    <div>
-                      <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
-                        BATERIA:
-                      </span>
-                      <input
-                        type="text"
-                        value={isca1Bateria}
-                        onChange={(e) => setIsca1Bateria(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-extrabold text-slate-900 focus:border-red-600 outline-none transition-all"
-                        placeholder="100%"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -2464,7 +2416,7 @@ Embarque: ${
                     <span className="text-[9px] font-extrabold uppercase text-red-600 block mb-1">
                       DISPOSITIVO ISCA 2:
                     </span>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
                           PREFIXO:
@@ -2504,19 +2456,8 @@ Embarque: ${
                           placeholder="RESTO..."
                         />
                       </div>
-                      <div>
-                        <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
-                          BATERIA:
-                        </span>
-                        <input
-                          type="text"
-                          value={isca2Bateria}
-                          onChange={(e) => setIsca2Bateria(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-extrabold text-slate-900 focus:border-red-600 outline-none transition-all"
-                          placeholder="100%"
-                        />
-                      </div>
                     </div>
+
                   </div>
                 )}
               </div>
@@ -2530,38 +2471,26 @@ Embarque: ${
                   <Image size={12} className="text-slate-500" /> EMBARQUE (CARRETA 1: {carreta1})
                 </label>
                 <div className="grid grid-cols-2 gap-2 mt-1">
-                  {EMBARQUE_IMAGES.map((img) => {
-                    const labelUpper = img.label.toUpperCase();
-                    const isZoomed = [
-                      "AMARELIN", 
-                      "CASTANHA", 
-                      "IZOTONICO", 
-                      "SUPERIOR BATIDO", 
-                      "CARGA BATIDA (PADRÃO)"
-                    ].includes(labelUpper);
-                    
-                    return (
-                      <button
-                        key={img.value}
-                        type="button"
-                        onClick={() => setSidebarEmbarque1(img.value)}
-                        className={cn(
-                          "px-2 py-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1 min-h-[50px]",
-                          sidebarEmbarque1 === img.value
-                            ? "bg-red-50 border-red-600 shadow-sm ring-2 ring-red-600/10"
-                            : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                        )}
-                      >
-                        <span className={cn(
-                          "font-black uppercase tracking-tight leading-none",
-                          isZoomed ? "text-[13px] text-red-700" : "text-[9px] text-slate-600",
-                          sidebarEmbarque1 === img.value && !isZoomed ? "text-red-600" : ""
-                        )}>
-                          {img.label}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {EMBARQUE_IMAGES.map((img) => (
+                    <button
+                      key={img.value}
+                      type="button"
+                      onClick={() => setSidebarEmbarque1(img.value)}
+                      className={cn(
+                        "relative px-2 py-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1 min-h-[55px]",
+                        sidebarEmbarque1 === img.value
+                          ? "bg-[#B91C1C] border-[#B91C1C] text-white shadow-md ring-2 ring-[#B91C1C]/20"
+                          : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                      )}
+                    >
+                      <span className={cn(
+                        "font-black uppercase tracking-tight text-[10px] leading-tight",
+                        sidebarEmbarque1 === img.value ? "text-white" : "text-slate-600"
+                      )}>
+                        {img.label}
+                      </span>
+                    </button>
+                  ))}
                 </div>
 
                 {sidebarEmbarque1 && (
@@ -2586,38 +2515,26 @@ Embarque: ${
                     <Image size={12} className="text-slate-500" /> EMBARQUE (CARRETA 2: {carreta2})
                   </label>
                   <div className="grid grid-cols-2 gap-2 mt-1">
-                    {EMBARQUE_IMAGES.map((img) => {
-                      const labelUpper = img.label.toUpperCase();
-                      const isZoomed = [
-                        "AMARELIN", 
-                        "CASTANHA", 
-                        "IZOTONICO", 
-                        "SUPERIOR BATIDO", 
-                        "CARGA BATIDA (PADRÃO)"
-                      ].includes(labelUpper);
-                      
-                      return (
-                        <button
-                          key={img.value}
-                          type="button"
-                          onClick={() => setSidebarEmbarque2(img.value)}
-                          className={cn(
-                            "px-2 py-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1 min-h-[50px]",
-                            sidebarEmbarque2 === img.value
-                              ? "bg-red-50 border-red-600 shadow-sm ring-2 ring-red-600/10"
-                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                          )}
-                        >
-                          <span className={cn(
-                            "font-black uppercase tracking-tight leading-none",
-                            isZoomed ? "text-[13px] text-red-700" : "text-[9px] text-slate-600",
-                            sidebarEmbarque2 === img.value && !isZoomed ? "text-red-600" : ""
-                          )}>
-                            {img.label}
-                          </span>
-                        </button>
-                      );
-                    })}
+                    {EMBARQUE_IMAGES.map((img) => (
+                      <button
+                        key={img.value}
+                        type="button"
+                        onClick={() => setSidebarEmbarque2(img.value)}
+                        className={cn(
+                          "relative px-2 py-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1 min-h-[55px]",
+                          sidebarEmbarque2 === img.value
+                            ? "bg-[#B91C1C] border-[#B91C1C] text-white shadow-md ring-2 ring-[#B91C1C]/20"
+                            : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                        )}
+                      >
+                        <span className={cn(
+                          "font-black uppercase tracking-tight text-[10px] leading-tight",
+                          sidebarEmbarque2 === img.value ? "text-white" : "text-slate-600"
+                        )}>
+                          {img.label}
+                        </span>
+                      </button>
+                    ))}
                   </div>
 
                   {sidebarEmbarque2 && (
@@ -2844,23 +2761,23 @@ Embarque: ${
       </div>
 
       {/* SEÇÃO DE CÓPIA PARA PLANILHA GOOGLE (LINHAS DE ISCA) */}
-      <div className="w-full mt-8 bg-[#1e293b]/95 border-2 border-[#334155] rounded-3xl shadow-2xl overflow-hidden flex flex-col p-5 sm:p-7">
+      <div className="w-full mt-8 bg-[#F4F8FA] border border-[#CBD5E1] rounded-3xl shadow-sm overflow-hidden flex flex-col p-5 sm:p-7">
         {/* Header banner */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-[#334155]">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-[#CBD5E1]">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg border border-emerald-400/40 shrink-0">
+            <div className="p-3 bg-[#0F172A] text-white rounded-2xl shadow-sm shrink-0">
               <FileSpreadsheet size={24} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-md border border-emerald-500/30">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B] bg-white px-2.5 py-0.5 rounded-md border border-[#CBD5E1]">
                   Planilha Google / Excel
                 </span>
               </div>
-              <h3 className="text-lg sm:text-xl font-serif font-black text-white uppercase tracking-tight mt-1">
-                Copiar Linhas de Iscas para Planilha Google
+              <h3 className="text-base font-sans font-extrabold text-[#0F172A] uppercase tracking-tight mt-1 flex items-center gap-2">
+                <FileSpreadsheet size={18} className="text-[#0F172A]" /> Copiar Linhas de Iscas para Planilha Google
               </h3>
-              <p className="text-xs text-slate-300 font-semibold mt-0.5">
+              <p className="text-xs text-[#64748B] font-semibold mt-0.5">
                 Copie cada linha individualmente ou a tabela completa para colar no Google Sheets (Ctrl+V)
               </p>
             </div>
@@ -2868,43 +2785,15 @@ Embarque: ${
 
           {/* Batch Copy Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => copyAllIscaRowsToClipboard(false)}
-              className={cn(
-                "px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border flex items-center gap-2 transition-all cursor-pointer active:scale-98",
-                copiedIscaDataOnly
-                  ? "bg-emerald-500 text-slate-950 border-emerald-300"
-                  : "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/40"
-              )}
-              title="Copiar todas as linhas tabuladas para colar no Google Sheets (Ctrl+V)"
-            >
-              {copiedIscaDataOnly ? <Check size={16} /> : <Copy size={16} />}
-              <span>{copiedIscaDataOnly ? "Copiado para Planilha!" : "Copiar Apenas Dados (Ctrl+V)"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => copyAllIscaRowsToClipboard(true)}
-              className={cn(
-                "px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border flex items-center gap-2 transition-all cursor-pointer active:scale-98",
-                copiedIscaAll
-                  ? "bg-emerald-500 text-slate-950 border-emerald-300"
-                  : "bg-teal-700 hover:bg-teal-600 text-white border-teal-400/40"
-              )}
-              title="Copiar cabeçalho + linhas de iscas no formato Google Sheets"
-            >
-              {copiedIscaAll ? <Check size={16} /> : <FileSpreadsheet size={16} />}
-              <span>{copiedIscaAll ? "Tabela Copiada!" : "Copiar com Cabeçalho"}</span>
-            </button>
+            
           </div>
         </div>
 
-        {/* Spreadsheet Mock Preview Table matching attached image */}
-        <div className="mt-5 w-full rounded-2xl border-2 border-emerald-800/60 overflow-x-auto shadow-xl bg-[#0b2829]">
+        {/* Spreadsheet Mock Preview Table */}
+        <div className="mt-5 w-full rounded-2xl border border-[#D1E1EB] overflow-x-auto shadow-sm bg-white">
           <div className="min-w-[1000px]">
             {/* Column Letters Bar A-H */}
-            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#071c1d] border-b border-emerald-800/80 text-[10px] font-black text-emerald-300 text-center py-1 divide-x divide-emerald-800/50">
+            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#F4F8FA] border-b border-[#D1E1EB] text-[10px] font-black text-[#64748B] text-center py-1 divide-x divide-[#D1E1EB]">
               <div>A</div>
               <div>B</div>
               <div>C</div>
@@ -2916,8 +2805,8 @@ Embarque: ${
               <div>AÇÃO</div>
             </div>
 
-            {/* Header Row (Dark Teal with white uppercase text like attached image) */}
-            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#0b3c3d] text-white text-[11px] font-black uppercase py-2.5 divide-x divide-emerald-800/80 border-b border-emerald-700/80 items-center">
+            {/* Header Row */}
+            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#0F172A] text-white text-[11px] font-black uppercase py-2.5 divide-x divide-[#CBD5E1] border-b border-[#CBD5E1] items-center">
               <div className="px-2 text-center">ID ISCA</div>
               <div className="px-2 text-center">DESTINO</div>
               <div className="px-2 text-center">STATUS</div>
@@ -2930,9 +2819,9 @@ Embarque: ${
             </div>
 
             {/* Data Rows */}
-            <div className="divide-y divide-slate-300 bg-stone-100 text-slate-900 font-sans">
+            <div className="divide-y divide-[#CBD5E1] bg-white text-[#1E293B] font-sans">
               {/* Row 1 (Isca 1) */}
-              <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] divide-x divide-slate-300 items-center hover:bg-emerald-50 transition-colors">
+              <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] divide-x divide-[#CBD5E1] items-center hover:bg-[#F4F8FA] transition-colors">
                 {/* ID ISCA */}
                 <div className="p-2 font-black text-xs text-slate-900 text-center">
                   <input
@@ -3038,8 +2927,8 @@ Embarque: ${
                     className={cn(
                       "px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border flex items-center gap-1 transition-all cursor-pointer active:scale-95",
                       copiedIscaRow1
-                        ? "bg-emerald-600 text-white border-emerald-400"
-                        : "bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500/40"
+                        ? "bg-[#7F1D1D] text-white border-[#7F1D1D]"
+                        : "bg-[#B91C1C] border-[#B91C1C] hover:bg-[#991B1B] hover:border-[#991B1B] text-white"
                     )}
                     title="Copiar esta linha para colar no Google Sheets (Ctrl+V)"
                   >
@@ -3162,8 +3051,8 @@ Embarque: ${
                       className={cn(
                         "px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border flex items-center gap-1 transition-all cursor-pointer active:scale-95",
                         copiedIscaRow2
-                          ? "bg-emerald-600 text-white border-emerald-400"
-                          : "bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500/40"
+                          ? "bg-[#7F1D1D] text-white border-[#7F1D1D]"
+                          : "bg-[#B91C1C] border-[#B91C1C] hover:bg-[#991B1B] hover:border-[#991B1B] text-white"
                       )}
                       title="Copiar esta linha para colar no Google Sheets (Ctrl+V)"
                     >

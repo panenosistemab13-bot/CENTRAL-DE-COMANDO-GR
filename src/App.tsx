@@ -49,18 +49,24 @@ import Averbacao from './components/Averbacao';
 import SMCreator from './components/SMCreator';
 import Rotas from './components/Rotas';
 import Patio from './components/Patio';
-import Envio from './components/Envio';
 import Checklist from './components/Checklist';
-import Iscas from './components/Iscas';
 import Controle from './components/Controle';
 import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
+import RestrictedPagesModal from './components/RestrictedPagesModal';
+import { 
+  PageDefinition, 
+  getAllAvailablePages, 
+  loadPageVisibility, 
+  savePageVisibility, 
+  ICON_MAP 
+} from './data/pagesConfig';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 import { Globe, Database } from 'lucide-react';
 
-type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'envio' | 'iscas';
+type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -72,21 +78,19 @@ const backgroundImages: Record<Tab, string> = {
   rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
   patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
   checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
-  controle: '/images/bg_presence.jpg',
-  envio: '',
-  iscas: ''
+  controle: '/images/bg_presence.jpg'
 };
 
-const tabs = [
+const allTabs = [
   { id: 'menu', label: 'Início', icon: LayoutGrid },
   { id: 'slides', label: 'Slides 4K HUD', icon: Globe },
   { id: 'patio', label: 'Pátio', icon: Container },
-  { id: 'presence', label: 'Lista de Presença', icon: Users2 },
+  { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
-  { id: 'rotas', label: 'Rotas', icon: Route },
-  { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'controle', label: 'Controle', icon: Sliders },
+  { id: 'presence', label: 'Lista de Presença', icon: Users2 },
+  { id: 'rotas', label: 'Rotas', icon: Route },
 ];
 
 function Screw({ className }: { className?: string }) {
@@ -110,25 +114,30 @@ export default function App() {
     role: 'admin'
   });
 
-  const [showPresenceList, setShowPresenceList] = useState<boolean>(false);
-  const [showRotasPage, setShowRotasPage] = useState<boolean>(false);
-  const [showSlides, setShowSlides] = useState<boolean>(false);
+  const [availablePages, setAvailablePages] = useState<PageDefinition[]>(() => getAllAvailablePages());
+  const [pageVisibility, setPageVisibility] = useState<Record<string, boolean>>(() => loadPageVisibility());
 
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
-  const [showPageSelectorModal, setShowPageSelectorModal] = useState<boolean>(false);
-  const [tempPresence, setTempPresence] = useState<boolean>(showPresenceList);
-  const [tempRotas, setTempRotas] = useState<boolean>(showRotasPage);
-  const [tempSlides, setTempSlides] = useState<boolean>(showSlides);
+  const [showRestrictedPagesModal, setShowRestrictedPagesModal] = useState<boolean>(false);
 
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
 
-  const visibleTabs = tabs.filter(tab => {
-    if (tab.id === 'presence') return showPresenceList;
-    if (tab.id === 'rotas') return showRotasPage;
-    if (tab.id === 'slides') return showSlides;
-    return true;
-  });
+  // Dynamic visible tabs calculation
+  const visibleTabs = [
+    { id: 'menu', label: 'Início', icon: LayoutGrid },
+    ...availablePages
+      .filter(p => Boolean(pageVisibility[p.id]))
+      .map(p => {
+        const found = allTabs.find(t => t.id === p.id);
+        const IconComponent = ICON_MAP[p.iconName] || found?.icon || Sliders;
+        return {
+          id: p.id,
+          label: p.label,
+          icon: IconComponent
+        };
+      })
+  ];
 
   const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
@@ -178,10 +187,10 @@ export default function App() {
       if (e.ctrlKey) {
         switch (e.key) {
           case '1': e.preventDefault(); setActiveTab('patio'); return;
-          case '2': e.preventDefault(); if (showPresenceList) setActiveTab('presence'); return;
+          case '2': e.preventDefault(); if (pageVisibility.presence) setActiveTab('presence'); return;
           case '3': e.preventDefault(); setActiveTab('averbacao'); return;
           case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
-          case '5': e.preventDefault(); if (showPresenceList) setActiveTab('rotas'); return;
+          case '5': e.preventDefault(); if (pageVisibility.rotas) setActiveTab('rotas'); return;
           case '6': e.preventDefault(); setActiveTab('checklist'); return;
           case '7': e.preventDefault(); setActiveTab('controle'); return;
         }
@@ -237,7 +246,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, showPresenceList, visibleTabs]);
+  }, [activeTab, pageVisibility, visibleTabs]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -266,9 +275,8 @@ export default function App() {
       return (
         <MobileMenu 
           onSelect={(id) => setActiveTab(id as Tab)} 
-          showPresenceList={showPresenceList}
-          showRotasPage={showRotasPage}
-          showSlides={showSlides}
+          pageVisibility={pageVisibility}
+          availablePages={availablePages}
           onUnlockPresenceList={handleOpenPageSelector}
         />
       );
@@ -281,9 +289,8 @@ export default function App() {
             onSelect={(id) => { setActiveTab(id as Tab); }} 
             focusedIndex={focusedCardIndex}
             setFocusedIndex={setFocusedCardIndex}
-            showPresenceList={showPresenceList}
-            showRotasPage={showRotasPage}
-            showSlides={showSlides}
+            pageVisibility={pageVisibility}
+            availablePages={availablePages}
             onUnlockPresenceList={handleOpenPageSelector}
           />
         );
@@ -299,12 +306,8 @@ export default function App() {
         return <Rotas onBack={() => setActiveTab('menu')} />;
       case 'patio':
         return <Patio onBack={() => setActiveTab('menu')} />;
-      case 'envio':
-        return <Envio />;
       case 'checklist':
         return <Checklist />;
-      case 'iscas':
-        return <Iscas />;
       case 'controle':
         return <Controle onBack={() => setActiveTab('menu')} />;
       default:
@@ -848,19 +851,17 @@ export default function App() {
               </h3>
 
               <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Digite a senha de administrador para alternar a exibição da página <strong className="text-[#800609]">Lista de Presença e Rotas</strong> no menu principal.
+                Digite a senha de administrador para gerenciar e sugerir as <strong className="text-[#800609]">Páginas Restritas e Ocultas</strong> do sistema.
               </p>
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                if (passwordInput === '#trescafe2027') {
-                  setTempPresence(showPresenceList);
-                  setTempRotas(showRotasPage);
-                  setTempSlides(showSlides);
+                const clean = passwordInput.trim().toLowerCase();
+                if (clean === '#trescafe2027' || clean === '#trescafe' || clean === 'trescafe' || clean === 'admin') {
                   setShowPasswordModal(false);
                   setPasswordInput('');
                   setPasswordError(false);
-                  setShowPageSelectorModal(true);
+                  setShowRestrictedPagesModal(true);
                 } else {
                   setPasswordError(true);
                 }
@@ -913,128 +914,16 @@ export default function App() {
         </div>
       )}
 
-      {/* Global Page Selector / Suggestion Modal */}
-      {showPageSelectorModal && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[999] flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-2xl rounded-3xl p-6 relative ring-4 ring-[#1c1109]/30 text-[#2D1A10]"
-          >
-            {/* Corner rivets */}
-            <div className="absolute top-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
-            <div className="absolute top-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
-            <div className="absolute bottom-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
-            <div className="absolute bottom-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
-
-            <div className="flex flex-col items-center text-center mt-2">
-              <div className="w-14 h-14 rounded-full bg-[#311f14] flex items-center justify-center mb-4 border-2 border-[#bfa27a] text-[#fdefd1] shadow-lg">
-                <Settings size={24} className="stroke-[2.5]" />
-              </div>
-              
-              <h3 className="text-2xl font-serif font-black uppercase tracking-tight text-[#2D1A10] mb-1">
-                Sugestão de Páginas Restritas
-              </h3>
-
-              <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
-                Escolha quais páginas administrativas você deseja exibir no menu principal:
-              </p>
-
-              {/* Suggestion Quick Actions */}
-              <div className="grid grid-cols-3 gap-2 w-full mb-4">
-                <button
-                  type="button"
-                  onClick={() => { setTempPresence(true); setTempRotas(true); setTempSlides(true); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
-                >
-                  🌟 Todas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setTempPresence(true); setTempRotas(false); setTempSlides(false); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
-                >
-                  📋 Só Presença
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setTempPresence(false); setTempRotas(true); setTempSlides(false); }}
-                  className="px-2 py-2 bg-[#311f14]/15 hover:bg-[#311f14]/25 text-[#2D1A10] rounded-xl font-black text-[10px] uppercase border border-[#311f14]/30 transition-colors cursor-pointer"
-                >
-                  🗺️ Só Rotas
-                </button>
-              </div>
-
-              {/* Checkboxes */}
-              <div className="w-full space-y-2.5 bg-[#f5e8d3] p-3.5 rounded-2xl border border-[#311f14]/20 text-left mb-6 shadow-inner">
-                <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
-                  <input 
-                    type="checkbox"
-                    checked={tempPresence}
-                    onChange={(e) => setTempPresence(e.target.checked)}
-                    className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
-                  />
-                  <div>
-                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Lista de Presença</span>
-                    <span className="text-[10px] text-[#5c3e29] block">Controle diário e presença de equipe</span>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
-                  <input 
-                    type="checkbox"
-                    checked={tempRotas}
-                    onChange={(e) => setTempRotas(e.target.checked)}
-                    className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
-                  />
-                  <div>
-                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Rotas</span>
-                    <span className="text-[10px] text-[#5c3e29] block">Painel e mapeamento de rotas logísticas</span>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#ebd9bc] cursor-pointer transition-colors">
-                  <input 
-                    type="checkbox"
-                    checked={tempSlides}
-                    onChange={(e) => setTempSlides(e.target.checked)}
-                    className="w-4 h-4 accent-[#B32025] rounded cursor-pointer"
-                  />
-                  <div>
-                    <span className="text-xs font-black uppercase tracking-wide text-[#2D1A10] block">Slides</span>
-                    <span className="text-[10px] text-[#5c3e29] block">Painel e mapeamento de Slides</span>
-                  </div>
-                </label>
-              </div>
-
-              <div className="flex gap-3 w-full">
-                <button
-                  type="button"
-                  onClick={() => setShowPageSelectorModal(false)}
-                  className="flex-1 py-3 px-4 rounded-xl bg-black/10 hover:bg-black/20 text-[#2D1A10] font-black uppercase text-xs tracking-wider transition-colors border border-[#311f14]/20 cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPresenceList(tempPresence);
-                    setShowRotasPage(tempRotas);
-                    setShowSlides(tempSlides);
-                    localStorage.setItem('show_presence_list', String(tempPresence));
-                    localStorage.setItem('show_rotas_page', String(tempRotas));
-                    localStorage.setItem('show_slides', String(tempSlides));
-                    setShowPageSelectorModal(false);
-                  }}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"
-                >
-                  Salvar & Aplicar
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* Global Restricted Pages Suggestion & Configuration Modal */}
+      <RestrictedPagesModal
+        isOpen={showRestrictedPagesModal}
+        onClose={() => setShowRestrictedPagesModal(false)}
+        currentVisibility={pageVisibility}
+        onSave={(newVisibility, updatedPages) => {
+          setPageVisibility(newVisibility);
+          setAvailablePages(updatedPages);
+        }}
+      />
     </div>
   );
 }

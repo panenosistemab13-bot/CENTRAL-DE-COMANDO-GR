@@ -5,20 +5,24 @@ import {
   FileCheck2, 
   CalendarDays, 
   Route, 
-  Container,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardCheck,
-  Sliders,
-  Lock,
-  Unlock,
-  Globe,
-  Database,
-  LogOut
+  Container, 
+  ChevronLeft, 
+  ChevronRight, 
+  ClipboardCheck, 
+  Sliders, 
+  Lock, 
+  Unlock, 
+  Globe, 
+  Database, 
+  LogOut,
+  Package,
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
 import coffeeLogo from '../assets/images/artisan_coffee_cup_1780921602243.png';
+import { PageDefinition, ICON_MAP, getAllAvailablePages } from '../data/pagesConfig';
 
 interface MenuItem {
   id: string;
@@ -29,24 +33,26 @@ interface MenuItem {
   description: string;
 }
 
-const menuItems: MenuItem[] = [
-  { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
+const baseMenuItems: MenuItem[] = [
   { id: 'patio', label: 'Pátio', buttonLabel: 'Logística', icon: Container, color: 'text-zinc-300', description: 'Gestão inteligente de entrada e saída de veículos.' },
-  { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
+  { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'text-zinc-300', description: 'Gestão de apólices e seguros integrados.' },
   { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'text-zinc-300', description: 'Criação e agendamento de solicitações de monitoramento.' },
-  { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
-  { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
   { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
+  { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
+  { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
+  { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
 ];
 
 interface InitialMenuProps {
   onSelect: (id: string) => void;
   focusedIndex: number;
   setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
-  showPresenceList: boolean;
-  showRotasPage: boolean;
-  showSlides: boolean;
+  showPresenceList?: boolean;
+  showRotasPage?: boolean;
+  showSlides?: boolean;
+  pageVisibility?: Record<string, boolean>;
+  availablePages?: PageDefinition[];
   onUnlockPresenceList: () => void;
   onLogout?: () => void;
 }
@@ -410,58 +416,87 @@ function ModuleGraphic({ id }: { id: string }) {
       );
 
     default:
-      return null;
+      return (
+        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
+          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
+          <polygon points="45,115 100,140 155,115 100,90" fill="#311f14" />
+          <polygon points="45,115 100,140 100,75 45,50" fill="#4a2e1d" />
+          <polygon points="100,140 155,115 155,50 100,75" fill="#5c3e29" />
+          <polygon points="45,50 100,75 155,50 100,25" fill="#bfa27a" />
+          <circle cx="100" cy="50" r="16" fill="#800609" stroke="#cead80" strokeWidth="2" />
+          <polygon points="95,44 105,50 95,56" fill="#ffffff" />
+        </svg>
+      );
   }
 }
 
-export default function InitialMenu({ onSelect, focusedIndex, setFocusedIndex, showPresenceList, showRotasPage, showSlides, onUnlockPresenceList, onLogout }: InitialMenuProps) {
+export default function InitialMenu({ 
+  onSelect, 
+  focusedIndex, 
+  setFocusedIndex, 
+  showPresenceList, 
+  showRotasPage, 
+  showSlides, 
+  pageVisibility, 
+  availablePages, 
+  onUnlockPresenceList, 
+  onLogout 
+}: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
-  const filteredMenuItems = menuItems.filter(item => {
-    if (item.id === 'presence') return showPresenceList;
-    if (item.id === 'rotas') return showRotasPage;
-    if (item.id === 'slides') return showSlides;
+  const allPages = availablePages || getAllAvailablePages();
+
+  const menuItemsList: MenuItem[] = allPages.map(page => {
+    const existing = baseMenuItems.find(b => b.id === page.id);
+    const IconComp = ICON_MAP[page.iconName] || existing?.icon || Sliders;
+    return {
+      id: page.id,
+      label: page.label,
+      buttonLabel: page.buttonLabel || page.category || 'Módulo',
+      icon: IconComp,
+      color: existing?.color || 'text-zinc-300',
+      description: page.description
+    };
+  });
+
+  const filteredMenuItems = menuItemsList.filter(item => {
+    if (pageVisibility && pageVisibility[item.id] !== undefined) {
+      return Boolean(pageVisibility[item.id]);
+    }
+    if (item.id === 'presence') return Boolean(showPresenceList);
+    if (item.id === 'rotas') return Boolean(showRotasPage);
+    if (item.id === 'slides') return Boolean(showSlides);
     return true;
   });
-  const safeFocusedIndex = Math.min(focusedIndex, filteredMenuItems.length - 1);
-  const activeItem = filteredMenuItems[safeFocusedIndex] || filteredMenuItems[0];
+
+  const itemsToRender = filteredMenuItems.length > 0 ? filteredMenuItems : menuItemsList.slice(0, 1);
+  const safeFocusedIndex = Math.min(focusedIndex, Math.max(0, itemsToRender.length - 1));
+  const activeItem = itemsToRender[safeFocusedIndex] || itemsToRender[0];
 
   const paginate = useCallback((newDirection: number) => {
     setDirection(newDirection);
     setFocusedIndex((prev) => {
-      const items = menuItems.filter(item => {
-        if (item.id === 'presence') return showPresenceList;
-        if (item.id === 'rotas') return showRotasPage;
-        if (item.id === 'slides') return showSlides;
-        return true;
-      });
       let next = prev + newDirection;
-      if (next < 0) next = items.length - 1;
-      if (next >= items.length) next = 0;
+      if (next < 0) next = itemsToRender.length - 1;
+      if (next >= itemsToRender.length) next = 0;
       return next;
     });
-  }, [setFocusedIndex, showPresenceList, showRotasPage, showSlides]);
+  }, [setFocusedIndex, itemsToRender.length]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
 
-      const items = menuItems.filter(item => {
-        if (item.id === 'presence') return showPresenceList;
-        if (item.id === 'rotas') return showRotasPage;
-        if (item.id === 'slides') return showSlides;
-        return true;
-      });
       if (e.key === 'ArrowRight') paginate(1);
       if (e.key === 'ArrowLeft') paginate(-1);
       if (e.key === 'Enter') {
-        const currentItem = items[focusedIndex] || items[0];
+        const currentItem = itemsToRender[safeFocusedIndex] || itemsToRender[0];
         if (currentItem) onSelect(currentItem.id);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, paginate, onSelect, showPresenceList, showRotasPage, showSlides]);
+  }, [safeFocusedIndex, paginate, onSelect, itemsToRender]);
 
   return (
     <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">
