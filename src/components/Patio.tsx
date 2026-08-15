@@ -3421,19 +3421,19 @@ export default function Patio({ onBack }: PatioProps) {
         </div>
       ) : activeSubTab === 'os' ? (
         /* ================= NEW "O.s" VEHICLE LIST AND SERVICE ORDERS INTEGRATION TAB ================= */
-        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col gap-6 min-h-0 animate-fade-in px-4">
+        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col gap-6 min-h-0 animate-fade-in px-4 font-sans">
           
-          {/* Header Plaque */}
-          <WoodenPlaque className="py-4 px-6 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4" screwSize="w-2.5 h-2.5">
+          {/* Header Plaque (Modern Slate/Blue Style) */}
+          <div className="w-full bg-slate-900 text-white p-4 md:py-4 md:px-6 rounded-2xl shadow-sm border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ca1a20] to-[#800609] flex items-center justify-center shadow-md border border-red-500/20">
-                <FileText className="text-[#fdefd1] w-5 h-5 stroke-[2.5]" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2D59] to-[#0A1F3E] flex items-center justify-center shadow-md border border-blue-400/20">
+                <FileText className="text-white w-5 h-5 stroke-[2.5]" />
               </div>
               <div className="text-left">
-                <h2 className="text-xl font-black font-rustic-title text-[#311f14] uppercase tracking-wide leading-tight">
+                <h2 className="text-base font-extrabold uppercase tracking-wider leading-tight">
                   Controle de Ordens de Serviço (O.S)
                 </h2>
-                <p className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider mt-0.5">
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mt-0.5">
                   Sincronizado em tempo real com todos os veículos da página Checklist
                 </p>
               </div>
@@ -3442,115 +3442,116 @@ export default function Patio({ onBack }: PatioProps) {
             {/* Quick search input */}
             <div className="relative w-full md:w-80">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search size={14} className="text-[#5c3c24]/50" />
+                <Search size={14} className="text-slate-400" />
               </span>
               <input
                 id="os-search-input"
                 type="text"
-                placeholder="Buscar placa..."
+                placeholder="BUSCAR PLACA DO CAVALO..."
                 value={osListSearch}
                 onChange={(e) => setOsListSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-xl text-xs font-bold text-[#311f14] placeholder-[#5c3c24]/50 outline-none focus:border-[#ca1a20] transition-colors shadow-inner font-sans"
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-extrabold text-white placeholder-slate-500 outline-none focus:border-[#0F2D59] focus:ring-2 focus:ring-[#0F2D59]/30 transition-all uppercase font-sans"
               />
               {osListSearch && (
                 <button
                   id="os-search-clear"
                   onClick={() => setOsListSearch('')}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#5c3c24]/60 hover:text-[#ca1a20] transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
-          </WoodenPlaque>
+          </div>
 
-          {/* Stats Bar */}
+          {/* Stats Bar (Modern Minimalist Style) */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
-            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
-              <div className="w-8 h-8 rounded-lg bg-[#ebd9c3] flex items-center justify-center text-[#5c3c24]">
+            <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 border border-slate-200">
                 <Truck size={16} className="stroke-[2.5]" />
               </div>
               <div>
-                <span className="block text-[8.5px] font-black uppercase text-[#5c3c24]/60 tracking-wider">Total Veículos</span>
-                <span className="text-base font-black font-mono text-[#311f14]">{checklistItems.length}</span>
+                <span className="block text-[8.5px] font-extrabold uppercase text-slate-500 tracking-wider">Total Veículos</span>
+                <span className="text-base font-extrabold font-sans text-slate-900">{checklistItems.length}</span>
               </div>
             </div>
-            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
-              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-700 border border-red-200">
+            <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-750 border border-rose-100">
                 <ShieldAlert size={16} className="stroke-[2.5]" />
               </div>
               <div>
-                <span className="block text-[8.5px] font-black uppercase text-red-600/70 tracking-wider">Pendente</span>
-                <span className="text-base font-black font-mono text-red-700">
+                <span className="block text-[8.5px] font-extrabold uppercase text-rose-600/70 tracking-wider">Pendente</span>
+                <span className="text-base font-extrabold font-sans text-rose-700">
                   {checklistItems.filter(item => (item.osStatus || 'PENDENTE') === 'PENDENTE').length}
                 </span>
               </div>
             </div>
-            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 border border-blue-200">
+            <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-750 border border-blue-100">
                 <Activity size={16} className="stroke-[2.5]" />
               </div>
               <div>
-                <span className="block text-[8.5px] font-black uppercase text-blue-600/70 tracking-wider">Agendado</span>
-                <span className="text-base font-black font-mono text-blue-700">
+                <span className="block text-[8.5px] font-extrabold uppercase text-blue-600/70 tracking-wider">Agendado</span>
+                <span className="text-base font-extrabold font-sans text-blue-700">
                   {checklistItems.filter(item => item.osStatus === 'AGENDADO').length}
                 </span>
               </div>
             </div>
-            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 border border-amber-200">
+            <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 border border-amber-100">
                 <Loader2 size={16} className="stroke-[2.5] animate-spin" />
               </div>
               <div>
-                <span className="block text-[8.5px] font-black uppercase text-amber-600/70 tracking-wider">Em Andamento</span>
-                <span className="text-base font-black font-mono text-amber-700">
+                <span className="block text-[8.5px] font-extrabold uppercase text-amber-600/70 tracking-wider">Em Andamento</span>
+                <span className="text-base font-extrabold font-sans text-amber-700">
                   {checklistItems.filter(item => item.osStatus === 'EM ANDAMENTO').length}
                 </span>
               </div>
             </div>
-            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left col-span-2 sm:col-span-1">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 border border-emerald-200">
+            <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex items-center gap-3 text-left col-span-2 sm:col-span-1">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-700 border border-emerald-100">
                 <ShieldCheck size={16} className="stroke-[2.5]" />
               </div>
               <div>
-                <span className="block text-[8.5px] font-black uppercase text-emerald-600/70 tracking-wider">Concluído</span>
-                <span className="text-base font-black font-mono text-emerald-700">
+                <span className="block text-[8.5px] font-extrabold uppercase text-emerald-600/70 tracking-wider">Concluído</span>
+                <span className="text-base font-extrabold font-sans text-emerald-750">
                   {checklistItems.filter(item => item.osStatus === 'CONCLUÍDO').length}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* SM Styled Grid Frame */}
-          <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-2xl p-3 shadow-md overflow-hidden relative flex-1 flex flex-col min-h-0">
+          {/* SM Styled Grid Frame (Modern Slate/Blue Table Card) */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-sm overflow-hidden relative flex-1 flex flex-col min-h-0">
             {checklistItems.filter(item => {
               const term = osListSearch.toLowerCase().trim();
               if (!term) return true;
               return (item.cavalo || '').toLowerCase().includes(term) || (item.carretas || '').toLowerCase().includes(term);
             }).length === 0 ? (
-              <div className="p-12 flex-1 flex flex-col items-center justify-center text-center bg-amber-50/20 rounded-xl border-2 border-dashed border-[#5c3c24]/20 min-h-[300px]">
-                <Truck className="text-[#5c3c24]/40 w-12 h-12 mb-3" />
-                <p className="text-sm text-[#311f14] mb-1 font-black uppercase font-sans">Nenhum veículo encontrado</p>
-                <p className="text-xs text-[#5c3c24]/70 max-w-md">
+              <div className="p-12 flex-1 flex flex-col items-center justify-center text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 min-h-[300px]">
+                <Truck className="text-slate-400 w-12 h-12 mb-3" />
+                <p className="text-sm text-slate-850 mb-1 font-extrabold uppercase font-sans">Nenhum veículo encontrado</p>
+                <p className="text-xs text-slate-500 max-w-md">
                   {osListSearch 
                     ? "Altere os termos da sua pesquisa para encontrar veículos correspondentes." 
                     : "Não há veículos cadastrados na página Checklist. Vá até lá para cadastrar veículos."}
                 </p>
               </div>
             ) : (
-              <div className="overflow-auto rounded-xl border-2 border-[#5c3c24]/25 flex-1 max-h-[500px]">
+              <div className="overflow-auto rounded-xl border border-slate-200 flex-1 max-h-[500px]">
                 <table className="w-full text-left border-collapse font-sans">
                   <thead>
-                    <tr className="bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] text-[10px] uppercase font-black tracking-wider h-11 border-b-2 border-[#5c3c24]/30 sticky top-0 z-20">
+                    <tr className="bg-[#0F2D59] text-white text-[11px] uppercase font-extrabold tracking-wider h-11 border-b border-slate-200 sticky top-0 z-20">
                       <th className="px-3 py-2.5 w-12 text-center select-none">#</th>
-                      <th className="px-4 py-2.5 min-w-[280px]">placas da pagina checklist</th>
-                      <th className="px-4 py-2.5 w-60">numero da O.S</th>
-                      <th className="px-4 py-2.5 w-60">Data do agendamento</th>
+                      <th className="px-4 py-2.5 min-w-[280px]">placa do cavalo</th>
+                      <th className="px-4 py-2.5 w-60 text-center">numero da O.S</th>
+                      <th className="px-4 py-2.5 w-60 text-center">Data do agendamento</th>
                       <th className="px-4 py-2.5 w-56 text-center">dias de vencimento</th>
-                      <th className="px-4 py-2.5 w-56 text-center">status com menu suspenso</th>
+                      <th className="px-4 py-2.5 w-56 text-center">Status</th>
+                      <th className="px-4 py-2.5 w-56 text-center">checklist realizado</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-[#fefcf8]">
+                  <tbody className="bg-white">
                     {checklistItems.filter(item => {
                       const term = osListSearch.toLowerCase().trim();
                       if (!term) return true;
@@ -3558,7 +3559,7 @@ export default function Patio({ onBack }: PatioProps) {
                     }).map((item, i) => {
                       // Calculate days remaining
                       let daysRemainingText = 'Sem agendamento';
-                      let daysRemainingStyle = 'bg-slate-100 text-slate-500 border-slate-200';
+                      let daysRemainingStyle = 'bg-slate-50 text-slate-500 border-slate-200';
                       if (item.dataAgendamento) {
                         try {
                           const today = new Date();
@@ -3569,48 +3570,48 @@ export default function Patio({ onBack }: PatioProps) {
                           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                           if (diffDays > 0) {
                             daysRemainingText = `Faltam ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
-                            daysRemainingStyle = 'bg-emerald-100 text-emerald-800 border-emerald-300 font-extrabold shadow-xs';
+                            daysRemainingStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200 font-extrabold';
                           } else if (diffDays === 0) {
                             daysRemainingText = 'Hoje';
-                            daysRemainingStyle = 'bg-amber-100 text-amber-800 border-amber-300 font-extrabold shadow-xs animate-pulse';
+                            daysRemainingStyle = 'bg-amber-50 text-amber-700 border-amber-200 font-extrabold animate-pulse';
                           } else {
                             const absDays = Math.abs(diffDays);
                             daysRemainingText = `Atrasado ${absDays} dia${absDays > 1 ? 's' : ''}`;
-                            daysRemainingStyle = 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold shadow-xs';
+                            daysRemainingStyle = 'bg-rose-50 text-rose-700 border-rose-200 font-extrabold';
                           }
                         } catch (e) {
                           daysRemainingText = 'Data inválida';
-                          daysRemainingStyle = 'bg-red-50 text-red-600 border-red-200';
+                          daysRemainingStyle = 'bg-rose-50 text-rose-700 border-rose-200';
                         }
                       }
 
                       // Select styles helper
-                      let selectStyle = 'bg-slate-50 text-[#311f14] border-slate-300 font-black';
+                      let selectStyle = 'bg-slate-50 text-slate-900 border-slate-200 font-extrabold';
                       switch (item.osStatus) {
                         case 'PENDENTE':
-                          selectStyle = 'bg-red-50 text-red-700 border-red-300 focus:ring-red-500 focus:border-red-500 font-black';
+                          selectStyle = 'bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-500 focus:border-rose-500 font-extrabold';
                           break;
                         case 'AGENDADO':
-                          selectStyle = 'bg-blue-50 text-blue-700 border-blue-300 focus:ring-blue-500 focus:border-blue-500 font-black';
+                          selectStyle = 'bg-blue-50 text-blue-700 border-blue-200 focus:ring-blue-500 focus:border-blue-500 font-extrabold';
                           break;
                         case 'EM ANDAMENTO':
-                          selectStyle = 'bg-amber-50 text-amber-700 border-amber-300 focus:ring-amber-500 focus:border-amber-500 font-black';
+                          selectStyle = 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500 focus:border-amber-200 font-extrabold';
                           break;
                         case 'CONCLUÍDO':
-                          selectStyle = 'bg-emerald-50 text-emerald-700 border-emerald-300 focus:ring-emerald-500 focus:border-emerald-500 font-black';
+                          selectStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500 focus:border-emerald-500 font-extrabold';
                           break;
                         case 'CANCELADO':
-                          selectStyle = 'bg-slate-50 text-slate-700 border-slate-300 focus:ring-slate-500 focus:border-slate-500 font-black';
+                          selectStyle = 'bg-slate-100 text-slate-700 border-slate-200 focus:ring-slate-500 focus:border-slate-500 font-extrabold';
                           break;
                       }
 
                       return (
                         <tr 
                           key={item.id} 
-                          className="text-xs text-[#311f14] group/row font-bold hover:bg-[#f3edd5]/40 transition-colors border-b border-[#5c3c24]/10 h-16"
+                          className="text-xs text-slate-900 group/row font-extrabold hover:bg-slate-50 transition-colors border-b border-slate-100 h-16"
                         >
                           {/* Index */}
-                          <td className="p-2 text-center text-[#5c3c24]/60 font-mono text-xs w-12 select-none">
+                          <td className="p-2 text-center text-slate-400 font-mono text-xs w-12 select-none">
                             {i + 1}
                           </td>
 
@@ -3635,8 +3636,8 @@ export default function Patio({ onBack }: PatioProps) {
                                   console.error("Erro ao salvar O.S:", err);
                                 });
                               }}
-                              placeholder="Nº da O.S (Ex: 900382)"
-                              className="w-full bg-[#faf5ec] border-2 border-[#5c3c24]/20 hover:border-[#5c3c24]/40 focus:border-[#ca1a20] text-[#311f14] font-mono font-black rounded-xl py-2 px-3 text-center outline-none transition-all uppercase text-xs shadow-xs"
+                              placeholder="Nº DA O.S (EX: 900382)"
+                              className="w-full bg-slate-50 border border-slate-200 hover:border-slate-350 focus:border-[#0F2D59] focus:bg-white text-slate-950 font-extrabold rounded-xl py-2 px-3 text-center outline-none transition-all uppercase text-xs"
                             />
                           </td>
 
@@ -3652,14 +3653,14 @@ export default function Patio({ onBack }: PatioProps) {
                                   console.error("Erro ao salvar data agendamento:", err);
                                 });
                               }}
-                              className="w-full bg-[#faf5ec] border-2 border-[#5c3c24]/20 hover:border-[#5c3c24]/40 focus:border-[#ca1a20] text-[#311f14] font-black rounded-xl py-2 px-3 text-center outline-none transition-all text-xs shadow-xs"
+                              className="w-full bg-slate-50 border border-slate-200 hover:border-slate-350 focus:border-[#0F2D59] focus:bg-white text-slate-950 font-extrabold rounded-xl py-2 px-3 text-center outline-none transition-all text-xs"
                             />
                           </td>
 
                           {/* Expiry Days column */}
                           <td className="p-2 text-center">
                             <div className={cn(
-                              "inline-block px-3 py-1.5 rounded-lg text-[10px] uppercase border font-extrabold select-none min-w-[120px] text-center shadow-xs",
+                              "inline-block px-3 py-1.5 rounded-lg text-[10px] uppercase border font-extrabold select-none min-w-[120px] text-center",
                               daysRemainingStyle
                             )}>
                               {daysRemainingText}
@@ -3678,7 +3679,7 @@ export default function Patio({ onBack }: PatioProps) {
                                 });
                               }}
                               className={cn(
-                                "w-full border-2 rounded-xl py-2 px-3 text-center outline-none transition-all text-xs font-black cursor-pointer shadow-xs",
+                                "w-full border rounded-xl py-2 px-3 text-center outline-none transition-all text-xs font-extrabold cursor-pointer",
                                 selectStyle
                               )}
                             >
@@ -3687,6 +3688,29 @@ export default function Patio({ onBack }: PatioProps) {
                               <option value="EM ANDAMENTO">🟡 EM ANDAMENTO</option>
                               <option value="CONCLUÍDO">🟢 CONCLUÍDO</option>
                               <option value="CANCELADO">⚫ CANCELADO</option>
+                            </select>
+                          </td>
+
+                          {/* Checklist Realizado dropdown column */}
+                          <td className="p-2 text-center">
+                            <select
+                              id={`os-checklist-realizado-${item.id}`}
+                              value={item.checklistRealizado || 'não'}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                update(ref(db, `checklist_veiculos/${item.id}`), { checklistRealizado: val }).catch(err => {
+                                  console.error("Erro ao salvar checklist realizado:", err);
+                                });
+                              }}
+                              className={cn(
+                                "w-full border rounded-xl py-2 px-3 text-center outline-none transition-all text-xs font-extrabold cursor-pointer",
+                                (item.checklistRealizado || 'não') === 'sim'
+                                  ? "bg-emerald-50 text-emerald-750 border-emerald-200 focus:ring-emerald-500 focus:border-emerald-500"
+                                  : "bg-rose-50 text-rose-750 border-rose-200 focus:ring-rose-500 focus:border-rose-500"
+                              )}
+                            >
+                              <option value="não">❌ NÃO</option>
+                              <option value="sim">✔️ SIM</option>
                             </select>
                           </td>
                         </tr>
