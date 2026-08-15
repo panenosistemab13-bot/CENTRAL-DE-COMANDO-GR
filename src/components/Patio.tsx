@@ -26,7 +26,14 @@ import {
   X,
   Save,
   FileText,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Globe,
+  Key,
+  Phone,
+  MapPin,
+  ExternalLink,
+  ShieldAlert,
+  ArrowRight
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
@@ -405,6 +412,277 @@ export interface OrdemColetaItem {
 
 const DEFAULT_ORDEM_COLETA: OrdemColetaItem[] = [];
 
+interface OSField {
+  label: string;
+  value: string;
+  copyable?: boolean;
+}
+
+interface OSItem {
+  id: string;
+  title: string;
+  category: 'Credenciais' | 'Sistemas' | 'Pontos de Atendimento' | 'Socorro Emergencial';
+  icon: 'Key' | 'Globe' | 'MapPin' | 'ShieldAlert';
+  fields: OSField[];
+  rawText: string;
+}
+
+const OS_ITEMS: OSItem[] = [
+  {
+    id: 'tablet_os',
+    title: 'Senha do Tablet / Abertura O.S.',
+    category: 'Credenciais',
+    icon: 'Key',
+    fields: [
+      { label: 'Senha do Tablet', value: 'Abrir os' },
+      { label: 'CNPJ', value: '63310411000101', copyable: true }
+    ],
+    rawText: 'Senha do tablet \nAbrir os:\ncnpj: 63310411000101'
+  },
+  {
+    id: 'sascar_dashboard',
+    title: 'Portal Cliente Sascar',
+    category: 'Sistemas',
+    icon: 'Globe',
+    fields: [
+      { label: 'Link do Dashboard', value: 'https://portalcliente.sascar.com.br/dashboard?loggedIn=true', copyable: true }
+    ],
+    rawText: 'https://portalcliente.sascar.com.br/dashboard?loggedIn=true'
+  },
+  {
+    id: 'sascar_manutencao',
+    title: 'Agendar Manutenção Sascar',
+    category: 'Sistemas',
+    icon: 'Key',
+    fields: [
+      { label: 'Portal', value: 'Portal de Serviços Sascar' },
+      { label: 'Usuário', value: 'Sclara' },
+      { label: 'Grupo', value: 'ADM' },
+      { label: 'Senha', value: 'Sascar@852#', copyable: true }
+    ],
+    rawText: 'Agendar manutenção:\nPortal de Serviços Sascar\nSclara\nADM\nSascar@852#'
+  },
+  {
+    id: 'posto_uberlandia',
+    title: 'Posto de Atendimento - Uberlândia/MG',
+    category: 'Pontos de Atendimento',
+    icon: 'MapPin',
+    fields: [
+      { label: 'Cidade/Estado', value: 'UBERLANDIA - MG' },
+      { label: 'CEP', value: '38425367' },
+      { label: 'Bairro', value: 'Shopping Park' },
+      { label: 'Logradouro', value: 'AVENIDA MANOEL MADRUGA', copyable: true },
+      { label: 'Número', value: '1140' },
+      { label: 'Ponto de Referência', value: 'SHOPPING PARK' }
+    ],
+    rawText: ' UBERLANDIA\nCEP:  38425367\nESTADO: MG\n\nCIDADE: UBERLANDIA\nBAIRRO: Shopping Park\nLOGRADOURO: AVENIDA MANOEL MADRUGA\nN°: 1140 \nPONTO DE REFERÊNCIA:  SHOPPING PARK'
+  },
+  {
+    id: 'posto_ipatinga',
+    title: 'Posto de Atendimento - Ipatinga/MG',
+    category: 'Pontos de Atendimento',
+    icon: 'MapPin',
+    fields: [
+      { label: 'Cidade/Estado', value: 'IPATINGA - MG' },
+      { label: 'CEP', value: '35164013' },
+      { label: 'Bairro', value: 'GRANJAS VAGALUME' },
+      { label: 'Logradouro', value: 'AVENIDA JOSE RAIMUNDO', copyable: true },
+      { label: 'Número', value: '3345' },
+      { label: 'Ponto de Referência', value: 'FINAL DA RUA GERASA' }
+    ],
+    rawText: ' IPATINGA\nCEP: 35164013\nESTADO: MG\nCIDADE: IPATINGA \nBAIRRO: GRANJAS VAGALUME\nLOGRADOURO: AVENIDA JOSE RAIMUNDO\nN°: 3345\nPONTO DE REFERÊNCIA: FINAL DA RUA GERASA'
+  },
+  {
+    id: 'posto_varginha',
+    title: 'Posto de Atendimento - Varginha/MG',
+    category: 'Pontos de Atendimento',
+    icon: 'MapPin',
+    fields: [
+      { label: 'Local', value: 'Endereço TP Varginha' },
+      { label: 'Rua', value: 'Rua Zoroastro Henrique Amorim, 450' },
+      { label: 'Distrito Industrial', value: 'Distrito Industrial Cláudio Galvão Nogueira', copyable: true },
+      { label: 'Cidade/Estado', value: 'Varginha/MG' },
+      { label: 'CEP', value: '37066-415' }
+    ],
+    rawText: ' VARGINHA\nEndereço TP Varginha:\nRua Zoroastro Henrique Amorim, 450 \nDistrito Industrial Cláudio Galvão Nogueira\nVarginha/MG\nCEP: 37066-415'
+  },
+  {
+    id: 'socorro_douglas',
+    title: 'Socorro Emergencial - Douglas Medeiros',
+    category: 'Socorro Emergencial',
+    icon: 'ShieldAlert',
+    fields: [
+      { label: 'CNPJ', value: '63310411000101' },
+      { label: 'Nome', value: 'Douglas Medeiros' },
+      { label: 'Relato', value: 'Preciso de um socorro emergencial, Tentamos off-line e não é problema mecânico' },
+      { label: 'Condutor', value: 'Douglas Medeiros Dutra' },
+      { label: 'Telefone', value: '31 9 86635900', copyable: true },
+      { label: 'CEP', value: '33170-000' },
+      { label: 'Rua', value: 'Av. Brasília, 5145' }
+    ],
+    rawText: 'Abrir os:\ncnpj:\n63310411000101\nNome: Douglas Medeiros \n\nPreciso de um socorro emergencial, Tentamos off-line e não é problema mecânico\nNome do condutor: Douglas Medeiros Dutra\nTelefone do condutor: 31 9 86635900\nLocalidade onde está o veículo: \nCep: 33170-000\nRua:  Av. Brasília, 5145'
+  },
+  {
+    id: 'posto_vespasiano',
+    title: 'Posto de Atendimento - Vespasiano/MG',
+    category: 'Pontos de Atendimento',
+    icon: 'MapPin',
+    fields: [
+      { label: 'CEP', value: '33206244' },
+      { label: 'Endereço', value: 'R. Antônio Engrácio Pereira' },
+      { label: 'Nº', value: '101' },
+      { label: 'Bairro', value: 'Dos Ipês' },
+      { label: 'Cidade/Estado', value: 'Vespasiano - MG' },
+      { label: 'Ponto de Referência', value: 'ConGLP fins' }
+    ],
+    rawText: 'VESPASIANO\nCEP: 33206244\nEndereço: R. Antônio Engrácio Pereira\nNº 101\nBairro:  Dos Ipês\nCidade:  Vespasiano\nEstado: MG\nPonto de Referência: ConGLP fins'
+  },
+  {
+    id: 'posto_santa_luzia',
+    title: 'Posto de Atendimento - Santa Luzia/MG',
+    category: 'Pontos de Atendimento',
+    icon: 'MapPin',
+    fields: [
+      { label: 'CEP', value: '33170000' },
+      { label: 'Nº', value: '5145' },
+      { label: 'Bairro', value: 'Duquesa II' },
+      { label: 'Cidade/Estado', value: 'SANTA LUZIA - MG' },
+      { label: 'Ponto de Referência', value: 'Fabrica 3 corações' }
+    ],
+    rawText: 'SANTA LUZIA\nCEP: 33170000\nNº 5145\nBairro:  Duquesa II\nCidade: SANTA LUZIA\nEstado: MG\nPonto de Referência: Fabrica 3 corações'
+  },
+  {
+    id: 'posto_sabara_kolansk',
+    title: 'Auto Elétrica Kolansk - Sabará/MG',
+    category: 'Pontos de Atendimento',
+    icon: 'MapPin',
+    fields: [
+      { label: 'Responsável', value: 'AUTO ELÉTRICA KOLANSK' },
+      { label: 'Endereço', value: 'ROD BR 381,33, 33 - BORGES', copyable: true },
+      { label: 'Cidade/Estado', value: 'SABARA - MG' },
+      { label: 'Telefone', value: '(31) 36911027', copyable: true }
+    ],
+    rawText: 'Endereço Kolansk:\nPrestador de serviços responsável pelo atendimento: AUTO ELÉTRICA KOLANSK\nEndereço: ROD BR 381,33, 33 - BORGES\nSABARA - MG\n(31) 36911027\nPonto de Referência:'
+  },
+  {
+    id: 'socorro_paulo',
+    title: 'Socorro Emergencial - Paulo Pereira',
+    category: 'Socorro Emergencial',
+    icon: 'ShieldAlert',
+    fields: [
+      { label: 'Condutor', value: 'PAULO PEREIRA DE SOUSA' },
+      { label: 'CEP', value: '13178-561' },
+      { label: 'Rua', value: 'AV PEDRO PASCOAL DOS SANTOS 410 AREA A' },
+      { label: 'Bairro', value: 'RESIDENCIAL REAL PARQUE SUMARE' },
+      { label: 'Cidade/Estado', value: 'Sumaré - SP' },
+      { label: 'Ponto de Referência', value: 'RESIDENCIAL REAL PARQUE' },
+      { label: 'Carga', value: 'FRIGORÍFICO' },
+      { label: 'Dentro de Empresa?', value: 'SIM' },
+      { label: 'Necessita Autorização?', value: 'SIM' },
+      { label: 'Responsável Retorno', value: 'Alef Junio' },
+      { label: 'Telefone/WhatsApp', value: '31 9 86635900', copyable: true }
+    ],
+    rawText: 'SOCORRO EMERGENCIAL \n\nNOME DO CONDUTOR: PAULO PEREIRA DE SOUSA\nTELEFONE DO CONDUTOR:\nLOCALIDADE ONDE ESTÁ O VEICULO:\nCEP: 13178-561\nRUA:  AV PEDRO PASCOAL DOS SANTOS 410 AREA A\nBAIRRO: BAIRRO/DISTRITO\n RESIDENCIAL REAL PARQUE SUMARE\nCIDADE: Sumaré\nESTADO: SP\nPONTO DE REFERÊNCIA: RESIDENCIAL REAL PARQUE\nVEICULO ESTÁ CARREGADO?  FRIGORÍFICO (  X ) SECA (   ) VAZIO (   )\nESTA DENTRO DE EMPRESA? SIM\nPOSSUI TOMADA DE ENERGIA NO LOCAL?\nHORÁRIO DE FUNCIONAMENTO DO LOCAL?\nNECESSÁRIO ALGUMA AUTORIZAÇÃO PARA ENTRAR NO LOCAL?  SIM\nNOME DO RESPONSÁVEL PARA RETORNO COM A PREVISÃO: Alef Junio\nTELEFONE DO RESPONSÁVEL PARA RETORNO COM A PREVISÃO: 31 9 86635900\nWHATSAPP DO RESPONSÁVEL PARA RETORNO COM A PREVISÃO: 31 9 86635900'
+  }
+];
+
+const FULL_OS_TEXT = `Senha do tablet 
+Abrir os:
+cnpj: 63310411000101  (COPIA)
+
+
+https://portalcliente.sascar.com.br/dashboard?loggedIn=true  (COPIA)
+Agendar manutenção:
+Portal de Serviços Sascar
+Sclara
+ADM
+Sascar@852# (COPIA)
+ UBERLANDIA
+CEP:  38425367
+ESTADO: MG
+
+CIDADE: UBERLANDIA
+BAIRRO: Shopping Park
+LOGRADOURO: AVENIDA MANOEL MADRUGA (COPIA)
+N°: 1140 
+PONTO DE REFERÊNCIA:  SHOPPING PARK            -------------------------------------------------------------------------
+
+ IPATINGA
+CEP: 35164013
+ESTADO: MG
+CIDADE: IPATINGA 
+BAIRRO: GRANJAS VAGALUME
+LOGRADOURO: AVENIDA JOSE RAIMUNDO (COPIA)
+N°: 3345
+PONTO DE REFERÊNCIA: FINAL DA RUA GERASA
+---------------------------------------------------------------------------------------------------------------------------
+
+
+ VARGINHA
+Endereço TP Varginha:
+Rua Zoroastro Henrique Amorim, 450 
+Distrito Industrial Cláudio Galvão Nogueira (COPIA)
+Varginha/MG
+CEP: 37066-415
+–---------------------------------------------------------------------------------------------------------------------------
+Abrir os:
+cnpj:
+63310411000101
+Nome: Douglas Medeiros 
+
+Preciso de um socorro emergencial, Tentamos off-line e não e problema mecânico
+Nome do condutor: Douglas Medeiros Dutra
+Telefone do condutor: 31 9 86635900
+Localidade onde está o veículo: 
+Cep: 33170-000
+Rua:  Av. Brasília, 5145
+
+VESPASIANO
+CEP: 33206244
+Endereço: R. Antônio Engrácio Pereira
+Nº 101
+Bairro:  Dos Ipês
+Cidade:  Vespasiano
+Estado: MG
+Ponto de Referência: ConGLP fins
+
+SANTA LUZIA
+CEP: 33170000
+Nº 5145
+Bairro:  Duquesa II
+Cidade: SANTA LUZIA
+Estado: MG
+Ponto de Referência: Fabrica 3 corações
+—--------------------------------------------------------------------------------------
+Endereço Kolansk:
+Prestador de serviços responsável pelo atendimento: AUTO ELÉTRICA KOLANSK
+Endereço: ROD BR 381,33, 33 - BORGES (COPIA)
+SABARA - MG
+(31) 36911027
+Ponto de Referência:
+
+—---------------------------------------------------------------------------------------------
+SOCORRO EMERGENCIAL 
+
+NOME DO CONDUTOR: PAULO PEREIRA DE SOUSA
+TELEFONE DO CONDUTOR:
+LOCALIDADE ONDE ESTÁ O VEICULO:
+CEP: 13178-561
+RUA:  AV PEDRO PASCOAL DOS SANTOS 410 AREA A
+BAIRRO: BAIRRO/DISTRITO
+ RESIDENCIAL REAL PARQUE SUMARE
+CIDADE: Sumaré
+ESTADO: SP
+PONTO DE REFERÊNCIA: RESIDENCIAL REAL PARQUE
+VEICULO ESTÁ CARREGADO?  FRIGORÍFICO (  X ) SECA (   ) VAZIO (   )
+ESTA DENTRO DE EMPRESA? SIM
+POSSUI TOMADA DE ENERGIA NO LOCAL?
+HORÁRIO DE FUNCIONAMENTO DO LOCAL?
+NECESSÁRIO ALGUMA AUTORIZAÇÃO PARA ENTRAR NO LOCAL?  SIM
+NOME DO RESPONSÁVEL PARA RETORNO COM A PREVISÃO: Alef Junio
+TELEFONE DO RESPONSÁVEL PARA RETORNO COM A PREVISÃO: 31 9 86635900
+WHATSAPP DO RESPONSÁVEL PARA RETORNO COM A PREVISÃO: 31 9 86635900`;
+
 export default function Patio({ onBack }: PatioProps) {
   const principle = useCurrentPrinciple();
   const [patioData, setPatioData] = useState<PatioItem[]>([]);
@@ -416,7 +694,23 @@ export default function Patio({ onBack }: PatioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lista' | 'importar'>('lista');
-  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas'>('patio');
+  const [activeSubTab, setActiveSubTab] = useState<'patio' | 'disponibilidade' | 'iscas' | 'os'>('patio');
+  const [checklistItems, setChecklistItems] = useState<any[]>([]);
+  const [osListSearch, setOsListSearch] = useState('');
+  const [osSearch, setOsSearch] = useState('');
+  const [osCategory, setOsCategory] = useState<'Todos' | 'Credenciais' | 'Sistemas' | 'Pontos de Atendimento' | 'Socorro Emergencial'>('Todos');
+  const [osFullTextCopied, setOsFullTextCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const copyToClipboard = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1800);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 
   useEffect(() => {
@@ -1078,6 +1372,25 @@ export default function Patio({ onBack }: PatioProps) {
       setPatioData(items);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'patio/veiculos');
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Escutar veículos da página checklist
+    const checklistRef = ref(db, 'checklist_veiculos');
+    const unsubscribe = onValue(checklistRef, (snapshot) => {
+      const data = snapshot.val();
+      const itemsList: any[] = [];
+      if (data) {
+        Object.entries(data).forEach(([key, value]: [string, any]) => {
+          itemsList.push({ id: key, ...value });
+        });
+      }
+      setChecklistItems(itemsList);
+    }, (error) => {
+      console.error("Erro ao carregar veículos do checklist:", error);
     });
 
     return () => unsubscribe();
@@ -2133,12 +2446,12 @@ export default function Patio({ onBack }: PatioProps) {
       </div>
 
       {/* ================= NAVIGATION TABS ================= */}
-      <div className="hidden md:flex w-full relative z-10 max-w-[94rem] mx-auto mb-6 flex-col sm:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-2 bg-[#e8d5bc]/80 p-1 border-2 border-[#5c3c24]/25 rounded-xl shadow-inner w-full sm:w-auto shrink-0">
+      <div className="flex w-full relative z-10 max-w-[94rem] mx-auto mb-6 flex-col md:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 bg-[#e8d5bc]/80 p-1 border-2 border-[#5c3c24]/25 rounded-xl shadow-inner w-full md:w-auto shrink-0">
           <button
             onClick={() => setActiveSubTab('patio')}
             className={cn(
-              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              "flex-1 md:flex-none px-4 sm:px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
               activeSubTab === 'patio'
                 ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
                 : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
@@ -2151,7 +2464,7 @@ export default function Patio({ onBack }: PatioProps) {
             <button
               onClick={() => setActiveSubTab('disponibilidade')}
               className={cn(
-                "hidden md:flex flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer items-center justify-center gap-2 select-none",
+                "hidden md:flex flex-1 md:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] rounded-lg transition-all cursor-pointer items-center justify-center gap-2 select-none",
                 activeSubTab === 'disponibilidade'
                   ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
                   : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
@@ -2164,7 +2477,7 @@ export default function Patio({ onBack }: PatioProps) {
           <button
             onClick={() => setActiveSubTab('iscas')}
             className={cn(
-              "flex-1 sm:flex-none px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              "flex-1 md:flex-none px-4 sm:px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
               activeSubTab === 'iscas'
                 ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
                 : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
@@ -2172,6 +2485,18 @@ export default function Patio({ onBack }: PatioProps) {
           >
             <Cpu size={14} className="stroke-[2.5]" />
             <span>Iscas</span>
+          </button>
+          <button
+            onClick={() => setActiveSubTab('os')}
+            className={cn(
+              "flex-1 md:flex-none px-4 sm:px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 select-none",
+              activeSubTab === 'os'
+                ? "bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] shadow-md border border-[#ff3e47]/20 font-black"
+                : "text-[#5c3c24] hover:bg-[#debfa0]/40 font-bold"
+            )}
+          >
+            <ShieldCheck size={14} className="stroke-[2.5]" />
+            <span>O.s</span>
           </button>
         </div>
         <div className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider hidden md:block">
@@ -3093,6 +3418,285 @@ export default function Patio({ onBack }: PatioProps) {
             </WoodenPlaque>
           </div>
 
+        </div>
+      ) : activeSubTab === 'os' ? (
+        /* ================= NEW "O.s" VEHICLE LIST AND SERVICE ORDERS INTEGRATION TAB ================= */
+        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col gap-6 min-h-0 animate-fade-in px-4">
+          
+          {/* Header Plaque */}
+          <WoodenPlaque className="py-4 px-6 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4" screwSize="w-2.5 h-2.5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ca1a20] to-[#800609] flex items-center justify-center shadow-md border border-red-500/20">
+                <FileText className="text-[#fdefd1] w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div className="text-left">
+                <h2 className="text-xl font-black font-rustic-title text-[#311f14] uppercase tracking-wide leading-tight">
+                  Controle de Ordens de Serviço (O.S)
+                </h2>
+                <p className="text-[10px] text-[#5c3c24]/80 font-bold uppercase tracking-wider mt-0.5">
+                  Sincronizado em tempo real com todos os veículos da página Checklist
+                </p>
+              </div>
+            </div>
+
+            {/* Quick search input */}
+            <div className="relative w-full md:w-80">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search size={14} className="text-[#5c3c24]/50" />
+              </span>
+              <input
+                id="os-search-input"
+                type="text"
+                placeholder="Buscar placa..."
+                value={osListSearch}
+                onChange={(e) => setOsListSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-xl text-xs font-bold text-[#311f14] placeholder-[#5c3c24]/50 outline-none focus:border-[#ca1a20] transition-colors shadow-inner font-sans"
+              />
+              {osListSearch && (
+                <button
+                  id="os-search-clear"
+                  onClick={() => setOsListSearch('')}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#5c3c24]/60 hover:text-[#ca1a20] transition-colors cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </WoodenPlaque>
+
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-[#ebd9c3] flex items-center justify-center text-[#5c3c24]">
+                <Truck size={16} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="block text-[8.5px] font-black uppercase text-[#5c3c24]/60 tracking-wider">Total Veículos</span>
+                <span className="text-base font-black font-mono text-[#311f14]">{checklistItems.length}</span>
+              </div>
+            </div>
+            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-700 border border-red-200">
+                <ShieldAlert size={16} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="block text-[8.5px] font-black uppercase text-red-600/70 tracking-wider">Pendente</span>
+                <span className="text-base font-black font-mono text-red-700">
+                  {checklistItems.filter(item => (item.osStatus || 'PENDENTE') === 'PENDENTE').length}
+                </span>
+              </div>
+            </div>
+            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 border border-blue-200">
+                <Activity size={16} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="block text-[8.5px] font-black uppercase text-blue-600/70 tracking-wider">Agendado</span>
+                <span className="text-base font-black font-mono text-blue-700">
+                  {checklistItems.filter(item => item.osStatus === 'AGENDADO').length}
+                </span>
+              </div>
+            </div>
+            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 border border-amber-200">
+                <Loader2 size={16} className="stroke-[2.5] animate-spin" />
+              </div>
+              <div>
+                <span className="block text-[8.5px] font-black uppercase text-amber-600/70 tracking-wider">Em Andamento</span>
+                <span className="text-base font-black font-mono text-amber-700">
+                  {checklistItems.filter(item => item.osStatus === 'EM ANDAMENTO').length}
+                </span>
+              </div>
+            </div>
+            <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 p-3 rounded-2xl shadow-md flex items-center gap-3 text-left col-span-2 sm:col-span-1">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 border border-emerald-200">
+                <ShieldCheck size={16} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="block text-[8.5px] font-black uppercase text-emerald-600/70 tracking-wider">Concluído</span>
+                <span className="text-base font-black font-mono text-emerald-700">
+                  {checklistItems.filter(item => item.osStatus === 'CONCLUÍDO').length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* SM Styled Grid Frame */}
+          <div className="bg-[#fcf9f2] border-2 border-[#5c3c24]/30 rounded-2xl p-3 shadow-md overflow-hidden relative flex-1 flex flex-col min-h-0">
+            {checklistItems.filter(item => {
+              const term = osListSearch.toLowerCase().trim();
+              if (!term) return true;
+              return (item.cavalo || '').toLowerCase().includes(term) || (item.carretas || '').toLowerCase().includes(term);
+            }).length === 0 ? (
+              <div className="p-12 flex-1 flex flex-col items-center justify-center text-center bg-amber-50/20 rounded-xl border-2 border-dashed border-[#5c3c24]/20 min-h-[300px]">
+                <Truck className="text-[#5c3c24]/40 w-12 h-12 mb-3" />
+                <p className="text-sm text-[#311f14] mb-1 font-black uppercase font-sans">Nenhum veículo encontrado</p>
+                <p className="text-xs text-[#5c3c24]/70 max-w-md">
+                  {osListSearch 
+                    ? "Altere os termos da sua pesquisa para encontrar veículos correspondentes." 
+                    : "Não há veículos cadastrados na página Checklist. Vá até lá para cadastrar veículos."}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-auto rounded-xl border-2 border-[#5c3c24]/25 flex-1 max-h-[500px]">
+                <table className="w-full text-left border-collapse font-sans">
+                  <thead>
+                    <tr className="bg-gradient-to-b from-[#ca1a20] to-[#800609] text-[#fdefd1] text-[10px] uppercase font-black tracking-wider h-11 border-b-2 border-[#5c3c24]/30 sticky top-0 z-20">
+                      <th className="px-3 py-2.5 w-12 text-center select-none">#</th>
+                      <th className="px-4 py-2.5 min-w-[280px]">placas da pagina checklist</th>
+                      <th className="px-4 py-2.5 w-60">numero da O.S</th>
+                      <th className="px-4 py-2.5 w-60">Data do agendamento</th>
+                      <th className="px-4 py-2.5 w-56 text-center">dias de vencimento</th>
+                      <th className="px-4 py-2.5 w-56 text-center">status com menu suspenso</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-[#fefcf8]">
+                    {checklistItems.filter(item => {
+                      const term = osListSearch.toLowerCase().trim();
+                      if (!term) return true;
+                      return (item.cavalo || '').toLowerCase().includes(term) || (item.carretas || '').toLowerCase().includes(term);
+                    }).map((item, i) => {
+                      // Calculate days remaining
+                      let daysRemainingText = 'Sem agendamento';
+                      let daysRemainingStyle = 'bg-slate-100 text-slate-500 border-slate-200';
+                      if (item.dataAgendamento) {
+                        try {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const target = new Date(item.dataAgendamento + 'T00:00:00');
+                          target.setHours(0, 0, 0, 0);
+                          const diffTime = target.getTime() - today.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          if (diffDays > 0) {
+                            daysRemainingText = `Faltam ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+                            daysRemainingStyle = 'bg-emerald-100 text-emerald-800 border-emerald-300 font-extrabold shadow-xs';
+                          } else if (diffDays === 0) {
+                            daysRemainingText = 'Hoje';
+                            daysRemainingStyle = 'bg-amber-100 text-amber-800 border-amber-300 font-extrabold shadow-xs animate-pulse';
+                          } else {
+                            const absDays = Math.abs(diffDays);
+                            daysRemainingText = `Atrasado ${absDays} dia${absDays > 1 ? 's' : ''}`;
+                            daysRemainingStyle = 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold shadow-xs';
+                          }
+                        } catch (e) {
+                          daysRemainingText = 'Data inválida';
+                          daysRemainingStyle = 'bg-red-50 text-red-600 border-red-200';
+                        }
+                      }
+
+                      // Select styles helper
+                      let selectStyle = 'bg-slate-50 text-[#311f14] border-slate-300 font-black';
+                      switch (item.osStatus) {
+                        case 'PENDENTE':
+                          selectStyle = 'bg-red-50 text-red-700 border-red-300 focus:ring-red-500 focus:border-red-500 font-black';
+                          break;
+                        case 'AGENDADO':
+                          selectStyle = 'bg-blue-50 text-blue-700 border-blue-300 focus:ring-blue-500 focus:border-blue-500 font-black';
+                          break;
+                        case 'EM ANDAMENTO':
+                          selectStyle = 'bg-amber-50 text-amber-700 border-amber-300 focus:ring-amber-500 focus:border-amber-500 font-black';
+                          break;
+                        case 'CONCLUÍDO':
+                          selectStyle = 'bg-emerald-50 text-emerald-700 border-emerald-300 focus:ring-emerald-500 focus:border-emerald-500 font-black';
+                          break;
+                        case 'CANCELADO':
+                          selectStyle = 'bg-slate-50 text-slate-700 border-slate-300 focus:ring-slate-500 focus:border-slate-500 font-black';
+                          break;
+                      }
+
+                      return (
+                        <tr 
+                          key={item.id} 
+                          className="text-xs text-[#311f14] group/row font-bold hover:bg-[#f3edd5]/40 transition-colors border-b border-[#5c3c24]/10 h-16"
+                        >
+                          {/* Index */}
+                          <td className="p-2 text-center text-[#5c3c24]/60 font-mono text-xs w-12 select-none">
+                            {i + 1}
+                          </td>
+
+                          {/* Plates column */}
+                          <td className="p-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {item.cavalo && (
+                                <LicensePlate plate={item.cavalo} type="cavalo" />
+                              )}
+                            </div>
+                          </td>
+
+                          {/* O.S Number column */}
+                          <td className="p-2">
+                            <input 
+                              id={`os-number-${item.id}`}
+                              type="text"
+                              defaultValue={item.manutencaoOs || ''}
+                              onBlur={(e) => {
+                                const val = e.target.value;
+                                update(ref(db, `checklist_veiculos/${item.id}`), { manutencaoOs: val }).catch(err => {
+                                  console.error("Erro ao salvar O.S:", err);
+                                });
+                              }}
+                              placeholder="Nº da O.S (Ex: 900382)"
+                              className="w-full bg-[#faf5ec] border-2 border-[#5c3c24]/20 hover:border-[#5c3c24]/40 focus:border-[#ca1a20] text-[#311f14] font-mono font-black rounded-xl py-2 px-3 text-center outline-none transition-all uppercase text-xs shadow-xs"
+                            />
+                          </td>
+
+                          {/* Scheduled Date column */}
+                          <td className="p-2">
+                            <input 
+                              id={`os-date-${item.id}`}
+                              type="date"
+                              value={item.dataAgendamento || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                update(ref(db, `checklist_veiculos/${item.id}`), { dataAgendamento: val }).catch(err => {
+                                  console.error("Erro ao salvar data agendamento:", err);
+                                });
+                              }}
+                              className="w-full bg-[#faf5ec] border-2 border-[#5c3c24]/20 hover:border-[#5c3c24]/40 focus:border-[#ca1a20] text-[#311f14] font-black rounded-xl py-2 px-3 text-center outline-none transition-all text-xs shadow-xs"
+                            />
+                          </td>
+
+                          {/* Expiry Days column */}
+                          <td className="p-2 text-center">
+                            <div className={cn(
+                              "inline-block px-3 py-1.5 rounded-lg text-[10px] uppercase border font-extrabold select-none min-w-[120px] text-center shadow-xs",
+                              daysRemainingStyle
+                            )}>
+                              {daysRemainingText}
+                            </div>
+                          </td>
+
+                          {/* Status dropdown column */}
+                          <td className="p-2 text-center">
+                            <select
+                              id={`os-status-${item.id}`}
+                              value={item.osStatus || 'PENDENTE'}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                update(ref(db, `checklist_veiculos/${item.id}`), { osStatus: val }).catch(err => {
+                                  console.error("Erro ao salvar status:", err);
+                                });
+                              }}
+                              className={cn(
+                                "w-full border-2 rounded-xl py-2 px-3 text-center outline-none transition-all text-xs font-black cursor-pointer shadow-xs",
+                                selectStyle
+                              )}
+                            >
+                              <option value="PENDENTE">🔴 PENDENTE</option>
+                              <option value="AGENDADO">🔵 AGENDADO</option>
+                              <option value="EM ANDAMENTO">🟡 EM ANDAMENTO</option>
+                              <option value="CONCLUÍDO">🟢 CONCLUÍDO</option>
+                              <option value="CANCELADO">⚫ CANCELADO</option>
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       ) : null}
 
