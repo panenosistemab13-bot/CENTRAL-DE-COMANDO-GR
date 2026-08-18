@@ -33,7 +33,9 @@ import {
   MapPin,
   ExternalLink,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Mail,
+  Clock
 } from 'lucide-react';
 import { ref, push, set, onValue, remove, update } from 'firebase/database';
 import { rtdb as db, handleFirestoreError, OperationType } from '../firebase';
@@ -332,6 +334,24 @@ const generateDisponibilidadeHtmlAndText = (greeting: 'bom dia' | 'boa tarde' | 
   }
   
   return { html, text: plainText };
+};
+
+const generateDisponibilidadeIntroHtmlAndText = (greeting: 'bom dia' | 'boa tarde' | 'boa noite') => {
+  const greetingPhrase = `Prezados, ${greeting}!`;
+  const subPhrase1 = `Segue a disponibilidade de veículos.`;
+  const subPhrase2Text = `Favor ficarem atentos à origem de cada carregamento`;
+
+  const html = `<div style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; background-color: #ffffff; padding: 10px; margin: 0;">
+    <p style="margin: 0 0 16px 0; font-family: Verdana, sans-serif; font-weight: normal; font-size: 11pt; color: #000000;">${greetingPhrase}</p>
+    <p style="margin: 0 0 4px 0; font-family: Verdana, sans-serif; font-weight: normal; font-size: 11pt; color: #000000;">${subPhrase1}</p>
+    <p style="margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000;">
+      <span style="background-color: #b4a7d6; font-weight: bold; font-family: Verdana, sans-serif; font-size: 17px; color: #000000; padding: 1px 3px;">${subPhrase2Text}</span>.
+    </p>
+  </div>`;
+
+  const text = `${greetingPhrase}\n\n${subPhrase1}\n${subPhrase2Text}.`;
+
+  return { html, text };
 };
 
 interface IngestedVehicle {
@@ -736,6 +756,7 @@ export default function Patio({ onBack }: PatioProps) {
   }, [activeSubTab]);
   const [dispCopied, setDispCopied] = useState(false);
   const [subjectCopied, setSubjectCopied] = useState(false);
+  const [introCopied, setIntroCopied] = useState(false);
   const [ingestedVehicles, setIngestedVehicles] = useState<IngestedVehicle[]>([]);
 
   // Iscas states
@@ -2989,21 +3010,79 @@ export default function Patio({ onBack }: PatioProps) {
                   </div>
                 </div>
 
-                {/* Greeting Dropdown Selector */}
-                <div className="flex flex-col gap-2 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24]">Saudação Inicial (Automática):</label>
-                  <div className="relative inline-block w-full">
-                    <select 
-                      value={disponibilidadeGreeting} 
-                      onChange={(e) => setDisponibilidadeGreeting(e.target.value as 'bom dia' | 'boa tarde' | 'boa noite')} 
-                      className="w-full bg-gradient-to-b from-[#f8f5ee] to-[#eddaba] border-2 border-[#5c3c24]/60 text-[#311f14] font-black text-xs uppercase tracking-widest rounded-xl py-3 px-4 shadow-md outline-none cursor-pointer hover:bg-[#e4cbab] transition-all appearance-none text-left"
+                {/* Texto do E-mail (Copiar Separadamente) */}
+                <div className="flex flex-col gap-2.5 text-left bg-[#f8f5ee]/90 border-2 border-[#5c3c24]/30 rounded-xl p-3.5 shadow-sm">
+                  <div className="flex justify-between items-center gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-[#5c3c24] flex items-center gap-1.5">
+                      <Mail size={13} className="text-[#ca1a20] shrink-0" />
+                      <span>Texto do e-mail (copiar separadamente):</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const { html, text } = generateDisponibilidadeIntroHtmlAndText(disponibilidadeGreeting);
+                        try {
+                          const typeHtml = "text/html";
+                          const typeText = "text/plain";
+                          const blobHtml = new Blob([html], { type: typeHtml });
+                          const blobText = new Blob([text], { type: typeText });
+                          const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
+                          await navigator.clipboard.write(data);
+                          setIntroCopied(true);
+                          setTimeout(() => setIntroCopied(false), 2000);
+                        } catch (err) {
+                          await navigator.clipboard.writeText(text);
+                          setIntroCopied(true);
+                          setTimeout(() => setIntroCopied(false), 2000);
+                        }
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm shrink-0",
+                        introCopied
+                          ? "bg-green-700 border-green-800 text-white"
+                          : "bg-gradient-to-b from-[#ca1a20] to-[#8c060a] hover:from-[#e52229] hover:to-[#a9080d] border-[#ff3e47]/30 text-white"
+                      )}
                     >
-                      <option value="bom dia">Prezados, bom dia!</option>
-                      <option value="boa tarde">Prezados, boa tarde!</option>
-                      <option value="boa noite">Prezados, boa noite!</option>
-                    </select>
-                    <div className="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none text-[#5c3c24] text-xs font-bold">
-                      ▼
+                      {introCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} className="stroke-[2.5]" />}
+                      {introCopied ? 'Copiado!' : 'Copiar Texto'}
+                    </button>
+                  </div>
+
+                  {/* Visual Preview of the Email Text exactly as attached */}
+                  <div className="bg-white border-2 border-[#5c3c24]/40 rounded-lg p-3 text-left font-sans text-xs text-black shadow-inner space-y-2 select-text">
+                    <p className="font-semibold text-slate-900 m-0">Prezados, {disponibilidadeGreeting}!</p>
+                    <p className="text-slate-800 m-0">Segue a disponibilidade de veículos.</p>
+                    <p className="m-0">
+                      <span className="bg-[#b4a7d6] text-black font-bold px-1.5 py-0.5 rounded-sm inline-block shadow-xs">
+                        Favor ficarem atentos à origem de cada carregamento
+                      </span>.
+                    </p>
+                  </div>
+
+                  {/* Greeting Selector with Time Guide */}
+                  <div className="flex flex-col gap-1 pt-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-[#5c3c24] flex items-center gap-1">
+                        <Clock size={11} className="text-[#ca1a20]" />
+                        <span>Saudação Inicial (Horário Automático):</span>
+                      </label>
+                      <span className="text-[8px] font-extrabold text-[#ca1a20] bg-red-100 border border-red-200 px-1.5 py-0.5 rounded uppercase">
+                        {disponibilidadeGreeting === 'bom dia' ? '00:00 às 12:00' : disponibilidadeGreeting === 'boa tarde' ? '12:00 às 18:00' : '18:00 às 00:00'}
+                      </span>
+                    </div>
+                    <div className="relative inline-block w-full">
+                      <select 
+                        value={disponibilidadeGreeting} 
+                        onChange={(e) => setDisponibilidadeGreeting(e.target.value as 'bom dia' | 'boa tarde' | 'boa noite')} 
+                        className="w-full bg-gradient-to-b from-[#f8f5ee] to-[#eddaba] border-2 border-[#5c3c24]/60 text-[#311f14] font-black text-xs uppercase tracking-widest rounded-lg py-2 px-3 shadow-xs outline-none cursor-pointer hover:bg-[#e4cbab] transition-all appearance-none text-left"
+                      >
+                        <option value="bom dia">Prezados, bom dia! (00:00 às 12:00)</option>
+                        <option value="boa tarde">Prezados, boa tarde! (12:00 às 18:00)</option>
+                        <option value="boa noite">Prezados, boa noite! (18:00 às 00:00)</option>
+                      </select>
+                      <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none text-[#5c3c24] text-xs font-bold">
+                        ▼
+                      </div>
                     </div>
                   </div>
                 </div>
