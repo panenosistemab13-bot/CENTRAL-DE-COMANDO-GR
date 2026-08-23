@@ -759,19 +759,11 @@ export default function Controle({ onBack }: ControleProps) {
       }
     });
 
-    // Pass 2: Assign unmatched items to remaining unmatched slots in order
+    // Pass 2: Assign unmatched items to remaining unmatched slots in order (isca1 first, then isca2)
     parsedItems.forEach((item, index) => {
       if (matchedItemIndices.has(index)) return;
 
-      if (!matchedIsca2) {
-        setIsca2(item.id);
-        setIsca2Endereco(item.endereco);
-        setIsca2Data(item.data);
-        setIsca2Bateria(item.bateria);
-        handleIsca2Change(item.id);
-        matchedIsca2 = true;
-        matchedItemIndices.add(index);
-      } else if (!matchedIsca1) {
+      if (!matchedIsca1) {
         setIsca1(item.id);
         setIsca1Endereco(item.endereco);
         setIsca1Data(item.data);
@@ -779,13 +771,37 @@ export default function Controle({ onBack }: ControleProps) {
         handleIsca1Change(item.id);
         matchedIsca1 = true;
         matchedItemIndices.add(index);
+      } else if (!matchedIsca2) {
+        setIsca2(item.id);
+        setIsca2Endereco(item.endereco);
+        setIsca2Data(item.data);
+        setIsca2Bateria(item.bateria);
+        handleIsca2Change(item.id);
+        matchedIsca2 = true;
+        matchedItemIndices.add(index);
       }
     });
 
     if (parsedItems.length === 1) {
-      setNumCarretas(1);
+      if (carreta2 && carreta2.trim() !== "") {
+        // Carreta 2 está preenchida: mantém 2 carretas e seleciona a opção "- Sem Isca" para a Carreta 2
+        setNumCarretas(2);
+        setIsca2("SEM ISCA");
+        setIsca2Endereco("");
+        setIsca2Data("");
+        setIsca2Bateria("");
+        setIscaSuffix2("");
+        setNfFim("");
+        setSidebarEmbarque2("none");
+        if (!produto2 || produto2 === "") setProduto2("---");
+        if (!uma2 || uma2 === "") setUma2("---");
+      } else {
+        setNumCarretas(1);
+      }
     } else if (parsedItems.length >= 2) {
       setNumCarretas(2);
+      if (produto2 === "---") setProduto2("");
+      if (uma2 === "---") setUma2("");
     }
   };
 
