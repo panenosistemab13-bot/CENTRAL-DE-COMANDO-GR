@@ -1163,14 +1163,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         {/* Global actions */}
         <div className="flex items-center gap-3 ml-auto">
           <button 
-            onClick={() => setIsNotepadOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm border bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-700 cursor-pointer"
-            title="Abrir bloco de notas"
-          >
-            <StickyNote size={16} /> Bloco de Notas
-          </button>
-
-          <button 
             onClick={handleUndo}
             disabled={historyCount === 0}
             className={cn(
@@ -1182,28 +1174,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
             title="Restaurar informação modificada (Ctrl + Z)"
           >
             <RotateCcw size={16} /> Desfazer (Ctrl+Z)
-          </button>
-
-          {(idaRows.length > 0 || voltaRows.length > 0) && (
-            <button 
-              onClick={copyToEmail}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer border",
-                copied 
-                  ? "bg-emerald-600 text-white border-emerald-700" 
-                  : "bg-slate-900 hover:bg-slate-800 text-white border-slate-900"
-              )}
-            >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? 'Tudo Copiado!' : 'Copiar Tudo (Ida + Volta + Vespasiano)'}
-            </button>
-          )}
-
-          <button 
-            onClick={() => openPdfModal('ida')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F2D59] hover:bg-[#0B2347] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-[#0F2D59]"
-          >
-            <FileText size={16} /> Importar NFs (PDF)
           </button>
         </div>
       </div>
@@ -1230,13 +1200,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => openPdfModal('ida')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
-                      title="Importar várias NFs em PDF para Rota Ida"
-                    >
-                      <FileText size={12} /> PDF Ida
-                    </button>
                     <button 
                       onClick={() => addNewRow('ida')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#0F2D59] hover:bg-[#0B2347] text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-blue-400/30"
