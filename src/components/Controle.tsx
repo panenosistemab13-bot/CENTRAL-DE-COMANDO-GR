@@ -72,6 +72,7 @@ const TRANSPORTADORAS = [
 
 const EMBARQUE_IMAGES = [
   { value: "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF", label: "Paletizado (Padrão)" },
+  { value: "/images/paletizado_lado_direito.png", label: "Paletizado Lado Direito" },
   {
     value: "https://lh3.googleusercontent.com/d/1L3oKNxekiqIQ_Uy8L9a7q8qZwx772qmH",
     label: "Carga Batida (Padrão)",
@@ -496,6 +497,44 @@ export default function Controle({ onBack }: ControleProps) {
   const [copiedIscaRow2, setCopiedIscaRow2] = useState(false);
   const [copiedIscaAll, setCopiedIscaAll] = useState(false);
   const [copiedIscaDataOnly, setCopiedIscaDataOnly] = useState(false);
+  const [copiedIscasSpace, setCopiedIscasSpace] = useState(false);
+
+  const getIscasSpaceSeparated = () => {
+    const iscasList: string[] = [];
+
+    const getCleanIsca = (iscaVal: string, prefix: string, suffix: string) => {
+      let val = (iscaVal || "").trim();
+      if (!val && (prefix || suffix)) {
+        val = (prefix + suffix).trim();
+      }
+      if (!val || val.toUpperCase() === "SEM ISCA" || val === "---") {
+        return "";
+      }
+      return val;
+    };
+
+    const isca1Clean = getCleanIsca(isca1, iscaPrefix1, iscaSuffix1);
+    if (isca1Clean) iscasList.push(isca1Clean);
+
+    if (numCarretas === 2) {
+      const isca2Clean = getCleanIsca(isca2, iscaPrefix2, iscaSuffix2);
+      if (isca2Clean) iscasList.push(isca2Clean);
+    }
+
+    return iscasList.join(" ");
+  };
+
+  const handleCopyIscasWithSpace = async () => {
+    const text = getIscasSpaceSeparated();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIscasSpace(true);
+      setTimeout(() => setCopiedIscasSpace(false), 2500);
+    } catch (err) {
+      console.error("Erro ao copiar iscas:", err);
+    }
+  };
 
   const getIscaRows = () => {
     const rows = [];
@@ -1034,8 +1073,25 @@ export default function Controle({ onBack }: ControleProps) {
 
   // Function to build and copy HTML template for Email pasting
   const handleCopyToEmail = async () => {
-    const isPaletizado1 = sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
-    const isPaletizado2 = sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF";
+    const isPaletizado1 =
+      sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF" ||
+      sidebarEmbarque1 === "/images/paletizado_lado_direito.png" ||
+      sidebarEmbarque1?.toLowerCase().includes("paletizado");
+    const isPaletizado2 =
+      sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF" ||
+      sidebarEmbarque2 === "/images/paletizado_lado_direito.png" ||
+      sidebarEmbarque2?.toLowerCase().includes("paletizado");
+
+    const getEmbarqueImgSrc = (imgUrl: string) => {
+      if (!imgUrl || imgUrl === "none") return "";
+      if (imgUrl.startsWith("http://") || imgUrl.startsWith("https://") || imgUrl.startsWith("data:")) {
+        return imgUrl;
+      }
+      if (typeof window !== "undefined" && window.location?.origin) {
+        return `${window.location.origin}${imgUrl}`;
+      }
+      return imgUrl;
+    };
 
     // Helper to render ladder visual grid inside email HTML matching modern executive style
     const renderLadderHtml = (
@@ -1218,7 +1274,7 @@ export default function Controle({ onBack }: ControleProps) {
                 ? `
                 <div style="text-align: center; width: ${isPaletizado1 ? '150px' : '320px'};">
                   <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: ${isPaletizado1 ? '6px' : '12px'}; margin-bottom: ${isPaletizado1 ? '8px' : '15px'}; width: ${isPaletizado1 ? '150px' : '320px'}; height: ${isPaletizado1 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 6px; shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <img src="${sidebarEmbarque1}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
+                    <img src="${getEmbarqueImgSrc(sidebarEmbarque1)}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
                   <p style="font-size: ${isPaletizado1 ? '9px' : '11px'}; font-weight: 800; color: #0F172A; margin-top: ${isPaletizado1 ? '6px' : '12px'}; text-transform: uppercase;">${carreta1}</p>
                 </div>
@@ -1237,7 +1293,7 @@ export default function Controle({ onBack }: ControleProps) {
                   ? `
                 <div style="text-align: center; width: ${isPaletizado2 ? '150px' : '320px'};">
                   <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: ${isPaletizado2 ? '6px' : '12px'}; margin-bottom: ${isPaletizado2 ? '8px' : '15px'}; width: ${isPaletizado2 ? '150px' : '320px'}; height: ${isPaletizado2 ? '200px' : '420px'}; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 6px; shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <img src="${sidebarEmbarque2}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
+                    <img src="${getEmbarqueImgSrc(sidebarEmbarque2)}" alt="Esquema" style="max-width: 95%; max-height: 95%; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
                   </div>
                   <p style="font-size: ${isPaletizado2 ? '9px' : '11px'}; font-weight: 800; color: #0F172A; margin-top: ${isPaletizado2 ? '6px' : '12px'}; text-transform: uppercase;">${carreta2}</p>
                 </div>
@@ -2530,9 +2586,34 @@ Embarque: ${
 
             {/* PREFIXOS & BATERIA ISCAS */}
             <div className="flex flex-col gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1">
-                <Sliders size={12} className="text-slate-500" /> N° ISCAS (PREFIXOS & BATERIA)
-              </label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1">
+                  <Sliders size={12} className="text-slate-500" /> N° ISCAS (PREFIXOS & BATERIA)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleCopyIscasWithSpace}
+                  title="Copiar números das iscas com espaço (ex: R100002466 R100000876)"
+                  className={cn(
+                    "flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md transition-all cursor-pointer select-none shadow-2xs",
+                    copiedIscasSpace
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white hover:shadow-xs active:scale-95"
+                  )}
+                >
+                  {copiedIscasSpace ? (
+                    <>
+                      <Check size={11} className="stroke-[3]" />
+                      <span>Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={11} />
+                      <span>Copiar Iscas</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
               <div className="flex flex-col gap-3">
                 {/* ISCA 1 SECTION */}
@@ -2633,6 +2714,33 @@ Embarque: ${
 
                   </div>
                 )}
+
+                {/* VISUAL PREVIEW & QUICK COPY BAR */}
+                {getIscasSpaceSeparated() ? (
+                  <div
+                    onClick={handleCopyIscasWithSpace}
+                    title="Clique para copiar com espaço"
+                    className="flex items-center justify-between bg-white border border-slate-300 hover:border-red-400 rounded-lg px-2.5 py-1.5 cursor-pointer transition-all group shadow-2xs"
+                  >
+                    <div className="flex items-center gap-1.5 overflow-hidden">
+                      <span className="text-[8px] font-extrabold uppercase text-slate-400 shrink-0">ISCAS:</span>
+                      <span className="text-[11px] font-mono font-black text-red-600 group-hover:text-red-700 tracking-wider truncate">
+                        {getIscasSpaceSeparated()}
+                      </span>
+                    </div>
+                    <div className="shrink-0 ml-1.5 flex items-center gap-1 text-[8px] font-black uppercase text-slate-400 group-hover:text-red-600 transition-colors">
+                      {copiedIscasSpace ? (
+                        <span className="text-emerald-600 font-black flex items-center gap-0.5">
+                          <Check size={11} className="stroke-[3]" /> Copiado
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-0.5">
+                          <Copy size={11} /> Copiar
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
 
