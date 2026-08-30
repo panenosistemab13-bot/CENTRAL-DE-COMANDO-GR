@@ -74,7 +74,7 @@ const backgroundImages: Record<Tab, string> = {
   slides: '',
   presence: '/images/bg_presence.jpg', // Notebook and coffee on rustic wood table
   risk: '/images/bg_risk.jpg',
-  averbacao: '/images/bg_averbacao.jpg', // Coffee sacks stacked with rich roast beans
+  averbacao: '',
   sm_creator: '/images/bg_sm_creator.jpg', // Quality checker analyzing coffee beans
   rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
   patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)

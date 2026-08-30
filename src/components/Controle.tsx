@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Mail,
@@ -6,11 +6,12 @@ import {
   Copy,
   Check,
   ArrowLeft,
+  ArrowRight,
   User,
   CreditCard,
   Phone,
   Info,
-  Sliders, Map, ArrowRight,
+  Sliders,
   Send,
   Sparkles,
   FileText,
@@ -27,6 +28,11 @@ import {
   EyeOff,
   Battery,
   FileSpreadsheet,
+  UploadCloud,
+  CheckCircle2,
+  Filter,
+  Layers,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -244,78 +250,319 @@ const ORIGEM_OPCOES = [
   "JUIZ DE FORA/MG",
 ];
 
+export interface ParsedPlacaItem {
+  id: string;
+  transportador: string;
+  condutor: string;
+  cavalo: string;
+  carreta1: string;
+  carreta2: string;
+  destino: string;
+  origem?: string;
+  modeloCarreta?: string;
+  modeloCavalo?: string;
+  nf?: string;
+  tecnologia?: string;
+  data?: string;
+  status?: string;
+  cpf?: string;
+  telefone?: string;
+  rawRowsCount: number;
+}
+
+export const normalizePlacaTransportador = (raw?: string): string => {
+  if (!raw) return "";
+  const clean = raw.trim().replace(/^["']|["']$/g, "");
+  const upper = clean.toUpperCase();
+  if (
+    upper === "3C" ||
+    upper === "3 C" ||
+    upper === "3-C" ||
+    upper === "FROTA 3C" ||
+    upper === "FROTA 3 C" ||
+    upper === "FROTA3C" ||
+    upper === "3C TRANSPORTES" ||
+    upper === "TRANSPORTADORA 3C" ||
+    upper === "TRANSP 3C"
+  ) {
+    return "Frota 3C";
+  }
+  return clean;
+};
+
+export function findBestMatchingRoute(
+  destinoInput: string,
+  origemInput: string
+): { rota: string; destinoFinal: string } {
+  if (!destinoInput || !destinoInput.trim()) {
+    return { rota: "", destinoFinal: "" };
+  }
+
+  const cleanDest = destinoInput.trim().replace(/^["']|["']$/g, "").toUpperCase();
+  const stripAccents = (str: string) =>
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
+  const normInput = stripAccents(cleanDest);
+  const inputWithoutUf = stripAccents(cleanDest.replace(/\/[A-Z]{2}$/, "").trim());
+
+  let bestMatch: string | null = null;
+
+  for (const opt of DESTINOS_OPCOES) {
+    const parts = opt.split(/\s*x\s*/i);
+    const destPart = parts[parts.length - 1]?.trim() || "";
+    const normDestPart = stripAccents(destPart);
+    const destPartWithoutUf = stripAccents(destPart.replace(/\/[A-Z]{2}$/, "").trim());
+
+    // 1. Exact match with or without UF
+    if (normInput === normDestPart || inputWithoutUf === destPartWithoutUf) {
+      bestMatch = opt;
+      break;
+    }
+
+    // 2. Contains match
+    if (
+      normInput.length >= 3 &&
+      (normDestPart.includes(normInput) ||
+        normInput.includes(normDestPart) ||
+        destPartWithoutUf.includes(inputWithoutUf) ||
+        inputWithoutUf.includes(destPartWithoutUf))
+    ) {
+      if (!bestMatch) bestMatch = opt;
+    }
+  }
+
+  // Also check special known destinations (e.g. SÍTIO NOVO -> RECIFE or similar)
+  if (!bestMatch && normInput.includes("SITIO NOVO")) {
+    const recife = DESTINOS_OPCOES.find((o) => o.includes("RECIFE"));
+    if (recife) bestMatch = recife;
+  }
+
+  if (bestMatch) {
+    const formattedRoute = bestMatch.replace(/^SANTA LUZIA\/MG/i, origemInput);
+    const parts = formattedRoute.split(/\s*x\s*/i);
+    const lastPart = parts[parts.length - 1]?.trim() || cleanDest;
+    return {
+      rota: formattedRoute,
+      destinoFinal: lastPart,
+    };
+  }
+
+  return {
+    rota: `${origemInput} x ${cleanDest}`,
+    destinoFinal: cleanDest,
+  };
+}
+
+export const SAMPLE_PLACAS_SHEET_DATA = `N°\tORIGEM\tDIA\tDATA\tCONTATO WHATS\tHORA LIBERADO\tSTATUS\tMODELO CARRETA\tMODELO CAVALO\tPRÉ-CHECKLIST\tDESTINO\tTRANSPORTADOR\tCAVALO\tCARRETA\tN° PALLETS\tPBT (TON)\tNF\tCATEGORIA\tTECNOLOGIA\tCONDUTOR\tCPF\tRG / SSP\tCNH\tTELEFONE
+1\tMONTES CLAROS/MG\tsexta-feira\t29/08/2024\tX\t05:05:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSFD3J76\tEKP0L77\t21\t23\t44271\tFROTA\tSIGHRA\tDAMIÃO GALVÃO ALVES\t602.985.092-34\t1330755 SSP/AL\t05145674570\t(87) 98129-1287
+2\tMONTES CLAROS/MG\tsexta-feira\t29/08/2024\tX\t05:05:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSFD3J76\tSEB8F09\t21\t23\t44272\tFROTA\tSIGHRA\tDAMIÃO GALVÃO ALVES\t602.985.092-34\t1330755 SSP/AL\t05145674570\t(87) 98129-1287
+3\tSANTA LUZIA/MG\tsexta-feira\t29/08/2024\tX\t05:06:51\tLIBERADO PARA VISTORIA EM DOCA\tSIDER\tTRUCK\tSIM\tREC. SÍTIO NOVO\tTORNADO\tTDF8G11\tRFV0E16\t28\t30\t53512\tFROTA\tONIXSAT\tCLEUSMAR M DA SILVA\t716.870.495-87\t64188941 SSP RJ\t01256784562\t(31) 97134-9810
+4\tSANTA LUZIA/MG\tsexta-feira\t29/08/2024\t29.08.59\tLIBERADO PARA VISTORIA EM DOCA\tSIDER\tTRUCK\tSIM\tGRAVATAÍ\tTENNA\tUVP-9C05\t---\t28\t30\t53513\tFROTA\tSASCAR\tFRANCISCO CLAWLISON DA SILVA\t056.888.895-70\t49258921 SSP MG\t01529475185\t(31) 98931-1558
+5\tSANTA LUZIA/MG\tsábado\t29/08/2024\tX\t08:19:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tNATAL\t3C\tUVP-9C05\tUVP0B29\t21\t17\t44273\tFROTA 3C\tSASCAR\tEMMANUEL RICARDO DE LIMA\t069.652.001-11\t18951234MG1\t01648291754\t(31) 99812-4411
+6\tSANTA LUZIA/MG\tsábado\t29/08/2024\t09:07:00\t09:50:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tSUMARÉ\tTENNA\tRMK5E77\tSDQ5F71\t28\t30\t53514\tFROTA\tSIGHRA\tJOSE MORAIS DE SOUSA\t906.750.185-00\t092551200 SSP BA\t01644257107\t(71) 71 99219-2756
+7\tSANTA LUZIA/MG\tsábado\t29/08/2024\t09:55:00\t09:55:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tTFD8E27\tSDQ5F71\t28\t30\t53515\tFROTA\tSIGHRA\tALEXANDRE MACHADO COELHO\t123.056.347-09\t22104523 DET RJ\t02074369037\t(21) 21 98908-0026
+8\tSANTA LUZIA/MG\tsábado\t29/08/2024\t11:10:00\t12:14:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRFM1J37\tKEM4C01\t28\t30\t53516\tFROTA\tSIGHRA\tMARCOS DE MELLO GODOY\t121.142.296-30\t11467412 SSP SP\t02089207039\t(11) 11 98319-3344
+9\tSANTA LUZIA/MG\tsábado\t29/08/2024\t11:06:00\t12:35:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSBW1E02\tKEM4C01\t28\t30\t53517\tFROTA\tSIGHRA\tDIEGO CARNEIRO\t127.355.829-06\t18432651 SSP SP\t01633596188\t(11) 11 98265-7607
+10\tSANTA LUZIA/MG\tsábado\t29/08/2024\t12:26:00\t12:49:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSBG7H83\tMSV1J96\t28\t30\t53518\tFROTA\tSIGHRA\tMARCOS GABRIEL OLIVEIRA\t135.097.437-84\t24531872 DET RJ\t04402638459\t(21) 21 98380-0010
+11\tSANTA LUZIA/MG\tsábado\t29/08/2024\t13:15:00\t14:58:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRNF6D84\tMSV1J96\t28\t30\t53519\tFROTA\tSIGHRA\tANTONILSON CAMPANHO DE SOUZA LACERDA\t126.658.877-06\t12934812 DET RJ\t03082531065\t(21) 21 99812-0535
+12\tSANTA LUZIA/MG\tsábado\t29/08/2024\t14:28:00\t15:19:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSAZ6E84\tRFE2J49\t28\t30\t53520\tFROTA\tSIGHRA\tBONIFACIO BARBOSA DA SILVA\t052.352.766-17\t08129812 SSP AL\t07002317398\t(82) 82 99600-1120
+13\tSANTA LUZIA/MG\tsábado\t29/08/2024\t15:05:00\t16:43:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSAY2C81\tRFE2J49\t28\t30\t53521\tFROTA\tSIGHRA\tROBERTO CARLOS PORTUGAL OLIVEIRA\t082.057.457-25\t12948603 DET RJ\t00510251776\t(21) 21 99846-8007
+14\tSANTA LUZIA/MG\tdomingo\t29/08/2024\tX\t09:05:36\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRVP9E38\tMDL9F97\t28\t30\t53522\tFROTA\tSIGHRA\tDERLEI PEREIRA DA SILVA\t082.739.561-16\t2856634 SDS PB\t01438973575\t(83) 83 99880-9008`;
+
+export function parsePlacasData(text: string): ParsedPlacaItem[] {
+  if (!text || !text.trim()) return [];
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return [];
+
+  // Check headers in first line
+  const firstCols = lines[0].split("\t").map((c) => c.trim().toUpperCase());
+
+  const findHeaderIdx = (patterns: string[]) => {
+    return firstCols.findIndex((col) =>
+      patterns.some((p) => col === p || col.includes(p))
+    );
+  };
+
+  let transpIdx = findHeaderIdx(["TRANSPORTADOR", "TRANSPORTADORA", "TRANSP", "EMPRESA"]);
+  let condutorIdx = findHeaderIdx(["CONDUTOR", "MOTORISTA", "NOME MOTORISTA", "NOME CONDUTOR"]);
+  let cavaloIdx = findHeaderIdx(["CAVALO", "PLACA CAVALO", "PLACA DO CAVALO", "PLACA CAV"]);
+  let carretaIdx = findHeaderIdx(["CARRETA", "PLACA CARRETA", "SEMI-REBOQUE", "PLACA CAR", "CARRETA 1"]);
+  let destinoIdx = findHeaderIdx(["DESTINO", "CIDADE DESTINO", "UNIDADE DESTINO", "DEST"]);
+  let origemIdx = findHeaderIdx(["ORIGEM", "CIDADE ORIGEM", "UNIDADE ORIGEM"]);
+  let nfIdx = findHeaderIdx(["NF", "NOTA FISCAL", "Nº NF", "N° NF"]);
+  let tecnologiaIdx = findHeaderIdx(["TECNOLOGIA", "RASTREADOR", "SISTEMA"]);
+  let modeloCarretaIdx = findHeaderIdx(["MODELO CARRETA", "TIPO CARRETA"]);
+  let modeloCavaloIdx = findHeaderIdx(["MODELO CAVALO", "TIPO CAVALO"]);
+  let statusIdx = findHeaderIdx(["STATUS"]);
+  let cpfIdx = findHeaderIdx(["CPF"]);
+  let telIdx = findHeaderIdx(["TELEFONE", "TEL", "CELULAR", "CONTATO"]);
+
+  const hasHeaders =
+    cavaloIdx !== -1 ||
+    condutorIdx !== -1 ||
+    transpIdx !== -1 ||
+    destinoIdx !== -1 ||
+    carretaIdx !== -1;
+  const startRow = hasHeaders ? 1 : 0;
+
+  // Fallback positional index matching Google Sheet in image.png if no headers detected:
+  // Col 1: ORIGEM, Col 10: DESTINO, Col 11: TRANSPORTADOR, Col 12: CAVALO, Col 13: CARRETA, Col 16: NF, Col 18: TECNOLOGIA, Col 19: CONDUTOR
+  if (!hasHeaders) {
+    origemIdx = 1;
+    destinoIdx = 10;
+    transpIdx = 11;
+    cavaloIdx = 12;
+    carretaIdx = 13;
+    nfIdx = 16;
+    tecnologiaIdx = 18;
+    condutorIdx = 19;
+    cpfIdx = 20;
+    telIdx = 23;
+  }
+
+  const cleanVal = (v?: string) => (v || "").trim().replace(/^["']|["']$/g, "");
+  const cleanPlate = (v?: string) => {
+    const s = cleanVal(v).toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    if (s === "---" || s === "-" || s === "SEM PLACA" || s === "SEM CARRETA" || s === "SEMISCA" || s === "SEM") return "";
+    return s;
+  };
+
+  const rawList: {
+    transportador: string;
+    condutor: string;
+    cavalo: string;
+    carreta: string;
+    destino: string;
+    origem: string;
+    nf: string;
+    tecnologia: string;
+    modeloCarreta: string;
+    modeloCavalo: string;
+    status: string;
+    cpf: string;
+    telefone: string;
+  }[] = [];
+
+  for (let i = startRow; i < lines.length; i++) {
+    const cols = lines[i].split("\t");
+    if (cols.length < 2) continue;
+
+    const cavalo = cleanPlate(cavaloIdx >= 0 ? cols[cavaloIdx] : "");
+    const carreta = cleanPlate(carretaIdx >= 0 ? cols[carretaIdx] : "");
+    const transp = normalizePlacaTransportador(cleanVal(transpIdx >= 0 ? cols[transpIdx] : ""));
+    const condutor = cleanVal(condutorIdx >= 0 ? cols[condutorIdx] : "").toUpperCase();
+    const destino = cleanVal(destinoIdx >= 0 ? cols[destinoIdx] : "").toUpperCase();
+    const origem = cleanVal(origemIdx >= 0 ? cols[origemIdx] : "").toUpperCase();
+    const nf = cleanVal(nfIdx >= 0 ? cols[nfIdx] : "");
+    const tecnologia = cleanVal(tecnologiaIdx >= 0 ? cols[tecnologiaIdx] : "").toUpperCase();
+    const modeloCarreta = cleanVal(modeloCarretaIdx >= 0 ? cols[modeloCarretaIdx] : "").toUpperCase();
+    const modeloCavalo = cleanVal(modeloCavaloIdx >= 0 ? cols[modeloCavaloIdx] : "").toUpperCase();
+    const status = cleanVal(statusIdx >= 0 ? cols[statusIdx] : "").toUpperCase();
+    const cpf = cleanVal(cpfIdx >= 0 ? cols[cpfIdx] : "");
+    const telefone = cleanVal(telIdx >= 0 ? cols[telIdx] : "");
+
+    if (!cavalo && !condutor && !transp && !carreta && !destino) continue;
+
+    rawList.push({
+      transportador: transp,
+      condutor,
+      cavalo,
+      carreta,
+      destino,
+      origem,
+      nf,
+      tecnologia,
+      modeloCarreta,
+      modeloCavalo,
+      status,
+      cpf,
+      telefone,
+    });
+  }
+
+  // Intelligent grouping by Cavalo plate or (Condutor + Destino)
+  const groupedMap = new globalThis.Map<string, ParsedPlacaItem>();
+
+  rawList.forEach((item, idx) => {
+    const groupKey = item.cavalo ? item.cavalo : `${item.condutor}_${item.destino}_${idx}`;
+    if (!groupedMap.has(groupKey)) {
+      groupedMap.set(groupKey, {
+        id: `placa_${idx}_${item.cavalo || idx}`,
+        transportador: item.transportador,
+        condutor: item.condutor,
+        cavalo: item.cavalo,
+        carreta1: item.carreta,
+        carreta2: "",
+        destino: item.destino,
+        origem: item.origem,
+        nf: item.nf,
+        tecnologia: item.tecnologia,
+        modeloCarreta: item.modeloCarreta,
+        modeloCavalo: item.modeloCavalo,
+        status: item.status,
+        cpf: item.cpf,
+        telefone: item.telefone,
+        rawRowsCount: 1,
+      });
+    } else {
+      const existing = groupedMap.get(groupKey)!;
+      existing.rawRowsCount++;
+      if (item.carreta && item.carreta !== existing.carreta1 && !existing.carreta2) {
+        existing.carreta2 = item.carreta;
+      }
+      if (!existing.transportador && item.transportador) existing.transportador = item.transportador;
+      if (!existing.condutor && item.condutor) existing.condutor = item.condutor;
+      if (!existing.destino && item.destino) existing.destino = item.destino;
+      if (!existing.origem && item.origem) existing.origem = item.origem;
+      if (!existing.nf && item.nf) existing.nf = item.nf;
+      else if (existing.nf && item.nf && !existing.nf.includes(item.nf)) {
+        existing.nf = `${existing.nf} / ${item.nf}`;
+      }
+      if (!existing.tecnologia && item.tecnologia) existing.tecnologia = item.tecnologia;
+      if (!existing.cpf && item.cpf) existing.cpf = item.cpf;
+      if (!existing.telefone && item.telefone) existing.telefone = item.telefone;
+    }
+  });
+
+  return Array.from(groupedMap.values());
+}
+
 interface ControleProps {
   onBack?: () => void;
 }
 
 export default function Controle({ onBack }: ControleProps) {
-  // Navigation tab state: 'gerador' or 'prancheta'
-  const [activeTab, setActiveTab] = useState<'gerador' | 'prancheta' | 'rota'>('gerador');
+  // Navigation Tabs: 'gerador' or 'placas'
+  const [activeTab, setActiveTab] = useState<"gerador" | "placas">("gerador");
 
-  // --- ROTA STATE ---
-  const [rotaPastedData, setRotaPastedData] = useState("");
-  const [parsedRotas, setParsedRotas] = useState<any[]>([]);
+  // --- PLACAS TAB STATE ---
+  const [placasPastedData, setPlacasPastedData] = useState("");
+  const [placasFilter, setPlacasFilter] = useState("");
+  const [importSuccessBanner, setImportSuccessBanner] = useState<{
+    cavalo: string;
+    motorista: string;
+    destino: string;
+    transp: string;
+  } | null>(null);
 
-  useEffect(() => {
-    if (!rotaPastedData.trim()) {
-      setParsedRotas([]);
-      return;
-    }
-    const lines = rotaPastedData.split('\n');
-    if (lines.length === 0) return;
-    
-    const headers = lines[0].split('\t').map(h => h.trim().toUpperCase());
-    let cavaloIdx = headers.findIndex(h => h === 'CAVALO' || (h.includes('CAVALO') && !h.includes('MODELO')));
-    let carretaIdx = headers.findIndex(h => h === 'CARRETA' || (h.includes('CARRETA') && !h.includes('MODELO') && !h.includes('ESTADO')));
-    let transpIdx = headers.findIndex(h => h.includes('TRANSPORTADOR') || h === 'TRANSPORTADORA');
-    let motoristaIdx = headers.findIndex(h => h.includes('MOTORISTA'));
-    let destinoIdx = headers.findIndex(h => h === 'DESTINO');
-    
-    if (cavaloIdx === -1 && lines.length > 1) {
-       cavaloIdx = 12;
-       carretaIdx = 13;
-       transpIdx = 11;
-       destinoIdx = 10;
-    }
-    
-    const parsedMap = new globalThis.Map<string, any>();
-    
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.trim()) continue;
-      const cols = line.split('\t');
-      
-      const cavalo = cavaloIdx >= 0 && cols[cavaloIdx] ? cols[cavaloIdx].trim() : "";
-      const carreta = carretaIdx >= 0 && cols[carretaIdx] ? cols[carretaIdx].trim() : "";
-      const transportadora = transpIdx >= 0 && cols[transpIdx] ? cols[transpIdx].trim() : "";
-      const motorista = motoristaIdx >= 0 && cols[motoristaIdx] ? cols[motoristaIdx].trim() : "";
-      const destino = destinoIdx >= 0 && cols[destinoIdx] ? cols[destinoIdx].trim() : "";
-      
-      if (!cavalo) continue;
-      
-      if (parsedMap.has(cavalo)) {
-        const existing = parsedMap.get(cavalo);
-        if (existing.carreta1 && existing.carreta1 !== carreta && !existing.carreta2) {
-           existing.carreta2 = carreta;
-        } else if (!existing.carreta1 && carreta) {
-           existing.carreta1 = carreta;
-        }
-      } else {
-        parsedMap.set(cavalo, {
-          placaCavalo: cavalo,
-          carreta1: carreta,
-          carreta2: "",
-          motorista: motorista,
-          transportadora: transportadora,
-          destino: destino
-        });
-      }
-    }
-    
-    setParsedRotas(Array.from(parsedMap.values()));
-  }, [rotaPastedData]);
-  // ------------------
+  const parsedPlacas = useMemo(() => {
+    return parsePlacasData(placasPastedData);
+  }, [placasPastedData]);
 
+  const filteredPlacas = useMemo(() => {
+    if (!placasFilter.trim()) return parsedPlacas;
+    const q = placasFilter.toLowerCase();
+    return parsedPlacas.filter(
+      (p) =>
+        p.cavalo.toLowerCase().includes(q) ||
+        p.carreta1.toLowerCase().includes(q) ||
+        p.carreta2.toLowerCase().includes(q) ||
+        p.condutor.toLowerCase().includes(q) ||
+        p.transportador.toLowerCase().includes(q) ||
+        p.destino.toLowerCase().includes(q)
+    );
+  }, [parsedPlacas, placasFilter]);
+  // -------------------------
 
   // State for all form fields
   const [numCarretas, setNumCarretas] = useState<1 | 2>(2);
@@ -1071,6 +1318,99 @@ export default function Controle({ onBack }: ControleProps) {
     }
   };
 
+  const handleImportPlacaItem = (item: ParsedPlacaItem) => {
+    // 1. Veículo & Carga
+    if (item.cavalo) setCavalo(item.cavalo);
+    if (item.carreta1) setCarreta1(item.carreta1);
+    if (item.carreta2) {
+      setCarreta2(item.carreta2);
+      setNumCarretas(2);
+      if (produto2 === "---") setProduto2("");
+      if (uma2 === "---") setUma2("");
+    } else {
+      setCarreta2("");
+      if (
+        item.modeloCarreta?.includes("RODOTREM") ||
+        item.modeloCarreta?.includes("BITREM")
+      ) {
+        setNumCarretas(2);
+      } else {
+        setNumCarretas(1);
+      }
+    }
+
+    // 2. Formulário de Controle & Dados Gerais
+    if (item.transportador) {
+      const normTransp = normalizePlacaTransportador(item.transportador);
+      const match = allTransportadoras.find(
+        (t) => t.toLowerCase() === normTransp.toLowerCase()
+      );
+      const finalTransp = match || normTransp;
+
+      setTransportadora(finalTransp);
+      setSidebarTransportadora(finalTransp);
+      if (!match) {
+        setCustomTransportadoras((prev) => [...prev, finalTransp]);
+      }
+    }
+
+    if (item.condutor) {
+      setMotorista(item.condutor);
+      setSidebarMotorista(item.condutor);
+    }
+
+    // Origem & Destino -> Formulário de Controle (SELECIONE A ROTA)
+    let finalOrigem = origem || "SANTA LUZIA/MG";
+    if (item.origem) {
+      const normOrig = item.origem.toUpperCase().trim();
+      const matchedOrig = ORIGEM_OPCOES.find(
+        (o) =>
+          o.toUpperCase() === normOrig ||
+          o.toUpperCase().includes(normOrig) ||
+          normOrig.includes(o.replace(/\/[A-Z]{2}$/, "").toUpperCase())
+      );
+      if (matchedOrig) {
+        finalOrigem = matchedOrig;
+      } else {
+        finalOrigem = item.origem.toUpperCase();
+      }
+      setOrigem(finalOrigem);
+    }
+
+    if (item.destino) {
+      const { rota, destinoFinal } = findBestMatchingRoute(item.destino, finalOrigem);
+      setDestino(destinoFinal);
+      setRota1(rota);
+    }
+
+    if (item.tecnologia) {
+      setSidebarTecnologia(item.tecnologia);
+    }
+
+    if (item.nf) {
+      const nfClean = item.nf.split("/")[0].trim().replace(/\D/g, "");
+      if (nfClean) {
+        setNfInicio(formatUMA(nfClean));
+      }
+      const nfParts = item.nf.split("/");
+      if (nfParts.length > 1) {
+        const nf2Clean = nfParts[1].trim().replace(/\D/g, "");
+        if (nf2Clean) setNfFim(formatUMA(nf2Clean));
+      }
+    }
+
+    // Interactive confirmation banner
+    setImportSuccessBanner({
+      cavalo: item.cavalo || "S/ Placa",
+      motorista: item.condutor || "Motorista",
+      destino: item.destino || "Destino",
+      transp: item.transportador || "Transportadora",
+    });
+
+    // Automatically switch to Gerador PGR
+    setActiveTab("gerador");
+  };
+
   // Function to build and copy HTML template for Email pasting
   const handleCopyToEmail = async () => {
     const isPaletizado1 =
@@ -1438,123 +1778,321 @@ Embarque: ${
           </div>
         </div>
 
-        {/* Navigation Tabs Bar */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Navigation Tabs */}
+        <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl border border-[#CBD5E1]">
           <button
             type="button"
             onClick={() => setActiveTab("gerador")}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border shadow-sm",
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
               activeTab === "gerador"
-                ? "bg-[#B32025] text-white border-[#B32025]"
-                : "bg-white text-[#1E293B] border-[#D1E1EB] hover:border-[#64748B]"
+                ? "bg-[#1E293B] text-white shadow-md"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
             )}
           >
             <Sliders size={14} />
-            Gerador PGR
+            <span>Gerador PGR</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setActiveTab("rota")}
+            onClick={() => setActiveTab("placas")}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border shadow-sm",
-              activeTab === "rota"
-                ? "bg-[#B32025] text-white border-[#B32025]"
-                : "bg-white text-[#1E293B] border-[#D1E1EB] hover:border-[#64748B]"
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "placas"
+                ? "bg-[#B32025] text-white shadow-md"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
             )}
           >
-            <Map size={14} />
-            Rota
+            <Truck size={14} />
+            <span>Placas</span>
+            {parsedPlacas.length > 0 && (
+              <span
+                className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                  activeTab === "placas"
+                    ? "bg-white text-[#B32025]"
+                    : "bg-[#B32025] text-white"
+                )}
+              >
+                {parsedPlacas.length}
+              </span>
+            )}
           </button>
         </div>
       </header>
 
       {/* Main Workspace Layout */}
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-canvas">
-      {/* TAB CONTENT: Rota */}
-      {activeTab === "rota" && (
-        <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
-           <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-sm p-6 sm:p-8 flex flex-col gap-6">
-              <div>
-                 <h2 className="text-xl font-black text-[#1E293B] uppercase tracking-wider mb-2 flex items-center gap-2"><Map size={24} className="text-[#B32025]"/> Importar da Planilha de Rota</h2>
-                 <p className="text-sm text-[#64748B]">Cole as informações da planilha Google (incluindo o cabeçalho) no campo abaixo para gerar a lista de veículos.</p>
+        {/* Interactive Toast / Banner when vehicle is imported */}
+        {importSuccessBanner && (
+          <div className="max-w-[100rem] mx-auto w-full mb-4">
+            <div className="bg-emerald-50 border-2 border-emerald-500/40 text-emerald-950 p-4 rounded-2xl flex items-center justify-between shadow-sm animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={18} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900">
+                    Veículo Importado com Sucesso!
+                  </h4>
+                  <p className="text-xs text-emerald-800 mt-0.5">
+                    Cavalo: <strong>{importSuccessBanner.cavalo}</strong> | Motorista:{" "}
+                    <strong>{importSuccessBanner.motorista}</strong> | Transportadora:{" "}
+                    <strong>{importSuccessBanner.transp}</strong> | Destino:{" "}
+                    <strong>{importSuccessBanner.destino}</strong> enviados para Gerador, Formulário e Veículo.
+                  </p>
+                </div>
               </div>
-              <textarea
-                 className="w-full h-40 bg-[#F4F8FA] border border-[#D1E1EB] rounded-xl p-4 text-xs font-mono text-[#1E293B] outline-none focus:border-[#64748B] focus:ring-2 focus:ring-[#D1E1EB] resize-y transition-all"
-                 placeholder="Cole aqui (Ctrl+V) os dados copiados da planilha..."
-                 value={rotaPastedData}
-                 onChange={(e) => setRotaPastedData(e.target.value)}
-              />
-              {parsedRotas.length > 0 && (
-                 <div className="flex flex-col gap-4">
-                    <h3 className="text-sm font-black text-[#1E293B] uppercase tracking-wider">Veículos Encontrados ({parsedRotas.length})</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                       {parsedRotas.map((rota, idx) => (
-                          <div key={idx} className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 flex flex-col gap-3 shadow-sm hover:border-[#94A3B8] transition-colors relative overflow-hidden group">
-                             <div className="absolute top-0 left-0 w-1 h-full bg-[#B32025]"></div>
-                             <div className="flex items-center gap-2 mb-1 pl-1">
-                               <div className="bg-[#1E293B] text-white text-[10px] px-2 py-0.5 rounded font-black uppercase flex items-center gap-1">
-                                 <Truck size={10} /> CAVALO: {rota.placaCavalo}
-                               </div>
-                               {rota.carreta1 && (
-                                 <div className="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded font-black uppercase border border-slate-300">
-                                   CR 1: {rota.carreta1}
-                                 </div>
-                               )}
-                               {rota.carreta2 && (
-                                 <div className="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded font-black uppercase border border-slate-300">
-                                   CR 2: {rota.carreta2}
-                                 </div>
-                               )}
-                             </div>
-                             <div className="text-[11px] text-[#475569] flex flex-col gap-1.5 pl-1">
-                               <span className="font-semibold uppercase flex items-center gap-1"><span className="text-[#94A3B8] w-20">Motorista:</span> {rota.motorista || "NÃO INFORMADO"}</span>
-                               <span className="font-semibold uppercase flex items-center gap-1"><span className="text-[#94A3B8] w-20">Transp:</span> {rota.transportadora || "NÃO INFORMADA"}</span>
-                               <span className="font-semibold uppercase flex items-center gap-1"><span className="text-[#94A3B8] w-20">Destino:</span> {rota.destino || "NÃO INFORMADO"}</span>
-                             </div>
-                             
-                             <button
-                               onClick={() => {
-                                 setCavalo(rota.placaCavalo);
-                                 setCarreta1(rota.carreta1);
-                                 setCarreta2(rota.carreta2);
-                                 if (rota.carreta2) {
-                                   setNumCarretas(2);
-                                 } else {
-                                   setNumCarretas(1);
-                                 }
-                                 if (rota.transportadora) {
-                                 setTransportadora(rota.transportadora);
-                                 setSidebarTransportadora(rota.transportadora);
-                               }
-                                 if (rota.motorista) setMotorista(rota.motorista);
-                                 if (rota.destino) {
-                                 setDestino(rota.destino);
-                                 setRota1(`${origem} x ${rota.destino}`);
-                               }
-                                 setActiveTab("gerador");
-                               }}
-                               className="mt-2 w-full py-2 bg-white border-2 border-[#D1E1EB] hover:border-[#B32025] hover:text-[#B32025] text-[#1E293B] font-black uppercase text-[10px] tracking-widest rounded-lg transition-colors flex items-center justify-center gap-2 group-hover:bg-[#B32025] group-hover:text-white group-hover:border-[#B32025]"
-                             >
-                               <ArrowRight size={14} /> Importar para Controle
-                             </button>
-                          </div>
-                       ))}
+              <button
+                type="button"
+                onClick={() => setImportSuccessBanner(null)}
+                className="text-emerald-700 hover:text-emerald-900 p-1.5 rounded-lg hover:bg-emerald-100/70 transition-colors cursor-pointer text-xs font-bold"
+              >
+                ✕ Fechar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB CONTENT: Placas */}
+        {activeTab === "placas" && (
+          <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
+            {/* Main Card */}
+            <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-md p-6 sm:p-8 flex flex-col gap-6">
+              {/* Header info */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-[#E2E8F0] gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="bg-[#B32025] text-white p-3 rounded-2xl shadow-md border border-red-800">
+                    <Truck size={24} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight flex items-center gap-2">
+                      Importação de Placas & Viagens
+                    </h2>
+                    <p className="text-xs text-[#64748B] font-medium mt-0.5">
+                      Cole as informações da planilha (Google Sheets / Excel) para extrair automaticamente e enviar aos formulários de controle.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Target Columns Badges */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-[#F8FAFC] border border-[#E2E8F0] p-2 rounded-xl">
+                  <span className="text-[10px] font-black uppercase text-[#64748B] mr-1">
+                    Colunas Integradas:
+                  </span>
+                  <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                    TRANSPORTADOR
+                  </span>
+                  <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                    CONDUTOR
+                  </span>
+                  <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                    CAVALO
+                  </span>
+                  <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                    CARRETA
+                  </span>
+                  <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                    DESTINO
+                  </span>
+                </div>
+              </div>
+
+              {/* Paste Area & Controls */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-xs font-black uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
+                    <FileSpreadsheet size={16} className="text-[#B32025]" />
+                    Cole aqui os dados da tabela (Ctrl + V):
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPlacasPastedData(SAMPLE_PLACAS_SHEET_DATA)}
+                      className="px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] border border-[#CBD5E1] rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Carrega os dados de exemplo da planilha anexa"
+                    >
+                      <Sparkles size={13} className="text-[#B32025]" />
+                      Carregar Exemplo
+                    </button>
+                    {placasPastedData && (
+                      <button
+                        type="button"
+                        onClick={() => setPlacasPastedData("")}
+                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                        Limpar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <textarea
+                  value={placasPastedData}
+                  onChange={(e) => setPlacasPastedData(e.target.value)}
+                  placeholder="Cole aqui as linhas copiadas da planilha Google Sheets ou Excel (com ou sem cabeçalho)..."
+                  className="w-full h-36 bg-[#F8FAFC] border-2 border-[#CBD5E1] focus:border-[#B32025] rounded-xl p-3.5 text-xs font-mono text-[#0F172A] outline-none transition-all placeholder:text-slate-400 focus:bg-white shadow-inner resize-y"
+                />
+              </div>
+
+              {/* Results Grid & Filter */}
+              {parsedPlacas.length > 0 ? (
+                <div className="flex flex-col gap-4 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black uppercase text-[#1E293B] tracking-wider">
+                        Veículos Identificados:
+                      </span>
+                      <span className="bg-[#B32025] text-white text-xs font-black px-2.5 py-0.5 rounded-full">
+                        {filteredPlacas.length} de {parsedPlacas.length}
+                      </span>
                     </div>
-                 </div>
+
+                    {/* Search Filter */}
+                    <div className="relative w-full sm:w-72">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                      <input
+                        type="text"
+                        value={placasFilter}
+                        onChange={(e) => setPlacasFilter(e.target.value)}
+                        placeholder="Buscar por placa, condutor, destino..."
+                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#CBD5E1] rounded-lg text-xs font-semibold text-[#1E293B] placeholder:text-[#94A3B8] outline-none focus:border-[#B32025]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredPlacas.map((item) => (
+                      <div
+                        key={item.id}
+                        className="bg-white border-2 border-[#E2E8F0] hover:border-[#B32025] rounded-2xl p-4.5 flex flex-col justify-between gap-4 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+                      >
+                        {/* Top plate badges */}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="bg-[#0F172A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                                <Truck size={13} className="text-red-400" />
+                                {item.cavalo || "S/ CAVALO"}
+                              </span>
+                              {item.carreta1 && (
+                                <span className="bg-slate-100 text-slate-800 border border-slate-300 text-[11px] font-black uppercase px-2 py-1 rounded-lg">
+                                  CR 1: {item.carreta1}
+                                </span>
+                              )}
+                              {item.carreta2 && (
+                                <span className="bg-slate-100 text-slate-800 border border-slate-300 text-[11px] font-black uppercase px-2 py-1 rounded-lg">
+                                  CR 2: {item.carreta2}
+                                </span>
+                              )}
+                            </div>
+                            {item.rawRowsCount > 1 && (
+                              <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                                {item.rawRowsCount} Linhas
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Details */}
+                          <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 flex flex-col gap-1.5 text-xs text-[#334155]">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
+                                Condutor:
+                              </span>
+                              <span className="font-bold text-[#0F172A] text-right truncate">
+                                {item.condutor || "NÃO INFORMADO"}
+                              </span>
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
+                                Transportador:
+                              </span>
+                              <span className="font-bold text-[#0F172A] text-right truncate">
+                                {item.transportador || "NÃO INFORMADO"}
+                              </span>
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
+                                Destino:
+                              </span>
+                              <span className="font-black text-red-600 text-right truncate flex items-center justify-end gap-1">
+                                <MapPin size={11} className="shrink-0" />
+                                {item.destino || "NÃO INFORMADO"}
+                              </span>
+                            </div>
+                            {item.origem && (
+                              <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-200">
+                                <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
+                                  Origem:
+                                </span>
+                                <span className="font-semibold text-slate-600 text-right truncate">
+                                  {item.origem}
+                                </span>
+                              </div>
+                            )}
+                            {item.tecnologia && (
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
+                                  Tecnologia:
+                                </span>
+                                <span className="font-semibold text-slate-600 text-right truncate">
+                                  {item.tecnologia}
+                                </span>
+                              </div>
+                            )}
+                            {item.nf && (
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
+                                  NF:
+                                </span>
+                                <span className="font-semibold text-slate-600 text-right truncate">
+                                  {item.nf}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action button */}
+                        <button
+                          type="button"
+                          onClick={() => handleImportPlacaItem(item)}
+                          className="w-full py-2.5 bg-white border-2 border-[#CBD5E1] hover:border-[#B32025] text-[#1E293B] hover:text-white hover:bg-[#B32025] rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 group-hover:border-[#B32025]"
+                        >
+                          <span>Importar para Controle</span>
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#F8FAFC] border-2 border-dashed border-[#CBD5E1] rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <Truck size={24} />
+                  </div>
+                  <h3 className="text-sm font-black uppercase text-[#1E293B] tracking-wider">
+                    Nenhum veículo carregado no momento
+                  </h3>
+                  <p className="text-xs text-[#64748B] max-w-md">
+                    Copie as linhas da planilha com as colunas <strong>TRANSPORTADOR, CONDUTOR, CAVALO, CARRETA e DESTINO</strong> e cole no campo acima, ou clique em <strong>"Carregar Exemplo"</strong> para testar.
+                  </p>
+                </div>
               )}
-           </div>
-        </div>
-      )}
+            </div>
+          </div>
+        )}
 
-
-      {/* TAB CONTENT: Gerador PGR */}
-      {activeTab === "gerador" && (
-        <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full">
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
-      {/* LEFT AREA: Template Generator */}
-      <div className="col-span-1 xl:col-span-1 flex flex-col">
-        <div className="flex-1 rounded-[2rem] bg-white border-2 border-[#3A2414]/20 shadow-2xl relative overflow-hidden flex flex-col p-6 sm:p-8">
+        {/* TAB CONTENT: Gerador PGR Workspace */}
+        {activeTab === "gerador" && (
+          <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
+        {/* LEFT AREA: Template Generator */}
+        <div className="col-span-1 xl:col-span-1 flex flex-col">
+          <div className="flex-1 rounded-[2rem] bg-white border-2 border-[#3A2414]/20 shadow-2xl relative overflow-hidden flex flex-col p-6 sm:p-8">
 
           {/* Module Title */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#3A2414]/10 pb-5 mb-6 gap-4">
@@ -2471,6 +3009,19 @@ Embarque: ${
                     ? "RESULTADOS DA BUSCA..."
                     : "SELECIONE A ROTA..."}
                 </option>
+                {rota1 &&
+                  !DESTINOS_OPCOES.some(
+                    (dest) =>
+                      dest.replace(/^SANTA LUZIA\/MG/i, origem).toUpperCase() ===
+                      rota1.toUpperCase()
+                  ) && (
+                    <option
+                      value={rota1}
+                      className="text-slate-900 uppercase text-xs font-bold"
+                    >
+                      {rota1.toUpperCase()}
+                    </option>
+                  )}
                 {DESTINOS_OPCOES.filter((dest) =>
                   dest.toLowerCase().includes(searchRota.toLowerCase()),
                 ).map((dest) => {

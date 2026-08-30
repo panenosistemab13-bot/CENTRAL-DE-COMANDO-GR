@@ -14,18 +14,17 @@ import {
   FileText,
   X,
   Loader2,
-  Eye,
-  Download,
   Sparkles,
   ShieldAlert,
+  ShieldCheck,
+  Activity,
   FileSpreadsheet,
-  RefreshCw,
-  Clipboard
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, remove, update } from 'firebase/database';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { format, differenceInDays, parseISO, addDays } from 'date-fns';
 
 interface PdfFile {
@@ -45,48 +44,13 @@ interface ChecklistItem {
   observacao: string;
   statusOverride?: 'APROVADO' | 'VENCIDO' | 'NEGATIVADO' | 'REPROVADO';
   pdfs?: PdfFile[];
+  dataAgendamento?: string;
+  osStatus?: 'PENDENTE' | 'AGENDADO' | 'EM ANDAMENTO' | 'CONCLUÍDO' | 'CANCELADO';
+  checklistRealizado?: 'sim' | 'não';
 }
-
-const QUICK_CODES = [
-  { label: 'Cápsula', value: '9000000982' },
-  { label: 'Máquina', value: '000000901' },
-  { label: 'Embalagem', value: '132' }
-];
-
-function Screw({ className }: { className?: string }) {
-  return (
-    <div className={cn(
-      "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
-      className
-    )}>
-      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
-    </div>
-  );
-}
-
-const WoodenPlaque: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-  screwSize?: string;
-}> = ({ children, className, screwSize }) => {
-  return (
-    <div className={cn(
-      "rounded-2xl bg-gradient-to-br from-[#f8f1e5] via-[#eddaba] to-[#e4cbab] border-[6px] border-[#311f14] shadow-[0_22px_45px_rgba(0,0,0,0.88),inset_1.5px_1.5px_3px_rgba(255,255,255,0.45)] relative p-6 flex flex-col justify-between ring-2 ring-[#1c1109]/30",
-      className
-    )}>
-      <Screw className={cn("absolute top-3 left-3 w-3 h-3", screwSize)} />
-      <Screw className={cn("absolute top-3 right-3 w-3 h-3", screwSize)} />
-      <Screw className={cn("absolute bottom-3 left-3 w-3 h-3", screwSize)} />
-      <Screw className={cn("absolute bottom-3 right-3 w-3 h-3", screwSize)} />
-      <div className="relative z-10 w-full h-full flex flex-col justify-between">
-        {children}
-      </div>
-    </div>
-  );
-};
 
 const LicensePlate: React.FC<{ plate: string; type?: 'cavalo' | 'carreta' }> = ({ plate, type }) => {
-  if (!plate || plate === '-') return <span className="text-[#5c3c24] font-mono font-bold">-</span>;
+  if (!plate || plate === '-') return <span className="text-slate-400 font-mono font-bold">-</span>;
   const cleanPlate = plate.trim().toUpperCase();
   const isCarreta = type === 'carreta';
   const isCavalo = type === 'cavalo';
@@ -94,8 +58,8 @@ const LicensePlate: React.FC<{ plate: string; type?: 'cavalo' | 'carreta' }> = (
   
   return (
     <div className={cn(
-      "inline-flex flex-col items-center justify-center overflow-hidden select-none font-mono tracking-wider w-[140px] h-[46px] shrink-0 transform transition-transform hover:scale-105 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.35)] border-2",
-      isCarreta ? "bg-[#fffde7] border-[#e6b800]" : "bg-[#f7f4ed] border-[#5c3c24]/80"
+      "inline-flex flex-col items-center justify-center overflow-hidden select-none font-mono tracking-wider w-[136px] h-[44px] shrink-0 transform transition-transform hover:scale-105 rounded-lg shadow-xs border",
+      isCarreta ? "bg-amber-50 border-amber-300" : "bg-white border-slate-300"
     )}>
       <div className="w-full bg-[#0051A2] h-[11px] flex items-center justify-between px-1.5 leading-none relative">
         <span className="text-[5.5px] text-white font-sans font-bold">BR</span>
@@ -108,8 +72,8 @@ const LicensePlate: React.FC<{ plate: string; type?: 'cavalo' | 'carreta' }> = (
           </div>
         </div>
       </div>
-      <div className={cn("w-full flex-1 flex items-center justify-center px-2", isCarreta ? "bg-gradient-to-b from-[#fff176] to-[#fbc02d]" : "bg-gradient-to-b from-[#ffffff] to-[#e8e4db]")}>
-        <span className="text-[#1a1c1d] font-black text-[17px] tracking-wide leading-none select-all" style={{ textShadow: '0.5px 0.5px 0px rgba(255, 255, 255, 0.8)' }}>
+      <div className={cn("w-full flex-1 flex items-center justify-center px-2", isCarreta ? "bg-amber-100" : "bg-slate-50")}>
+        <span className="text-slate-900 font-black text-[16px] tracking-wide leading-none select-all font-mono">
           {cleanPlate}
         </span>
       </div>
@@ -119,13 +83,14 @@ const LicensePlate: React.FC<{ plate: string; type?: 'cavalo' | 'carreta' }> = (
 
 export default function Checklist() {
   const [pasteData, setPasteData] = useState('');
-  const [activeView, setActiveView] = useState<'monitoring' | 'generator'>('monitoring');
+  const [activeView, setActiveView] = useState<'monitoring' | 'os' | 'generator'>('monitoring');
   const [searchTerm, setSearchTerm] = useState('');
+  const [osSearchTerm, setOsSearchTerm] = useState('');
+  const [osStatusFilter, setOsStatusFilter] = useState<'TODOS' | 'PENDENTE' | 'AGENDADO' | 'EM ANDAMENTO' | 'CONCLUÍDO' | 'CANCELADO'>('TODOS');
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [filter, setFilter] = useState<'TODOS' | 'EM DIA' | 'VENCIDO' | 'NEGATIVADOS'>('TODOS');
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<ChecklistItem | null>(null);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   
   const [newItem, setNewItem] = useState<Omit<ChecklistItem, 'id'>>({
     cavalo: '',
@@ -134,7 +99,10 @@ export default function Checklist() {
     dataVencimento: format(addDays(new Date(), 60), 'yyyy-MM-dd'),
     manutencaoOs: '',
     periferico: '',
-    observacao: ''
+    observacao: '',
+    dataAgendamento: '',
+    osStatus: 'PENDENTE',
+    checklistRealizado: 'não'
   });
 
   const [genData, setGenData] = useState({
@@ -145,16 +113,6 @@ export default function Checklist() {
   });
   const [genCopied, setGenCopied] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
-
-  const copyCodeToClipboard = async (label: string, value: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedCode(label);
-      setTimeout(() => setCopiedCode(null), 2000);
-    } catch (e) {
-      console.error("Erro ao copiar código:", e);
-    }
-  };
 
   const handleImportData = async () => {
     const lines = pasteData.trim().split('\n');
@@ -365,6 +323,9 @@ export default function Checklist() {
         manutencaoOs: '',
         periferico: '',
         observacao: '',
+        dataAgendamento: '',
+        osStatus: 'PENDENTE',
+        checklistRealizado: 'não',
         statusOverride: undefined
       });
     } catch (error) {
@@ -422,19 +383,19 @@ export default function Checklist() {
   const getStatus = (item: ChecklistItem) => {
     if (item.statusOverride) {
       if (item.statusOverride === 'VENCIDO' || item.statusOverride === 'REPROVADO' || item.statusOverride === 'NEGATIVADO') {
-        return { label: item.statusOverride, color: 'text-rose-600', bg: 'bg-rose-100', border: 'border-rose-300' };
+        return { label: item.statusOverride, color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200' };
       }
-      return { label: item.statusOverride, color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' };
+      return { label: item.statusOverride, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
     }
     const today = new Date();
     const expiry = safeParseDate(item.dataVencimento);
     if (!expiry) {
-      return { label: 'PENDENTE', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' };
+      return { label: 'PENDENTE', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' };
     }
     const diff = differenceInDays(expiry, today);
-    if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-600', bg: 'bg-rose-100', border: 'border-rose-300' };
-    if (diff <= 3) return { label: 'A VENCER', color: 'text-amber-800', bg: 'bg-amber-100', border: 'border-amber-300' };
-    return { label: 'APROVADO', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' };
+    if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200' };
+    if (diff <= 3) return { label: 'A VENCER', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' };
+    return { label: 'APROVADO', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
   };
 
   const filteredItems = items.filter(item => {
@@ -452,24 +413,24 @@ export default function Checklist() {
 
   const handleCopyGenerator = () => {
     const htmlContent = `
-      <div style="font-family: Calibri, Arial, sans-serif; color: #000000; font-size: 11pt; padding: 20px;">
+      <div style="font-family: Arial, sans-serif; color: #1e293b; font-size: 11pt; padding: 20px;">
         <p style="margin: 0 0 16px 0;">${genData.greeting},</p>
         <p style="margin: 0 0 16px 0;">Solicito o <strong>checklist</strong> para os conjuntos abaixo:</p>
-        <table style="border-collapse: collapse; width: 100%; border: 1px solid #000000; margin-bottom: 20px;">
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin-bottom: 20px;">
           <thead>
-            <tr style="background-color: #000000; color: #ffffff;">
-              <th style="padding: 8px 12px; border: 1px solid #000000; text-align: center;">VEÍCULO CAVALO</th>
-              <th style="padding: 8px 12px; border: 1px solid #000000; text-align: center;">CARRETAS DO CONJUNTO</th>
+            <tr style="background-color: #0F2D59; color: #ffffff;">
+              <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center;">VEÍCULO CAVALO</th>
+              <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center;">CARRETAS DO CONJUNTO</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style="padding: 8px 12px; border: 1px solid #000000; text-align: center; font-weight: bold;">${genData.cavalo || "—"}</td>
-              <td style="padding: 8px 12px; border: 1px solid #000000; text-align: center; font-weight: bold;">${genData.carretas || "—"}</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; font-family: monospace;">${genData.cavalo || "—"}</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; font-family: monospace;">${genData.carretas || "—"}</td>
             </tr>
           </tbody>
         </table>
-        <p style="margin: 0 0 8px 0;">Canal de Atendimento: ${genData.contato}</p>
+        <p style="margin: 0 0 8px 0;">Canal de Atendimento: <strong>${genData.contato}</strong></p>
         <p style="margin: 20px 0 0 0;">Atenciosamente,<br/><strong>Jefferson Augusto</strong> - Agente de Risco</p>
       </div>
     `;
@@ -496,98 +457,88 @@ export default function Checklist() {
   const totalEmDia = totalVeiculos - totalVencidos;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#2D1A10] text-stone-100 font-sans" style={{ zoom: 0.88 }}>
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800 font-sans">
       
-      {/* HEADER IDÊNTICO AO PATIO */}
-      <header className="bg-[#3A2414] border-b-4 border-[#6B4423] px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-2xl relative z-20">
+      {/* CORPORATE OFFICE HEADER */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xs relative z-20">
         <div className="flex items-center gap-3">
-          <div className="w-3.5 h-3.5 rounded-full bg-[#B32025] animate-pulse"></div>
-          <h1 className="text-base font-black tracking-wider text-[#fdf8f0] uppercase font-serif flex items-center gap-2">
-            <ClipboardCheck size={20} className="text-[#C7A26A]" />
-            CENTRAL DE CHECKLIST E VISTORIAS DE FROTA
-          </h1>
-        </div>
-
-        {/* Quick Codes */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[11px] font-black uppercase text-[#C7A26A] tracking-wider hidden sm:inline">CÓDIGOS RÁPIDOS:</span>
-          {QUICK_CODES.map((item) => (
-            <div 
-              key={item.label}
-              className="flex items-center gap-2 bg-[#21120B] border border-[#6B4423] rounded-xl px-3 py-1.5 shadow-inner"
-            >
-              <span className="text-[11px] font-black text-[#eddaba] uppercase">{item.label}:</span>
-              <code className="text-xs font-mono font-black text-amber-300 bg-black/40 px-2 py-0.5 rounded border border-white/5">
-                {item.value}
-              </code>
-              <button
-                type="button"
-                onClick={() => copyCodeToClipboard(item.label, item.value)}
-                className={cn(
-                  "px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 cursor-pointer border shadow-sm",
-                  copiedCode === item.label
-                    ? "bg-green-600 border-green-500 text-white"
-                    : "bg-[#B32025] hover:bg-[#8c060a] border-[#5a0f12] text-white"
-                )}
-              >
-                {copiedCode === item.label ? <Check size={11} /> : <Copy size={11} />}
-                <span>{copiedCode === item.label ? 'OK' : 'COPIAR'}</span>
-              </button>
-            </div>
-          ))}
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+            <ClipboardCheck size={22} className="stroke-[2.5]" />
+          </div>
+          <div>
+            <h1 className="text-lg font-extrabold tracking-tight text-blue-950 uppercase">
+              Central de Checklist & Vistorias de Frota
+            </h1>
+            <p className="text-xs font-semibold text-blue-800">
+              Sistema corporativo de conformidade e controle de manutenção
+            </p>
+          </div>
         </div>
       </header>
 
-      {/* SUBHEADER & METRICS RIBBON */}
-      <div className="bg-[#21120B] border-b border-[#6B4423]/60 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md">
-        <div className="flex items-center gap-2 p-1.5 bg-[#3A2414] border border-[#6B4423] rounded-2xl shadow-inner">
+      {/* SUBHEADER & CONTROLS RIBBON */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 border border-slate-200 rounded-xl">
           <button
             onClick={() => setActiveView('monitoring')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
               activeView === 'monitoring'
-                ? "bg-[#B32025] text-white shadow-md border border-[#ff4d4d]/40"
-                : "text-[#eddaba] hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-blue-900 hover:bg-white"
             )}
           >
             <ClipboardCheck size={16} />
-            <span>Monitoramento de Frota</span>
+            <span>Checklist</span>
+          </button>
+          <button
+            onClick={() => setActiveView('os')}
+            className={cn(
+              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              activeView === 'os'
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-blue-900 hover:bg-white"
+            )}
+          >
+            <FileText size={16} />
+            <span>O.S</span>
           </button>
           <button
             onClick={() => setActiveView('generator')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
               activeView === 'generator'
-                ? "bg-[#B32025] text-white shadow-md border border-[#ff4d4d]/40"
-                : "text-[#eddaba] hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-blue-900 hover:bg-white"
             )}
           >
             <Sparkles size={16} />
-            <span>Gerador / Checkpoint</span>
+            <span>Solicitação</span>
           </button>
         </div>
 
-        {/* Metrics */}
+        {/* Metrics Counters */}
         <div className="flex items-center gap-3">
-          <div className="bg-[#3A2414] border border-[#6B4423] rounded-2xl px-4 py-2 flex items-center gap-3 shadow-inner">
-            <Truck size={18} className="text-[#C7A26A]" />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
+            <Truck size={16} className="text-blue-600" />
             <div>
-              <span className="text-[9px] font-mono tracking-widest text-[#eddaba]/70 uppercase block">Total Frota</span>
-              <span className="text-sm font-serif font-black text-white">{totalVeiculos}</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase block leading-tight">Total Frota</span>
+              <span className="text-sm font-extrabold text-blue-950">{totalVeiculos}</span>
             </div>
           </div>
-          <div className="bg-[#3A2414] border border-[#6B4423] rounded-2xl px-4 py-2 flex items-center gap-3 shadow-inner">
-            <Check size={18} className="text-emerald-400" />
+          <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
+            <Check size={16} className="text-emerald-600" />
             <div>
-              <span className="text-[9px] font-mono tracking-widest text-[#eddaba]/70 uppercase block">Em Dia</span>
-              <span className="text-sm font-serif font-black text-emerald-400">{totalEmDia}</span>
+              <span className="text-[10px] font-bold text-emerald-700 uppercase block leading-tight">Em Dia</span>
+              <span className="text-sm font-extrabold text-emerald-800">{totalEmDia}</span>
             </div>
           </div>
-          <div className="bg-[#3A2414] border border-[#6B4423] rounded-2xl px-4 py-2 flex items-center gap-3 shadow-inner">
-            <ShieldAlert size={18} className="text-rose-400" />
+          <div className="bg-rose-50/60 border border-rose-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
+            <ShieldAlert size={16} className="text-rose-600" />
             <div>
-              <span className="text-[9px] font-mono tracking-widest text-[#eddaba]/70 uppercase block">Vencidos</span>
-              <span className="text-sm font-serif font-black text-rose-400">{totalVencidos}</span>
+              <span className="text-[10px] font-bold text-rose-700 uppercase block leading-tight">Vencidos</span>
+              <span className="text-sm font-extrabold text-rose-800">{totalVencidos}</span>
             </div>
           </div>
         </div>
@@ -596,20 +547,61 @@ export default function Checklist() {
         <div className="flex items-center gap-3 w-full md:w-auto">
           {activeView === 'monitoring' && (
             <div className="relative flex-1 md:w-64">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C7A26A]" />
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar placa cavalo..."
-                className="w-full bg-[#3A2414] border border-[#6B4423] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-[#eddaba]/40 outline-none focus:border-[#B32025] font-mono uppercase shadow-inner"
+                placeholder="Buscar placa ou carreta..."
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-mono uppercase transition-all"
               />
+            </div>
+          )}
+
+          {activeView === 'os' && (
+            <div className="flex flex-wrap items-center gap-2 flex-1 md:flex-initial">
+              <div className="relative flex-1 md:w-64">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text"
+                  value={osSearchTerm}
+                  onChange={(e) => setOsSearchTerm(e.target.value)}
+                  placeholder="Buscar placa / O.S..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-mono uppercase transition-all"
+                />
+                {osSearchTerm && (
+                  <button
+                    onClick={() => setOsSearchTerm('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {sortedCavalos.length > 0 && (
+                <div className="relative shrink-0">
+                  <select
+                    value={sortedCavalos.some(i => i.cavalo === osSearchTerm) ? osSearchTerm : ''}
+                    onChange={(e) => setOsSearchTerm(e.target.value)}
+                    className="bg-blue-50 border border-blue-200 hover:border-blue-300 rounded-xl px-3 py-2 text-xs font-bold text-blue-950 uppercase outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer font-mono shadow-2xs transition-all"
+                    title="Puxar placa da aba Checklist"
+                  >
+                    <option value="">-- Puxar Placa do Checklist --</option>
+                    {sortedCavalos.map(item => (
+                      <option key={item.id} value={item.cavalo}>
+                        {item.cavalo} {item.carretas ? `(${item.carretas})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           )}
 
           <button
             onClick={() => setIsAdding(true)}
-            className="px-5 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-serif font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 cursor-pointer transition-all border border-[#ff4d4d]/30 shrink-0"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-xs flex items-center gap-2 cursor-pointer transition-all shrink-0"
           >
             <Plus size={16} />
             <span>Novo Registro</span>
@@ -618,33 +610,36 @@ export default function Checklist() {
           {items.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="px-3.5 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl font-serif font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Apagar todos"
+              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Apagar todos os registros"
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} />
               <span className="hidden sm:inline">Limpar</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* MAIN CONTAINER */}
-      <div className="flex-1 p-6 max-w-[1600px] w-full mx-auto space-y-6">
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 p-6 max-w-[1600px] w-full mx-auto space-y-6">
+        
+        {/* ================= VIEW: GERADOR / CHECKPOINT ================= */}
         {activeView === 'generator' ? (
-          <WoodenPlaque className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 space-y-5 bg-[#3A2414] border-2 border-[#6B4423] p-6 rounded-3xl shadow-inner text-[#eddaba]">
-              <h3 className="text-xs font-bold font-serif uppercase tracking-widest border-b border-[#6B4423] pb-3 flex items-center gap-2 text-[#fdf8f0]">
-                <Sparkles size={16} className="text-[#C7A26A]" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+            {/* Form Configuration Card */}
+            <div className="lg:col-span-1 space-y-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
+              <h3 className="text-sm font-bold uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center gap-2 text-blue-950">
+                <Sparkles size={18} className="text-blue-600" />
                 Configurar Solicitação de Checklist
               </h3>
               
-              <div className="space-y-4 font-serif">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Saudação</label>
+                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Saudação</label>
                   <select
                     value={genData.greeting}
                     onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
-                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B32025] outline-none cursor-pointer font-serif"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer"
                   >
                     <option value="Bom dia">Bom dia</option>
                     <option value="Boa tarde">Boa tarde</option>
@@ -653,7 +648,7 @@ export default function Checklist() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Veículo (Cavalo)</label>
+                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Veículo (Cavalo)</label>
                   <select
                     value={genData.cavalo}
                     onChange={(e) => {
@@ -665,7 +660,7 @@ export default function Checklist() {
                         carretas: relatedItem ? relatedItem.carretas : prev.carretas 
                       }));
                     }}
-                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white font-bold focus:border-[#B32025] outline-none cursor-pointer uppercase font-mono"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-mono font-bold focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer uppercase"
                   >
                     <option value="">Selecione veículo...</option>
                     {sortedCavalos.map(item => (
@@ -677,23 +672,23 @@ export default function Checklist() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Carretas Relacionadas</label>
+                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Carretas Relacionadas</label>
                   <input
                     type="text"
                     value={genData.carretas}
                     onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
                     placeholder="EX: PNE7353 / PNE7433"
-                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B32025] outline-none uppercase font-mono placeholder-[#eddaba]/30"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase font-mono placeholder-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase mb-1.5 block tracking-wider text-[#eddaba]">Celular Contato</label>
+                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Celular Contato</label>
                   <input
                     type="text"
                     value={genData.contato}
                     onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
-                    className="w-full bg-[#21120B] border border-[#6B4423] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B32025] outline-none font-mono"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none font-mono"
                   />
                 </div>
               </div>
@@ -701,70 +696,409 @@ export default function Checklist() {
               <button 
                 onClick={handleCopyGenerator}
                 className={cn(
-                  "w-full mt-6 py-3.5 rounded-xl text-xs font-serif font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition-all shadow-lg cursor-pointer",
+                  "w-full mt-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer",
                   genCopied 
-                    ? "bg-green-600 text-white border-green-500 shadow-xl" 
-                    : "bg-[#B32025] text-white border-[#ff4d4d]/40 hover:bg-[#8c060a]"
+                    ? "bg-emerald-600 text-white shadow-md" 
+                    : "bg-blue-600 text-white hover:bg-blue-700"
                 )}
               >
                 {genCopied ? <Check size={16} /> : <Copy size={16} />}
-                {genCopied ? 'Solicitação Copiada!' : 'Copiar para WhatsApp'}
+                <span>{genCopied ? 'Solicitação Copiada!' : 'Copiar para WhatsApp'}</span>
               </button>
             </div>
 
-            <div className="lg:col-span-2 flex items-center justify-center">
-              <div className="w-full max-w-xl bg-white text-stone-900 p-8 rounded-3xl border-4 border-[#311f14] shadow-2xl relative font-serif">
-                <p className="mb-4 text-base font-medium">{genData.greeting},</p>
-                <p className="mb-6 text-base">Solicito o <strong className="font-bold underline text-[#B32025]">checklist</strong> para os conjuntos abaixo:</p>
+            {/* Preview Document Card */}
+            <div className="lg:col-span-2 flex items-center justify-center bg-white border border-slate-200 p-8 rounded-2xl shadow-xs">
+              <div className="w-full max-w-xl bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm text-slate-800">
+                <p className="mb-4 text-base font-semibold text-blue-950">{genData.greeting},</p>
+                <p className="mb-6 text-sm text-slate-700">
+                  Solicito o <strong className="font-bold text-blue-700">checklist</strong> para os conjuntos abaixo:
+                </p>
                 
-                <table className="w-full border-collapse border border-stone-300 text-center mb-6">
+                <table className="w-full border-collapse border border-slate-300 text-center mb-6 overflow-hidden rounded-lg">
                   <thead>
-                    <tr className="bg-stone-900 text-white text-xs uppercase font-serif">
-                      <th className="p-3 border border-stone-300">VEÍCULO CAVALO</th>
-                      <th className="p-3 border border-stone-300">CARRETAS DO CONJUNTO</th>
+                    <tr className="bg-blue-900 text-white text-xs uppercase font-bold tracking-wider">
+                      <th className="p-3 border border-blue-950">Veículo Cavalo</th>
+                      <th className="p-3 border border-blue-950">Carretas do Conjunto</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="bg-stone-50 font-mono font-bold text-stone-900">
-                      <td className="p-3.5 border border-stone-300 uppercase">{genData.cavalo || "—"}</td>
-                      <td className="p-3.5 border border-stone-300 uppercase">{genData.carretas || "—"}</td>
+                    <tr className="bg-white font-mono font-bold text-slate-900">
+                      <td className="p-3.5 border border-slate-300 uppercase">{genData.cavalo || "—"}</td>
+                      <td className="p-3.5 border border-slate-300 uppercase">{genData.carretas || "—"}</td>
                     </tr>
                   </tbody>
                 </table>
 
-                <div className="bg-stone-100 p-3 rounded-xl border border-stone-200 text-stone-800 font-mono text-xs mb-8">
+                <div className="bg-blue-50/80 p-3 rounded-xl border border-blue-200 text-blue-950 font-mono text-xs mb-8 font-semibold">
                   Canal de Atendimento: {genData.contato}
                 </div>
 
-                <div className="border-t border-stone-300 pt-6 flex justify-between items-end">
-                  <p className="text-stone-600 text-xs">Atenciosamente,</p>
+                <div className="border-t border-slate-200 pt-6 flex justify-between items-end">
+                  <p className="text-slate-500 text-xs font-medium">Atenciosamente,</p>
                   <div className="text-center mr-2">
-                    <p className="italic text-2xl font-serif text-stone-900" style={{ fontFamily: 'Brush Script MT, cursive' }}>Jefferson Augusto</p>
-                    <div className="w-32 h-[1px] bg-[#B32025] my-1 mx-auto"></div>
-                    <p className="text-[9px] uppercase tracking-widest text-[#B32025] font-bold font-sans">Agente de Risco</p>
+                    <p className="font-serif italic text-2xl text-blue-950">Jefferson Augusto</p>
+                    <div className="w-32 h-[1.5px] bg-blue-600 my-1 mx-auto"></div>
+                    <p className="text-[10px] uppercase tracking-widest text-blue-800 font-bold font-sans">Agente de Risco</p>
                   </div>
                 </div>
               </div>
             </div>
-          </WoodenPlaque>
-        ) : (
-          <div className="space-y-6">
-            
-            {/* FILTER & IMPORT PLAQUE */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <WoodenPlaque className="lg:col-span-1">
+          </div>
+        ) : activeView === 'os' ? (
+          /* ================= VIEW: ORDEM DE SERVIÇO (O.S) ================= */
+          <div className="space-y-6 animate-fade-in">
+            {/* Header and Filter Plaque */}
+            <div className="w-full bg-white text-slate-900 p-5 rounded-2xl shadow-xs border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                  <FileText className="w-5 h-5 stroke-[2.5]" />
+                </div>
+                <div className="text-left">
+                  <h2 className="text-base font-extrabold uppercase tracking-wider text-blue-950">
+                    Controle de Ordens de Serviço (O.S)
+                  </h2>
+                  <p className="text-xs text-blue-800 font-semibold mt-0.5">
+                    Sincronizado em tempo real com todas as placas da aba Checklist
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 border border-slate-200 rounded-xl">
+                {(['TODOS', 'PENDENTE', 'AGENDADO', 'EM ANDAMENTO', 'CONCLUÍDO', 'CANCELADO'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setOsStatusFilter(st)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                      osStatusFilter === st
+                        ? "bg-blue-600 text-white shadow-xs"
+                        : "text-slate-600 hover:text-blue-900 hover:bg-white"
+                    )}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Metrics Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
+                  <Truck size={18} className="stroke-[2.5]" />
+                </div>
                 <div>
-                  <span className="text-[10px] font-mono tracking-widest text-[#5c3c24] uppercase block mb-3 font-extrabold">Filtrar Status</span>
+                  <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">Total Frota</span>
+                  <span className="text-base font-extrabold text-blue-950">{items.length}</span>
+                </div>
+              </div>
+              <div className="bg-white border border-rose-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center border border-rose-100">
+                  <ShieldAlert size={18} className="stroke-[2.5]" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-rose-700 tracking-wider">Pendente</span>
+                  <span className="text-base font-extrabold text-rose-700">
+                    {items.filter(item => (item.osStatus || 'PENDENTE') === 'PENDENTE').length}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white border border-blue-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
+                  <Activity size={18} className="stroke-[2.5]" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-blue-700 tracking-wider">Agendado</span>
+                  <span className="text-base font-extrabold text-blue-700">
+                    {items.filter(item => item.osStatus === 'AGENDADO').length}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white border border-amber-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100">
+                  <Loader2 size={18} className="stroke-[2.5] animate-spin" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-amber-700 tracking-wider">Em Andamento</span>
+                  <span className="text-base font-extrabold text-amber-700">
+                    {items.filter(item => item.osStatus === 'EM ANDAMENTO').length}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white border border-emerald-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left col-span-2 sm:col-span-1">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+                  <ShieldCheck size={18} className="stroke-[2.5]" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-emerald-700 tracking-wider">Concluído</span>
+                  <span className="text-base font-extrabold text-emerald-700">
+                    {items.filter(item => item.osStatus === 'CONCLUÍDO').length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Table Container Card */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs overflow-hidden">
+              {items.filter(item => {
+                const term = osSearchTerm.toLowerCase().trim();
+                const matchesSearch = !term || 
+                  (item.cavalo || '').toLowerCase().includes(term) || 
+                  (item.carretas || '').toLowerCase().includes(term) ||
+                  (item.manutencaoOs || '').toLowerCase().includes(term);
+                const currentStatus = item.osStatus || 'PENDENTE';
+                const matchesStatus = osStatusFilter === 'TODOS' || currentStatus === osStatusFilter;
+                return matchesSearch && matchesStatus;
+              }).length === 0 ? (
+                <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 min-h-[300px]">
+                  <Truck className="text-slate-400 w-12 h-12 mb-3" />
+                  <p className="text-sm text-slate-800 mb-1 font-bold uppercase">Nenhum registro encontrado</p>
+                  <p className="text-xs text-slate-500 max-w-md">
+                    {osSearchTerm || osStatusFilter !== 'TODOS'
+                      ? "Altere os filtros ou termos da sua busca para encontrar os veículos."
+                      : "Nenhum veículo cadastrado. Clique no botão 'Novo Registro' acima para cadastrar."}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                  <table className="w-full text-left border-collapse font-sans">
+                    <thead>
+                      <tr className="bg-blue-900 text-white text-xs uppercase font-bold tracking-wider h-11 border-b border-blue-950">
+                        <th className="px-3 py-2.5 w-12 text-center select-none">#</th>
+                        <th className="px-4 py-2.5 min-w-[260px]">Placa do Cavalo</th>
+                        <th className="px-4 py-2.5 w-56 text-center">Número da O.S</th>
+                        <th className="px-4 py-2.5 w-56 text-center">Data Agendamento</th>
+                        <th className="px-4 py-2.5 w-52 text-center">Dias Vencimento</th>
+                        <th className="px-4 py-2.5 w-52 text-center">Status da O.S</th>
+                        <th className="px-4 py-2.5 w-48 text-center">Checklist Feito</th>
+                        <th className="px-4 py-2.5 w-28 text-center">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {items.filter(item => {
+                        const term = osSearchTerm.toLowerCase().trim();
+                        const matchesSearch = !term || 
+                          (item.cavalo || '').toLowerCase().includes(term) || 
+                          (item.carretas || '').toLowerCase().includes(term) ||
+                          (item.manutencaoOs || '').toLowerCase().includes(term);
+                        const currentStatus = item.osStatus || 'PENDENTE';
+                        const matchesStatus = osStatusFilter === 'TODOS' || currentStatus === osStatusFilter;
+                        return matchesSearch && matchesStatus;
+                      }).map((item, i) => {
+                        // Calculate days remaining
+                        let daysRemainingText = 'Sem agendamento';
+                        let daysRemainingStyle = 'bg-slate-50 text-slate-500 border-slate-200';
+                        if (item.dataAgendamento) {
+                          try {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const target = new Date(item.dataAgendamento + 'T00:00:00');
+                            target.setHours(0, 0, 0, 0);
+                            const diffTime = target.getTime() - today.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            if (diffDays > 0) {
+                              daysRemainingText = `Faltam ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+                              daysRemainingStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold';
+                            } else if (diffDays === 0) {
+                              daysRemainingText = 'Hoje';
+                              daysRemainingStyle = 'bg-amber-50 text-amber-700 border-amber-200 font-bold animate-pulse';
+                            } else {
+                              const absDays = Math.abs(diffDays);
+                              daysRemainingText = `Atrasado ${absDays} dia${absDays > 1 ? 's' : ''}`;
+                              daysRemainingStyle = 'bg-rose-50 text-rose-700 border-rose-200 font-bold';
+                            }
+                          } catch (e) {
+                            daysRemainingText = 'Data inválida';
+                            daysRemainingStyle = 'bg-rose-50 text-rose-700 border-rose-200';
+                          }
+                        }
+
+                        // Select styles helper
+                        let selectStyle = 'bg-slate-50 text-slate-900 border-slate-300 font-bold';
+                        switch (item.osStatus) {
+                          case 'PENDENTE':
+                            selectStyle = 'bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-500 font-bold';
+                            break;
+                          case 'AGENDADO':
+                            selectStyle = 'bg-blue-50 text-blue-700 border-blue-200 focus:ring-blue-500 font-bold';
+                            break;
+                          case 'EM ANDAMENTO':
+                            selectStyle = 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500 font-bold';
+                            break;
+                          case 'CONCLUÍDO':
+                            selectStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500 font-bold';
+                            break;
+                          case 'CANCELADO':
+                            selectStyle = 'bg-slate-100 text-slate-700 border-slate-300 focus:ring-slate-500 font-bold';
+                            break;
+                        }
+
+                        return (
+                          <tr 
+                            key={item.id} 
+                            className="text-xs text-slate-900 hover:bg-blue-50/40 transition-colors border-b border-slate-100 h-16"
+                          >
+                            {/* Index */}
+                            <td className="p-2 text-center text-slate-400 font-mono text-xs w-12 select-none font-bold">
+                              {i + 1}
+                            </td>
+
+                            {/* Plates column */}
+                            <td className="p-3">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  {item.cavalo && (
+                                    <LicensePlate plate={item.cavalo} type="cavalo" />
+                                  )}
+                                </div>
+                                {item.carretas && (
+                                  <span className="text-[11px] font-mono text-blue-900 font-bold">
+                                    Conjunto: {item.carretas}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* O.S Number column */}
+                            <td className="p-3">
+                              <input 
+                                id={`os-number-${item.id}`}
+                                type="text"
+                                defaultValue={item.manutencaoOs || ''}
+                                onBlur={(e) => {
+                                  const val = e.target.value;
+                                  update(ref(rtdb, `checklist_veiculos/${item.id}`), { manutencaoOs: val }).catch(err => {
+                                    console.error("Erro ao salvar O.S:", err);
+                                  });
+                                }}
+                                placeholder="Nº DA O.S (EX: 900382)"
+                                className="w-full bg-slate-50 border border-slate-300 hover:border-blue-400 focus:border-blue-600 focus:bg-white text-blue-950 font-bold rounded-lg py-2 px-3 text-center outline-none transition-all uppercase text-xs font-mono"
+                              />
+                            </td>
+
+                            {/* Scheduled Date column */}
+                            <td className="p-3">
+                              <input 
+                                id={`os-date-${item.id}`}
+                                type="date"
+                                value={item.dataAgendamento || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  update(ref(rtdb, `checklist_veiculos/${item.id}`), { dataAgendamento: val }).catch(err => {
+                                    console.error("Erro ao salvar data agendamento:", err);
+                                  });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-300 hover:border-blue-400 focus:border-blue-600 focus:bg-white text-slate-900 font-bold rounded-lg py-2 px-3 text-center outline-none transition-all text-xs font-mono"
+                              />
+                            </td>
+
+                            {/* Expiry Days column */}
+                            <td className="p-3 text-center">
+                              <div className={cn(
+                                "inline-block px-3 py-1.5 rounded-lg text-[10px] uppercase border select-none min-w-[120px] text-center font-mono font-bold",
+                                daysRemainingStyle
+                              )}>
+                                {daysRemainingText}
+                              </div>
+                            </td>
+
+                            {/* Status dropdown column */}
+                            <td className="p-3 text-center">
+                              <select
+                                id={`os-status-${item.id}`}
+                                value={item.osStatus || 'PENDENTE'}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  update(ref(rtdb, `checklist_veiculos/${item.id}`), { osStatus: val }).catch(err => {
+                                    console.error("Erro ao salvar status:", err);
+                                  });
+                                }}
+                                className={cn(
+                                  "w-full border rounded-lg py-2 px-3 text-center outline-none transition-all text-xs font-bold cursor-pointer",
+                                  selectStyle
+                                )}
+                              >
+                                <option value="PENDENTE">🔴 PENDENTE</option>
+                                <option value="AGENDADO">🔵 AGENDADO</option>
+                                <option value="EM ANDAMENTO">🟡 EM ANDAMENTO</option>
+                                <option value="CONCLUÍDO">🟢 CONCLUÍDO</option>
+                                <option value="CANCELADO">⚫ CANCELADO</option>
+                              </select>
+                            </td>
+
+                            {/* Checklist Realizado dropdown column */}
+                            <td className="p-3 text-center">
+                              <select
+                                id={`os-checklist-realizado-${item.id}`}
+                                value={item.checklistRealizado || 'não'}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  update(ref(rtdb, `checklist_veiculos/${item.id}`), { checklistRealizado: val }).catch(err => {
+                                    console.error("Erro ao salvar checklist realizado:", err);
+                                  });
+                                }}
+                                className={cn(
+                                  "w-full border rounded-lg py-2 px-3 text-center outline-none transition-all text-xs font-bold cursor-pointer",
+                                  (item.checklistRealizado || 'não') === 'sim'
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 focus:border-emerald-500"
+                                    : "bg-rose-50 text-rose-700 border-rose-200 focus:border-rose-500"
+                                )}
+                              >
+                                <option value="não">❌ NÃO</option>
+                                <option value="sim">✔️ SIM</option>
+                              </select>
+                            </td>
+
+                            {/* Actions column */}
+                            <td className="p-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => setEditingItem(item)}
+                                  className="p-2 bg-slate-100 hover:bg-blue-50 text-blue-900 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                                  title="Editar"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(item.id)}
+                                  className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg border border-rose-200 transition-colors cursor-pointer"
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* ================= VIEW: MONITORAMENTO (DEFAULT) ================= */
+          <div className="space-y-6 animate-fade-in">
+            
+            {/* Filter & Import Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Status Filter Card */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-950 block mb-3">Filtrar por Status</span>
                   <div className="grid grid-cols-2 gap-2">
                     {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
                       <button
                         key={f}
                         onClick={() => setFilter(f)}
                         className={cn(
-                          "px-4 py-2.5 rounded-xl text-[11px] font-bold font-serif uppercase tracking-widest transition-all cursor-pointer text-center border shadow-sm",
+                          "px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-center border shadow-2xs",
                           filter === f 
-                            ? "bg-[#B32025] text-white shadow-md border-[#ff4d4d]/40" 
-                            : "bg-[#f4ede2] text-[#311f14] hover:bg-[#eddaba] border-[#d4bc96]"
+                            ? "bg-blue-600 text-white border-blue-600 shadow-xs" 
+                            : "bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
                         )}
                       >
                         {f}
@@ -772,39 +1106,40 @@ export default function Checklist() {
                     ))}
                   </div>
                 </div>
-                <div className="text-[11px] text-[#5c3c24] font-serif italic border-t border-[#d4bc96] pt-3 mt-4">
-                  Mostrando <strong className="text-[#311f14]">{filteredItems.length}</strong> de {items.length} veículos.
+                <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 mt-4">
+                  Mostrando <strong className="text-blue-950 font-bold">{filteredItems.length}</strong> de {items.length} veículos.
                 </div>
-              </WoodenPlaque>
+              </div>
 
-              <WoodenPlaque className="lg:col-span-2">
+              {/* Paste Importer Card */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs lg:col-span-2">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-[10px] font-mono tracking-widest text-[#5c3c24] uppercase font-extrabold flex items-center gap-1.5">
-                    <FileSpreadsheet size={15} className="text-[#B32025]" />
+                  <label className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+                    <FileSpreadsheet size={16} className="text-blue-600" />
                     Atualizar Checklist via Colagem (Planilha)
                   </label>
-                  <span className="text-[9px] text-[#5c3c24]/70 font-mono">Cole sem cabeçalhos</span>
+                  <span className="text-[11px] text-slate-400 font-medium">Cole as colunas sem cabeçalho</span>
                 </div>
                 <div className="flex gap-3">
                   <textarea
                     value={pasteData}
                     onChange={(e) => setPasteData(e.target.value)}
-                    placeholder="Cole aqui as informações copiadas do Excel..."
-                    className="w-full h-20 bg-white border border-[#d4bc96] rounded-2xl px-4 py-3 text-xs text-[#311f14] placeholder-stone-400 outline-none focus:border-[#B32025] resize-none font-mono shadow-inner"
+                    placeholder="Cole aqui as informações copiadas do Excel (Placa, Conjunto, Status, Data Teste, Data Vencimento)..."
+                    className="w-full h-20 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none font-mono transition-all"
                   />
                   <button 
                     onClick={handleImportData}
-                    className="px-6 bg-emerald-700 hover:bg-emerald-600 text-white rounded-2xl text-xs font-serif font-bold uppercase tracking-wider shadow-lg transition-all active:scale-95 shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer border border-emerald-500/40"
+                    className="px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-all active:scale-95 shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
                   >
                     <RefreshCw size={16} />
                     <span>Atualizar</span>
                   </button>
                 </div>
-              </WoodenPlaque>
+              </div>
             </div>
 
-            {/* VEHICLES CARDS LIST */}
-            <div className="space-y-4">
+            {/* Vehicles Cards List */}
+            <div className="space-y-3.5">
               <AnimatePresence>
                 {filteredItems.map((item) => {
                   const status = getStatus(item);
@@ -813,72 +1148,74 @@ export default function Checklist() {
                   const formattedVencimento = parsedExpiry ? format(parsedExpiry, 'dd/MM/yyyy') : (item.dataVencimento || '—');
 
                   return (
-                    <WoodenPlaque key={item.id} className="p-6 transition-all duration-300 hover:scale-[1.01]">
+                    <div key={item.id} className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-5 shadow-xs transition-all">
                       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                         
-                        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 w-full lg:w-auto">
-                          <div className="flex flex-col items-center">
-                            <span className="text-[10px] font-mono tracking-[0.2em] text-[#5c3c24] uppercase mb-2 font-extrabold">PLACA CAVALO</span>
+                        {/* Plates Section */}
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 w-full lg:w-auto">
+                          <div className="flex flex-col items-center lg:items-start">
+                            <span className="text-[10px] font-bold text-blue-950 uppercase mb-1.5 tracking-wider">Placa Cavalo</span>
                             <LicensePlate plate={item.cavalo} type="cavalo" />
                           </div>
 
                           {item.carretas && (
-                            <div className="flex flex-col items-center">
-                              <span className="text-[10px] font-mono tracking-[0.2em] text-[#5c3c24] uppercase mb-2 font-extrabold">CARRETAS DO CONJUNTO</span>
-                              <div className="bg-white border-2 border-[#d4bc96] rounded-2xl px-5 py-3 shadow-inner flex items-center gap-3">
-                                <Truck size={22} className="text-[#B32025]" />
-                                <span className="font-mono font-black text-sm sm:text-base text-[#311f14] uppercase tracking-wider">{item.carretas}</span>
+                            <div className="flex flex-col items-center lg:items-start">
+                              <span className="text-[10px] font-bold text-blue-950 uppercase mb-1.5 tracking-wider">Carretas do Conjunto</span>
+                              <div className="bg-blue-50/60 border border-blue-200 rounded-xl px-4 py-2 flex items-center gap-2.5">
+                                <Truck size={18} className="text-blue-600" />
+                                <span className="font-mono font-extrabold text-sm text-blue-950 uppercase tracking-wide">{item.carretas}</span>
                               </div>
                             </div>
                           )}
                         </div>
 
-                        <div className="flex flex-col items-center lg:items-start gap-3 flex-1 px-2 text-center lg:text-left">
-                          <div className="flex items-center gap-2.5 flex-wrap justify-center lg:justify-start">
+                        {/* Details & Status Section */}
+                        <div className="flex flex-col items-center lg:items-start gap-2.5 flex-1 px-2 text-center lg:text-left">
+                          <div className="flex items-center gap-2 flex-wrap justify-center lg:justify-start">
                             {status.label === 'NEGATIVADO' ? (
-                              <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                                 <ShieldAlert size={14} />
                                 <span>NEGATIVADO</span>
                               </div>
                             ) : status.label === 'REPROVADO' ? (
-                              <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                                 <ShieldAlert size={14} />
                                 <span>REPROVADO</span>
                               </div>
                             ) : diasParaVencer < 0 || status.label === 'VENCIDO' ? (
-                              <div className="px-4 py-1.5 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                                 <ShieldAlert size={14} />
                                 <span>VENCIDO</span>
                               </div>
                             ) : status.label === 'A VENCER' ? (
-                              <div className="px-4 py-1.5 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5 animate-pulse">
+                              <div className="px-3.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                                 <Clock size={14} />
                                 <span>A VENCER</span>
                               </div>
                             ) : (
-                              <div className="px-4 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 font-serif font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-1.5">
+                              <div className="px-3.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                                 <Check size={14} />
                                 <span>APROVADO</span>
                               </div>
                             )}
 
                             {item.periferico && (
-                              <span className="px-3 py-1.5 rounded-xl bg-white border border-[#d4bc96] text-[#311f14] font-mono font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                                <Wrench size={12} /> {item.periferico}
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-mono font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                                <Wrench size={12} className="text-blue-600" /> {item.periferico}
                               </span>
                             )}
 
                             {item.manutencaoOs && (
-                              <span className="px-3 py-1.5 rounded-xl bg-stone-200 border border-stone-300 text-stone-800 font-mono font-bold text-[10px]">
+                              <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 font-mono font-bold text-[11px]">
                                 OS: {item.manutencaoOs}
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-5 text-xs font-serif text-[#5c3c24] mt-1 flex-wrap justify-center lg:justify-start">
+                          <div className="flex items-center gap-4 text-xs text-slate-600 mt-0.5 flex-wrap justify-center lg:justify-start">
                             <div className="flex items-center gap-1.5">
-                              <Clock size={15} className="text-[#B32025]" />
-                              <span>Vencimento: <strong className="font-mono font-black text-sm text-[#311f14]">{formattedVencimento}</strong></span>
+                              <Clock size={14} className="text-blue-600" />
+                              <span>Vencimento: <strong className="font-mono font-bold text-slate-900">{formattedVencimento}</strong></span>
                             </div>
                             <span className={cn(
                               "font-mono font-bold text-xs",
@@ -889,15 +1226,15 @@ export default function Checklist() {
                           </div>
 
                           {item.observacao && (
-                            <p className="text-xs text-[#5c3c24] italic mt-1 max-w-lg">
+                            <p className="text-xs text-slate-500 italic max-w-lg">
                               "{item.observacao}"
                             </p>
                           )}
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex flex-col items-center justify-center gap-2 border-t lg:border-t-0 lg:border-l border-[#d4bc96] pt-4 lg:pt-0 lg:pl-6 shrink-0">
-                          <label className="px-4 py-2 bg-[#311f14] hover:bg-[#4a2e1f] text-white rounded-xl text-xs font-serif font-bold uppercase tracking-wider cursor-pointer shadow-md flex items-center gap-1.5 transition-all">
+                        {/* Actions Section */}
+                        <div className="flex flex-col items-center justify-center gap-2 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6 shrink-0">
+                          <label className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer shadow-2xs flex items-center gap-1.5 transition-all">
                             {uploadingItemId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                             <span>Anexar PDF</span>
                             <input 
@@ -908,17 +1245,17 @@ export default function Checklist() {
                             />
                           </label>
 
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-1.5 mt-0.5">
                             <button
                               onClick={() => setEditingItem(item)}
-                              className="p-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl transition-all cursor-pointer border border-stone-300"
+                              className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg transition-all cursor-pointer border border-slate-200"
                               title="Editar"
                             >
                               <Edit2 size={14} />
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
-                              className="p-2 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl transition-all cursor-pointer border border-rose-300"
+                              className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-all cursor-pointer border border-rose-200"
                               title="Excluir"
                             >
                               <Trash2 size={14} />
@@ -930,21 +1267,21 @@ export default function Checklist() {
 
                       {/* PDF Attachments List */}
                       {item.pdfs && item.pdfs.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-[#d4bc96] flex items-center gap-3 flex-wrap">
-                          <span className="text-[10px] font-mono font-bold text-[#5c3c24] uppercase">PDFs Anexados:</span>
+                        <div className="mt-3.5 pt-3.5 border-t border-slate-100 flex items-center gap-2.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-blue-950 uppercase tracking-wider">PDFs Anexados:</span>
                           {item.pdfs.map(pdf => (
-                            <div key={pdf.id} className="flex items-center gap-2 bg-white border border-[#d4bc96] px-3 py-1.5 rounded-xl shadow-xs">
-                              <FileText size={13} className="text-[#B32025]" />
-                              <span className="text-xs font-mono font-bold text-[#311f14] max-w-[150px] truncate">{pdf.name}</span>
+                            <div key={pdf.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg shadow-2xs">
+                              <FileText size={13} className="text-blue-600" />
+                              <span className="text-xs font-mono font-bold text-slate-800 max-w-[150px] truncate">{pdf.name}</span>
                               <button 
                                 onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'view')} 
-                                className="text-blue-600 hover:underline text-[10px] font-bold uppercase ml-1 cursor-pointer"
+                                className="text-blue-600 hover:text-blue-800 text-[11px] font-bold uppercase ml-1 cursor-pointer"
                               >
                                 Ver
                               </button>
                               <button 
                                 onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'download')} 
-                                className="text-emerald-700 hover:underline text-[10px] font-bold uppercase ml-1 cursor-pointer"
+                                className="text-emerald-700 hover:text-emerald-900 text-[11px] font-bold uppercase ml-1 cursor-pointer"
                               >
                                 Baixar
                               </button>
@@ -952,74 +1289,74 @@ export default function Checklist() {
                           ))}
                         </div>
                       )}
-                    </WoodenPlaque>
+                    </div>
                   );
                 })}
               </AnimatePresence>
             </div>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* EDIT MODAL */}
+      {/* ================= EDIT MODAL ================= */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#f8f1e5] border-4 border-[#311f14] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
-            <h3 className="text-base font-serif font-black uppercase text-[#311f14] mb-6 flex items-center justify-between border-b border-[#d4bc96] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative">
+            <h3 className="text-base font-bold uppercase text-blue-950 mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
               <span>Editar Checklist: {editingItem.cavalo}</span>
-              <button onClick={() => setEditingItem(null)} className="text-[#5c3c24] hover:text-[#311f14] cursor-pointer">
+              <button onClick={() => setEditingItem(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X size={20} />
               </button>
             </h3>
 
-            <div className="space-y-4 font-serif text-sm">
+            <div className="space-y-4 text-sm">
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Placa Cavalo</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Placa Cavalo</label>
                 <input
                   type="text"
                   value={editingItem.cavalo}
                   onChange={(e) => setEditingItem({ ...editingItem, cavalo: e.target.value.toUpperCase() })}
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Carretas do Conjunto</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Carretas do Conjunto</label>
                 <input
                   type="text"
                   value={editingItem.carretas}
                   onChange={(e) => setEditingItem({ ...editingItem, carretas: e.target.value.toUpperCase() })}
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Teste</label>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Teste</label>
                   <input
                     type="date"
                     value={editingItem.dataTeste}
                     onChange={(e) => setEditingItem({ ...editingItem, dataTeste: e.target.value })}
-                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Vencimento</label>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Vencimento</label>
                   <input
                     type="date"
                     value={editingItem.dataVencimento}
                     onChange={(e) => setEditingItem({ ...editingItem, dataVencimento: e.target.value })}
-                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Status Manual</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Status Manual</label>
                 <select
                   value={editingItem.statusOverride || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, statusOverride: e.target.value as any || undefined })}
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium"
                 >
                   <option value="">Automático (Calculado pela Data)</option>
                   <option value="APROVADO">APROVADO</option>
@@ -1029,35 +1366,85 @@ export default function Checklist() {
                 </select>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Nº da O.S</label>
+                  <input
+                    type="text"
+                    value={editingItem.manutencaoOs || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, manutencaoOs: e.target.value.toUpperCase() })}
+                    placeholder="EX: 900382"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 uppercase font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Agendamento O.S</label>
+                  <input
+                    type="date"
+                    value={editingItem.dataAgendamento || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, dataAgendamento: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Status da O.S</label>
+                  <select
+                    value={editingItem.osStatus || 'PENDENTE'}
+                    onChange={(e) => setEditingItem({ ...editingItem, osStatus: e.target.value as any })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold"
+                  >
+                    <option value="PENDENTE">🔴 PENDENTE</option>
+                    <option value="AGENDADO">🔵 AGENDADO</option>
+                    <option value="EM ANDAMENTO">🟡 EM ANDAMENTO</option>
+                    <option value="CONCLUÍDO">🟢 CONCLUÍDO</option>
+                    <option value="CANCELADO">⚫ CANCELADO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Checklist Realizado</label>
+                  <select
+                    value={editingItem.checklistRealizado || 'não'}
+                    onChange={(e) => setEditingItem({ ...editingItem, checklistRealizado: e.target.value as any })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold"
+                  >
+                    <option value="não">❌ NÃO</option>
+                    <option value="sim">✔️ SIM</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Periférico</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Periférico</label>
                 <input
                   type="text"
                   value={editingItem.periferico || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, periferico: e.target.value.toUpperCase() })}
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] uppercase font-mono outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 uppercase font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Observação</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Observação</label>
                 <textarea
                   value={editingItem.observacao || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, observacao: e.target.value })}
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] outline-none focus:border-[#B32025] h-20 resize-none"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 h-20 resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#d4bc96]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   onClick={() => setEditingItem(null)}
-                  className="px-5 py-2.5 bg-stone-300 hover:bg-stone-400 text-stone-800 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleUpdate}
-                  className="px-6 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-md cursor-pointer"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-xs cursor-pointer"
                 >
                   Salvar Alterações
                 </button>
@@ -1067,92 +1454,135 @@ export default function Checklist() {
         </div>
       )}
 
-      {/* NEW REGISTRATION MODAL */}
+      {/* ================= NEW REGISTRATION MODAL ================= */}
       {isAdding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#f8f1e5] border-4 border-[#311f14] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
-            <h3 className="text-base font-serif font-black uppercase text-[#311f14] mb-6 flex items-center justify-between border-b border-[#d4bc96] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative">
+            <h3 className="text-base font-bold uppercase text-blue-950 mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
               <span>Novo Registro de Checklist</span>
-              <button onClick={() => setIsAdding(false)} className="text-[#5c3c24] hover:text-[#311f14] cursor-pointer">
+              <button onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X size={20} />
               </button>
             </h3>
 
-            <div className="space-y-4 font-serif text-sm">
+            <div className="space-y-4 text-sm">
+              {/* Dropdown to pull existing plate from Checklist */}
+              {sortedCavalos.length > 0 && (
+                <div className="bg-blue-50/70 border border-blue-200 p-3 rounded-xl space-y-1.5">
+                  <label className="text-xs font-bold text-blue-950 uppercase flex items-center gap-1.5">
+                    <Truck size={14} className="text-blue-600" />
+                    <span>Puxar Placa da aba Checklist</span>
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const selectedCavalo = e.target.value;
+                      if (!selectedCavalo) return;
+                      const found = items.find(i => i.cavalo === selectedCavalo);
+                      if (found) {
+                        setNewItem({
+                          cavalo: found.cavalo || '',
+                          carretas: found.carretas || '',
+                          dataTeste: found.dataTeste || format(new Date(), 'yyyy-MM-dd'),
+                          dataVencimento: found.dataVencimento || format(addDays(new Date(), 60), 'yyyy-MM-dd'),
+                          manutencaoOs: found.manutencaoOs || '',
+                          periferico: found.periferico || '',
+                          observacao: found.observacao || '',
+                          dataAgendamento: found.dataAgendamento || '',
+                          osStatus: found.osStatus || 'PENDENTE',
+                          checklistRealizado: found.checklistRealizado || 'não',
+                          statusOverride: found.statusOverride
+                        });
+                      }
+                    }}
+                    className="w-full bg-white border border-blue-300 rounded-lg px-3 py-2 text-xs text-blue-950 font-mono font-bold outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 uppercase cursor-pointer"
+                  >
+                    <option value="">-- Selecione uma placa da aba Checklist --</option>
+                    {sortedCavalos.map(item => (
+                      <option key={item.id} value={item.cavalo}>
+                        {item.cavalo} {item.carretas ? `(${item.carretas})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-blue-800 font-medium">
+                    Preenche automaticamente a placa do cavalo e conjunto com os dados do Checklist.
+                  </p>
+                </div>
+              )}
+
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Placa Cavalo *</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Placa Cavalo *</label>
                 <input
                   type="text"
                   value={newItem.cavalo}
                   onChange={(e) => setNewItem({ ...newItem, cavalo: e.target.value.toUpperCase() })}
                   placeholder="EX: POZ4431"
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Carretas do Conjunto</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Carretas do Conjunto</label>
                 <input
                   type="text"
                   value={newItem.carretas}
                   onChange={(e) => setNewItem({ ...newItem, carretas: e.target.value.toUpperCase() })}
                   placeholder="EX: PNE7353 / PNE7433"
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono uppercase font-bold outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Teste</label>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Teste</label>
                   <input
                     type="date"
                     value={newItem.dataTeste}
                     onChange={(e) => setNewItem({ ...newItem, dataTeste: e.target.value })}
-                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Data Vencimento</label>
+                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Vencimento</label>
                   <input
                     type="date"
                     value={newItem.dataVencimento}
                     onChange={(e) => setNewItem({ ...newItem, dataVencimento: e.target.value })}
-                    className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] font-mono outline-none focus:border-[#B32025]"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Periférico</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Periférico</label>
                 <input
                   type="text"
                   value={newItem.periferico}
                   onChange={(e) => setNewItem({ ...newItem, periferico: e.target.value.toUpperCase() })}
                   placeholder="EX: TECLADO / SENSOR"
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] uppercase font-mono outline-none focus:border-[#B32025]"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 uppercase font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#5c3c24] uppercase mb-1 block">Observação</label>
+                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Observação</label>
                 <textarea
                   value={newItem.observacao}
                   onChange={(e) => setNewItem({ ...newItem, observacao: e.target.value })}
                   placeholder="Observações adicionais..."
-                  className="w-full bg-white border border-[#d4bc96] rounded-xl px-4 py-2.5 text-[#311f14] outline-none focus:border-[#B32025] h-20 resize-none"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 h-20 resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#d4bc96]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="px-5 py-2.5 bg-stone-300 hover:bg-stone-400 text-stone-800 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAdd}
-                  className="px-6 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-md cursor-pointer"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-xs cursor-pointer"
                 >
                   Cadastrar Checklist
                 </button>
