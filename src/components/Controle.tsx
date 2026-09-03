@@ -528,11 +528,12 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
 }
 
 export interface ParsedUnidadeItem {
-  carreta: string;
-  isca: string;
-  uma: string;
-  esquema: string;
-  nf: string;
+  carreta: string;  // Coluna 1: Placa da carreta
+  isca: string;     // Coluna 2: Número da isca
+  produto: string;  // Coluna 3: Produto / Descrição / Posição
+  uma: string;      // Coluna 4: U.M.A
+  nf: string;       // Coluna 5: NF
+  esquema: string;  // Esquema / Posição
 }
 
 export interface ParsedUnidadeInfo {
@@ -596,78 +597,93 @@ export function parseUnidadesText(text: string): ParsedUnidadeInfo {
       continue;
     }
 
-    // 3. Placa do Baú / Carreta / Semi-reboque
-    const bauMatch = line.match(/(?:Placa\s+do\s+Baú|Placa\s+do\s+Bau|Placa\s+da\s+Carreta|Carreta\s*\d*|Baú\s*\d*|Bau\s*\d*)\s*:\s*([^\n]+)/i);
-    if (bauMatch) {
-      const rawDetails = bauMatch[1].trim();
-      const parts = rawDetails.split("-").map((p) => p.trim()).filter(Boolean);
-
-      const carretaPlate = (parts[0] || "").toUpperCase().replace(/[^A-Z0-9-]/g, "");
-
-      let iscaVal = "";
-      let umaVal = "";
-      let esquemaVal = "";
-
-      parts.slice(1).forEach((part) => {
-        const pUpper = part.toUpperCase();
-        const pClean = pUpper.replace(/[^A-Z0-9]/g, "");
-
-        if (/^R\d+/i.test(pClean) || /^30D/i.test(pClean) || pUpper.includes("ISCA")) {
-          iscaVal = pClean;
-        } else if (/^\d{6,14}$/.test(pClean)) {
-          umaVal = pClean;
-        } else {
-          if (esquemaVal) esquemaVal += " - " + part;
-          else esquemaVal = part;
-        }
-      });
-
-      result.carretas.push({
-        carreta: carretaPlate,
-        isca: iscaVal,
-        uma: umaVal,
-        esquema: esquemaVal,
-        nf: "",
-      });
-      currentCarretaIdx = result.carretas.length - 1;
-      continue;
-    }
-
-    // 4. NF
-    const nfMatch = line.match(/NF\s*:\s*([0-9\/\s-]+)/i);
-    if (nfMatch) {
-      const nfVal = nfMatch[1].trim().replace(/\D/g, "");
-      if (currentCarretaIdx >= 0 && result.carretas[currentCarretaIdx]) {
-        result.carretas[currentCarretaIdx].nf = nfVal;
-      }
-      continue;
-    }
-
-    // 5. Destino
+    // 3. Destino
     const destMatch = line.match(/Destino\s*:\s*([^\n]+)/i);
     if (destMatch && !result.destino) {
       result.destino = destMatch[1].trim().toUpperCase();
       continue;
     }
 
-    // 6. Transportadora
+    // 4. Transportadora
     const transpMatch = line.match(/Transportadora\s*:\s*([^\n]+)/i);
     if (transpMatch && !result.transportadora) {
       result.transportadora = transpMatch[1].trim();
       continue;
     }
 
-    // 7. Motorista / Condutor
+    // 5. Motorista / Condutor
     const motMatch = line.match(/(?:Motorista|Condutor)\s*:\s*([^\n]+)/i);
     if (motMatch && !result.motorista) {
       result.motorista = motMatch[1].trim().toUpperCase();
       continue;
     }
 
-    // 8. Tecnologia / Rastreador
+    // 6. Tecnologia / Rastreador
     const tecMatch = line.match(/(?:Tecnologia|Rastreador)\s*:\s*([^\n]+)/i);
     if (tecMatch && !result.tecnologia) {
       result.tecnologia = tecMatch[1].trim().toUpperCase();
+      continue;
+    }
+
+    // 7. Placa do Baú / Carreta / Semi-reboque or line with hyphen/tab separated columns
+    const isBauPrefix = /(?:Placa\s+do\s+Baú|Placa\s+do\s+Bau|Placa\s+da\s+Carreta|Carreta|Baú|Bau)\s*:/i.test(line);
+    const partsCount = line.split(/[-;\t]/).length;
+    const isMultiColumnLine = partsCount >= 2 && !/^(Data|Destino|Transportadora|Motorista|Condutor|Tecnologia|Rastreador|Placa\s+do\s+cavalo|Cavalo)/i.test(line);
+
+    if (isBauPrefix || isMultiColumnLine) {
+      const cleanLine = line.replace(/^(Placa\s+do\s+Baú|Placa\s+do\s+Bau|Placa\s+da\s+Carreta|Carreta\s*\d*|Baú\s*\d*|Bau\s*\d*)\s*:\s*/i, "").trim();
+      const parts = cleanLine.split(/[-;\t]/).map((p) => p.trim()).filter(Boolean);
+
+      if (parts.length > 0) {
+        // Coluna 1: Placa da Carreta
+        const carretaPlate = parts[0].toUpperCase().replace(/[^A-Z0-9-]/g, "");
+
+        let iscaVal = "";
+        let produtoVal = "";
+        let umaVal = "";
+        let nfVal = "";
+
+        // Iterate through remaining parts following standard 5-column semantics
+        parts.slice(1).forEach((part) => {
+          const pUpper = part.toUpperCase().trim();
+          const pClean = pUpper.replace(/[^A-Z0-9]/g, "");
+
+          if (!iscaVal && (/^R\d+/i.test(pClean) || /^30D/i.test(pClean) || pUpper.includes("ISCA"))) {
+            // Coluna 2: Número da Isca
+            iscaVal = pClean;
+          } else if (!umaVal && /^\d{6,14}$/.test(pClean)) {
+            // Coluna 4: U.M.A (código numérico)
+            umaVal = pClean;
+          } else if (!nfVal && (/^\d{4,8}$/.test(pClean) || pUpper.startsWith("NF"))) {
+            // Coluna 5: NF
+            nfVal = pClean.replace(/^NF\s*:?\s*/i, "");
+          } else {
+            // Coluna 3: Produto / Descrição / Posição
+            if (produtoVal) produtoVal += " - " + part.trim();
+            else produtoVal = part.trim();
+          }
+        });
+
+        result.carretas.push({
+          carreta: carretaPlate,
+          isca: iscaVal,
+          produto: produtoVal,
+          uma: umaVal,
+          nf: nfVal,
+          esquema: produtoVal,
+        });
+        currentCarretaIdx = result.carretas.length - 1;
+        continue;
+      }
+    }
+
+    // 8. NF on a standalone line (e.g. "NF : 305124")
+    const nfMatch = line.match(/^NF\s*:\s*([0-9\/\s-]+)/i);
+    if (nfMatch) {
+      const nfVal = nfMatch[1].trim().replace(/\D/g, "");
+      if (currentCarretaIdx >= 0 && result.carretas[currentCarretaIdx]) {
+        result.carretas[currentCarretaIdx].nf = nfVal;
+      }
       continue;
     }
   }
@@ -2384,6 +2400,26 @@ Embarque: ${
                 </div>
               </div>
 
+              {/* Banner explaining the 5 required columns */}
+              <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-inner">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-blue-600/30 border border-blue-500/40 rounded-xl text-blue-300">
+                    <Layers size={18} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider text-blue-300 block">
+                      Estrutura das Colunas Recomendada
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-200">
+                      Placa da Carreta &nbsp;➔&nbsp; Número da Isca &nbsp;➔&nbsp; Produto &nbsp;➔&nbsp; U.M.A &nbsp;➔&nbsp; NF
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  Suporta separação por hífen (-), tabulação ou vírgulas.
+                </div>
+              </div>
+
               {/* Paste Area */}
               <div className="flex flex-col gap-3">
                 <label className="text-xs font-black uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
@@ -2393,7 +2429,7 @@ Embarque: ${
                 <textarea
                   value={unidadesPastedText}
                   onChange={(e) => setUnidadesPastedText(e.target.value)}
-                  placeholder={`Cole aqui as informações da Unidade...\n\nExemplo:\nData do embarque: 02/09/2026\nPlaca do cavalo: RFX9E81\nPlaca do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR - BATIDO\nNF : 305124\nPlaca do Baú: RBV2D09 - R100000620 - 12211016- LADO DIREITO SUPERIOR - BATIDO\nNF:305128\nDestino: CAMPO GRANDE - MS\nTransportadora: Ledfran\nMotorista: Diego Pereira`}
+                  placeholder={`Cole aqui as informações da Unidade...\n\nSiga a ordem das colunas:\nPlaca da Carreta - Número da Isca - Produto - U.M.A - NF\n\nExemplo 1:\nRBV2C89 - R100001239 - LADO DIREITO SUPERIOR BATIDO - 12211016 - 305124\n\nExemplo 2:\nData do embarque: 02/09/2026\nPlaca do cavalo: RFX9E81\nPlaca do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR - BATIDO\nNF : 305124\nDestino: CAMPO GRANDE - MS\nTransportadora: Ledfran\nMotorista: Diego Pereira`}
                   className="w-full h-48 bg-[#F8FAFC] border-2 border-[#CBD5E1] focus:border-blue-600 rounded-2xl p-4 text-xs font-mono text-[#0F172A] outline-none transition-all placeholder:text-slate-400 focus:bg-white shadow-inner resize-y leading-relaxed"
                 />
               </div>
@@ -2404,7 +2440,7 @@ Embarque: ${
                   <div className="flex items-center justify-between border-b border-blue-200/80 pb-3">
                     <span className="text-xs font-black uppercase text-blue-950 tracking-wider flex items-center gap-1.5">
                       <CheckCircle2 size={16} className="text-blue-600" />
-                      Dados Identificados no Texto
+                      Dados Identificados nas Colunas
                     </span>
                     <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
                       Pronto para importar
@@ -2442,40 +2478,52 @@ Embarque: ${
                     </div>
                   </div>
 
-                  {/* Carretas List */}
+                  {/* Carretas List with 5 Columns explicitly labeled */}
                   {parsedUnidades.carretas.length > 0 && (
                     <div className="flex flex-col gap-2 pt-1">
-                      <span className="text-[11px] font-black uppercase text-blue-950 tracking-wider">
-                        Carretas / Baús Detectados ({parsedUnidades.carretas.length}):
+                      <span className="text-[11px] font-black uppercase text-blue-950 tracking-wider flex items-center justify-between">
+                        <span>Carretas / Baús Identificados ({parsedUnidades.carretas.length}):</span>
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded">
+                          Mapeamento automático das 5 colunas
+                        </span>
                       </span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-3">
                         {parsedUnidades.carretas.map((cr, idx) => (
-                          <div key={idx} className="bg-white border border-blue-200 p-3.5 rounded-xl flex flex-col gap-2 shadow-2xs">
-                            <div className="flex items-center justify-between">
-                              <span className="bg-blue-900 text-white font-mono font-black text-xs px-2 py-0.5 rounded uppercase">
+                          <div key={idx} className="bg-white border-2 border-blue-200 p-4 rounded-xl flex flex-col gap-3 shadow-2xs">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <span className="bg-blue-900 text-white font-mono font-black text-xs px-2.5 py-1 rounded-lg uppercase flex items-center gap-1.5">
+                                <Truck size={14} />
                                 Carreta {idx + 1}: {cr.carreta || "S/ Placa"}
                               </span>
-                              {cr.nf && (
-                                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                                  NF: {cr.nf}
+                              <span className="text-[11px] font-black text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg">
+                                NF: <span className="font-mono text-blue-700">{cr.nf || "---"}</span>
+                              </span>
+                            </div>
+
+                            {/* 5 Columns Display Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase block">1. Placa Carreta</span>
+                                <span className="font-mono font-black text-slate-900 text-xs">{cr.carreta || "---"}</span>
+                              </div>
+
+                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase block">2. Número da Isca</span>
+                                <span className="font-mono font-black text-red-600 text-xs">{cr.isca || "---"}</span>
+                              </div>
+
+                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase block">3. Produto / Posição</span>
+                                <span className="font-bold text-slate-900 text-xs truncate block" title={cr.produto}>
+                                  {cr.produto || "---"}
                                 </span>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700 font-medium pt-1">
-                              <div>
-                                <span className="font-bold text-slate-500 block text-[10px]">N° ISCA:</span>
-                                <span className="font-mono font-bold text-red-600">{cr.isca || "---"}</span>
                               </div>
-                              <div>
-                                <span className="font-bold text-slate-500 block text-[10px]">CÓDIGO U.M.A:</span>
-                                <span className="font-mono font-bold text-slate-900">{cr.uma || "---"}</span>
+
+                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase block">4. U.M.A</span>
+                                <span className="font-mono font-black text-blue-900 text-xs">{cr.uma || "---"}</span>
                               </div>
                             </div>
-                            {cr.esquema && (
-                              <div className="text-[10px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200 font-semibold uppercase">
-                                Posição / Esquema: {cr.esquema}
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
