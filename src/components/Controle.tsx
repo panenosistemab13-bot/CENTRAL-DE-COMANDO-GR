@@ -527,13 +527,167 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
   return Array.from(groupedMap.values());
 }
 
+export interface ParsedUnidadeItem {
+  carreta: string;
+  isca: string;
+  uma: string;
+  esquema: string;
+  nf: string;
+}
+
+export interface ParsedUnidadeInfo {
+  dataEmbarque: string;
+  cavalo: string;
+  carretas: ParsedUnidadeItem[];
+  destino: string;
+  transportadora: string;
+  motorista: string;
+  tecnologia: string;
+}
+
+export const SAMPLE_UNIDADES_TEXT = `Data do embarque: 02/09/2026
+
+RODO
+
+Placa do cavalo: RFX9E81
+
+Placa do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR - BATIDO
+NF : 305124
+
+Placa do Baú: RBV2D09 - R100000620 - 12211016- LADO DIREITO SUPERIOR - BATIDO
+NF:305128
+
+Destino: CAMPO GRANDE - MS
+Transportadora: Ledfran
+Motorista: Diego Pereira`;
+
+export function parseUnidadesText(text: string): ParsedUnidadeInfo {
+  const result: ParsedUnidadeInfo = {
+    dataEmbarque: "",
+    cavalo: "",
+    carretas: [],
+    destino: "",
+    transportadora: "",
+    motorista: "",
+    tecnologia: "",
+  };
+
+  if (!text || !text.trim()) return result;
+
+  const lines = text.split("\n").map((l) => l.trim());
+
+  let currentCarretaIdx = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+
+    // 1. Data do embarque
+    const dateMatch = line.match(/(?:Data(?:\s+do\s+embarque)?)\s*:\s*([^\n]+)/i);
+    if (dateMatch && !result.dataEmbarque) {
+      result.dataEmbarque = dateMatch[1].trim();
+      continue;
+    }
+
+    // 2. Placa do cavalo
+    const cavaloMatch = line.match(/(?:Placa\s+do\s+cavalo|Cavalo|Placa\s+Cavalo)\s*:\s*([A-Za-z0-9-]+)/i);
+    if (cavaloMatch && !result.cavalo) {
+      result.cavalo = cavaloMatch[1].trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+      continue;
+    }
+
+    // 3. Placa do Baú / Carreta / Semi-reboque
+    const bauMatch = line.match(/(?:Placa\s+do\s+Baú|Placa\s+do\s+Bau|Placa\s+da\s+Carreta|Carreta\s*\d*|Baú\s*\d*|Bau\s*\d*)\s*:\s*([^\n]+)/i);
+    if (bauMatch) {
+      const rawDetails = bauMatch[1].trim();
+      const parts = rawDetails.split("-").map((p) => p.trim()).filter(Boolean);
+
+      const carretaPlate = (parts[0] || "").toUpperCase().replace(/[^A-Z0-9-]/g, "");
+
+      let iscaVal = "";
+      let umaVal = "";
+      let esquemaVal = "";
+
+      parts.slice(1).forEach((part) => {
+        const pUpper = part.toUpperCase();
+        const pClean = pUpper.replace(/[^A-Z0-9]/g, "");
+
+        if (/^R\d+/i.test(pClean) || /^30D/i.test(pClean) || pUpper.includes("ISCA")) {
+          iscaVal = pClean;
+        } else if (/^\d{6,14}$/.test(pClean)) {
+          umaVal = pClean;
+        } else {
+          if (esquemaVal) esquemaVal += " - " + part;
+          else esquemaVal = part;
+        }
+      });
+
+      result.carretas.push({
+        carreta: carretaPlate,
+        isca: iscaVal,
+        uma: umaVal,
+        esquema: esquemaVal,
+        nf: "",
+      });
+      currentCarretaIdx = result.carretas.length - 1;
+      continue;
+    }
+
+    // 4. NF
+    const nfMatch = line.match(/NF\s*:\s*([0-9\/\s-]+)/i);
+    if (nfMatch) {
+      const nfVal = nfMatch[1].trim().replace(/\D/g, "");
+      if (currentCarretaIdx >= 0 && result.carretas[currentCarretaIdx]) {
+        result.carretas[currentCarretaIdx].nf = nfVal;
+      }
+      continue;
+    }
+
+    // 5. Destino
+    const destMatch = line.match(/Destino\s*:\s*([^\n]+)/i);
+    if (destMatch && !result.destino) {
+      result.destino = destMatch[1].trim().toUpperCase();
+      continue;
+    }
+
+    // 6. Transportadora
+    const transpMatch = line.match(/Transportadora\s*:\s*([^\n]+)/i);
+    if (transpMatch && !result.transportadora) {
+      result.transportadora = transpMatch[1].trim();
+      continue;
+    }
+
+    // 7. Motorista / Condutor
+    const motMatch = line.match(/(?:Motorista|Condutor)\s*:\s*([^\n]+)/i);
+    if (motMatch && !result.motorista) {
+      result.motorista = motMatch[1].trim().toUpperCase();
+      continue;
+    }
+
+    // 8. Tecnologia / Rastreador
+    const tecMatch = line.match(/(?:Tecnologia|Rastreador)\s*:\s*([^\n]+)/i);
+    if (tecMatch && !result.tecnologia) {
+      result.tecnologia = tecMatch[1].trim().toUpperCase();
+      continue;
+    }
+  }
+
+  return result;
+}
+
 interface ControleProps {
   onBack?: () => void;
 }
 
 export default function Controle({ onBack }: ControleProps) {
-  // Navigation Tabs: 'gerador' or 'placas'
-  const [activeTab, setActiveTab] = useState<"gerador" | "placas">("gerador");
+  // Navigation Tabs: 'gerador', 'unidades' or 'placas'
+  const [activeTab, setActiveTab] = useState<"gerador" | "placas" | "unidades">("gerador");
+
+  // --- UNIDADES TAB STATE ---
+  const [unidadesPastedText, setUnidadesPastedText] = useState("");
+  const parsedUnidades = useMemo(() => {
+    return parseUnidadesText(unidadesPastedText);
+  }, [unidadesPastedText]);
 
   // --- PLACAS TAB STATE ---
   const [placasPastedData, setPlacasPastedData] = useState("");
@@ -1411,6 +1565,93 @@ export default function Controle({ onBack }: ControleProps) {
     setActiveTab("gerador");
   };
 
+  const handleImportUnidadeData = (info: ParsedUnidadeInfo) => {
+    if (info.cavalo) setCavalo(info.cavalo);
+
+    if (info.carretas.length > 0) {
+      // Carreta 1
+      const c1 = info.carretas[0];
+      if (c1.carreta) setCarreta1(c1.carreta);
+      if (c1.isca) {
+        setIsca1(c1.isca);
+        handleIsca1Change(c1.isca);
+      }
+      if (c1.uma) setUma1(formatUMA(c1.uma));
+      if (c1.nf) setNfInicio(formatUMA(c1.nf));
+
+      if (c1.esquema) {
+        const upperE = c1.esquema.toUpperCase();
+        if (upperE.includes("SUPERIOR") || upperE.includes("BATIDO")) {
+          setSidebarEmbarque1("https://lh3.googleusercontent.com/d/17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh");
+        } else if (upperE.includes("PALETIZADO")) {
+          setSidebarEmbarque1("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
+        }
+      }
+
+      if (info.carretas.length > 1) {
+        const c2 = info.carretas[1];
+        setNumCarretas(2);
+        if (c2.carreta) setCarreta2(c2.carreta);
+        if (c2.isca) {
+          setIsca2(c2.isca);
+          handleIsca2Change(c2.isca);
+        }
+        if (c2.uma) setUma2(formatUMA(c2.uma));
+        if (c2.nf) setNfFim(formatUMA(c2.nf));
+
+        if (c2.esquema) {
+          const upperE = c2.esquema.toUpperCase();
+          if (upperE.includes("SUPERIOR") || upperE.includes("BATIDO")) {
+            setSidebarEmbarque2("https://lh3.googleusercontent.com/d/17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh");
+          } else if (upperE.includes("PALETIZADO")) {
+            setSidebarEmbarque2("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
+          }
+        }
+      } else {
+        setNumCarretas(1);
+      }
+    }
+
+    if (info.transportadora) {
+      const normTransp = normalizePlacaTransportador(info.transportadora);
+      const match = allTransportadoras.find(
+        (t) => t.toLowerCase() === normTransp.toLowerCase()
+      );
+      const finalTransp = match || normTransp;
+      setTransportadora(finalTransp);
+      setSidebarTransportadora(finalTransp);
+      if (!match) {
+        setCustomTransportadoras((prev) => [...prev, finalTransp]);
+      }
+    }
+
+    if (info.motorista) {
+      setMotorista(info.motorista);
+      setSidebarMotorista(info.motorista);
+    }
+
+    if (info.destino) {
+      const { rota, destinoFinal } = findBestMatchingRoute(info.destino, origem);
+      setDestino(destinoFinal);
+      setRota1(rota);
+    }
+
+    if (info.tecnologia) {
+      setSidebarTecnologia(info.tecnologia);
+    }
+
+    // Interactive confirmation banner
+    setImportSuccessBanner({
+      cavalo: info.cavalo || "S/ Placa",
+      motorista: info.motorista || "Motorista",
+      destino: info.destino || "Destino",
+      transp: info.transportadora || "Transportadora",
+    });
+
+    // Automatically switch to Gerador PGR
+    setActiveTab("gerador");
+  };
+
   // Function to build and copy HTML template for Email pasting
   const handleCopyToEmail = async () => {
     const isPaletizado1 =
@@ -1796,6 +2037,20 @@ Embarque: ${
 
           <button
             type="button"
+            onClick={() => setActiveTab("unidades")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "unidades"
+                ? "bg-blue-600 text-white shadow-md"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
+            )}
+          >
+            <Package size={14} />
+            <span>Unidades</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("placas")}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
@@ -2079,6 +2334,174 @@ Embarque: ${
                   </h3>
                   <p className="text-xs text-[#64748B] max-w-md">
                     Copie as linhas da planilha com as colunas <strong>TRANSPORTADOR, CONDUTOR, CAVALO, CARRETA e DESTINO</strong> e cole no campo acima, ou clique em <strong>"Carregar Exemplo"</strong> para testar.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB CONTENT: Unidades */}
+        {activeTab === "unidades" && (
+          <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
+            <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-md p-6 sm:p-8 flex flex-col gap-6">
+              {/* Header info */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-[#E2E8F0] gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="bg-blue-700 text-white p-3 rounded-2xl shadow-md border border-blue-900">
+                    <Package size={24} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight flex items-center gap-2">
+                      Unidades - Importador de Embarque
+                    </h2>
+                    <p className="text-xs text-[#64748B] font-medium mt-0.5">
+                      Copie e cole as informações do embarque recebidas da unidade para preencher automaticamente o Gerador PGR e criar o Pré-Alerta.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUnidadesPastedText(SAMPLE_UNIDADES_TEXT)}
+                    className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    title="Carrega os dados de exemplo da mensagem recebida"
+                  >
+                    <Sparkles size={14} className="text-blue-600" />
+                    Carregar Exemplo (Imagem Anexa)
+                  </button>
+                  {unidadesPastedText && (
+                    <button
+                      type="button"
+                      onClick={() => setUnidadesPastedText("")}
+                      className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Paste Area */}
+              <div className="flex flex-col gap-3">
+                <label className="text-xs font-black uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
+                  <FileText size={16} className="text-blue-600" />
+                  Cole aqui o texto do embarque recebido da Unidade (Ctrl + V):
+                </label>
+                <textarea
+                  value={unidadesPastedText}
+                  onChange={(e) => setUnidadesPastedText(e.target.value)}
+                  placeholder={`Cole aqui as informações da Unidade...\n\nExemplo:\nData do embarque: 02/09/2026\nPlaca do cavalo: RFX9E81\nPlaca do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR - BATIDO\nNF : 305124\nPlaca do Baú: RBV2D09 - R100000620 - 12211016- LADO DIREITO SUPERIOR - BATIDO\nNF:305128\nDestino: CAMPO GRANDE - MS\nTransportadora: Ledfran\nMotorista: Diego Pereira`}
+                  className="w-full h-48 bg-[#F8FAFC] border-2 border-[#CBD5E1] focus:border-blue-600 rounded-2xl p-4 text-xs font-mono text-[#0F172A] outline-none transition-all placeholder:text-slate-400 focus:bg-white shadow-inner resize-y leading-relaxed"
+                />
+              </div>
+
+              {/* Live Preview of Parsed Data */}
+              {parsedUnidades.cavalo || parsedUnidades.carretas.length > 0 || parsedUnidades.destino || parsedUnidades.motorista ? (
+                <div className="bg-blue-50/60 border-2 border-blue-200 rounded-2xl p-5 flex flex-col gap-4 animate-fade-in">
+                  <div className="flex items-center justify-between border-b border-blue-200/80 pb-3">
+                    <span className="text-xs font-black uppercase text-blue-950 tracking-wider flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-blue-600" />
+                      Dados Identificados no Texto
+                    </span>
+                    <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
+                      Pronto para importar
+                    </span>
+                  </div>
+
+                  {/* Summary Badges Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Placa Cavalo</span>
+                      <span className="font-mono font-black text-sm text-blue-950">
+                        {parsedUnidades.cavalo || "Não especificado"}
+                      </span>
+                    </div>
+
+                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Motorista</span>
+                      <span className="font-bold text-xs text-blue-950 truncate">
+                        {parsedUnidades.motorista || "Não especificado"}
+                      </span>
+                    </div>
+
+                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Transportadora</span>
+                      <span className="font-bold text-xs text-blue-950 truncate">
+                        {parsedUnidades.transportadora || "Não especificada"}
+                      </span>
+                    </div>
+
+                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Destino</span>
+                      <span className="font-bold text-xs text-blue-950 truncate">
+                        {parsedUnidades.destino || "Não especificado"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Carretas List */}
+                  {parsedUnidades.carretas.length > 0 && (
+                    <div className="flex flex-col gap-2 pt-1">
+                      <span className="text-[11px] font-black uppercase text-blue-950 tracking-wider">
+                        Carretas / Baús Detectados ({parsedUnidades.carretas.length}):
+                      </span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {parsedUnidades.carretas.map((cr, idx) => (
+                          <div key={idx} className="bg-white border border-blue-200 p-3.5 rounded-xl flex flex-col gap-2 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <span className="bg-blue-900 text-white font-mono font-black text-xs px-2 py-0.5 rounded uppercase">
+                                Carreta {idx + 1}: {cr.carreta || "S/ Placa"}
+                              </span>
+                              {cr.nf && (
+                                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                                  NF: {cr.nf}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700 font-medium pt-1">
+                              <div>
+                                <span className="font-bold text-slate-500 block text-[10px]">N° ISCA:</span>
+                                <span className="font-mono font-bold text-red-600">{cr.isca || "---"}</span>
+                              </div>
+                              <div>
+                                <span className="font-bold text-slate-500 block text-[10px]">CÓDIGO U.M.A:</span>
+                                <span className="font-mono font-bold text-slate-900">{cr.uma || "---"}</span>
+                              </div>
+                            </div>
+                            {cr.esquema && (
+                              <div className="text-[10px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200 font-semibold uppercase">
+                                Posição / Esquema: {cr.esquema}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Import Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleImportUnidadeData(parsedUnidades)}
+                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-98 mt-2"
+                  >
+                    <Send size={16} />
+                    <span>IMPORTAR PARA GERADOR PGR E CRIAR PRÉ-ALERTA COMPLETO</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-[#F8FAFC] border-2 border-dashed border-[#CBD5E1] rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
+                    <Package size={24} />
+                  </div>
+                  <h3 className="text-sm font-black uppercase text-[#1E293B] tracking-wider">
+                    Aguardando colagem de dados da Unidade
+                  </h3>
+                  <p className="text-xs text-[#64748B] max-w-md">
+                    Cole as informações da mensagem da unidade na caixa acima ou clique em <strong>"Carregar Exemplo (Imagem Anexa)"</strong> para testar a extração automática.
                   </p>
                 </div>
               )}
