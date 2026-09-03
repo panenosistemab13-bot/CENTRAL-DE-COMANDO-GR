@@ -745,6 +745,11 @@ export default function Controle({ onBack }: ControleProps) {
 
   // Routes & Warning lines
   const [origem, setOrigem] = useState("SANTA LUZIA/MG");
+  const isCuiabaOrigem = useMemo(() => {
+    if (!origem) return false;
+    const normalized = origem.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return normalized.includes("cuiaba");
+  }, [origem]);
   const [rota1, setRota1] = useState("");
   const [instrucao1, setInstrucao1] = useState("* Favor, acusar o recebimento do pré-alerta;");
 
@@ -1582,6 +1587,10 @@ export default function Controle({ onBack }: ControleProps) {
   };
 
   const handleImportUnidadeData = (info: ParsedUnidadeInfo) => {
+    // Origem originada da aba Unidades é sempre CUIABÁ/MT
+    const unidadeOrigem = "CUIABÁ/MT";
+    setOrigem(unidadeOrigem);
+
     if (info.cavalo) setCavalo(info.cavalo);
 
     if (info.carretas.length > 0) {
@@ -1592,6 +1601,7 @@ export default function Controle({ onBack }: ControleProps) {
         setIsca1(c1.isca);
         handleIsca1Change(c1.isca);
       }
+      if (c1.produto) setProduto1(c1.produto);
       if (c1.uma) setUma1(formatUMA(c1.uma));
       if (c1.nf) setNfInicio(formatUMA(c1.nf));
 
@@ -1612,6 +1622,7 @@ export default function Controle({ onBack }: ControleProps) {
           setIsca2(c2.isca);
           handleIsca2Change(c2.isca);
         }
+        if (c2.produto) setProduto2(c2.produto);
         if (c2.uma) setUma2(formatUMA(c2.uma));
         if (c2.nf) setNfFim(formatUMA(c2.nf));
 
@@ -1647,9 +1658,11 @@ export default function Controle({ onBack }: ControleProps) {
     }
 
     if (info.destino) {
-      const { rota, destinoFinal } = findBestMatchingRoute(info.destino, origem);
+      const { rota, destinoFinal } = findBestMatchingRoute(info.destino, unidadeOrigem);
       setDestino(destinoFinal);
       setRota1(rota);
+    } else {
+      setRota1(`· ${unidadeOrigem} x DESTINO;`);
     }
 
     if (info.tecnologia) {
@@ -1690,6 +1703,12 @@ export default function Controle({ onBack }: ControleProps) {
       return imgUrl;
     };
 
+    const alertBg = isCuiabaOrigem ? "#EAB308" : "#DC2626";
+    const alertTextColor = isCuiabaOrigem ? "#0F172A" : "#FFFFFF";
+    const iscaHighlightColor = isCuiabaOrigem ? "#D97706" : "#DC2626";
+    const ladderCellBg = isCuiabaOrigem ? "#EAB308" : "#DC2626";
+    const ladderCellColor = isCuiabaOrigem ? "#0F172A" : "#FFFFFF";
+
     // Helper to render ladder visual grid inside email HTML matching modern executive style
     const renderLadderHtml = (
       grid: string[][],
@@ -1710,8 +1729,8 @@ export default function Controle({ onBack }: ControleProps) {
                 <tr>
                   ${row
                     .map((cell) => {
-                      const bg = cell === "P" ? "#DC2626" : "#FFFFFF";
-                      const color = cell === "P" ? "#FFFFFF" : "#0F172A";
+                      const bg = cell === "P" ? ladderCellBg : "#FFFFFF";
+                      const color = cell === "P" ? ladderCellColor : "#0F172A";
                       return `<td style="border: 1px solid #CBD5E1; background-color: ${bg}; color: ${color}; font-size: 10px; font-weight: bold; width: 50%; height: 18px; text-align: center; vertical-align: middle;">${cell === "P" ? "P" : ""}</td>`;
                     })
                     .join("")}
@@ -1732,7 +1751,7 @@ export default function Controle({ onBack }: ControleProps) {
         <p style="font-family: 'Segoe UI', Arial, sans-serif; font-weight: 700; color: #0F172A; font-size: 15px; margin-bottom: 16px; margin-top: 0; padding: 0;">${saudacao || "Boa tarde,"}</p>
         
         <!-- Alerta Resgate Corporate Banner -->
-        <div style="background-color: #DC2626; color: #FFFFFF; font-weight: 900; padding: 10px 18px; display: inline-block; margin-bottom: 20px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="background-color: ${alertBg}; color: ${alertTextColor}; font-weight: 900; padding: 10px 18px; display: inline-block; margin-bottom: 20px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           ${alertaResgate || "FAVOR SE ATENTAR AO RESGATE!"}
         </div>
         
@@ -1781,7 +1800,7 @@ export default function Controle({ onBack }: ControleProps) {
               <td rowspan="${numCarretas}" style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 700; text-transform: uppercase; font-size: 11px; color: #0F172A;">${motorista}</td>
               <td rowspan="${numCarretas}" style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 900; text-transform: uppercase; font-size: 13px; color: #0284C7; letter-spacing: 0.5px;">${cavalo.replace(/-/g, '')}</td>
               <td style="border-right: 1px solid #CBD5E1; padding: 10px; text-transform: uppercase; font-weight: 700; color: #0F172A;">${carreta1}</td>
-              <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 900; font-size: 13px; color: #DC2626;">${isca1}</td>
+              <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 900; font-size: 13px; color: ${iscaHighlightColor};">${isca1}</td>
               <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 700; font-size: 12px; color: #0F172A;">${produto1}</td>
               <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 700; font-size: 12px; color: #0F172A;">${uma1}</td>
               <td rowspan="${numCarretas}" style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 800; text-transform: uppercase; font-size: 11px; color: #0F172A;">${destino}</td>
@@ -1792,7 +1811,7 @@ export default function Controle({ onBack }: ControleProps) {
                 ? `
             <tr style="border-bottom: 1px solid #CBD5E1; text-align: center; background-color: #F8FAFC;">
               <td style="border-right: 1px solid #CBD5E1; padding: 10px; text-transform: uppercase; font-weight: 700; color: #0F172A;">${carreta2}</td>
-              <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 900; font-size: 13px; color: #DC2626;">${isca2}</td>
+              <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 900; font-size: 13px; color: ${iscaHighlightColor};">${isca2}</td>
               <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 700; font-size: 12px; color: #0F172A;">${produto2}</td>
               <td style="border-right: 1px solid #CBD5E1; padding: 10px; font-weight: 700; font-size: 12px; color: #0F172A;">${uma2}</td>
             </tr>
@@ -1821,7 +1840,7 @@ export default function Controle({ onBack }: ControleProps) {
             numCarretas === 2
               ? `
           <tr style="background-color: #F8FAFC;">
-            <td style="padding: 9px; border: 1px solid #CBD5E1; text-transform: uppercase; font-weight: 900; color: #DC2626;">${isca2 === "SEM ISCA" ? "" : isca2}</td>
+            <td style="padding: 9px; border: 1px solid #CBD5E1; text-transform: uppercase; font-weight: 900; color: ${iscaHighlightColor};">${isca2 === "SEM ISCA" ? "" : isca2}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1; text-align: left; padding-left: 12px; font-weight: 600; color: #334155;">${isca2 === "SEM ISCA" ? "" : isca2Endereco}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1; font-weight: 600; color: #0F172A;">${isca2 === "SEM ISCA" ? "" : isca2Data}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1;">
@@ -1838,7 +1857,7 @@ export default function Controle({ onBack }: ControleProps) {
               : ""
           }
           <tr style="background-color: #FFFFFF;">
-            <td style="padding: 9px; border: 1px solid #CBD5E1; text-transform: uppercase; font-weight: 900; color: #DC2626;">${isca1}</td>
+            <td style="padding: 9px; border: 1px solid #CBD5E1; text-transform: uppercase; font-weight: 900; color: ${iscaHighlightColor};">${isca1}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1; text-align: left; padding-left: 12px; font-weight: 600; color: #334155;">${isca1Endereco}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1; font-weight: 600; color: #0F172A;">${isca1Data}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1;">
@@ -2568,7 +2587,12 @@ Embarque: ${
           {/* Module Title */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#3A2414]/10 pb-5 mb-6 gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-[#B32025] text-white p-3 rounded-2xl shadow-md border border-[#3A2414]/20">
+              <div className={cn(
+                "p-3 rounded-2xl shadow-md border transition-colors",
+                isCuiabaOrigem
+                  ? "bg-amber-500 text-slate-950 border-amber-600/30"
+                  : "bg-[#B32025] text-white border-[#3A2414]/20"
+              )}>
                 <Sliders size={22} className="stroke-[2.5]" />
               </div>
               <div>
@@ -2593,7 +2617,10 @@ Embarque: ${
                 <select
                   value={saudacao}
                   onChange={(e) => setSaudacao(e.target.value)}
-                  className="w-full bg-white border-2 border-[#3A2414]/20 rounded-xl px-3.5 py-2.5 text-xs font-black text-[#3A2414] focus:border-[#B32025] outline-none transition-all cursor-pointer shadow-sm"
+                  className={cn(
+                    "w-full bg-white border-2 border-[#3A2414]/20 rounded-xl px-3.5 py-2.5 text-xs font-black text-[#3A2414] outline-none transition-all cursor-pointer shadow-sm",
+                    isCuiabaOrigem ? "focus:border-amber-500" : "focus:border-[#B32025]"
+                  )}
                 >
                   <option value="Boa tarde,">Boa tarde,</option>
                   <option value="Bom dia,">Bom dia,</option>
@@ -2623,7 +2650,9 @@ Embarque: ${
                   "flex items-center gap-2 font-black uppercase text-[10px] tracking-wider px-5 py-3 rounded-xl shadow-sm transition-all cursor-pointer select-none active:scale-95 shrink-0 border",
                   copiedAssunto
                     ? "bg-emerald-600 text-white border-emerald-500"
-                    : "bg-[#B32025] hover:bg-[#8c060a] text-white border-[#B32025]/30",
+                    : isCuiabaOrigem
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border-amber-500/40"
+                      : "bg-[#B32025] hover:bg-[#8c060a] text-white border-[#B32025]/30",
                 )}
               >
                 {copiedAssunto ? (
@@ -2651,12 +2680,22 @@ Embarque: ${
                 </div>
 
                 {/* 2. Executive Alert Banner */}
-                <div className="mb-5 bg-[#B32025] text-white font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 border-[#3A2414]/30 max-w-max ml-0">
+                <div className={cn(
+                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 transition-all max-w-max ml-0",
+                  isCuiabaOrigem
+                    ? "bg-amber-500 text-slate-950 border-amber-600/40"
+                    : "bg-[#B32025] text-white border-[#3A2414]/30"
+                )}>
                   <input
                     type="text"
                     value={alertaResgate}
                     onChange={(e) => setAlertaResgate(e.target.value)}
-                    className="bg-transparent border-none text-white w-full outline-none font-black text-xs uppercase p-0.5 focus:ring-1 focus:ring-white/40 hover:bg-white/10 rounded px-1.5 transition-all min-w-[280px]"
+                    className={cn(
+                      "bg-transparent border-none w-full outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all min-w-[280px]",
+                      isCuiabaOrigem
+                        ? "text-slate-950 focus:ring-1 focus:ring-slate-950/40 hover:bg-black/10 placeholder:text-slate-800"
+                        : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
+                    )}
                     placeholder="ALERTA RESGATE"
                   />
                 </div>
@@ -2672,9 +2711,12 @@ Embarque: ${
                 </div>
 
                 {/* 4. Routes and Instructions Selector Box with executive left highlight */}
-                <div className="border-2 border-[#3A2414]/20 border-l-4 border-l-[#B32025] bg-white p-4 mb-6 font-bold leading-relaxed max-w-xl rounded-xl shadow-inner">
+                <div className={cn(
+                  "border-2 border-[#3A2414]/20 bg-white p-4 mb-6 font-bold leading-relaxed max-w-xl rounded-xl shadow-inner border-l-4 transition-all",
+                  isCuiabaOrigem ? "border-l-amber-500" : "border-l-[#B32025]"
+                )}>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#B32025] text-sm">•</span>
+                    <span className={isCuiabaOrigem ? "text-amber-500 text-sm font-black" : "text-[#B32025] text-sm font-black"}>•</span>
                     <input
                       type="text"
                       value={rota1}
@@ -2684,7 +2726,7 @@ Embarque: ${
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[#B32025] text-sm">•</span>
+                    <span className={isCuiabaOrigem ? "text-amber-500 text-sm font-black" : "text-[#B32025] text-sm font-black"}>•</span>
                     <input
                       type="text"
                       value={instrucao1}
@@ -2708,7 +2750,12 @@ Embarque: ${
                           setUma2("");
                         }
                       }}
-                      className="flex items-center gap-1 bg-[#B32025] hover:bg-[#8c060a] text-white font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
+                      className={cn(
+                        "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                        isCuiabaOrigem
+                          ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
+                          : "bg-[#B32025] hover:bg-[#8c060a] text-white"
+                      )}
                     >
                       <Plus size={10} className="stroke-[3]" /> Adicionar
                       Segunda Carreta
@@ -2723,7 +2770,12 @@ Embarque: ${
                             setProduto2("");
                             setUma2("");
                           }}
-                          className="flex items-center gap-1 bg-[#B32025] hover:bg-[#8c060a] text-white font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
+                          className={cn(
+                            "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                            isCuiabaOrigem
+                              ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
+                              : "bg-[#B32025] hover:bg-[#8c060a] text-white"
+                          )}
                         >
                           <Plus size={10} className="stroke-[3]" /> Adicionar Isca
                         </button>
@@ -2740,7 +2792,12 @@ Embarque: ${
                             }
                             setSidebarEmbarque2("none");
                           }}
-                          className="flex items-center gap-1 bg-[#B32025] hover:bg-[#8c060a] text-white font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none"
+                          className={cn(
+                            "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                            isCuiabaOrigem
+                              ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
+                              : "bg-[#B32025] hover:bg-[#8c060a] text-white"
+                          )}
                         >
                           <Minus size={10} className="stroke-[3]" /> Sem Isca
                         </button>
@@ -2902,7 +2959,10 @@ Embarque: ${
                           type="text"
                           value={isca1}
                           onChange={(e) => handleIsca1Change(e.target.value)}
-                          className="w-full text-center bg-transparent border-none outline-none hover:bg-slate-100 focus:bg-slate-200/70 rounded px-1 py-0.5 uppercase font-black text-[13px] text-red-600 transition-all duration-200"
+                          className={cn(
+                            "w-full text-center bg-transparent border-none outline-none hover:bg-slate-100 focus:bg-slate-200/70 rounded px-1 py-0.5 uppercase font-black text-[13px] transition-all duration-200",
+                            isCuiabaOrigem ? "text-amber-600" : "text-red-600"
+                          )}
                           placeholder="ISCA 1"
                         />
                       </td>
@@ -2980,7 +3040,11 @@ Embarque: ${
                             onChange={(e) => handleIsca2Change(e.target.value)}
                             className={cn(
                               "w-full text-center bg-transparent border-none outline-none hover:bg-slate-200/50 focus:bg-slate-200 rounded px-1 py-0.5 uppercase font-black text-[13px] transition-all duration-200",
-                              isca2 === "SEM ISCA" ? "text-slate-400 font-bold" : "text-red-600"
+                              isca2 === "SEM ISCA"
+                                ? "text-slate-400 font-bold"
+                                : isCuiabaOrigem
+                                  ? "text-amber-600"
+                                  : "text-red-600"
                             )}
                             placeholder="ISCA 2"
                           />
@@ -3065,7 +3129,10 @@ Embarque: ${
                     {/* Row 1 (Isca 2) */}
                     {numCarretas === 2 && (
                       <tr className="bg-slate-50 text-center font-semibold text-slate-900 h-[44px] border-b border-slate-300">
-                        <td className="border-r border-slate-300 p-1.5 font-extrabold uppercase text-[11px] text-center bg-slate-50 align-middle text-red-600">
+                        <td className={cn(
+                          "border-r border-slate-300 p-1.5 font-extrabold uppercase text-[11px] text-center bg-slate-50 align-middle",
+                          isCuiabaOrigem ? "text-amber-600" : "text-red-600"
+                        )}>
                           {isca2 === "SEM ISCA" ? "" : isca2}
                         </td>
                         <td className="border-r border-slate-300 p-1.5 text-left font-medium text-xs bg-slate-50 align-middle">
@@ -3111,7 +3178,10 @@ Embarque: ${
                     )}
                     {/* Row 2 (Isca 1) */}
                     <tr className="bg-white text-center font-semibold text-slate-900 h-[44px] border-b border-slate-300">
-                      <td className="border-r border-slate-300 p-1.5 font-extrabold uppercase text-[11px] text-center bg-white align-middle text-red-600">
+                      <td className={cn(
+                        "border-r border-slate-300 p-1.5 font-extrabold uppercase text-[11px] text-center bg-white align-middle",
+                        isCuiabaOrigem ? "text-amber-600" : "text-red-600"
+                      )}>
                         {isca1}
                       </td>
                       <td className="border-r border-slate-300 p-1.5 text-left font-medium text-xs bg-white align-middle">
@@ -3214,7 +3284,7 @@ Embarque: ${
                                         className={cn(
                                           "w-full h-[12px] border-[0.5px] border-slate-400 font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
                                           cell === "P"
-                                            ? "bg-red-600 text-white"
+                                            ? isCuiabaOrigem ? "bg-amber-500 text-slate-950 font-black" : "bg-red-600 text-white"
                                             : "bg-white hover:bg-slate-100 text-slate-900",
                                         )}
                                       >
@@ -3278,7 +3348,7 @@ Embarque: ${
                                         className={cn(
                                           "w-full h-[12px] border-[0.5px] border-slate-400 font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
                                           cell === "P"
-                                            ? "bg-red-600 text-white"
+                                            ? isCuiabaOrigem ? "bg-amber-500 text-slate-950 font-black" : "bg-red-600 text-white"
                                             : "bg-white hover:bg-slate-100 text-slate-900",
                                         )}
                                       >
@@ -3863,10 +3933,12 @@ Embarque: ${
               <button
                 onClick={handleCopyToEmail}
                 className={cn(
-                  "w-full text-white text-[11px] font-extrabold uppercase tracking-widest py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98 cursor-pointer border border-transparent",
+                  "w-full text-[11px] font-extrabold uppercase tracking-widest py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98 cursor-pointer border border-transparent",
                   copied
-                    ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20"
-                    : "bg-red-600 hover:bg-red-700 shadow-red-600/20",
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                    : isCuiabaOrigem
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-amber-500/20"
+                      : "bg-red-600 hover:bg-red-700 text-white shadow-red-600/20",
                 )}
               >
                 {copied ? (
