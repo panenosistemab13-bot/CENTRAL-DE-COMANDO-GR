@@ -443,6 +443,8 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   const [copied, setCopied] = useState(false);
   const [idaCopied, setIdaCopied] = useState(false);
   const [voltaCopied, setVoltaCopied] = useState(false);
+  const [subjectIdaCopied, setSubjectIdaCopied] = useState(false);
+  const [subjectVoltaCopied, setSubjectVoltaCopied] = useState(false);
 
   // PDF Import Modal State
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
@@ -1049,6 +1051,40 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
     return rows[0]?.dataSaida || '---';
   };
 
+  const getSubjectDate = (rows: SMRow[]) => {
+    const rawDate = rows[0]?.dataSaida?.trim();
+    if (!rawDate || rawDate === '---') {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}`;
+    }
+    const match = rawDate.match(/(\d{1,2})[\/\.-](\d{1,2})/);
+    if (match) {
+      const day = match[1].padStart(2, '0');
+      const month = match[2].padStart(2, '0');
+      return `${day}/${month}`;
+    }
+    return rawDate;
+  };
+
+  const getSubjectIda = () => `SM IDA - DEDICADOS ${getSubjectDate(idaRows)} - SANTA LUZIA!`;
+  const getSubjectVolta = () => `SM VOLTA - DEDICADOS ${getSubjectDate(voltaRows)} - SANTA LUZIA!`;
+
+  const copySubjectIda = () => {
+    const subject = getSubjectIda();
+    navigator.clipboard.writeText(subject);
+    setSubjectIdaCopied(true);
+    setTimeout(() => setSubjectIdaCopied(false), 2000);
+  };
+
+  const copySubjectVolta = () => {
+    const subject = getSubjectVolta();
+    navigator.clipboard.writeText(subject);
+    setSubjectVoltaCopied(true);
+    setTimeout(() => setSubjectVoltaCopied(false), 2000);
+  };
+
   const copyToEmail = async () => {
     const greeting = getGreeting();
 
@@ -1184,8 +1220,88 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         <div className="relative z-10 space-y-8 animate-fade-in">
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
             {/* Main Work Area */}
-            <div className="xl:col-span-3 space-y-8">
+            <div className="xl:col-span-3 space-y-6">
               
+              {/* ASSUNTOS DE E-MAIL CARD */}
+              <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm font-sans space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-slate-900 text-amber-400 rounded-xl shadow-xs shrink-0">
+                      <Mail size={18} className="stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                          Assuntos do E-mail Padronizados
+                        </h4>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          Automatico
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Formatados automaticamente com base na data da escala para envio imediato
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {/* Assunto Ida */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gradient-to-r from-blue-50/90 via-slate-50 to-white border border-blue-200/80 rounded-xl p-3 gap-3 shadow-2xs hover:border-blue-300 transition-all">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#0F2D59] text-white shrink-0 shadow-2xs">
+                        Ida
+                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-blue-800/80">Assunto Rota Ida</span>
+                        <span className="text-xs font-mono font-black text-slate-900 truncate select-all">{getSubjectIda()}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copySubjectIda}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border shadow-2xs shrink-0 active:scale-95",
+                        subjectIdaCopied
+                          ? "bg-emerald-600 text-white border-emerald-700 shadow-emerald-600/20"
+                          : "bg-[#0F2D59] hover:bg-[#0B2347] text-white border-blue-900 shadow-blue-900/10"
+                      )}
+                      title="Copiar assunto da Rota Ida"
+                    >
+                      {subjectIdaCopied ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} />}
+                      <span>{subjectIdaCopied ? "Copiado!" : "Copiar Assunto"}</span>
+                    </button>
+                  </div>
+
+                  {/* Assunto Volta */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gradient-to-r from-rose-50/90 via-slate-50 to-white border border-rose-200/80 rounded-xl p-3 gap-3 shadow-2xs hover:border-rose-300 transition-all">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#801414] text-white shrink-0 shadow-2xs">
+                        Volta
+                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-rose-800/80">Assunto Rota Volta</span>
+                        <span className="text-xs font-mono font-black text-slate-900 truncate select-all">{getSubjectVolta()}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copySubjectVolta}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border shadow-2xs shrink-0 active:scale-95",
+                        subjectVoltaCopied
+                          ? "bg-emerald-600 text-white border-emerald-700 shadow-emerald-600/20"
+                          : "bg-[#801414] hover:bg-[#661010] text-white border-rose-900 shadow-rose-900/10"
+                      )}
+                      title="Copiar assunto da Rota Volta"
+                    >
+                      {subjectVoltaCopied ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} />}
+                      <span>{subjectVoltaCopied ? "Copiado!" : "Copiar Assunto"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* ROTA IDA (Blue Theme) */}
               <section className="space-y-3 font-sans">
                 <div className="flex items-center justify-between bg-slate-900 text-white p-3.5 rounded-xl shadow-sm border border-slate-800">
@@ -1200,6 +1316,19 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button 
+                      onClick={copySubjectIda}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
+                        subjectIdaCopied 
+                          ? "bg-emerald-600 text-white border-emerald-700" 
+                          : "bg-blue-900 hover:bg-blue-950 text-blue-100 border-blue-700"
+                      )}
+                      title="Copiar assunto do e-mail da Rota Ida"
+                    >
+                      {subjectIdaCopied ? <Check size={12} /> : <Mail size={12} />}
+                      {subjectIdaCopied ? 'Assunto Copiado!' : 'Copiar Assunto'}
+                    </button>
                     <button 
                       onClick={() => addNewRow('ida')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#0F2D59] hover:bg-[#0B2347] text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-blue-400/30"
@@ -1445,6 +1574,19 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button 
+                      onClick={copySubjectVolta}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
+                        subjectVoltaCopied 
+                          ? "bg-emerald-600 text-white border-emerald-700" 
+                          : "bg-rose-900 hover:bg-rose-950 text-rose-100 border-rose-700"
+                      )}
+                      title="Copiar assunto do e-mail da Rota Volta"
+                    >
+                      {subjectVoltaCopied ? <Check size={12} /> : <Mail size={12} />}
+                      {subjectVoltaCopied ? 'Assunto Copiado!' : 'Copiar Assunto'}
+                    </button>
                     <button 
                       onClick={() => openPdfModal('volta')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"

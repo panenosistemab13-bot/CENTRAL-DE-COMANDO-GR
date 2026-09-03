@@ -33,6 +33,7 @@ import {
   Filter,
   Layers,
   ExternalLink,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -1264,6 +1265,35 @@ export default function Controle({ onBack }: ControleProps) {
       if (produto2 === "---") setProduto2("");
       if (uma2 === "---") setUma2("");
     }
+  };
+
+  // Handlers for swapping Carretas and copying/swapping Produtos (Veículo & Carga)
+  const handleSwapCarretas = () => {
+    const temp1 = carreta1;
+    const temp2 = carreta2;
+    setCarreta1(temp2);
+    setCarreta2(temp1);
+    if (temp1 && numCarretas === 1) {
+      setNumCarretas(2);
+    }
+  };
+
+  const handleCopyProduto1To2 = () => {
+    setProduto2(produto1);
+    if (produto1 && numCarretas === 1) {
+      setNumCarretas(2);
+    }
+  };
+
+  const handleCopyProduto2To1 = () => {
+    setProduto1(produto2);
+  };
+
+  const handleSwapProdutos = () => {
+    const temp1 = produto1;
+    const temp2 = produto2;
+    setProduto1(temp2);
+    setProduto2(temp1);
   };
 
   const STORAGE_KEY = "controle_pgr_data";
@@ -2738,84 +2768,132 @@ Embarque: ${
                 </div>
 
                 {/* 5. BIG INTERACTIVE SPREADSHEET TABLE 1 */}
-                <div className="flex justify-end gap-2 mb-2">
-                  {numCarretas === 1 ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2 bg-[#FAF8F5] p-2 rounded-xl border border-[#3A2414]/15 shadow-2xs">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-black uppercase text-[#3A2414]/80 tracking-wider flex items-center gap-1 mr-1">
+                      <Truck size={12} className={isCuiabaOrigem ? "text-amber-600" : "text-[#B32025]"} /> Veículo & Carga:
+                    </span>
+
                     <button
                       type="button"
-                      onClick={() => {
-                        setNumCarretas(2);
-                        if (isca2 === "SEM ISCA") {
-                          setIsca2("");
-                          setProduto2("");
-                          setUma2("");
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
-                        isCuiabaOrigem
-                          ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
-                          : "bg-[#B32025] hover:bg-[#8c060a] text-white"
-                      )}
+                      onClick={handleSwapCarretas}
+                      title="Trocar as placas das colunas Carreta 1 e Carreta 2"
+                      className="flex items-center gap-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
                     >
-                      <Plus size={10} className="stroke-[3]" /> Adicionar
-                      Segunda Carreta
+                      <ArrowUpDown size={11} className="text-blue-600 stroke-[2.5]" />
+                      <span>Trocar Placas (C1 ⇄ C2)</span>
                     </button>
-                  ) : (
-                    <>
-                      {isca2 === "SEM ISCA" ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsca2("");
-                            setProduto2("");
-                            setUma2("");
-                          }}
-                          className={cn(
-                            "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
-                            isCuiabaOrigem
-                              ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
-                              : "bg-[#B32025] hover:bg-[#8c060a] text-white"
-                          )}
-                        >
-                          <Plus size={10} className="stroke-[3]" /> Adicionar Isca
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsca2("SEM ISCA");
-                            setProduto2("---");
-                            setUma2("---");
-                            setNfFim("");
-                            if (!carreta2 && carreta1) {
-                              setCarreta2(carreta1);
-                            }
-                            setSidebarEmbarque2("none");
-                          }}
-                          className={cn(
-                            "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
-                            isCuiabaOrigem
-                              ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
-                              : "bg-[#B32025] hover:bg-[#8c060a] text-white"
-                          )}
-                        >
-                          <Minus size={10} className="stroke-[3]" /> Sem Isca
-                        </button>
-                      )}
+
+                    <button
+                      type="button"
+                      onClick={handleCopyProduto1To2}
+                      title="Copiar e enviar código do Produto 1 para o Produto 2"
+                      className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-950 border border-slate-300 hover:border-emerald-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
+                    >
+                      <Copy size={10} className="text-emerald-600" />
+                      <span>Prod 1 ➔ Prod 2</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyProduto2To1}
+                      title="Copiar e enviar código do Produto 2 para o Produto 1"
+                      className="flex items-center gap-1 bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-950 border border-slate-300 hover:border-amber-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
+                    >
+                      <Copy size={10} className="text-amber-600" />
+                      <span>Prod 2 ➔ Prod 1</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSwapProdutos}
+                      title="Trocar os códigos dos Produtos 1 e 2"
+                      className="flex items-center gap-1 bg-white hover:bg-purple-50 text-slate-800 hover:text-purple-950 border border-slate-300 hover:border-purple-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
+                    >
+                      <ArrowUpDown size={11} className="text-purple-600" />
+                      <span>Inverter Prod 1 ⇄ 2</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {numCarretas === 1 ? (
                       <button
                         type="button"
                         onClick={() => {
-                          setNumCarretas(1);
-                          setNfFim("");
-                          setSidebarEmbarque2("none");
+                          setNumCarretas(2);
+                          if (isca2 === "SEM ISCA") {
+                            setIsca2("");
+                            setProduto2("");
+                            setUma2("");
+                          }
                         }}
-                        className="flex items-center gap-1 bg-slate-800 hover:bg-slate-900 text-white font-extrabold uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none"
+                        className={cn(
+                          "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                          isCuiabaOrigem
+                            ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
+                            : "bg-[#B32025] hover:bg-[#8c060a] text-white"
+                        )}
                       >
-                        <Minus size={10} className="stroke-[3]" /> Remover Segunda
-                        Carreta
+                        <Plus size={10} className="stroke-[3]" /> Adicionar
+                        Segunda Carreta
                       </button>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        {isca2 === "SEM ISCA" ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsca2("");
+                              setProduto2("");
+                              setUma2("");
+                            }}
+                            className={cn(
+                              "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                              isCuiabaOrigem
+                                ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
+                                : "bg-[#B32025] hover:bg-[#8c060a] text-white"
+                            )}
+                          >
+                            <Plus size={10} className="stroke-[3]" /> Adicionar Isca
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsca2("SEM ISCA");
+                              setProduto2("---");
+                              setUma2("---");
+                              setNfFim("");
+                              if (!carreta2 && carreta1) {
+                                setCarreta2(carreta1);
+                              }
+                              setSidebarEmbarque2("none");
+                            }}
+                            className={cn(
+                              "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                              isCuiabaOrigem
+                                ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"
+                                : "bg-[#B32025] hover:bg-[#8c060a] text-white"
+                            )}
+                          >
+                            <Minus size={10} className="stroke-[3]" /> Sem Isca
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNumCarretas(1);
+                            setNfFim("");
+                            setSidebarEmbarque2("none");
+                          }}
+                          className="flex items-center gap-1 bg-slate-800 hover:bg-slate-900 text-white font-extrabold uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none"
+                        >
+                          <Minus size={10} className="stroke-[3]" /> Remover Segunda
+                          Carreta
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <table className="w-full border-collapse border border-slate-300 text-xs font-sans text-slate-900 table-fixed rounded-lg overflow-hidden shadow-2xs">
                   <thead>
@@ -4130,6 +4208,51 @@ Embarque: ${
                 </div>
               </div>
             )}
+
+            {/* QUICK ACTIONS BAR (SWAP CARRETAS / COPY & SWAP PRODUCTS) */}
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-2.5 flex flex-col gap-2 shadow-2xs">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <Sliders size={11} className={isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Trocar Placas & Copiar Produtos:
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleSwapCarretas}
+                  title="Inverter as placas das colunas Carreta 1 e Carreta 2"
+                  className="flex items-center justify-center gap-1 bg-white hover:bg-slate-200/80 text-slate-800 border border-slate-300 font-extrabold uppercase text-[9px] py-1.5 px-2 rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <ArrowUpDown size={11} className="text-blue-600 stroke-[2.5]" />
+                  <span>Carreta 1 ⇄ 2</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSwapProdutos}
+                  title="Inverter os códigos dos Produtos 1 e 2"
+                  className="flex items-center justify-center gap-1 bg-white hover:bg-slate-200/80 text-slate-800 border border-slate-300 font-extrabold uppercase text-[9px] py-1.5 px-2 rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <ArrowUpDown size={11} className="text-purple-600 stroke-[2.5]" />
+                  <span>Prod 1 ⇄ 2</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyProduto1To2}
+                  title="Copiar código do Produto 1 para o Produto 2"
+                  className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 border border-slate-300 hover:border-emerald-300 font-extrabold uppercase text-[9px] py-1.5 px-2 rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <Copy size={10} className="text-emerald-600" />
+                  <span>Prod 1 ➔ Prod 2</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyProduto2To1}
+                  title="Copiar código do Produto 2 para o Produto 1"
+                  className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-900 border border-slate-300 hover:border-amber-300 font-extrabold uppercase text-[9px] py-1.5 px-2 rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <Copy size={10} className="text-amber-600" />
+                  <span>Prod 2 ➔ Prod 1</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
