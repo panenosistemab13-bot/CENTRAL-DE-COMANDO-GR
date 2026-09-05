@@ -79,7 +79,6 @@ const TRANSPORTADORAS = [
 
 const EMBARQUE_IMAGES = [
   { value: "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF", label: "Paletizado (Padrão)" },
-  { value: "/images/paletizado_lado_direito.png", label: "Paletizado Lado Direito" },
   {
     value: "https://lh3.googleusercontent.com/d/1L3oKNxekiqIQ_Uy8L9a7q8qZwx772qmH",
     label: "Carga Batida (Padrão)",
@@ -1592,17 +1591,9 @@ export default function Controle({ onBack }: ControleProps) {
       setSidebarTecnologia(item.tecnologia);
     }
 
-    if (item.nf) {
-      const nfClean = item.nf.split("/")[0].trim().replace(/\D/g, "");
-      if (nfClean) {
-        setNfInicio(formatUMA(nfClean));
-      }
-      const nfParts = item.nf.split("/");
-      if (nfParts.length > 1) {
-        const nf2Clean = nfParts[1].trim().replace(/\D/g, "");
-        if (nf2Clean) setNfFim(formatUMA(nf2Clean));
-      }
-    }
+    // As colunas NF INÍCIO e NF FIM precisam ficar vazias ao importar da aba Placas
+    setNfInicio("");
+    setNfFim("");
 
     // Interactive confirmation banner
     setImportSuccessBanner({
@@ -2097,7 +2088,7 @@ Embarque: ${
             )}
           >
             <Sliders size={14} />
-            <span>Gerador PGR</span>
+            <span>Pre Alerta</span>
           </button>
 
           <button
@@ -2111,7 +2102,7 @@ Embarque: ${
             )}
           >
             <Package size={14} />
-            <span>Unidades</span>
+            <span>Cuiaba</span>
           </button>
 
           <button
@@ -2418,7 +2409,7 @@ Embarque: ${
                   </div>
                   <div>
                     <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight flex items-center gap-2">
-                      Unidades - Importador de Embarque
+                      Cuiaba - Importador de Embarque
                     </h2>
                     <p className="text-xs text-[#64748B] font-medium mt-0.5">
                       Copie e cole as informações do embarque recebidas da unidade para preencher automaticamente o Gerador PGR e criar o Pré-Alerta.
@@ -2768,53 +2759,7 @@ Embarque: ${
                 </div>
 
                 {/* 5. BIG INTERACTIVE SPREADSHEET TABLE 1 */}
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2 bg-[#FAF8F5] p-2 rounded-xl border border-[#3A2414]/15 shadow-2xs">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-black uppercase text-[#3A2414]/80 tracking-wider flex items-center gap-1 mr-1">
-                      <Truck size={12} className={isCuiabaOrigem ? "text-amber-600" : "text-[#B32025]"} /> Veículo & Carga:
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={handleSwapCarretas}
-                      title="Trocar as placas das colunas Carreta 1 e Carreta 2"
-                      className="flex items-center gap-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
-                    >
-                      <ArrowUpDown size={11} className="text-blue-600 stroke-[2.5]" />
-                      <span>Trocar Placas (C1 ⇄ C2)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyProduto1To2}
-                      title="Copiar e enviar código do Produto 1 para o Produto 2"
-                      className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-950 border border-slate-300 hover:border-emerald-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
-                    >
-                      <Copy size={10} className="text-emerald-600" />
-                      <span>Prod 1 ➔ Prod 2</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyProduto2To1}
-                      title="Copiar e enviar código do Produto 2 para o Produto 1"
-                      className="flex items-center gap-1 bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-950 border border-slate-300 hover:border-amber-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
-                    >
-                      <Copy size={10} className="text-amber-600" />
-                      <span>Prod 2 ➔ Prod 1</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleSwapProdutos}
-                      title="Trocar os códigos dos Produtos 1 e 2"
-                      className="flex items-center gap-1 bg-white hover:bg-purple-50 text-slate-800 hover:text-purple-950 border border-slate-300 hover:border-purple-300 font-extrabold uppercase text-[9px] tracking-wider px-2 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none active:scale-95"
-                    >
-                      <ArrowUpDown size={11} className="text-purple-600" />
-                      <span>Inverter Prod 1 ⇄ 2</span>
-                    </button>
-                  </div>
-
+                <div className="flex items-center justify-end gap-2 mb-2 bg-[#FAF8F5] p-2 rounded-xl border border-[#3A2414]/15 shadow-2xs">
                   <div className="flex items-center gap-1.5">
                     {numCarretas === 1 ? (
                       <button
