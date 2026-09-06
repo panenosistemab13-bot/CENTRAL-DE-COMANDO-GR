@@ -30,7 +30,8 @@ import {
   Sliders,
   Lock,
   Unlock,
-  Settings
+  Settings,
+  Camera
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { rtdb as db } from './firebase';
@@ -54,6 +55,7 @@ import Controle from './components/Controle';
 import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
+import { ScreenshotCaptureModal } from './components/ScreenshotCaptureModal';
 import { MobileBottomDock, MobileTopBar } from './components/MobileDock';
 import { 
   PageDefinition, 
@@ -155,6 +157,7 @@ export default function App() {
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
   const [smCreatorView, setSmCreatorView] = useState<'generator' | 'codes'>('generator');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [showScreenshotModal, setShowScreenshotModal] = useState<boolean>(false);
 
   // Enforce mobile restriction: only menu, presence, and patio
   useEffect(() => {
@@ -295,6 +298,7 @@ export default function App() {
           pageVisibility={pageVisibility}
           availablePages={availablePages}
           onUnlockPresenceList={handleOpenPageSelector}
+          onOpenScreenshot={() => setShowScreenshotModal(true)}
         />
       );
     }
@@ -309,6 +313,7 @@ export default function App() {
             pageVisibility={pageVisibility}
             availablePages={availablePages}
             onUnlockPresenceList={handleOpenPageSelector}
+            onOpenScreenshot={() => setShowScreenshotModal(true)}
           />
         );
       case 'slides':
@@ -386,7 +391,7 @@ export default function App() {
   const maxUrgencyScore = maxUrgencyApp ? maxUrgencyApp.urgencyScore : 0;
 
   return (
-    <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
+    <div id="app-capture-root" className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
       
       {/* Immersive Background Image / Radial glow */}
       {(activeTab === 'menu' || activeTab === 'checklist') ? (
@@ -430,6 +435,7 @@ export default function App() {
             activeTab={activeTab} 
             onBack={() => setActiveTab('menu')} 
             onSelectTab={(tabId) => setActiveTab(tabId as Tab)} 
+            onOpenScreenshot={() => setShowScreenshotModal(true)}
           />
         )}
 
@@ -555,7 +561,25 @@ export default function App() {
             </div>
 
             {/* Right side widgets pinned absolute right */}
-            <div className="absolute right-8 hidden xl:flex items-center gap-4 pointer-events-auto">
+            <div className="absolute right-8 hidden xl:flex items-center gap-3 pointer-events-auto">
+               {/* Screenshot Capture Button */}
+               <motion.button 
+                 type="button"
+                 whileHover={{ scale: 1.05 }}
+                 whileTap={{ scale: 0.95 }}
+                 onClick={() => setShowScreenshotModal(true)}
+                 className={cn(
+                   "flex items-center gap-2 px-3.5 py-2 border-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-md select-none",
+                   activeTab === 'slides'
+                     ? "bg-[#020617]/90 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                     : "bg-[#E8D4B0] hover:bg-[#fae7c8] border-[#3A2414] text-[#2D1A10]"
+                 )}
+                 title="Tirar print da página atual ou de todas as páginas"
+               >
+                 <Camera size={14} className={activeTab === 'slides' ? "text-cyan-400" : "text-[#B32025]"} />
+                 <span>Tirar Print</span>
+               </motion.button>
+
                {/* Dynamic Breadcrumb */}
                <AnimatePresence>
                  <motion.div 
@@ -959,6 +983,37 @@ export default function App() {
           setAvailablePages(updatedPages);
         }}
       />
+
+      {/* Global Screenshot Capture Modal */}
+      <ScreenshotCaptureModal
+        isOpen={showScreenshotModal}
+        onClose={() => setShowScreenshotModal(false)}
+        activeTab={activeTab}
+        tabs={visibleTabs}
+        setActiveTab={(t) => setActiveTab(t as Tab)}
+        isSlidesTheme={activeTab === 'slides'}
+      />
+
+      {/* Floating Quick Screenshot Button (Always accessible, excluded from screenshot output) */}
+      <motion.button
+        type="button"
+        data-no-screenshot="true"
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.94 }}
+        onClick={() => setShowScreenshotModal(true)}
+        className={cn(
+          "fixed bottom-4 left-4 z-40 p-2.5 sm:px-3.5 sm:py-2 rounded-2xl border-2 shadow-2xl flex items-center gap-2 cursor-pointer no-screenshot select-none backdrop-blur-md transition-all",
+          activeTab === 'slides'
+            ? "bg-[#020617]/90 border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 shadow-[0_0_20px_rgba(0,240,255,0.3)]"
+            : "bg-[#24160E]/95 hover:bg-[#382012] border-[#7d5635] text-[#eddabf] shadow-[0_8px_20px_rgba(0,0,0,0.7)]"
+        )}
+        title="Tirar print da página atual ou de todas as páginas"
+      >
+        <Camera size={16} className={activeTab === 'slides' ? "text-cyan-400" : "text-[#ff5252]"} />
+        <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">
+          Tirar Print
+        </span>
+      </motion.button>
     </div>
   );
 }

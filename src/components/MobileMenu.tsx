@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Activity,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Camera
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
@@ -27,13 +28,15 @@ interface MobileMenuProps {
   availablePages?: any[];
   onUnlockPresenceList?: () => void;
   onLogout?: () => void;
+  onOpenScreenshot?: () => void;
 }
 
 export default function MobileMenu({ 
   onSelect, 
   pageVisibility,
   onUnlockPresenceList, 
-  onLogout 
+  onLogout,
+  onOpenScreenshot 
 }: MobileMenuProps) {
   const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
   const [patioCount, setPatioCount] = useState<number>(0);
@@ -136,6 +139,17 @@ export default function MobileMenu({
                 {formattedDate}
               </div>
             </div>
+
+            {onOpenScreenshot && (
+              <button
+                type="button"
+                onClick={onOpenScreenshot}
+                className="w-9 h-9 rounded-xl bg-white/5 active:bg-white/15 border border-white/10 flex items-center justify-center text-amber-300 transition-colors cursor-pointer"
+                title="Tirar Print da Página"
+              >
+                <Camera size={16} />
+              </button>
+            )}
 
             {onUnlockPresenceList && (
               <button
