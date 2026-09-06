@@ -34,6 +34,7 @@ import {
   Layers,
   ExternalLink,
   ArrowUpDown,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -262,12 +263,32 @@ export interface ParsedPlacaItem {
   modeloCarreta?: string;
   modeloCavalo?: string;
   nf?: string;
+  valorNf?: string;
   tecnologia?: string;
   data?: string;
   status?: string;
   cpf?: string;
   telefone?: string;
   rawRowsCount: number;
+}
+
+export function formatValorNf(val?: string): string {
+  if (!val) return "";
+  const cleaned = val.trim().replace(/^["']|["']$/g, "");
+  if (!cleaned || cleaned === "-" || cleaned === "---") return "";
+  // Check if it already has R$, RS, or similar currency symbol
+  if (/^R?S?\$?\s*/i.test(cleaned)) {
+    const numPart = cleaned.replace(/^R?S?\$?\s*/i, "").trim();
+    if (numPart) {
+      return `R$ ${numPart}`;
+    }
+  }
+  // If numeric with decimal point or comma
+  const num = parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
+  if (!isNaN(num) && num > 0) {
+    return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  return cleaned;
 }
 
 export const normalizePlacaTransportador = (raw?: string): string => {
@@ -353,21 +374,21 @@ export function findBestMatchingRoute(
   };
 }
 
-export const SAMPLE_PLACAS_SHEET_DATA = `N°\tORIGEM\tDIA\tDATA\tCONTATO WHATS\tHORA LIBERADO\tSTATUS\tMODELO CARRETA\tMODELO CAVALO\tPRÉ-CHECKLIST\tDESTINO\tTRANSPORTADOR\tCAVALO\tCARRETA\tN° PALLETS\tPBT (TON)\tNF\tCATEGORIA\tTECNOLOGIA\tCONDUTOR\tCPF\tRG / SSP\tCNH\tTELEFONE
-1\tMONTES CLAROS/MG\tsexta-feira\t29/08/2024\tX\t05:05:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSFD3J76\tEKP0L77\t21\t23\t44271\tFROTA\tSIGHRA\tDAMIÃO GALVÃO ALVES\t602.985.092-34\t1330755 SSP/AL\t05145674570\t(87) 98129-1287
-2\tMONTES CLAROS/MG\tsexta-feira\t29/08/2024\tX\t05:05:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSFD3J76\tSEB8F09\t21\t23\t44272\tFROTA\tSIGHRA\tDAMIÃO GALVÃO ALVES\t602.985.092-34\t1330755 SSP/AL\t05145674570\t(87) 98129-1287
-3\tSANTA LUZIA/MG\tsexta-feira\t29/08/2024\tX\t05:06:51\tLIBERADO PARA VISTORIA EM DOCA\tSIDER\tTRUCK\tSIM\tREC. SÍTIO NOVO\tTORNADO\tTDF8G11\tRFV0E16\t28\t30\t53512\tFROTA\tONIXSAT\tCLEUSMAR M DA SILVA\t716.870.495-87\t64188941 SSP RJ\t01256784562\t(31) 97134-9810
-4\tSANTA LUZIA/MG\tsexta-feira\t29/08/2024\t29.08.59\tLIBERADO PARA VISTORIA EM DOCA\tSIDER\tTRUCK\tSIM\tGRAVATAÍ\tTENNA\tUVP-9C05\t---\t28\t30\t53513\tFROTA\tSASCAR\tFRANCISCO CLAWLISON DA SILVA\t056.888.895-70\t49258921 SSP MG\t01529475185\t(31) 98931-1558
-5\tSANTA LUZIA/MG\tsábado\t29/08/2024\tX\t08:19:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tNATAL\t3C\tUVP-9C05\tUVP0B29\t21\t17\t44273\tFROTA 3C\tSASCAR\tEMMANUEL RICARDO DE LIMA\t069.652.001-11\t18951234MG1\t01648291754\t(31) 99812-4411
-6\tSANTA LUZIA/MG\tsábado\t29/08/2024\t09:07:00\t09:50:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tSUMARÉ\tTENNA\tRMK5E77\tSDQ5F71\t28\t30\t53514\tFROTA\tSIGHRA\tJOSE MORAIS DE SOUSA\t906.750.185-00\t092551200 SSP BA\t01644257107\t(71) 71 99219-2756
-7\tSANTA LUZIA/MG\tsábado\t29/08/2024\t09:55:00\t09:55:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tTFD8E27\tSDQ5F71\t28\t30\t53515\tFROTA\tSIGHRA\tALEXANDRE MACHADO COELHO\t123.056.347-09\t22104523 DET RJ\t02074369037\t(21) 21 98908-0026
-8\tSANTA LUZIA/MG\tsábado\t29/08/2024\t11:10:00\t12:14:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRFM1J37\tKEM4C01\t28\t30\t53516\tFROTA\tSIGHRA\tMARCOS DE MELLO GODOY\t121.142.296-30\t11467412 SSP SP\t02089207039\t(11) 11 98319-3344
-9\tSANTA LUZIA/MG\tsábado\t29/08/2024\t11:06:00\t12:35:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSBW1E02\tKEM4C01\t28\t30\t53517\tFROTA\tSIGHRA\tDIEGO CARNEIRO\t127.355.829-06\t18432651 SSP SP\t01633596188\t(11) 11 98265-7607
-10\tSANTA LUZIA/MG\tsábado\t29/08/2024\t12:26:00\t12:49:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSBG7H83\tMSV1J96\t28\t30\t53518\tFROTA\tSIGHRA\tMARCOS GABRIEL OLIVEIRA\t135.097.437-84\t24531872 DET RJ\t04402638459\t(21) 21 98380-0010
-11\tSANTA LUZIA/MG\tsábado\t29/08/2024\t13:15:00\t14:58:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRNF6D84\tMSV1J96\t28\t30\t53519\tFROTA\tSIGHRA\tANTONILSON CAMPANHO DE SOUZA LACERDA\t126.658.877-06\t12934812 DET RJ\t03082531065\t(21) 21 99812-0535
-12\tSANTA LUZIA/MG\tsábado\t29/08/2024\t14:28:00\t15:19:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSAZ6E84\tRFE2J49\t28\t30\t53520\tFROTA\tSIGHRA\tBONIFACIO BARBOSA DA SILVA\t052.352.766-17\t08129812 SSP AL\t07002317398\t(82) 82 99600-1120
-13\tSANTA LUZIA/MG\tsábado\t29/08/2024\t15:05:00\t16:43:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSAY2C81\tRFE2J49\t28\t30\t53521\tFROTA\tSIGHRA\tROBERTO CARLOS PORTUGAL OLIVEIRA\t082.057.457-25\t12948603 DET RJ\t00510251776\t(21) 21 99846-8007
-14\tSANTA LUZIA/MG\tdomingo\t29/08/2024\tX\t09:05:36\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRVP9E38\tMDL9F97\t28\t30\t53522\tFROTA\tSIGHRA\tDERLEI PEREIRA DA SILVA\t082.739.561-16\t2856634 SDS PB\t01438973575\t(83) 83 99880-9008`;
+export const SAMPLE_PLACAS_SHEET_DATA = `N°\tORIGEM\tDIA\tDATA\tCONTATO WHATS\tHORA LIBERADO\tSTATUS\tMODELO CARRETA\tMODELO CAVALO\tPRÉ-CHECKLIST\tDESTINO\tTRANSPORTADOR\tCAVALO\tCARRETA\tN° PALLETS\tPBT (TON)\tNF\tCATEGORIA\tTECNOLOGIA\tCONDUTOR\tCPF\tRG / SSP\tCNH\tTELEFONE\tVALOR NF
+1\tMONTES CLAROS/MG\tsexta-feira\t29/08/2024\tX\t05:05:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSFD3J76\tEKP0L77\t21\t23\t44271\tFROTA\tSIGHRA\tDAMIÃO GALVÃO ALVES\t602.985.092-34\t1330755 SSP/AL\t05145674570\t(87) 98129-1287\tR$ 176.627,35
+2\tMONTES CLAROS/MG\tsexta-feira\t29/08/2024\tX\t05:05:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSFD3J76\tSEB8F09\t21\t23\t44272\tFROTA\tSIGHRA\tDAMIÃO GALVÃO ALVES\t602.985.092-34\t1330755 SSP/AL\t05145674570\t(87) 98129-1287\tR$ 176.627,35
+3\tSANTA LUZIA/MG\tsexta-feira\t29/08/2024\tX\t05:06:51\tLIBERADO PARA VISTORIA EM DOCA\tSIDER\tTRUCK\tSIM\tREC. SÍTIO NOVO\tTORNADO\tTDF8G11\tRFV0E16\t28\t30\t53512\tFROTA\tONIXSAT\tCLEUSMAR M DA SILVA\t716.870.495-87\t64188941 SSP RJ\t01256784562\t(31) 97134-9810\tR$ 145.890,20
+4\tSANTA LUZIA/MG\tsexta-feira\t29/08/2024\t29.08.59\tLIBERADO PARA VISTORIA EM DOCA\tSIDER\tTRUCK\tSIM\tGRAVATAÍ\tTENNA\tUVP-9C05\t---\t28\t30\t53513\tFROTA\tSASCAR\tFRANCISCO CLAWLISON DA SILVA\t056.888.895-70\t49258921 SSP MG\t01529475185\t(31) 98931-1558\tR$ 192.410,00
+5\tSANTA LUZIA/MG\tsábado\t29/08/2024\tX\t08:19:00\tLIBERADO PARA VISTORIA EM DOCA\tRODOTREM BAÚ\tTRUCADO\tSIM\tNATAL\t3C\tUVP-9C05\tUVP0B29\t21\t17\t44273\tFROTA 3C\tSASCAR\tEMMANUEL RICARDO DE LIMA\t069.652.001-11\t18951234MG1\t01648291754\t(31) 99812-4411\tR$ 177.724,27
+6\tSANTA LUZIA/MG\tsábado\t29/08/2024\t09:07:00\t09:50:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tSUMARÉ\tTENNA\tRMK5E77\tSDQ5F71\t28\t30\t53514\tFROTA\tSIGHRA\tJOSE MORAIS DE SOUSA\t906.750.185-00\t092551200 SSP BA\t01644257107\t(71) 71 99219-2756\tR$ 169.627,35
+7\tSANTA LUZIA/MG\tsábado\t29/08/2024\t09:55:00\t09:55:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tTFD8E27\tSDQ5F71\t28\t30\t53515\tFROTA\tSIGHRA\tALEXANDRE MACHADO COELHO\t123.056.347-09\t22104523 DET RJ\t02074369037\t(21) 21 98908-0026\tR$ 181.230,00
+8\tSANTA LUZIA/MG\tsábado\t29/08/2024\t11:10:00\t12:14:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRFM1J37\tKEM4C01\t28\t30\t53516\tFROTA\tSIGHRA\tMARCOS DE MELLO GODOY\t121.142.296-30\t11467412 SSP SP\t02089207039\t(11) 11 98319-3344\tR$ 176.627,35
+9\tSANTA LUZIA/MG\tsábado\t29/08/2024\t11:06:00\t12:35:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSBW1E02\tKEM4C01\t28\t30\t53517\tFROTA\tSIGHRA\tDIEGO CARNEIRO\t127.355.829-06\t18432651 SSP SP\t01633596188\t(11) 11 98265-7607\tR$ 176.627,35
+10\tSANTA LUZIA/MG\tsábado\t29/08/2024\t12:26:00\t12:49:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSBG7H83\tMSV1J96\t28\t30\t53518\tFROTA\tSIGHRA\tMARCOS GABRIEL OLIVEIRA\t135.097.437-84\t24531872 DET RJ\t04402638459\t(21) 21 98380-0010\tR$ 176.627,35
+11\tSANTA LUZIA/MG\tsábado\t29/08/2024\t13:15:00\t14:58:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRNF6D84\tMSV1J96\t28\t30\t53519\tFROTA\tSIGHRA\tANTONILSON CAMPANHO DE SOUZA LACERDA\t126.658.877-06\t12934812 DET RJ\t03082531065\t(21) 21 99812-0535\tR$ 177.724,27
+12\tSANTA LUZIA/MG\tsábado\t29/08/2024\t14:28:00\t15:19:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tSAZ6E84\tRFE2J49\t28\t30\t53520\tFROTA\tSIGHRA\tBONIFACIO BARBOSA DA SILVA\t052.352.766-17\t08129812 SSP AL\t07002317398\t(82) 82 99600-1120\tR$ 180.500,00
+13\tSANTA LUZIA/MG\tsábado\t29/08/2024\t15:05:00\t16:43:00\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tGUARULHOS\tTRANSVALADARES\tSAY2C81\tRFE2J49\t28\t30\t53521\tFROTA\tSIGHRA\tROBERTO CARLOS PORTUGAL OLIVEIRA\t082.057.457-25\t12948603 DET RJ\t00510251776\t(21) 21 99846-8007\tR$ 176.627,35
+14\tSANTA LUZIA/MG\tdomingo\t29/08/2024\tX\t09:05:36\tLIBERADO PARA VISTORIA EM DOCA\tBAÚ\tTRUCADO\tSIM\tRIO DE JANEIRO\tTRANSVALADARES\tRVP9E38\tMDL9F97\t28\t30\t53522\tFROTA\tSIGHRA\tDERLEI PEREIRA DA SILVA\t082.739.561-16\t2856634 SDS PB\t01438973575\t(83) 83 99880-9008\tR$ 176.627,35`;
 
 export function parsePlacasData(text: string): ParsedPlacaItem[] {
   if (!text || !text.trim()) return [];
@@ -390,6 +411,12 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
   let destinoIdx = findHeaderIdx(["DESTINO", "CIDADE DESTINO", "UNIDADE DESTINO", "DEST"]);
   let origemIdx = findHeaderIdx(["ORIGEM", "CIDADE ORIGEM", "UNIDADE ORIGEM"]);
   let nfIdx = findHeaderIdx(["NF", "NOTA FISCAL", "Nº NF", "N° NF"]);
+  let valorNfIdx = findHeaderIdx(["VALOR NF", "VALOR DA CARGA", "VALOR CARGA", "VALOR_NF", "VALOR", "VLR NF", "VLR CARGA"]);
+  if (valorNfIdx === -1) {
+    valorNfIdx = firstCols.findIndex(
+      (col) => col.includes("VALOR") && !col.includes("DATA") && !col.includes("STATUS")
+    );
+  }
   let tecnologiaIdx = findHeaderIdx(["TECNOLOGIA", "RASTREADOR", "SISTEMA"]);
   let modeloCarretaIdx = findHeaderIdx(["MODELO CARRETA", "TIPO CARRETA"]);
   let modeloCavaloIdx = findHeaderIdx(["MODELO CAVALO", "TIPO CAVALO"]);
@@ -406,7 +433,7 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
   const startRow = hasHeaders ? 1 : 0;
 
   // Fallback positional index matching Google Sheet in image.png if no headers detected:
-  // Col 1: ORIGEM, Col 10: DESTINO, Col 11: TRANSPORTADOR, Col 12: CAVALO, Col 13: CARRETA, Col 16: NF, Col 18: TECNOLOGIA, Col 19: CONDUTOR
+  // Col 1: ORIGEM, Col 10: DESTINO, Col 11: TRANSPORTADOR, Col 12: CAVALO, Col 13: CARRETA, Col 16: NF, Col 18: TECNOLOGIA, Col 19: CONDUTOR, Col 33: VALOR NF
   if (!hasHeaders) {
     origemIdx = 1;
     destinoIdx = 10;
@@ -418,6 +445,7 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
     condutorIdx = 19;
     cpfIdx = 20;
     telIdx = 23;
+    valorNfIdx = 33;
   }
 
   const cleanVal = (v?: string) => (v || "").trim().replace(/^["']|["']$/g, "");
@@ -435,6 +463,7 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
     destino: string;
     origem: string;
     nf: string;
+    valorNf: string;
     tecnologia: string;
     modeloCarreta: string;
     modeloCavalo: string;
@@ -454,6 +483,9 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
     const destino = cleanVal(destinoIdx >= 0 ? cols[destinoIdx] : "").toUpperCase();
     const origem = cleanVal(origemIdx >= 0 ? cols[origemIdx] : "").toUpperCase();
     const nf = cleanVal(nfIdx >= 0 ? cols[nfIdx] : "");
+    const valorNf = formatValorNf(
+      valorNfIdx >= 0 ? cols[valorNfIdx] : (cols.length > 33 ? cols[33] : "")
+    );
     const tecnologia = cleanVal(tecnologiaIdx >= 0 ? cols[tecnologiaIdx] : "").toUpperCase();
     const modeloCarreta = cleanVal(modeloCarretaIdx >= 0 ? cols[modeloCarretaIdx] : "").toUpperCase();
     const modeloCavalo = cleanVal(modeloCavaloIdx >= 0 ? cols[modeloCavaloIdx] : "").toUpperCase();
@@ -471,6 +503,7 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
       destino,
       origem,
       nf,
+      valorNf,
       tecnologia,
       modeloCarreta,
       modeloCavalo,
@@ -496,6 +529,7 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
         destino: item.destino,
         origem: item.origem,
         nf: item.nf,
+        valorNf: item.valorNf,
         tecnologia: item.tecnologia,
         modeloCarreta: item.modeloCarreta,
         modeloCavalo: item.modeloCavalo,
@@ -518,6 +552,7 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
       else if (existing.nf && item.nf && !existing.nf.includes(item.nf)) {
         existing.nf = `${existing.nf} / ${item.nf}`;
       }
+      if (!existing.valorNf && item.valorNf) existing.valorNf = item.valorNf;
       if (!existing.tecnologia && item.tecnologia) existing.tecnologia = item.tecnologia;
       if (!existing.cpf && item.cpf) existing.cpf = item.cpf;
       if (!existing.telefone && item.telefone) existing.telefone = item.telefone;
@@ -789,6 +824,7 @@ export default function Controle({ onBack }: ControleProps) {
   const [nfInicio, setNfInicio] = useState("");
   const [nfFim, setNfFim] = useState("");
   const [transportadora, setTransportadora] = useState("");
+  const [valorCarga, setValorCarga] = useState("");
   const [motorista, setMotorista] = useState("");
   const [cavalo, setCavalo] = useState("");
 
@@ -1344,6 +1380,7 @@ export default function Controle({ onBack }: ControleProps) {
         if (data.nfInicio !== undefined) setNfInicio(data.nfInicio);
         if (data.nfFim !== undefined) setNfFim(data.nfFim);
         if (data.transportadora !== undefined) setTransportadora(data.transportadora);
+        if (data.valorCarga !== undefined) setValorCarga(data.valorCarga);
         if (data.motorista !== undefined) setMotorista(data.motorista);
         if (data.cavalo !== undefined) setCavalo(data.cavalo);
         if (data.carreta1 !== undefined) setCarreta1(data.carreta1);
@@ -1396,6 +1433,7 @@ export default function Controle({ onBack }: ControleProps) {
       nfInicio,
       nfFim,
       transportadora,
+      valorCarga,
       motorista,
       cavalo,
       carreta1,
@@ -1439,6 +1477,7 @@ export default function Controle({ onBack }: ControleProps) {
     nfInicio,
     nfFim,
     transportadora,
+    valorCarga,
     motorista,
     cavalo,
     carreta1,
@@ -1482,6 +1521,7 @@ export default function Controle({ onBack }: ControleProps) {
     setProduto2("");
     setUma1("");
     setUma2("");
+    setValorCarga("");
   };
 
   const handleClear = () => {
@@ -1500,6 +1540,7 @@ export default function Controle({ onBack }: ControleProps) {
       setNfInicio("");
       setNfFim("");
       setTransportadora("");
+      setValorCarga("");
       setMotorista("");
       setCavalo("");
       setCarreta1("");
@@ -1627,6 +1668,13 @@ export default function Controle({ onBack }: ControleProps) {
     setNfInicio("");
     setNfFim("");
 
+    // Somente quando a informação for importada da aba Santa Luzia, importa o VALOR NF para o valor da carga
+    if (item.valorNf) {
+      setValorCarga(item.valorNf);
+    } else {
+      setValorCarga("");
+    }
+
     // Interactive confirmation banner
     setImportSuccessBanner({
       cavalo: item.cavalo || "S/ Placa",
@@ -1721,6 +1769,9 @@ export default function Controle({ onBack }: ControleProps) {
     if (info.tecnologia) {
       setSidebarTecnologia(info.tecnologia);
     }
+
+    // Valor da carga fica vazio na importação da aba Unidades (exclusivo para Santa Luzia)
+    setValorCarga("");
 
     // Interactive confirmation banner
     setImportSuccessBanner({
@@ -1865,7 +1916,12 @@ export default function Controle({ onBack }: ControleProps) {
               </th>
               <th colspan="1" style="background-color: #0F172A; color: #FFFFFF; border-right: 1px solid #334155; border-bottom: 1px solid #334155; font-weight: 900; padding: 10px; text-transform: uppercase; font-size: 11px; width: 18%; letter-spacing: 0.5px;">TRANSPORTADORA:</th>
               <th colspan="2" style="border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 6px; width: 25%; background-color: #F8FAFC; text-transform: uppercase; font-weight: 900; color: #0F172A;">${transportadora}</th>
-              <th colspan="2" style="background-color: #0F172A; border-bottom: 1px solid #334155; width: 17%;"></th>
+              <th colspan="2" style="background-color: #0F172A; border-bottom: 1px solid #334155; width: 17%; text-align: center; vertical-align: middle; padding: 6px;">
+                ${valorCarga ? `
+                  <div style="font-size: 8px; color: #94A3B8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1;">VALOR DA CARGA</div>
+                  <div style="font-size: 11px; color: #FBBF24; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">${valorCarga}</div>
+                ` : ''}
+              </th>
             </tr>
             <tr style="background-color: #0F172A; color: #FFFFFF; text-transform: uppercase; font-size: 10px; font-weight: 900; letter-spacing: 0.5px;">
               <th style="border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 9px; width: 22%;">MOTORISTA</th>
@@ -2032,7 +2088,7 @@ ${infoAbaixo}
 · ${instrucao1}
 
 -----------------------------------------------------------------------------------------------------------------
-NÚMERO DA NF: ${[nfInicio, (numCarretas === 2 && isca2 !== "SEM ISCA" ? nfFim : "")].filter(Boolean).map(v => v.replace(/-/g, '')).join(' ')} | TRANSPORTADORA: ${transportadora}
+NÚMERO DA NF: ${[nfInicio, (numCarretas === 2 && isca2 !== "SEM ISCA" ? nfFim : "")].filter(Boolean).map(v => v.replace(/-/g, '')).join(' ')} | TRANSPORTADORA: ${transportadora}${valorCarga ? ` | VALOR CARGA: ${valorCarga}` : ""}
 -----------------------------------------------------------------------------------------------------------------
 MOTORISTA: ${motorista}
 CAVALO: ${cavalo.replace(/-/g, '')}
@@ -2392,6 +2448,16 @@ Embarque: ${
                                 </span>
                                 <span className="font-semibold text-slate-600 text-right truncate">
                                   {item.nf}
+                                </span>
+                              </div>
+                            )}
+                            {item.valorNf && (
+                              <div className="flex items-start justify-between gap-2 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200">
+                                <span className="text-[10px] font-black uppercase text-emerald-800 shrink-0 w-24">
+                                  VALOR NF:
+                                </span>
+                                <span className="font-black text-emerald-700 text-right truncate text-xs">
+                                  {item.valorNf}
                                 </span>
                               </div>
                             )}
@@ -2961,7 +3027,35 @@ Embarque: ${
                           ))}
                         </select>
                       </th>
-                      <th colSpan={2} className="w-[17%] bg-slate-900"></th>
+                      <th
+                        colSpan={2}
+                        className="w-[17%] bg-slate-900 border-b border-slate-700 p-1 text-center align-middle"
+                      >
+                        {valorCarga ? (
+                          <div className="flex flex-col items-center justify-center px-1">
+                            <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider leading-none mb-0.5">
+                              VALOR DA CARGA
+                            </span>
+                            <input
+                              type="text"
+                              value={valorCarga}
+                              onChange={(e) => setValorCarga(e.target.value)}
+                              className="w-full text-center font-black uppercase text-amber-300 hover:text-amber-200 bg-transparent border-none outline-none hover:bg-slate-800/70 focus:bg-slate-800 rounded px-1 py-0.5 text-xs tracking-wide transition-all shadow-none cursor-text"
+                              title="Valor da Carga (VALOR NF importado da aba Santa Luzia)"
+                              placeholder="R$ 0,00"
+                            />
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={valorCarga}
+                            onChange={(e) => setValorCarga(e.target.value)}
+                            className="w-full text-center font-black uppercase text-amber-300 bg-transparent border-none outline-none hover:bg-slate-800/70 focus:bg-slate-800 rounded px-1 py-0.5 text-[11px] tracking-wide transition-all placeholder:text-transparent hover:placeholder:text-slate-600 cursor-text"
+                            placeholder="VALOR CARGA"
+                            title="Espaço ao lado da transportadora (Valor da Carga)"
+                          />
+                        )}
+                      </th>
                     </tr>
 
                     {/* Row 2: Standard Columns Headings */}
@@ -4176,6 +4270,28 @@ Embarque: ${
                 <ArrowUpDown size={11} className="text-blue-600 stroke-[2.5]" />
                 <span>Carreta 1 ⇄ 2</span>
               </button>
+            </div>
+
+            {/* VALOR DA CARGA (SANTA LUZIA) */}
+            <div className="flex flex-col gap-1 p-2.5 bg-slate-50 rounded-xl border border-slate-200 shadow-2xs">
+              <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <DollarSign size={10} className="text-amber-600" /> Valor da Carga (NF)
+                </span>
+                {valorCarga && (
+                  <span className="text-[8px] bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black border border-amber-300/60">
+                    SANTA LUZIA
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                value={valorCarga}
+                onChange={(e) => setValorCarga(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                placeholder="R$ 0,00"
+                title="Importado da coluna VALOR NF na aba SANTA LUZIA"
+              />
             </div>
           </div>
         </div>
