@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutGrid, Users2, Container, ArrowLeft, ShieldCheck, Clock, Camera } from 'lucide-react';
+import { LayoutGrid, Users2, Container, ArrowLeft, ShieldCheck, Clock } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface MobileDockProps {
@@ -85,10 +85,9 @@ interface MobileTopBarProps {
   activeTab: string;
   onBack: () => void;
   onSelectTab: (tabId: string) => void;
-  onOpenScreenshot?: () => void;
 }
 
-export function MobileTopBar({ activeTab, onBack, onSelectTab, onOpenScreenshot }: MobileTopBarProps) {
+export function MobileTopBar({ activeTab, onBack, onSelectTab }: MobileTopBarProps) {
   const getTitle = () => {
     switch (activeTab) {
       case 'presence': return 'Lista de Presença';
@@ -154,17 +153,6 @@ export function MobileTopBar({ activeTab, onBack, onSelectTab, onOpenScreenshot 
           Pátio
         </button>
       </div>
-
-      {onOpenScreenshot && (
-        <button
-          type="button"
-          onClick={onOpenScreenshot}
-          className="w-9 h-9 rounded-xl bg-white/10 active:bg-white/20 text-[#f5ebd6] flex items-center justify-center border border-white/10 transition-colors cursor-pointer shrink-0 ml-1.5"
-          title="Tirar Print da Página"
-        >
-          <Camera size={17} className="text-amber-400" />
-        </button>
-      )}
     </header>
   );
 }

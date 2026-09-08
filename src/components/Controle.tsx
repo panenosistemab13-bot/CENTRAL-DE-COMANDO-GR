@@ -94,6 +94,21 @@ const EMBARQUE_IMAGES = [
   { value: "none", label: "Nenhum Embarque" },
 ];
 
+export const getLocalFallbackImg = (url: string) => {
+  if (!url || url === "none") return "";
+  if (url.includes("1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF")) return "/images/img_0.png";
+  if (url.includes("1L3oKNxekiqIQ_Uy8L9a7q8qZwx772qmH")) return "/images/img_1.png";
+  if (url.includes("1RdjcMTVC2ofuxQVzajM0S01VSMAXLaMf")) return "/images/img_2.png";
+  if (url.includes("17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh")) return "/images/img_3.png";
+  if (url.includes("1JGe0rvxIMqBpMMxclgFpQj47GqVl1VMX")) return "/images/img_4.png";
+  if (url.includes("1kI3l33NFrTlqnDveMgKWHfFfU5WA6OTQ")) return "/images/img_5.png";
+  if (url.includes("1EQ5fMDDHViGvBd8-ehlwhyE4yyOc_peH")) return "/images/img_6.png";
+  if (url.includes("1-OVNvrvxJ_t6RCj8hQpU0ZDtk3BfVWBV")) return "/images/img_7.png";
+  if (url.includes("14F4wPXwU607GmwqphSzlXk7xZ_EhOdWS")) return "/images/img_8.png";
+  if (url.startsWith("/images/")) return url;
+  return url;
+};
+
 export const DESTINOS_PLANILHA_ISCAS = [
   "ARAÇARIGUAMA",
   "ARIQUEMES-RO",
@@ -3451,6 +3466,12 @@ Embarque: ${
                                   src={sidebarEmbarque1}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    const fallback = getLocalFallbackImg(sidebarEmbarque1);
+                                    if (fallback && e.currentTarget.src !== fallback) {
+                                      e.currentTarget.src = fallback;
+                                    }
+                                  }}
                                   className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
                                 />
                               </div>
@@ -3521,6 +3542,12 @@ Embarque: ${
                                   src={sidebarEmbarque2}
                                   alt="Esquema"
                                   referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    const fallback = getLocalFallbackImg(sidebarEmbarque2);
+                                    if (fallback && e.currentTarget.src !== fallback) {
+                                      e.currentTarget.src = fallback;
+                                    }
+                                  }}
                                   className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
                                 />
                               </div>
@@ -4047,6 +4074,114 @@ Embarque: ${
             </div>
 
 
+
+            {/* EMBARQUE CARRETA 1 */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <Layers size={12} className="text-slate-500" /> EMBARQUE CARRETA 1
+              </label>
+              <select
+                value={sidebarEmbarque1}
+                onChange={(e) => setSidebarEmbarque1(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+              >
+                {EMBARQUE_IMAGES.map((img) => (
+                  <option key={img.value} value={img.value} className="text-slate-900 uppercase text-xs font-bold">
+                    {img.label}
+                  </option>
+                ))}
+                <option value="" className="text-slate-900 uppercase text-xs font-bold">
+                  Grade Interativa (Escala 01)
+                </option>
+              </select>
+
+              {/* Mini Preview Box */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col items-center justify-center min-h-[90px]">
+                {sidebarEmbarque1 && sidebarEmbarque1 !== "none" ? (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={sidebarEmbarque1}
+                      alt="Prévia Carreta 1"
+                      className="max-h-[75px] w-auto object-contain rounded"
+                      onError={(e) => {
+                        const fallback = getLocalFallbackImg(sidebarEmbarque1);
+                        if (fallback && e.currentTarget.src !== fallback) {
+                          e.currentTarget.src = fallback;
+                        }
+                      }}
+                    />
+                    <span className="text-[9px] font-extrabold text-slate-600 mt-1 uppercase text-center">
+                      carreta1: {carreta1 || "S/ PLACA"}
+                    </span>
+                  </div>
+                ) : sidebarEmbarque1 === "" ? (
+                  <div className="flex flex-col items-center text-center p-1">
+                    <span className="text-xs font-black text-slate-800 uppercase">Grade Interativa</span>
+                    <span className="text-[9px] font-bold text-slate-500">carreta1: {carreta1 || "S/ PLACA"}</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center text-center p-1 text-slate-400">
+                    <EyeOff size={16} className="mb-0.5" />
+                    <span className="text-[9px] font-bold uppercase">Sem Isca (Omitido)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* EMBARQUE CARRETA 2 (If numCarretas === 2) */}
+            {numCarretas === 2 && (
+              <div className="flex flex-col gap-1.5 animate-fade-in">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                  <Layers size={12} className="text-slate-500" /> EMBARQUE CARRETA 2
+                </label>
+                <select
+                  value={sidebarEmbarque2}
+                  onChange={(e) => setSidebarEmbarque2(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                >
+                  {EMBARQUE_IMAGES.map((img) => (
+                    <option key={img.value} value={img.value} className="text-slate-900 uppercase text-xs font-bold">
+                      {img.label}
+                    </option>
+                  ))}
+                  <option value="" className="text-slate-900 uppercase text-xs font-bold">
+                    Grade Interativa (Escala 02)
+                  </option>
+                </select>
+
+                {/* Mini Preview Box */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col items-center justify-center min-h-[90px]">
+                  {sidebarEmbarque2 && sidebarEmbarque2 !== "none" ? (
+                    <div className="flex flex-col items-center">
+                      <img
+                        src={sidebarEmbarque2}
+                        alt="Prévia Carreta 2"
+                        className="max-h-[75px] w-auto object-contain rounded"
+                        onError={(e) => {
+                          const fallback = getLocalFallbackImg(sidebarEmbarque2);
+                          if (fallback && e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback;
+                          }
+                        }}
+                      />
+                      <span className="text-[9px] font-extrabold text-slate-600 mt-1 uppercase text-center">
+                        carreta2: {carreta2 || "S/ PLACA"}
+                      </span>
+                    </div>
+                  ) : sidebarEmbarque2 === "" ? (
+                    <div className="flex flex-col items-center text-center p-1">
+                      <span className="text-xs font-black text-slate-800 uppercase">Grade Interativa</span>
+                      <span className="text-[9px] font-bold text-slate-500">carreta2: {carreta2 || "S/ PLACA"}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center text-center p-1 text-slate-400">
+                      <EyeOff size={16} className="mb-0.5" />
+                      <span className="text-[9px] font-bold uppercase">Sem Isca (Omitido)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Buttons area */}
             <div className="flex flex-col gap-3 mt-2">

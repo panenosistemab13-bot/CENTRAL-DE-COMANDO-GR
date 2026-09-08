@@ -17,8 +17,7 @@ import {
   LogOut,
   Package,
   ShieldAlert,
-  Sparkles,
-  Camera
+  Sparkles
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -56,7 +55,6 @@ interface InitialMenuProps {
   availablePages?: PageDefinition[];
   onUnlockPresenceList: () => void;
   onLogout?: () => void;
-  onOpenScreenshot?: () => void;
 }
 
 // Slotted Vintage Flat-head Screw Component for authentic industrial look
@@ -442,8 +440,7 @@ export default function InitialMenu({
   pageVisibility, 
   availablePages, 
   onUnlockPresenceList, 
-  onLogout,
-  onOpenScreenshot 
+  onLogout 
 }: InitialMenuProps) {
   const [direction, setDirection] = useState(0);
 
@@ -538,24 +535,8 @@ export default function InitialMenu({
           </div>
         </div>
 
-        {/* TOP RIGHT BRAND PLATE & ACTIONS */}
-        <div className="flex items-center gap-3">
-          {onOpenScreenshot && (
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onOpenScreenshot}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-gradient-to-br from-[#4a3222]/85 to-[#1c0e06]/95 border-2 border-[#bfa27a]/60 shadow-[0_10px_20px_rgba(0,0,0,0.6)] text-[#eddabf] hover:text-white transition-all cursor-pointer select-none"
-              title="Tirar print da tela ou capturar todas as páginas"
-            >
-              <Camera size={18} className="text-[#ff5252]" />
-              <span className="text-[11px] font-black uppercase tracking-wider hidden sm:inline">
-                Tirar Print
-              </span>
-            </motion.button>
-          )}
-
+        {/* TOP RIGHT BRAND PLATE */}
+        <div className="flex items-center gap-4">
           <div 
             className="relative px-5 py-2.5 rounded-2xl bg-gradient-to-br from-[#4a3222]/85 to-[#1c0e06]/95 border-2 border-[#bfa27a]/60 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_4px_rgba(255,255,255,0.15)] max-w-sm w-full md:w-auto shrink-0 transition-transform duration-300 hover:scale-[1.02]"
           >
