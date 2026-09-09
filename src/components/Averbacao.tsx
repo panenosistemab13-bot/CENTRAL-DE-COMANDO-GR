@@ -262,12 +262,12 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
   return (
     <div className="flex flex-col min-h-screen bg-slate-100 text-slate-900 overflow-hidden font-sans" style={{ zoom: 0.85 }}>
       {/* Top Header / Quick Codes Bar */}
-      <header className="bg-blue-950 border-b border-blue-900 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xs z-20">
+      <header className="bg-[#2B180D] border-b border-[#3A2414]/50 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm z-20">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse inline-block"></span>
-            <h1 className="text-sm font-extrabold tracking-wider text-white uppercase font-sans flex items-center gap-2">
-              <FileText size={16} className="text-blue-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#B32025] animate-pulse inline-block"></span>
+            <h1 className="text-sm font-black tracking-wider text-white uppercase font-heading flex items-center gap-2">
+              <FileText size={16} className="text-[#B32025]" />
               CENTRAL DE AVERBAÇÃO E SEGUROS
             </h1>
           </div>
@@ -275,24 +275,24 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
 
         {/* Quick Codes Pill Bar */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-[10px] font-bold uppercase text-blue-200 tracking-wider hidden sm:inline">CÓDIGOS RÁPIDOS:</span>
+          <span className="text-[10px] font-extrabold uppercase text-amber-200/80 tracking-wider hidden sm:inline">CÓDIGOS RÁPIDOS:</span>
           {QUICK_CODES.map((item) => (
             <div 
               key={item.label}
-              className="flex items-center gap-2 bg-blue-900/60 border border-blue-800 hover:border-blue-600 rounded-xl px-3 py-1.5 transition-all shadow-2xs group"
+              className="flex items-center gap-2 bg-[#3A2414]/70 border border-[#5c3c24]/80 hover:border-[#B32025] rounded-xl px-3 py-1.5 transition-all shadow-2xs group"
             >
-              <span className="text-[11px] font-bold text-blue-100 uppercase">{item.label}:</span>
-              <code className="text-xs font-mono font-bold text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800 tracking-wider">
+              <span className="text-[11px] font-bold text-amber-100 uppercase font-sans">{item.label}:</span>
+              <code className="text-xs font-mono font-bold text-amber-300 bg-[#1c1109] px-2 py-0.5 rounded border border-[#3a200a] tracking-wider">
                 {item.value}
               </code>
               <button
                 type="button"
                 onClick={() => copyCodeToClipboard(item.label, item.value)}
                 className={cn(
-                  "px-2 py-1 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer border shadow-2xs",
+                  "px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase transition-all flex items-center gap-1 cursor-pointer border shadow-2xs",
                   copiedCode === item.label
                     ? "bg-emerald-600 border-emerald-500 text-white"
-                    : "bg-blue-600 hover:bg-blue-700 border-blue-500 text-white"
+                    : "bg-[#B32025] hover:bg-[#8c060a] border-[#8c060a] text-white"
                 )}
                 title={`Copiar ${item.label}`}
               >
@@ -305,32 +305,32 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
       </header>
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-y-auto lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-y-auto lg:overflow-hidden bg-[#f8f6f0] canvas-grid">
         
         {/* Left Panel: Inputs & Data Controls */}
-        <aside className="w-full lg:w-[380px] bg-white text-slate-900 p-6 flex flex-col border-b lg:border-b-0 lg:border-r border-slate-200 shadow-xs relative shrink-0 overflow-y-auto">
+        <aside className="w-full lg:w-[380px] bg-white text-slate-900 p-6 flex flex-col border-b lg:border-b-0 lg:border-r border-[#3A2414]/15 shadow-sm relative shrink-0 overflow-y-auto">
           
-          <div className="mb-5 bg-blue-50 p-4 rounded-2xl border border-blue-200 text-blue-950 shadow-2xs flex items-center justify-between">
+          <div className="mb-5 bg-[#FAF8F5] p-4 rounded-2xl border border-[#3A2414]/15 text-[#2B180D] shadow-2xs flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold tracking-widest text-blue-600 uppercase block">PAINEL DE CONTROLE</span>
-              <h2 className="font-bold text-sm tracking-wide text-blue-950">DADOS DO TRANSPORTE</h2>
+              <span className="text-[10px] font-extrabold tracking-widest text-[#B32025] uppercase block">PAINEL DE CONTROLE</span>
+              <h2 className="font-black text-sm tracking-wide text-[#2B180D] font-heading uppercase">DADOS DO TRANSPORTE</h2>
             </div>
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-2xs border border-blue-500">
+            <div className="w-10 h-10 bg-[#B32025] rounded-xl flex items-center justify-center text-white font-black text-lg shadow-2xs border border-[#8c060a]">
               <Sparkles size={18} />
             </div>
           </div>
 
           {/* Paste Area for Raw Data */}
           <div className="mb-5 space-y-2">
-            <label className="text-[10px] font-extrabold text-blue-950 uppercase tracking-wider flex items-center gap-1.5">
-              <Clipboard size={12} className="text-blue-600" />
+            <label className="text-[10px] font-extrabold text-[#2B180D] uppercase tracking-wider flex items-center gap-1.5 font-sans">
+              <Clipboard size={12} className="text-[#B32025]" />
               COLAR DADOS DA PLANILHA (TSV)
             </label>
             <textarea 
               value={rawInputText}
               onChange={(e) => parseInput(e.target.value)}
               placeholder="Cole aqui as linhas copiadas da planilha..."
-              className="w-full h-24 p-3 rounded-xl border border-slate-300 bg-slate-50 text-xs font-mono font-medium text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-2xs resize-none transition-all"
+              className="w-full h-24 p-3 rounded-xl border border-slate-300 bg-slate-50/50 text-xs font-mono font-medium text-slate-900 placeholder-slate-400 focus:border-[#B32025] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B32025]/15 shadow-2xs resize-none transition-all"
             />
           </div>
 
@@ -344,14 +344,14 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
               { label: 'TELEFONE', key: 'telefone', icon: Phone, placeholder: '(00) 00000-0000' }
             ].map((field) => (
               <div key={field.key} className="space-y-1">
-                <label className="text-[10px] font-extrabold text-blue-950 flex items-center gap-1.5 uppercase tracking-wide">
-                  <field.icon size={12} className="text-blue-600" /> {field.label}
+                <label className="text-[10px] font-extrabold text-[#2B180D] flex items-center gap-1.5 uppercase tracking-wide font-sans">
+                  <field.icon size={12} className="text-[#B32025]" /> {field.label}
                 </label>
                 <input 
                   name={field.key} 
                   value={(extraData as any)[field.key]} 
                   onChange={handleExtraChange} 
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-2xs transition-all" 
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-[#B32025] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B32025]/15 shadow-2xs transition-all" 
                   placeholder={field.placeholder} 
                 />
               </div>
@@ -362,7 +362,7 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
           <div className="space-y-2.5 pt-2">
             <button 
               onClick={copyToEmail} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
+              className="w-full bg-[#B32025] hover:bg-[#8c060a] text-white py-3.5 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer tracking-wider font-sans"
             >
               <Mail size={16} /> 
               <span>{copied ? 'E-MAIL COPIADO COM SUCESSO!' : 'COPIAR FORMATADO PARA E-MAIL'}</span>
@@ -370,7 +370,7 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
 
             <button 
               onClick={clearData} 
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 transition-all border border-slate-300 cursor-pointer"
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-[10px] uppercase flex items-center justify-center gap-2 transition-all border border-slate-300 cursor-pointer font-sans"
             >
               <Trash2 size={13} /> 
               <span>LIMPAR DADOS E REINICIAR</span>
@@ -379,14 +379,14 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
         </aside>
 
         {/* Right Panel: Interactive Email Preview Dashboard */}
-        <main className="flex-1 p-6 lg:p-10 overflow-y-auto flex flex-col items-center justify-center bg-slate-100">
+        <main className="flex-1 p-6 lg:p-10 overflow-y-auto flex flex-col items-center justify-center">
           {parsedRows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center max-w-lg text-center py-12 px-6 bg-white border border-dashed border-slate-300 rounded-3xl shadow-xs">
-              <div className="w-16 h-16 bg-blue-50 rounded-2xl border border-blue-200 flex items-center justify-center text-blue-600 mb-4 shadow-2xs">
+            <div className="flex flex-col items-center justify-center max-w-lg text-center py-12 px-6 bg-white border-2 border-[#3A2414]/15 rounded-3xl shadow-lg">
+              <div className="w-16 h-16 bg-[#B32025]/10 rounded-2xl border border-[#B32025]/20 flex items-center justify-center text-[#B32025] mb-4 shadow-2xs">
                 <FileText size={32} />
               </div>
-              <h2 className="text-lg font-extrabold text-blue-950 uppercase mb-2 tracking-wide">Nenhum dado importado ainda</h2>
-              <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+              <h2 className="text-lg font-black text-[#2B180D] uppercase mb-2 tracking-wide font-heading">Nenhum dado importado ainda</h2>
+              <p className="text-xs text-slate-600 mb-6 leading-relaxed font-sans">
                 Cole os dados copiados da planilha no campo à esquerda ou utilize o painel para configurar os dados da carga e gerar a pré-visualização instantânea do e-mail de averbação.
               </p>
               <div className="relative group w-full max-w-xs flex justify-center opacity-80 hover:opacity-100 transition-opacity">
@@ -394,21 +394,21 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
               </div>
             </div>
           ) : (
-            <div className="w-full max-w-4xl bg-white text-slate-900 rounded-2xl shadow-sm p-8 lg:p-12 border border-slate-200 relative animate-fade-in">
+            <div className="w-full max-w-4xl bg-white text-slate-900 rounded-2xl shadow-xl p-8 lg:p-12 border-2 border-[#3A2414]/15 relative animate-fade-in">
               
               {/* Preview Header Bar */}
               <div className="flex flex-wrap items-center justify-between border-b border-slate-200 pb-5 mb-8 gap-4">
                 <div>
-                  <span className="text-[10px] font-extrabold tracking-widest text-blue-700 uppercase bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  <span className="text-[10px] font-extrabold tracking-widest text-[#B32025] uppercase bg-[#B32025]/10 px-3 py-1 rounded-full border border-[#B32025]/20">
                     PRÉ-VISUALIZAÇÃO OFICIAL DO E-MAIL
                   </span>
-                  <h3 className="font-extrabold text-base text-blue-950 mt-1">FORMATO PRONTO PARA ENVIO</h3>
+                  <h3 className="font-black text-base text-[#2B180D] mt-1 font-heading uppercase">FORMATO PRONTO PARA ENVIO</h3>
                 </div>
                 
                 <div className="flex items-center gap-2.5">
                   <button 
                     onClick={copyToEmail} 
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs uppercase flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
+                    className="px-4 py-2.5 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer font-sans"
                   >
                     <Clipboard size={14} /> 
                     <span>{copied ? 'COPIADO!' : 'COPIAR E-MAIL'}</span>
@@ -430,28 +430,28 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
                   Segue <span className="bg-yellow-300 font-bold px-1.5 py-0.5 rounded text-slate-950 border border-yellow-400">averbação</span> realizada via sistema.
                 </p>
                 
-                <div className="bg-blue-50/70 p-5 rounded-2xl border border-blue-200 space-y-2 font-bold text-blue-950 shadow-2xs">
+                <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#3A2414]/15 space-y-2 font-bold text-[#2B180D] shadow-2xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-blue-800 font-mono">ROTA:</span>
-                    <span className="uppercase text-blue-950">{getRoute()}</span>
+                    <span className="text-xs text-[#2B180D]/70 font-mono">ROTA:</span>
+                    <span className="uppercase text-[#2B180D] font-mono">{getRoute()}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-blue-800 font-mono">PROTOCOLO(S):</span>
+                    <span className="text-xs text-[#2B180D]/70 font-mono">PROTOCOLO(S):</span>
                     <div className="flex flex-wrap gap-1.5">
                       {getProtocols().length > 0 ? (
                         getProtocols().map(p => (
-                          <span key={p} className="text-blue-700 font-mono bg-white px-2 py-0.5 rounded border border-blue-300">{p}</span>
+                          <span key={p} className="text-[#B32025] font-mono bg-white px-2 py-0.5 rounded border border-[#3A2414]/20">{p}</span>
                         ))
                       ) : (
-                        <span className="text-blue-600 font-mono">---</span>
+                        <span className="text-slate-500 font-mono">---</span>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-blue-800 font-mono">VALOR DA CARGA:</span>
-                    <span className="text-rose-600 font-mono text-base">{getTotalValue()}</span>
+                    <span className="text-xs text-[#2B180D]/70 font-mono">VALOR DA CARGA:</span>
+                    <span className="text-[#B32025] font-mono text-base font-black">{getTotalValue()}</span>
                   </div>
                 </div>
 
@@ -461,16 +461,16 @@ export default function Averbacao({ onBack, view }: AverbacaoProps) {
                 <div className="overflow-x-auto my-6 border border-slate-300 rounded-2xl shadow-2xs">
                   <table className="w-full text-center text-xs border-collapse min-w-[780px]">
                     <thead>
-                      <tr className="bg-blue-950 text-white uppercase font-bold text-[10px] tracking-wider">
-                        <th className="p-3.5 border border-blue-900">ORIGEM</th>
-                        <th className="p-3.5 border border-blue-900">DESTINO</th>
-                        <th className="p-3.5 border border-blue-900">TRANSPORTADORA</th>
-                        <th className="p-3.5 border border-blue-900">PLACA CAVALO</th>
-                        <th className="p-3.5 border border-blue-900">PLACAS CARRETAS</th>
-                        <th className="p-3.5 border border-blue-900">TECNOLOGIA</th>
-                        <th className="p-3.5 border border-blue-900">NOME MOTORISTA</th>
-                        <th className="p-3.5 border border-blue-900">CPF</th>
-                        <th className="p-3.5 border border-blue-900">TELEFONE</th>
+                      <tr className="bg-[#2B180D] text-white uppercase font-bold text-[10px] tracking-wider font-heading">
+                        <th className="p-3.5 border border-[#3A2414]">ORIGEM</th>
+                        <th className="p-3.5 border border-[#3A2414]">DESTINO</th>
+                        <th className="p-3.5 border border-[#3A2414]">TRANSPORTADORA</th>
+                        <th className="p-3.5 border border-[#3A2414]">PLACA CAVALO</th>
+                        <th className="p-3.5 border border-[#3A2414]">PLACAS CARRETAS</th>
+                        <th className="p-3.5 border border-[#3A2414]">TECNOLOGIA</th>
+                        <th className="p-3.5 border border-[#3A2414]">NOME MOTORISTA</th>
+                        <th className="p-3.5 border border-[#3A2414]">CPF</th>
+                        <th className="p-3.5 border border-[#3A2414]">TELEFONE</th>
                       </tr>
                     </thead>
                     <tbody>

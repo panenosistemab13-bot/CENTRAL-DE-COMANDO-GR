@@ -287,20 +287,59 @@ export interface ParsedPlacaItem {
   rawRowsCount: number;
 }
 
-export function formatValorNf(val?: string): string {
-  if (!val) return "";
+export function parseCurrencyNumber(val?: string | number): number {
+  if (val === undefined || val === null || val === "") return 0;
+  if (typeof val === "number") return isNaN(val) ? 0 : val;
+  let cleaned = val.trim().replace(/^["']|["']$/g, "");
+  if (!cleaned || cleaned === "-" || cleaned === "---") return 0;
+
+  // Remove currency symbols (R$, RS, $, etc.) and spaces
+  cleaned = cleaned.replace(/R?S?\$?\s*/gi, "").trim();
+
+  // If both dot and comma exist (e.g. "176.627,35")
+  if (cleaned.includes(".") && cleaned.includes(",")) {
+    cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+  } else if (cleaned.includes(",")) {
+    // Only comma exists (e.g. "176627,35" or "1000,00")
+    cleaned = cleaned.replace(",", ".");
+  } else if (cleaned.includes(".")) {
+    // Only dot exists (e.g. "176.627" or "176627.35")
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+      cleaned = cleaned.replace(/\./g, "");
+    } else if (parts.length === 2 && parts[1].length === 3) {
+      cleaned = cleaned.replace(/\./g, "");
+    }
+  }
+
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+}
+
+export function formatValorNf(val?: string | number): string {
+  if (val === undefined || val === null || val === "") return "";
+  if (typeof val === "number") {
+    if (isNaN(val) || val <= 0) return "";
+    return val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
   const cleaned = val.trim().replace(/^["']|["']$/g, "");
   if (!cleaned || cleaned === "-" || cleaned === "---") return "";
+
   // Check if it already has R$, RS, or similar currency symbol
   if (/^R?S?\$?\s*/i.test(cleaned)) {
     const numPart = cleaned.replace(/^R?S?\$?\s*/i, "").trim();
+    const parsedNum = parseCurrencyNumber(numPart);
+    if (parsedNum > 0) {
+      return parsedNum.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
     if (numPart) {
       return `R$ ${numPart}`;
     }
   }
-  // If numeric with decimal point or comma
-  const num = parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
-  if (!isNaN(num) && num > 0) {
+
+  const num = parseCurrencyNumber(cleaned);
+  if (num > 0) {
     return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
   return cleaned;
@@ -567,7 +606,16 @@ export function parsePlacasData(text: string): ParsedPlacaItem[] {
       else if (existing.nf && item.nf && !existing.nf.includes(item.nf)) {
         existing.nf = `${existing.nf} / ${item.nf}`;
       }
-      if (!existing.valorNf && item.valorNf) existing.valorNf = item.valorNf;
+      if (!existing.valorNf && item.valorNf) {
+        existing.valorNf = item.valorNf;
+      } else if (existing.valorNf && item.valorNf) {
+        const v1 = parseCurrencyNumber(existing.valorNf);
+        const v2 = parseCurrencyNumber(item.valorNf);
+        if (v1 > 0 || v2 > 0) {
+          const sum = v1 + v2;
+          existing.valorNf = formatValorNf(sum);
+        }
+      }
       if (!existing.tecnologia && item.tecnologia) existing.tecnologia = item.tecnologia;
       if (!existing.cpf && item.cpf) existing.cpf = item.cpf;
       if (!existing.telefone && item.telefone) existing.telefone = item.telefone;

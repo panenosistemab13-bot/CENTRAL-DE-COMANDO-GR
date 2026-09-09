@@ -462,14 +462,14 @@ export default function Checklist() {
       {/* CORPORATE OFFICE HEADER */}
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xs relative z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+          <div className="w-10 h-10 rounded-xl bg-[#B32025] text-white flex items-center justify-center shadow-md border border-[#8c060a]">
             <ClipboardCheck size={22} className="stroke-[2.5]" />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold tracking-tight text-blue-950 uppercase">
+            <h1 className="text-lg font-black tracking-tight text-[#2B180D] uppercase font-heading">
               Central de Checklist & Vistorias de Frota
             </h1>
-            <p className="text-xs font-semibold text-blue-800">
+            <p className="text-xs font-bold text-[#B32025] font-sans">
               Sistema corporativo de conformidade e controle de manutenção
             </p>
           </div>
@@ -483,10 +483,10 @@ export default function Checklist() {
           <button
             onClick={() => setActiveView('monitoring')}
             className={cn(
-              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              "px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 font-sans",
               activeView === 'monitoring'
-                ? "bg-blue-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-blue-900 hover:bg-white"
+                ? "bg-[#B32025] text-white shadow-md"
+                : "text-slate-600 hover:text-[#2B180D] hover:bg-white"
             )}
           >
             <ClipboardCheck size={16} />
@@ -495,10 +495,10 @@ export default function Checklist() {
           <button
             onClick={() => setActiveView('os')}
             className={cn(
-              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              "px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 font-sans",
               activeView === 'os'
-                ? "bg-blue-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-blue-900 hover:bg-white"
+                ? "bg-[#B32025] text-white shadow-md"
+                : "text-slate-600 hover:text-[#2B180D] hover:bg-white"
             )}
           >
             <FileText size={16} />
@@ -507,10 +507,10 @@ export default function Checklist() {
           <button
             onClick={() => setActiveView('generator')}
             className={cn(
-              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2",
+              "px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 font-sans",
               activeView === 'generator'
-                ? "bg-blue-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-blue-900 hover:bg-white"
+                ? "bg-[#B32025] text-white shadow-md"
+                : "text-slate-600 hover:text-[#2B180D] hover:bg-white"
             )}
           >
             <Sparkles size={16} />
@@ -520,25 +520,25 @@ export default function Checklist() {
 
         {/* Metrics Counters */}
         <div className="flex items-center gap-3">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
-            <Truck size={16} className="text-blue-600" />
+          <div className="bg-[#FAF8F5] border border-[#3A2414]/15 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
+            <Truck size={16} className="text-[#B32025]" />
             <div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase block leading-tight">Total Frota</span>
-              <span className="text-sm font-extrabold text-blue-950">{totalVeiculos}</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase block leading-tight font-sans">Total Frota</span>
+              <span className="text-sm font-black text-[#2B180D] font-mono">{totalVeiculos}</span>
             </div>
           </div>
           <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
             <Check size={16} className="text-emerald-600" />
             <div>
-              <span className="text-[10px] font-bold text-emerald-700 uppercase block leading-tight">Em Dia</span>
-              <span className="text-sm font-extrabold text-emerald-800">{totalEmDia}</span>
+              <span className="text-[10px] font-extrabold text-emerald-700 uppercase block leading-tight font-sans">Em Dia</span>
+              <span className="text-sm font-black text-emerald-800 font-mono">{totalEmDia}</span>
             </div>
           </div>
           <div className="bg-rose-50/60 border border-rose-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5">
             <ShieldAlert size={16} className="text-rose-600" />
             <div>
-              <span className="text-[10px] font-bold text-rose-700 uppercase block leading-tight">Vencidos</span>
-              <span className="text-sm font-extrabold text-rose-800">{totalVencidos}</span>
+              <span className="text-[10px] font-extrabold text-rose-700 uppercase block leading-tight font-sans">Vencidos</span>
+              <span className="text-sm font-black text-rose-800 font-mono">{totalVencidos}</span>
             </div>
           </div>
         </div>
@@ -553,7 +553,7 @@ export default function Checklist() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar placa ou carreta..."
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-mono uppercase transition-all"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 font-mono uppercase transition-all font-bold"
               />
             </div>
           )}
@@ -567,7 +567,7 @@ export default function Checklist() {
                   value={osSearchTerm}
                   onChange={(e) => setOsSearchTerm(e.target.value)}
                   placeholder="Buscar placa / O.S..."
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-mono uppercase transition-all"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 font-mono uppercase transition-all font-bold"
                 />
                 {osSearchTerm && (
                   <button
@@ -584,7 +584,7 @@ export default function Checklist() {
                   <select
                     value={sortedCavalos.some(i => i.cavalo === osSearchTerm) ? osSearchTerm : ''}
                     onChange={(e) => setOsSearchTerm(e.target.value)}
-                    className="bg-blue-50 border border-blue-200 hover:border-blue-300 rounded-xl px-3 py-2 text-xs font-bold text-blue-950 uppercase outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer font-mono shadow-2xs transition-all"
+                    className="bg-[#FAF8F5] border border-[#3A2414]/20 hover:border-[#B32025] rounded-xl px-3 py-2 text-xs font-bold text-[#2B180D] uppercase outline-none focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 cursor-pointer font-mono shadow-2xs transition-all"
                     title="Puxar placa da aba Checklist"
                   >
                     <option value="">-- Puxar Placa do Checklist --</option>
@@ -601,7 +601,7 @@ export default function Checklist() {
 
           <button
             onClick={() => setIsAdding(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-xs flex items-center gap-2 cursor-pointer transition-all shrink-0"
+            className="px-4 py-2 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-extrabold text-xs uppercase tracking-wider shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0 font-sans"
           >
             <Plus size={16} />
             <span>Novo Registro</span>
@@ -610,7 +610,7 @@ export default function Checklist() {
           {items.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer font-sans"
               title="Apagar todos os registros"
             >
               <Trash2 size={15} />
@@ -628,18 +628,18 @@ export default function Checklist() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
             {/* Form Configuration Card */}
             <div className="lg:col-span-1 space-y-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
-              <h3 className="text-sm font-bold uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center gap-2 text-blue-950">
-                <Sparkles size={18} className="text-blue-600" />
+              <h3 className="text-sm font-black uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center gap-2 text-[#2B180D] font-heading">
+                <Sparkles size={18} className="text-[#B32025]" />
                 Configurar Solicitação de Checklist
               </h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Saudação</label>
+                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Saudação</label>
                   <select
                     value={genData.greeting}
                     onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none cursor-pointer font-medium"
                   >
                     <option value="Bom dia">Bom dia</option>
                     <option value="Boa tarde">Boa tarde</option>
@@ -648,7 +648,7 @@ export default function Checklist() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Veículo (Cavalo)</label>
+                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Veículo (Cavalo)</label>
                   <select
                     value={genData.cavalo}
                     onChange={(e) => {
@@ -660,7 +660,7 @@ export default function Checklist() {
                         carretas: relatedItem ? relatedItem.carretas : prev.carretas 
                       }));
                     }}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-mono font-bold focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer uppercase"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-mono font-bold focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none cursor-pointer uppercase"
                   >
                     <option value="">Selecione veículo...</option>
                     {sortedCavalos.map(item => (
@@ -672,23 +672,23 @@ export default function Checklist() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Carretas Relacionadas</label>
+                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Carretas Relacionadas</label>
                   <input
                     type="text"
                     value={genData.carretas}
                     onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
                     placeholder="EX: PNE7353 / PNE7433"
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase font-mono placeholder-slate-400"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none uppercase font-mono placeholder-slate-400 font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase mb-1.5 block tracking-wider text-blue-950">Celular Contato</label>
+                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Celular Contato</label>
                   <input
                     type="text"
                     value={genData.contato}
                     onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none font-mono"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none font-mono font-bold"
                   />
                 </div>
               </div>
@@ -696,10 +696,10 @@ export default function Checklist() {
               <button 
                 onClick={handleCopyGenerator}
                 className={cn(
-                  "w-full mt-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer",
+                  "w-full mt-6 py-3 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer font-sans",
                   genCopied 
-                    ? "bg-emerald-600 text-white shadow-md" 
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-emerald-600 text-white" 
+                    : "bg-[#B32025] text-white hover:bg-[#8c060a]"
                 )}
               >
                 {genCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -709,37 +709,37 @@ export default function Checklist() {
 
             {/* Preview Document Card */}
             <div className="lg:col-span-2 flex items-center justify-center bg-white border border-slate-200 p-8 rounded-2xl shadow-xs">
-              <div className="w-full max-w-xl bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm text-slate-800">
-                <p className="mb-4 text-base font-semibold text-blue-950">{genData.greeting},</p>
-                <p className="mb-6 text-sm text-slate-700">
-                  Solicito o <strong className="font-bold text-blue-700">checklist</strong> para os conjuntos abaixo:
+              <div className="w-full max-w-xl bg-[#FAF8F5] p-8 rounded-2xl border border-[#3A2414]/15 shadow-sm text-slate-800">
+                <p className="mb-4 text-base font-bold text-[#2B180D] font-heading">{genData.greeting},</p>
+                <p className="mb-6 text-sm text-slate-700 font-medium">
+                  Solicito o <strong className="font-extrabold text-[#B32025]">checklist</strong> para os conjuntos abaixo:
                 </p>
                 
                 <table className="w-full border-collapse border border-slate-300 text-center mb-6 overflow-hidden rounded-lg">
                   <thead>
-                    <tr className="bg-blue-900 text-white text-xs uppercase font-bold tracking-wider">
-                      <th className="p-3 border border-blue-950">Veículo Cavalo</th>
-                      <th className="p-3 border border-blue-950">Carretas do Conjunto</th>
+                    <tr className="bg-[#2B180D] text-white text-xs uppercase font-extrabold tracking-wider font-heading">
+                      <th className="p-3 border border-[#3A2414]">Veículo Cavalo</th>
+                      <th className="p-3 border border-[#3A2414]">Carretas do Conjunto</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="bg-white font-mono font-bold text-slate-900">
+                    <tr className="bg-white font-mono font-bold text-[#2B180D]">
                       <td className="p-3.5 border border-slate-300 uppercase">{genData.cavalo || "—"}</td>
                       <td className="p-3.5 border border-slate-300 uppercase">{genData.carretas || "—"}</td>
                     </tr>
                   </tbody>
                 </table>
 
-                <div className="bg-blue-50/80 p-3 rounded-xl border border-blue-200 text-blue-950 font-mono text-xs mb-8 font-semibold">
+                <div className="bg-[#B32025]/10 p-3 rounded-xl border border-[#B32025]/20 text-[#2B180D] font-mono text-xs mb-8 font-bold">
                   Canal de Atendimento: {genData.contato}
                 </div>
 
                 <div className="border-t border-slate-200 pt-6 flex justify-between items-end">
                   <p className="text-slate-500 text-xs font-medium">Atenciosamente,</p>
                   <div className="text-center mr-2">
-                    <p className="font-serif italic text-2xl text-blue-950">Jefferson Augusto</p>
-                    <div className="w-32 h-[1.5px] bg-blue-600 my-1 mx-auto"></div>
-                    <p className="text-[10px] uppercase tracking-widest text-blue-800 font-bold font-sans">Agente de Risco</p>
+                    <p className="font-serif italic text-2xl text-[#2B180D] font-bold">Jefferson Augusto</p>
+                    <div className="w-32 h-[1.5px] bg-[#B32025] my-1 mx-auto"></div>
+                    <p className="text-[10px] uppercase tracking-widest text-[#B32025] font-extrabold font-sans">Agente de Risco</p>
                   </div>
                 </div>
               </div>
@@ -751,14 +751,14 @@ export default function Checklist() {
             {/* Header and Filter Plaque */}
             <div className="w-full bg-white text-slate-900 p-5 rounded-2xl shadow-xs border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                <div className="w-11 h-11 rounded-xl bg-[#B32025] text-white flex items-center justify-center shadow-md border border-[#8c060a]">
                   <FileText className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div className="text-left">
-                  <h2 className="text-base font-extrabold uppercase tracking-wider text-blue-950">
+                  <h2 className="text-base font-black uppercase tracking-wider text-[#2B180D] font-heading">
                     Controle de Ordens de Serviço (O.S)
                   </h2>
-                  <p className="text-xs text-blue-800 font-semibold mt-0.5">
+                  <p className="text-xs text-[#B32025] font-bold mt-0.5 font-sans">
                     Sincronizado em tempo real com todas as placas da aba Checklist
                   </p>
                 </div>
@@ -771,10 +771,10 @@ export default function Checklist() {
                     key={st}
                     onClick={() => setOsStatusFilter(st)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                      "px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer font-sans",
                       osStatusFilter === st
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "text-slate-600 hover:text-blue-900 hover:bg-white"
+                        ? "bg-[#B32025] text-white shadow-xs"
+                        : "text-slate-600 hover:text-[#2B180D] hover:bg-white"
                     )}
                   >
                     {st}
@@ -786,12 +786,12 @@ export default function Checklist() {
             {/* Metrics Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
               <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
+                <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] text-[#B32025] flex items-center justify-center border border-[#3A2414]/15">
                   <Truck size={18} className="stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">Total Frota</span>
-                  <span className="text-base font-extrabold text-blue-950">{items.length}</span>
+                  <span className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider font-sans">Total Frota</span>
+                  <span className="text-base font-black text-[#2B180D] font-mono">{items.length}</span>
                 </div>
               </div>
               <div className="bg-white border border-rose-200 p-4 rounded-xl shadow-xs flex items-center gap-3 text-left">
@@ -799,8 +799,8 @@ export default function Checklist() {
                   <ShieldAlert size={18} className="stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-rose-700 tracking-wider">Pendente</span>
-                  <span className="text-base font-extrabold text-rose-700">
+                  <span className="block text-[10px] font-extrabold uppercase text-rose-700 tracking-wider font-sans">Pendente</span>
+                  <span className="text-base font-black text-rose-700 font-mono">
                     {items.filter(item => (item.osStatus || 'PENDENTE') === 'PENDENTE').length}
                   </span>
                 </div>
@@ -810,8 +810,8 @@ export default function Checklist() {
                   <Activity size={18} className="stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-blue-700 tracking-wider">Agendado</span>
-                  <span className="text-base font-extrabold text-blue-700">
+                  <span className="block text-[10px] font-extrabold uppercase text-blue-700 tracking-wider font-sans">Agendado</span>
+                  <span className="text-base font-black text-blue-700 font-mono">
                     {items.filter(item => item.osStatus === 'AGENDADO').length}
                   </span>
                 </div>
@@ -821,8 +821,8 @@ export default function Checklist() {
                   <Loader2 size={18} className="stroke-[2.5] animate-spin" />
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-amber-700 tracking-wider">Em Andamento</span>
-                  <span className="text-base font-extrabold text-amber-700">
+                  <span className="block text-[10px] font-extrabold uppercase text-amber-700 tracking-wider font-sans">Em Andamento</span>
+                  <span className="text-base font-black text-amber-700 font-mono">
                     {items.filter(item => item.osStatus === 'EM ANDAMENTO').length}
                   </span>
                 </div>
@@ -832,8 +832,8 @@ export default function Checklist() {
                   <ShieldCheck size={18} className="stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-emerald-700 tracking-wider">Concluído</span>
-                  <span className="text-base font-extrabold text-emerald-700">
+                  <span className="block text-[10px] font-extrabold uppercase text-emerald-700 tracking-wider font-sans">Concluído</span>
+                  <span className="text-base font-black text-emerald-700 font-mono">
                     {items.filter(item => item.osStatus === 'CONCLUÍDO').length}
                   </span>
                 </div>
@@ -865,7 +865,7 @@ export default function Checklist() {
                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
                   <table className="w-full text-left border-collapse font-sans">
                     <thead>
-                      <tr className="bg-blue-900 text-white text-xs uppercase font-bold tracking-wider h-11 border-b border-blue-950">
+                      <tr className="bg-[#2B180D] text-white text-xs uppercase font-extrabold tracking-wider h-11 border-b border-[#3A2414] font-heading">
                         <th className="px-3 py-2.5 w-12 text-center select-none">#</th>
                         <th className="px-4 py-2.5 min-w-[260px]">Placa do Cavalo</th>
                         <th className="px-4 py-2.5 w-56 text-center">Número da O.S</th>
@@ -938,7 +938,7 @@ export default function Checklist() {
                         return (
                           <tr 
                             key={item.id} 
-                            className="text-xs text-slate-900 hover:bg-blue-50/40 transition-colors border-b border-slate-100 h-16"
+                            className="text-xs text-slate-900 hover:bg-[#FAF8F5] transition-colors border-b border-slate-100 h-16"
                           >
                             {/* Index */}
                             <td className="p-2 text-center text-slate-400 font-mono text-xs w-12 select-none font-bold">
@@ -954,7 +954,7 @@ export default function Checklist() {
                                   )}
                                 </div>
                                 {item.carretas && (
-                                  <span className="text-[11px] font-mono text-blue-900 font-bold">
+                                  <span className="text-[11px] font-mono text-[#2B180D] font-bold">
                                     Conjunto: {item.carretas}
                                   </span>
                                 )}
@@ -974,7 +974,7 @@ export default function Checklist() {
                                   });
                                 }}
                                 placeholder="Nº DA O.S (EX: 900382)"
-                                className="w-full bg-slate-50 border border-slate-300 hover:border-blue-400 focus:border-blue-600 focus:bg-white text-blue-950 font-bold rounded-lg py-2 px-3 text-center outline-none transition-all uppercase text-xs font-mono"
+                                className="w-full bg-slate-50 border border-slate-300 hover:border-[#B32025] focus:border-[#B32025] focus:bg-white text-[#2B180D] font-bold rounded-lg py-2 px-3 text-center outline-none transition-all uppercase text-xs font-mono"
                               />
                             </td>
 
@@ -990,7 +990,7 @@ export default function Checklist() {
                                     console.error("Erro ao salvar data agendamento:", err);
                                   });
                                 }}
-                                className="w-full bg-slate-50 border border-slate-300 hover:border-blue-400 focus:border-blue-600 focus:bg-white text-slate-900 font-bold rounded-lg py-2 px-3 text-center outline-none transition-all text-xs font-mono"
+                                className="w-full bg-slate-50 border border-slate-300 hover:border-[#B32025] focus:border-[#B32025] focus:bg-white text-slate-900 font-bold rounded-lg py-2 px-3 text-center outline-none transition-all text-xs font-mono"
                               />
                             </td>
 
@@ -1056,7 +1056,7 @@ export default function Checklist() {
                               <div className="flex items-center justify-center gap-1.5">
                                 <button
                                   onClick={() => setEditingItem(item)}
-                                  className="p-2 bg-slate-100 hover:bg-blue-50 text-blue-900 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                                  className="p-2 bg-slate-100 hover:bg-[#FAF8F5] text-[#2B180D] rounded-lg border border-slate-200 transition-colors cursor-pointer"
                                   title="Editar"
                                 >
                                   <Edit2 size={13} />
@@ -1088,16 +1088,16 @@ export default function Checklist() {
               {/* Status Filter Card */}
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-950 block mb-3">Filtrar por Status</span>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#2B180D] block mb-3 font-sans">Filtrar por Status</span>
                   <div className="grid grid-cols-2 gap-2">
                     {(['TODOS', 'EM DIA', 'VENCIDO', 'NEGATIVADOS'] as const).map((f) => (
                       <button
                         key={f}
                         onClick={() => setFilter(f)}
                         className={cn(
-                          "px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-center border shadow-2xs",
+                          "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer text-center border shadow-2xs font-sans",
                           filter === f 
-                            ? "bg-blue-600 text-white border-blue-600 shadow-xs" 
+                            ? "bg-[#B32025] text-white border-[#B32025] shadow-xs" 
                             : "bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
                         )}
                       >
@@ -1106,16 +1106,16 @@ export default function Checklist() {
                     ))}
                   </div>
                 </div>
-                <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 mt-4">
-                  Mostrando <strong className="text-blue-950 font-bold">{filteredItems.length}</strong> de {items.length} veículos.
+                <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 mt-4 font-sans">
+                  Mostrando <strong className="text-[#2B180D] font-black font-mono">{filteredItems.length}</strong> de {items.length} veículos.
                 </div>
               </div>
 
               {/* Paste Importer Card */}
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs lg:col-span-2">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
-                    <FileSpreadsheet size={16} className="text-blue-600" />
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-[#2B180D] flex items-center gap-1.5 font-sans">
+                    <FileSpreadsheet size={16} className="text-[#B32025]" />
                     Atualizar Checklist via Colagem (Planilha)
                   </label>
                   <span className="text-[11px] text-slate-400 font-medium">Cole as colunas sem cabeçalho</span>
@@ -1125,11 +1125,11 @@ export default function Checklist() {
                     value={pasteData}
                     onChange={(e) => setPasteData(e.target.value)}
                     placeholder="Cole aqui as informações copiadas do Excel (Placa, Conjunto, Status, Data Teste, Data Vencimento)..."
-                    className="w-full h-20 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none font-mono transition-all"
+                    className="w-full h-20 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 resize-none font-mono transition-all font-medium"
                   />
                   <button 
                     onClick={handleImportData}
-                    className="px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-all active:scale-95 shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
+                    className="px-6 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-md transition-all active:scale-95 shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer font-sans"
                   >
                     <RefreshCw size={16} />
                     <span>Atualizar</span>
@@ -1148,22 +1148,22 @@ export default function Checklist() {
                   const formattedVencimento = parsedExpiry ? format(parsedExpiry, 'dd/MM/yyyy') : (item.dataVencimento || '—');
 
                   return (
-                    <div key={item.id} className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-5 shadow-xs transition-all">
+                    <div key={item.id} className="bg-white border border-slate-200 hover:border-[#B32025]/40 rounded-2xl p-5 shadow-xs transition-all">
                       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                         
                         {/* Plates Section */}
                         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 w-full lg:w-auto">
                           <div className="flex flex-col items-center lg:items-start">
-                            <span className="text-[10px] font-bold text-blue-950 uppercase mb-1.5 tracking-wider">Placa Cavalo</span>
+                            <span className="text-[10px] font-extrabold text-[#2B180D] uppercase mb-1.5 tracking-wider font-sans">Placa Cavalo</span>
                             <LicensePlate plate={item.cavalo} type="cavalo" />
                           </div>
 
                           {item.carretas && (
                             <div className="flex flex-col items-center lg:items-start">
-                              <span className="text-[10px] font-bold text-blue-950 uppercase mb-1.5 tracking-wider">Carretas do Conjunto</span>
-                              <div className="bg-blue-50/60 border border-blue-200 rounded-xl px-4 py-2 flex items-center gap-2.5">
-                                <Truck size={18} className="text-blue-600" />
-                                <span className="font-mono font-extrabold text-sm text-blue-950 uppercase tracking-wide">{item.carretas}</span>
+                              <span className="text-[10px] font-extrabold text-[#2B180D] uppercase mb-1.5 tracking-wider font-sans">Carretas do Conjunto</span>
+                              <div className="bg-[#FAF8F5] border border-[#3A2414]/20 rounded-xl px-4 py-2 flex items-center gap-2.5">
+                                <Truck size={18} className="text-[#B32025]" />
+                                <span className="font-mono font-black text-sm text-[#2B180D] uppercase tracking-wide">{item.carretas}</span>
                               </div>
                             </div>
                           )}
@@ -1173,27 +1173,27 @@ export default function Checklist() {
                         <div className="flex flex-col items-center lg:items-start gap-2.5 flex-1 px-2 text-center lg:text-left">
                           <div className="flex items-center gap-2 flex-wrap justify-center lg:justify-start">
                             {status.label === 'NEGATIVADO' ? (
-                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 font-sans">
                                 <ShieldAlert size={14} />
                                 <span>NEGATIVADO</span>
                               </div>
                             ) : status.label === 'REPROVADO' ? (
-                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 font-sans">
                                 <ShieldAlert size={14} />
                                 <span>REPROVADO</span>
                               </div>
                             ) : diasParaVencer < 0 || status.label === 'VENCIDO' ? (
-                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <div className="px-3.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 font-sans">
                                 <ShieldAlert size={14} />
                                 <span>VENCIDO</span>
                               </div>
                             ) : status.label === 'A VENCER' ? (
-                              <div className="px-3.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <div className="px-3.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 font-sans">
                                 <Clock size={14} />
                                 <span>A VENCER</span>
                               </div>
                             ) : (
-                              <div className="px-3.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <div className="px-3.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 font-sans">
                                 <Check size={14} />
                                 <span>APROVADO</span>
                               </div>
@@ -1201,21 +1201,21 @@ export default function Checklist() {
 
                             {item.periferico && (
                               <span className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-mono font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                                <Wrench size={12} className="text-blue-600" /> {item.periferico}
+                                <Wrench size={12} className="text-[#B32025]" /> {item.periferico}
                               </span>
                             )}
 
                             {item.manutencaoOs && (
-                              <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 font-mono font-bold text-[11px]">
+                              <span className="px-2.5 py-1 rounded-lg bg-[#FAF8F5] border border-[#3A2414]/20 text-[#2B180D] font-mono font-bold text-[11px]">
                                 OS: {item.manutencaoOs}
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-4 text-xs text-slate-600 mt-0.5 flex-wrap justify-center lg:justify-start">
+                          <div className="flex items-center gap-4 text-xs text-slate-600 mt-0.5 flex-wrap justify-center lg:justify-start font-sans">
                             <div className="flex items-center gap-1.5">
-                              <Clock size={14} className="text-blue-600" />
-                              <span>Vencimento: <strong className="font-mono font-bold text-slate-900">{formattedVencimento}</strong></span>
+                              <Clock size={14} className="text-[#B32025]" />
+                              <span>Vencimento: <strong className="font-mono font-bold text-[#2B180D]">{formattedVencimento}</strong></span>
                             </div>
                             <span className={cn(
                               "font-mono font-bold text-xs",
@@ -1226,7 +1226,7 @@ export default function Checklist() {
                           </div>
 
                           {item.observacao && (
-                            <p className="text-xs text-slate-500 italic max-w-lg">
+                            <p className="text-xs text-slate-500 italic max-w-lg font-sans">
                               "{item.observacao}"
                             </p>
                           )}
@@ -1234,8 +1234,8 @@ export default function Checklist() {
 
                         {/* Actions Section */}
                         <div className="flex flex-col items-center justify-center gap-2 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6 shrink-0">
-                          <label className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer shadow-2xs flex items-center gap-1.5 transition-all">
-                            {uploadingItemId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          <label className="px-3.5 py-2 bg-[#FAF8F5] hover:bg-slate-100 text-[#2B180D] border border-[#3A2414]/20 rounded-xl text-xs font-extrabold uppercase tracking-wider cursor-pointer shadow-2xs flex items-center gap-1.5 transition-all font-sans">
+                            {uploadingItemId === item.id ? <Loader2 size={14} className="animate-spin text-[#B32025]" /> : <Upload size={14} className="text-[#B32025]" />}
                             <span>Anexar PDF</span>
                             <input 
                               type="file" 
@@ -1268,20 +1268,20 @@ export default function Checklist() {
                       {/* PDF Attachments List */}
                       {item.pdfs && item.pdfs.length > 0 && (
                         <div className="mt-3.5 pt-3.5 border-t border-slate-100 flex items-center gap-2.5 flex-wrap">
-                          <span className="text-[10px] font-bold text-blue-950 uppercase tracking-wider">PDFs Anexados:</span>
+                          <span className="text-[10px] font-extrabold text-[#2B180D] uppercase tracking-wider font-sans">PDFs Anexados:</span>
                           {item.pdfs.map(pdf => (
-                            <div key={pdf.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg shadow-2xs">
-                              <FileText size={13} className="text-blue-600" />
-                              <span className="text-xs font-mono font-bold text-slate-800 max-w-[150px] truncate">{pdf.name}</span>
+                            <div key={pdf.id} className="flex items-center gap-2 bg-[#FAF8F5] border border-[#3A2414]/15 px-3 py-1 rounded-lg shadow-2xs">
+                              <FileText size={13} className="text-[#B32025]" />
+                              <span className="text-xs font-mono font-bold text-[#2B180D] max-w-[150px] truncate">{pdf.name}</span>
                               <button 
                                 onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'view')} 
-                                className="text-blue-600 hover:text-blue-800 text-[11px] font-bold uppercase ml-1 cursor-pointer"
+                                className="text-[#B32025] hover:text-[#8c060a] text-[11px] font-extrabold uppercase ml-1 cursor-pointer font-sans"
                               >
                                 Ver
                               </button>
                               <button 
                                 onClick={(e) => handlePdfAction(e, pdf.url, pdf.name, 'download')} 
-                                className="text-emerald-700 hover:text-emerald-900 text-[11px] font-bold uppercase ml-1 cursor-pointer"
+                                className="text-emerald-700 hover:text-emerald-900 text-[11px] font-extrabold uppercase ml-1 cursor-pointer font-sans"
                               >
                                 Baixar
                               </button>

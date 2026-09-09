@@ -460,7 +460,7 @@ export const BrazilMapHUD: React.FC<BrazilMapHUDProps> = ({
                   fill={isSelected ? "#00f0ff" : "#94a3b8"} 
                   fontSize="8" 
                   fontFamily="monospace" 
-                  textAnchor={city.anchor} 
+                  textAnchor={city.anchor as "start" | "middle" | "end"} 
                   fontWeight={isSelected ? "bold" : "medium"}
                   className="drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] transition-colors hover:fill-cyan-300"
                 >
