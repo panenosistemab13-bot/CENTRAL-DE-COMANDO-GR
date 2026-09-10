@@ -15,6 +15,7 @@ import {
   Clock,
   MapPin,
   User,
+  Users,
   Sliders,
   ChevronLeft,
   ArrowRight,
@@ -22,46 +23,52 @@ import {
   AlertCircle,
   Copy,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  Search,
+  Edit2,
+  Save,
+  X,
+  UserPlus
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import FileSaver from 'file-saver';
 import { rtdb } from '../firebase';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, set, push, remove, update } from 'firebase/database';
 import { parseISO, differenceInDays } from 'date-fns';
 
-// 30 exact columns required for "Disponibilidade" (Pátio) spreadsheet
+// 31 exact columns required for "Disponibilidade" (Pátio) spreadsheet
 export const DISPO_COLUMNS = [
-  'MÊS',                           // 1
-  'ORIGEM',                        // 2
-  'DIA',                           // 3
-  'DATA',                          // 4
-  'CONTATO WHATS',                 // 5
-  'HORA LIBERADO',                 // 6
-  'STATUS',                        // 7
-  'MODELO CARRETA',                // 8
-  'MODELO CAVALO',                 // 9
-  'FEZ CONTATO?',                  // 10
-  'DESTINO',                       // 11
-  'TRANSPORTADOR',                 // 12
-  'CAVALO',                        // 13
-  'CARRETA',                       // 14
-  'Nº PALLETS',                    // 15
-  'TON',                           // 16
-  'M³',                            // 17
-  'CATEGORIA',                     // 18
-  'TECNOLOGIA',                    // 19
-  'CONDUCTOR',                     // 20
-  'CPF',                           // 21
-  'RG / SAP',                      // 22
-  'CNH',                           // 23
-  'TELEFONE',                      // 24
-  'VIGÊNCIA DO CADASTRO',          // 25
-  'CÓDIGO DA TRANSPORTADORA',      // 26
-  'ID DA CARGA / LACRE EXPORTAÇÃO', // 27
-  'ESTADO MOTORISTA',              // 28
-  'ESTADO CAVALO',                 // 29
-  'ESTADO CARRETA'                 // 30
+  'MÊS',                            // 1
+  'ORIGEM',                         // 2
+  'DIA',                            // 3
+  'DATA',                           // 4
+  'CONTATO WHATS',                  // 5
+  'HORA LIBERADO',                  // 6
+  'STATUS',                         // 7
+  'MODELO CARRETA',                 // 8
+  'MODELO CAVALO',                  // 9
+  'FEZ CONTATO?',                   // 10
+  'DESTINO',                        // 11
+  'TRANSPORTADOR',                  // 12
+  'CAVALO',                         // 13
+  'CARRETA',                        // 14
+  'Nº PALLETS',                     // 15
+  'TON',                            // 16
+  'M³',                             // 17
+  'CATEGORIA',                      // 18
+  'TECNOLOGIA',                     // 19
+  'CONDUCTOR',                      // 20
+  'CPF',                            // 21
+  'RG / SAP',                       // 22
+  'CNH',                            // 23
+  'TELEFONE',                       // 24
+  'VIGÊNCIA DO CADASTRO',           // 25
+  'CÓDIGO DA TRANSPORTADORA',       // 26
+  'ID DA CARGA / LACRE EXPORTAÇÃO',  // 27
+  'ESTADO MOTORISTA',               // 28
+  'ESTADO CAVALO',                  // 29
+  'ESTADO CARRETA',                 // 30
+  'CHECK LIST'                      // 31
 ] as const;
 
 export interface DispoRow {
@@ -96,7 +103,46 @@ export interface DispoRow {
   estadoMotorista: string;
   estadoCavalo: string;
   estadoCarreta: string;
+  checkList: string;
 }
+
+export interface Motorista3C {
+  id: string;
+  nome: string;
+  cpf: string;
+  rg: string;
+}
+
+// 27 Drivers list from user's attached image (image.png)
+export const INITIAL_MOTORISTAS_3C: Omit<Motorista3C, 'id'>[] = [
+  { nome: 'ADILSON DOS REIS SILVA', cpf: '599.612.106.97', rg: 'MG3330429' },
+  { nome: 'ADRIANO DA SILVA DE SOUZA', cpf: '080.054.376.92', rg: 'MG13811014' },
+  { nome: 'ALAN HENRIQUE ALVES MACIEL DOS SANTOS', cpf: '067.595.466.52', rg: 'MG10829620' },
+  { nome: 'ALVIMARIO DOS SANTOS', cpf: '028.654.416.44', rg: 'MG7668785' },
+  { nome: 'ANDERSON DE ALMEIDA SOARES', cpf: '065.123.286.47', rg: 'MG10229992' },
+  { nome: 'DANIEL PEREIRA DA CUNHA', cpf: '100.359.096.92', rg: 'MG14723148' },
+  { nome: 'DIEGO RODRIGO DE OLIVEIRA TORRES', cpf: '085.734.946.54', rg: 'MG15511875' },
+  { nome: 'ELIAS DE SOUZA BARBOSA', cpf: '056.154.926.51', rg: 'MG12208437' },
+  { nome: 'FERNANDO COLOR ALVES CARDOSO', cpf: '119.173.486.22', rg: 'MG17532481' },
+  { nome: 'JONATAS SILVA MATIAS', cpf: '086.851.316.42', rg: 'MG15322717' },
+  { nome: 'LEANDRO ALVES PIRES', cpf: '059.560.626.40', rg: 'MG12155796' },
+  { nome: 'LUCIO ROBERTO CARDOSO DOS ANJOS', cpf: '097.029.916.84', rg: 'MG16166279' },
+  { nome: 'LUIZ ANTONIO DOS SANTOS MARQUES', cpf: '684.258.136.20', rg: 'MG4418906' },
+  { nome: 'MARISON RESENDE LEMOS', cpf: '015.784.926.02', rg: 'MG11378218' },
+  { nome: 'PAULO DE OLIVEIRA RAMOS', cpf: '881.913.116.15', rg: 'MG5041854' },
+  { nome: 'PAULO PEREIRA DE SOUSA', cpf: '035.812.206.60', rg: 'MG10489715' },
+  { nome: 'PEDRO HENRIQUE ARAUJO DE SOUSA', cpf: '109.604.946.50', rg: 'MG16373993' },
+  { nome: 'RENATO LÚCIO FERREIRA', cpf: '013.639.816.25', rg: 'MG12114900' },
+  { nome: 'SAMUEL ALVES PEREIRA DA SILVA', cpf: '104.722.696.32', rg: 'MG17029661' },
+  { nome: 'SIDNEY COSTA LIDORIO', cpf: '074.498.246.47', rg: 'MG14140167' },
+  { nome: 'WALLISSON DE JESUS PEREIRA', cpf: '117.616.486.40', rg: 'MG15903697' },
+  { nome: 'WARLEY OLIVEIRA DO SANTOS', cpf: '058.508.696.00', rg: 'MG10709292' },
+  { nome: 'WEBER DALFRAN FERNANDES', cpf: '036.847.996.02', rg: 'MG12967576' },
+  { nome: 'WENDEL POLOZZI REIS MAIA', cpf: '108.064.276.55', rg: 'MG16269190' },
+  { nome: 'JOSE FRANCISCO DEBORTOLI LOPES', cpf: '084.694.686.24', rg: 'MG14542349' },
+  { nome: 'EVERTON LUCAS FERNANDES', cpf: '079.149.766.60', rg: 'MG14891367' },
+  { nome: 'WELLINGTON TADEU MUNIZ', cpf: '050.728.216.69', rg: '' }
+];
 
 interface ChecklistItem {
   id: string;
@@ -107,25 +153,33 @@ interface ChecklistItem {
   statusOverride?: 'APROVADO' | 'VENCIDO' | 'NEGATIVADO' | 'REPROVADO';
 }
 
-// Sample data from image.png provided by user
-const SAMPLE_INPUT_TEXT = `10/09/2026\tBRUNO KERVIN FERNANDES DO NASCIMENTO\tUUF-3F25\tUUG-4I45\tUUG-4B95\tSANTA LUZIA X NATAL\t32503\t1001203515\t48\t34
-10/09/2026\tMAURICIO APARECIDO DA SILVA\tUUO-8D35\tUVA-5F15\tUVA-4E95\tSANTA LUZIA X RECIFE\t32512\t1001215981\t48\t45
+// Sample data with 3C drivers
+const SAMPLE_INPUT_TEXT = `10/09/2026\tADILSON DOS REIS SILVA\tUUF-3F25\tUUG-4I45\tUUG-4B95\tSANTA LUZIA X NATAL\t32503\t1001203515\t48\t34
+10/09/2026\tADRIANO DA SILVA DE SOUZA\tUUO-8D35\tUVA-5F15\tUVA-4E95\tSANTA LUZIA X RECIFE\t32512\t1001215981\t48\t45
 10/09/2026\tPAULO EDER DE OLIVEIRA MENDES\tUUO-9D95\tUVA-6C45\tUVA-6F45\tSANTA LUZIA X JOÃO PESSOA\t32471\t1000425673\t48\t45
-10/09/2026\tMARCOS MENDES PEREIRA\tUUU-8F75\tUUH-3A45\tUUF-9H85\tSANTA LUZIA X MACEIO\t32514\t1001216423\t48\t34`;
+10/09/2026\tDIEGO RODRIGO DE OLIVEIRA TORRES\tUUU-8F75\tUUH-3A45\tUUF-9H85\tSANTA LUZIA X MACEIO\t32514\t1001216423\t48\t34`;
 
 interface EscalaProps {
   onBack?: () => void;
 }
 
 export default function Escala({ onBack }: EscalaProps) {
+  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas'>('escala');
   const [inputText, setInputText] = useState<string>(SAMPLE_INPUT_TEXT);
   const [includeHeaderInCopy, setIncludeHeaderInCopy] = useState<boolean>(false);
   const [copiedStatus, setCopiedStatus] = useState<boolean>(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [motoristas3C, setMotoristas3C] = useState<Motorista3C[]>([]);
+  const [searchMotorista, setSearchMotorista] = useState<string>('');
+
+  // Modal State for adding/editing driver
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingDriver, setEditingDriver] = useState<Motorista3C | null>(null);
+  const [formData, setFormData] = useState({ nome: '', cpf: '', rg: '' });
 
   // Global default configuration for auto-filling
   const [defaults, setDefaults] = useState({
-    transportador: 'TOMASI',
+    transportador: '3C',
     modeloCavalo: 'TRUCADO',
     modeloCarreta2: 'RODOTREM BAÚ',
     modeloCarreta1: 'BAÚ',
@@ -161,6 +215,31 @@ export default function Escala({ onBack }: EscalaProps) {
       return () => unsubscribe();
     } catch (err) {
       console.error('Erro ao conectar ao checklist:', err);
+    }
+  }, []);
+
+  // Subscribe to Motoristas 3C database & seed if empty
+  useEffect(() => {
+    try {
+      const motoristasRef = ref(rtdb, 'motoristas_3c');
+      const unsubscribe = onValue(motoristasRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const list = Object.entries(data).map(([key, val]: [string, any]) => ({
+            id: key,
+            ...val
+          }));
+          setMotoristas3C(list);
+        } else {
+          // Seed initial 27 drivers if empty in database
+          INITIAL_MOTORISTAS_3C.forEach((item) => {
+            push(motoristasRef, item);
+          });
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.error('Erro ao conectar aos motoristas 3C:', err);
     }
   }, []);
 
@@ -255,6 +334,21 @@ export default function Escala({ onBack }: EscalaProps) {
     };
   };
 
+  // Helper to extract checklist expiry date string for column 31
+  const getChecklistExpiryStr = (plate: string): string => {
+    if (!plate || !plate.trim()) return '';
+    const cleanPlate = plate.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const match = checklistItems.find(item => {
+      const c = (item.cavalo || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      return c === cleanPlate;
+    });
+
+    if (!match) return 'SEM CHECKLIST';
+    if (match.dataVencimento) return match.dataVencimento;
+    if (match.statusOverride) return match.statusOverride;
+    return 'OK';
+  };
+
   // Calculate day of week string in Portuguese
   const getDayOfWeek = (dateStr: string): string => {
     try {
@@ -273,7 +367,7 @@ export default function Escala({ onBack }: EscalaProps) {
     return 'quinta-feira';
   };
 
-  // Get month abbreviation e.g. "SET/26" or "JAN/26"
+  // Get month abbreviation with pipe e.g. "SET | 26" or "OUT | 26"
   const getMonthAbbrev = (dateStr: string): string => {
     try {
       const parts = dateStr.split('/');
@@ -282,15 +376,27 @@ export default function Escala({ onBack }: EscalaProps) {
         const year = parts[2].slice(-2);
         const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
         const mStr = months[month - 1] || 'SET';
-        return `${mStr}/${year}`;
+        return `${mStr} | ${year}`;
       }
     } catch (e) {
       // fallback
     }
-    return 'SET/26';
+    return 'SET | 26';
   };
 
-  // Parse input pasted lines into structured 30-column DispoRow objects
+  // Find 3C Driver matching name
+  const findDriver3C = (driverName: string): Motorista3C | null => {
+    if (!driverName || !driverName.trim()) return null;
+    const clean = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+    const target = clean(driverName);
+
+    return motoristas3C.find(m => {
+      const mNorm = clean(m.nome);
+      return mNorm === target || (target.length > 5 && (mNorm.includes(target) || target.includes(mNorm)));
+    }) || null;
+  };
+
+  // Parse input pasted lines into structured 31-column DispoRow objects
   const parsedRows = useMemo<DispoRow[]>(() => {
     if (!inputText.trim()) return [];
 
@@ -341,30 +447,54 @@ export default function Escala({ onBack }: EscalaProps) {
       const rawPallets = cols[8] || '48';
       const rawTon = cols[9] || '34';
 
-      // Extract Origem and Destino from Trecho (e.g. "SANTA LUZIA X NATAL")
-      let origem = 'SANTA LUZIA / MG';
+      // Always format Santa Luzia as "SANTA LUZIA | MG"
+      let origem = 'SANTA LUZIA | MG';
       let destino = '';
 
       if (trecho) {
         const trechoParts = trecho.split(/\s+X\s+|\s+x\s+|X|x/);
         if (trechoParts.length >= 2) {
-          const rawOrigem = trechoParts[0].trim();
-          origem = rawOrigem.includes('/') ? rawOrigem : `${rawOrigem} / MG`;
+          const rawOrigem = trechoParts[0].trim().toUpperCase();
+          if (rawOrigem.includes('SANTA LUZIA')) {
+            origem = 'SANTA LUZIA | MG';
+          } else if (rawOrigem.includes('|')) {
+            origem = rawOrigem;
+          } else if (rawOrigem.includes('/')) {
+            origem = rawOrigem.replace('/', ' | ');
+          } else {
+            origem = `${rawOrigem} | MG`;
+          }
           destino = trechoParts[1].trim();
         } else {
           destino = trecho;
         }
       }
 
+      // Auto-match CPF and RG from Motoristas 3C database
+      let matchedCPF = '';
+      let matchedRG = '';
+      const matched3CDriver = findDriver3C(motorista);
+      if (matched3CDriver) {
+        matchedCPF = matched3CDriver.cpf || '';
+        matchedRG = matched3CDriver.rg || '';
+      }
+
       // RG / SAP combined
-      let rgSap = codSap;
-      if (matricula && codSap) {
-        rgSap = `${matricula} / ${codSap}`;
-      } else if (matricula) {
-        rgSap = matricula;
+      let rgSap = matchedRG;
+      if (matchedRG && codSap) {
+        rgSap = `${matchedRG} / ${codSap}`;
+      } else if (!matchedRG) {
+        if (matricula && codSap) {
+          rgSap = `${matricula} / ${codSap}`;
+        } else if (matricula) {
+          rgSap = matricula;
+        } else {
+          rgSap = codSap;
+        }
       }
 
       const isTwoBaus = Boolean(bau1 && bau2);
+      const chkExpiry = getChecklistExpiryStr(placaCavalo);
 
       if (isTwoBaus) {
         // Divide Pallets & Ton half-and-half between Baú 1 and Baú 2
@@ -395,7 +525,7 @@ export default function Escala({ onBack }: EscalaProps) {
           modeloCavalo: defaults.modeloCavalo,
           fezContato: defaults.fezContato,
           destino: destino.toUpperCase(),
-          transportador: defaults.transportador,
+          transportador: defaults.transportador, // Always "3C" by default
           cavalo: placaCavalo.toUpperCase(),
           carreta: bau1.toUpperCase(),
           pallets: palletsHalf,
@@ -404,7 +534,7 @@ export default function Escala({ onBack }: EscalaProps) {
           categoria: defaults.categoria, // FROTA
           tecnologia: defaults.tecnologia, // SASCAR
           conductor: motorista.toUpperCase(),
-          cpf: '',
+          cpf: matchedCPF,
           rgSap: rgSap,
           cnh: '',
           telefone: '',
@@ -413,7 +543,8 @@ export default function Escala({ onBack }: EscalaProps) {
           idCarga: '',
           estadoMotorista: defaults.estadoMotorista,
           estadoCavalo: defaults.estadoCavalo,
-          estadoCarreta: defaults.estadoCarreta
+          estadoCarreta: defaults.estadoCarreta,
+          checkList: chkExpiry
         };
 
         // Row 2 for Baú 2
@@ -430,7 +561,7 @@ export default function Escala({ onBack }: EscalaProps) {
           modeloCavalo: defaults.modeloCavalo,
           fezContato: defaults.fezContato,
           destino: destino.toUpperCase(),
-          transportador: defaults.transportador,
+          transportador: defaults.transportador, // Always "3C" by default
           cavalo: placaCavalo.toUpperCase(),
           carreta: bau2.toUpperCase(),
           pallets: palletsHalf,
@@ -439,7 +570,7 @@ export default function Escala({ onBack }: EscalaProps) {
           categoria: defaults.categoria, // FROTA
           tecnologia: defaults.tecnologia, // SASCAR
           conductor: motorista.toUpperCase(),
-          cpf: '',
+          cpf: matchedCPF,
           rgSap: rgSap,
           cnh: '',
           telefone: '',
@@ -448,7 +579,8 @@ export default function Escala({ onBack }: EscalaProps) {
           idCarga: '',
           estadoMotorista: defaults.estadoMotorista,
           estadoCavalo: defaults.estadoCavalo,
-          estadoCarreta: defaults.estadoCarreta
+          estadoCarreta: defaults.estadoCarreta,
+          checkList: chkExpiry
         };
 
         rows.push(row1, row2);
@@ -476,7 +608,7 @@ export default function Escala({ onBack }: EscalaProps) {
           modeloCavalo: defaults.modeloCavalo,
           fezContato: defaults.fezContato,
           destino: destino.toUpperCase(),
-          transportador: defaults.transportador,
+          transportador: defaults.transportador, // Always "3C" by default
           cavalo: placaCavalo.toUpperCase(),
           carreta: singleCarreta.toUpperCase(),
           pallets: rawPallets,
@@ -485,7 +617,7 @@ export default function Escala({ onBack }: EscalaProps) {
           categoria: defaults.categoria, // FROTA
           tecnologia: defaults.tecnologia, // SASCAR
           conductor: motorista.toUpperCase(),
-          cpf: '',
+          cpf: matchedCPF,
           rgSap: rgSap,
           cnh: '',
           telefone: '',
@@ -494,7 +626,8 @@ export default function Escala({ onBack }: EscalaProps) {
           idCarga: '',
           estadoMotorista: defaults.estadoMotorista,
           estadoCavalo: defaults.estadoCavalo,
-          estadoCarreta: defaults.estadoCarreta
+          estadoCarreta: defaults.estadoCarreta,
+          checkList: chkExpiry
         };
 
         rows.push(row);
@@ -502,7 +635,7 @@ export default function Escala({ onBack }: EscalaProps) {
     });
 
     return rows;
-  }, [inputText, defaults]);
+  }, [inputText, defaults, motoristas3C, checklistItems]);
 
   // Editable rows state
   const [editableRows, setEditableRows] = useState<DispoRow[]>([]);
@@ -558,7 +691,8 @@ export default function Escala({ onBack }: EscalaProps) {
         row.idCarga,
         row.estadoMotorista,
         row.estadoCavalo,
-        row.estadoCarreta
+        row.estadoCarreta,
+        row.checkList
       ];
       lines.push(lineValues.join('\t'));
     });
@@ -593,8 +727,8 @@ export default function Escala({ onBack }: EscalaProps) {
   const handleAddRow = () => {
     const newRow: DispoRow = {
       id: `manual-${Date.now()}`,
-      mes: 'SET/26',
-      origem: 'SANTA LUZIA / MG',
+      mes: 'SET | 26',
+      origem: 'SANTA LUZIA | MG',
       dia: 'quinta-feira',
       data: '10/09/2026',
       contatoWhats: defaults.contatoWhats,
@@ -622,7 +756,8 @@ export default function Escala({ onBack }: EscalaProps) {
       idCarga: '',
       estadoMotorista: defaults.estadoMotorista,
       estadoCavalo: defaults.estadoCavalo,
-      estadoCarreta: defaults.estadoCarreta
+      estadoCarreta: defaults.estadoCarreta,
+      checkList: ''
     };
     setEditableRows(prev => [...prev, newRow]);
   };
@@ -631,6 +766,65 @@ export default function Escala({ onBack }: EscalaProps) {
   const handleRemoveRow = (rowId: string) => {
     setEditableRows(prev => prev.filter(r => r.id !== rowId));
   };
+
+  // Motoristas 3C CRUD actions
+  const handleOpenAddMotoristaModal = () => {
+    setEditingDriver(null);
+    setFormData({ nome: '', cpf: '', rg: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditMotoristaModal = (driver: Motorista3C) => {
+    setEditingDriver(driver);
+    setFormData({ nome: driver.nome, cpf: driver.cpf, rg: driver.rg });
+    setIsModalOpen(true);
+  };
+
+  const handleSaveMotorista = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nome.trim()) return;
+
+    try {
+      const motoristasRef = ref(rtdb, 'motoristas_3c');
+      if (editingDriver) {
+        const itemRef = ref(rtdb, `motoristas_3c/${editingDriver.id}`);
+        await update(itemRef, {
+          nome: formData.nome.toUpperCase().trim(),
+          cpf: formData.cpf.trim(),
+          rg: formData.rg.toUpperCase().trim()
+        });
+      } else {
+        await push(motoristasRef, {
+          nome: formData.nome.toUpperCase().trim(),
+          cpf: formData.cpf.trim(),
+          rg: formData.rg.toUpperCase().trim()
+        });
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Erro ao salvar motorista:', err);
+    }
+  };
+
+  const handleDeleteMotorista = async (id: string, name: string) => {
+    if (window.confirm(`Tem certeza que deseja remover o motorista "${name}"?`)) {
+      try {
+        const itemRef = ref(rtdb, `motoristas_3c/${id}`);
+        await remove(itemRef);
+      } catch (err) {
+        console.error('Erro ao remover motorista:', err);
+      }
+    }
+  };
+
+  // Filtered Motoristas 3C list
+  const filteredMotoristas = useMemo(() => {
+    if (!searchMotorista.trim()) return motoristas3C;
+    const q = searchMotorista.toLowerCase();
+    return motoristas3C.filter(
+      m => m.nome.toLowerCase().includes(q) || m.cpf.includes(q) || m.rg.toLowerCase().includes(q)
+    );
+  }, [motoristas3C, searchMotorista]);
 
   // Calculate totals for KPI summary
   const totalPallets = editableRows.reduce((acc, r) => acc + (parseInt(r.pallets, 10) || 0), 0);
@@ -660,789 +854,1035 @@ export default function Escala({ onBack }: EscalaProps) {
               </button>
             )}
             <div>
-              <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                 <span className="px-3 py-1 rounded-lg bg-[#B32025] text-white text-[10px] font-black uppercase tracking-widest border border-red-400/30 flex items-center gap-1.5 shadow-sm">
                   <FileSpreadsheet size={13} />
                   Módulo Escala
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
-                  Desmembramento de Baús & Validação de Checklist
+                  Transportador: 3C
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
+                  SANTA LUZIA | MG
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white uppercase">
-                Conversor de Escala para Disponibilidade do Pátio
+                Conversor de Escala & Base Motoristas 3C
               </h1>
               <p className="text-xs sm:text-sm text-[#dac0a3] mt-1 font-sans">
-                Gera linhas separadas para cada baú (com divisão de paletização e tonelagem meio a meio), valida a validade do checklist dos cavalos e copia apenas os dados (sem cabeçalho).
+                Desmembramento automático de baús, preenchimento de CPF/RG dos motoristas 3C e inclusão de checklist na planilha (31 colunas).
               </p>
             </div>
           </div>
 
           {/* Quick Action Copy Button on Top Header */}
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={handleCopyToClipboard}
-              disabled={editableRows.length === 0}
-              className={cn(
-                "px-6 py-3.5 rounded-2xl font-black uppercase tracking-wider text-xs sm:text-sm shadow-xl transition-all cursor-pointer flex items-center gap-2.5 border-2",
-                copiedStatus
-                  ? "bg-emerald-600 text-white border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-105"
-                  : editableRows.length === 0
-                    ? "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50"
-                    : "bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white border-amber-300 shadow-[0_8px_20px_rgba(179,32,37,0.5)] active:scale-98"
-              )}
-            >
-              {copiedStatus ? (
-                <>
-                  <Check size={18} className="stroke-[3]" />
-                  <span>Dados Copiados! (Somente Conteúdo)</span>
-                </>
-              ) : (
-                <>
-                  <Clipboard size={18} />
-                  <span>Copiar para Planilha de Disponibilidade</span>
-                </>
-              )}
-            </button>
-          </div>
+          {activeTab === 'escala' && (
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={handleCopyToClipboard}
+                disabled={editableRows.length === 0}
+                className={cn(
+                  "px-6 py-3.5 rounded-2xl font-black uppercase tracking-wider text-xs sm:text-sm shadow-xl transition-all cursor-pointer flex items-center gap-2.5 border-2",
+                  copiedStatus
+                    ? "bg-emerald-600 text-white border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-105"
+                    : editableRows.length === 0
+                      ? "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50"
+                      : "bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white border-amber-300 shadow-[0_8px_20px_rgba(179,32,37,0.5)] active:scale-98"
+                )}
+              >
+                {copiedStatus ? (
+                  <>
+                    <Check size={18} className="stroke-[3]" />
+                    <span>Dados Copiados! (Somente Conteúdo)</span>
+                  </>
+                ) : (
+                  <>
+                    <Clipboard size={18} />
+                    <span>Copiar para Planilha de Disponibilidade</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Tab Navigation Navigation Bar */}
+        <div className="flex items-center gap-2 mt-6 pt-4 border-t border-[#8c6039]/30">
+          <button
+            onClick={() => setActiveTab('escala')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              activeTab === 'escala'
+                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
+                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
+            )}
+          >
+            <FileSpreadsheet size={16} />
+            <span>1. Conversor de Escala</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-[#B32025] text-white text-[10px] font-mono font-bold">
+              {editableRows.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('motoristas')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              activeTab === 'motoristas'
+                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
+                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
+            )}
+          >
+            <Users size={16} />
+            <span>2. Motoristas 3C</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[10px] font-mono font-bold">
+              {motoristas3C.length}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Copy Alert Banner */}
-      <AnimatePresence>
-        {copiedStatus && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            className="p-4 bg-emerald-900/90 border-2 border-emerald-400 text-emerald-100 rounded-2xl shadow-xl flex items-center justify-between gap-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-emerald-950 flex items-center justify-center font-black">
-                <Check size={22} className="stroke-[3]" />
-              </div>
+      {/* Main Content Area */}
+      {activeTab === 'escala' ? (
+        <>
+          {/* Copy Alert Banner */}
+          <AnimatePresence>
+            {copiedStatus && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                className="p-4 bg-emerald-900/90 border-2 border-emerald-400 text-emerald-100 rounded-2xl shadow-xl flex items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500 text-emerald-950 flex items-center justify-center font-black">
+                    <Check size={22} className="stroke-[3]" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black uppercase tracking-wide text-white">
+                      Dados copiados em formato tabular ({editableRows.length} linhas sem cabeçalho)!
+                    </h4>
+                    <p className="text-xs text-emerald-200">
+                      Abra a sua planilha de Disponibilidade, selecione a primeira célula da linha de dados (<strong className="text-white">MÊS</strong>) e pressione <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-emerald-400/40 text-white font-mono">Ctrl + V</kbd>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCopiedStatus(false)}
+                  className="text-xs text-emerald-300 hover:text-white font-bold uppercase underline cursor-pointer"
+                >
+                  Fechar
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Main Grid: Left Paste Box & Right Default Configs */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Column: Textarea Paste Area (7 cols) */}
+            <div className="lg:col-span-7 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4 flex flex-col justify-between">
               <div>
-                <h4 className="text-sm font-black uppercase tracking-wide text-white">
-                  Dados copiados em formato tabular ({editableRows.length} linhas sem cabeçalho)!
-                </h4>
-                <p className="text-xs text-emerald-200">
-                  Abra a sua planilha de Disponibilidade, selecione a primeira célula da linha de dados (<strong className="text-white">MÊS</strong> ou a próxima célula vazia) e pressione <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-emerald-400/40 text-white font-mono">Ctrl + V</kbd>.
-                </p>
+                <div className="flex items-center justify-between gap-4 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-[#3A2414] text-[#fdefd1] flex items-center justify-center font-bold">
+                      <Clipboard size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-serif font-black uppercase tracking-tight text-[#2D1A10]">
+                        1. Cole os Dados da Escala
+                      </h3>
+                      <p className="text-xs text-slate-600">
+                        Copie a tabela da imagem/planilha e cole no campo abaixo.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setInputText(SAMPLE_INPUT_TEXT)}
+                      className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      title="Carregar exemplo da imagem anexa"
+                    >
+                      <Sparkles size={14} className="text-[#B32025]" />
+                      <span>Exemplo com Motoristas 3C</span>
+                    </button>
+
+                    <button
+                      onClick={() => setInputText('')}
+                      className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Limpar campo"
+                    >
+                      <Trash2 size={14} />
+                      <span>Limpar</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Instruction Box */}
+                <div className="bg-[#2D1A10]/5 border border-[#3A2414]/15 rounded-2xl p-3 text-xs text-[#2D1A10] space-y-1 mb-3">
+                  <div className="flex items-center gap-2 font-bold text-[#B32025] uppercase text-[11px]">
+                    <Info size={14} />
+                    <span>Regras de Conversão Automática:</span>
+                  </div>
+                  <ul className="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 font-sans">
+                    <li><strong>Transportador</strong>: Preenchido sempre como <strong className="text-amber-900">3C</strong>.</li>
+                    <li><strong>Origem</strong>: Santa Luzia padronizada como <strong className="text-slate-900">SANTA LUZIA | MG</strong>.</li>
+                    <li><strong>Mês</strong>: Formatado como <strong className="text-slate-900">SET | 26</strong>, <strong className="text-slate-900">OUT | 26</strong>, etc.</li>
+                    <li><strong>CPF & RG Auto-preenchidos</strong>: Se o motorista for da base <strong className="text-blue-800">Motoristas 3C</strong>, insere CPF e RG automaticamente.</li>
+                    <li><strong>Checklist</strong>: Inserido como a 31ª coluna na planilha final.</li>
+                  </ul>
+                </div>
+
+                {/* Textarea */}
+                <div className="relative">
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Cole aqui as linhas copiadas da tabela de escala..."
+                    rows={7}
+                    className="w-full bg-white border-2 border-[#3A2414]/30 rounded-2xl p-4 font-mono text-xs text-[#2D1A10] placeholder-slate-400 focus:outline-none focus:border-[#B32025] transition-colors shadow-inner resize-y leading-relaxed"
+                  />
+                  <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white font-mono text-[10px] font-bold">
+                    {editableRows.length} linha(s) final(is)
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between text-xs text-slate-600 border-t border-slate-200">
+                <span>
+                  Status: <strong className="text-emerald-700 font-bold">{editableRows.length} linhas prontas</strong>
+                </span>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold select-none text-[11px] uppercase text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-amber-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeHeaderInCopy}
+                      onChange={(e) => setIncludeHeaderInCopy(e.target.checked)}
+                      className="rounded text-[#B32025] focus:ring-[#B32025] w-4 h-4 cursor-pointer"
+                    />
+                    <span>Incluir linha de cabeçalho ao copiar</span>
+                  </label>
+                </div>
               </div>
             </div>
-            <button
-              onClick={() => setCopiedStatus(false)}
-              className="text-xs text-emerald-300 hover:text-white font-bold uppercase underline cursor-pointer"
-            >
-              Fechar
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Main Grid: Left Paste Box & Right Default Configs */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Column: Textarea Paste Area (7 cols) */}
-        <div className="lg:col-span-7 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between gap-4 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#3A2414] text-[#fdefd1] flex items-center justify-center font-bold">
-                  <Clipboard size={16} />
+            {/* Right Column: Default Operational Configs (5 cols) */}
+            <div className="lg:col-span-5 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-[#B32025] text-white flex items-center justify-center font-bold">
+                  <Sliders size={16} />
                 </div>
                 <div>
                   <h3 className="text-base font-serif font-black uppercase tracking-tight text-[#2D1A10]">
-                    1. Cole os Dados da Escala
+                    2. Padrões da Planilha
                   </h3>
                   <p className="text-xs text-slate-600">
-                    Copie a tabela da imagem/planilha e cole no campo abaixo.
+                    Ajuste as propriedades padrão pré-preenchidas.
                   </p>
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setInputText(SAMPLE_INPUT_TEXT)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                  title="Carregar exemplo da imagem anexa"
-                >
-                  <Sparkles size={14} className="text-[#B32025]" />
-                  <span>Exemplo da Imagem</span>
-                </button>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                {/* Transportador */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Transportador
+                  </label>
+                  <input
+                    type="text"
+                    value={defaults.transportador}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, transportador: e.target.value }))}
+                    className="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-3 py-2 font-black text-amber-950 focus:outline-none focus:border-[#B32025]"
+                  />
+                </div>
 
-                <button
-                  onClick={() => setInputText('')}
-                  className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="Limpar campo"
-                >
-                  <Trash2 size={14} />
-                  <span>Limpar</span>
-                </button>
+                {/* Categoria */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Categoria (FROTA)
+                  </label>
+                  <select
+                    value={defaults.categoria}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, categoria: e.target.value }))}
+                    className="w-full bg-white border-2 border-purple-300 rounded-xl px-3 py-2 font-black text-purple-900 focus:outline-none focus:border-[#B32025]"
+                  >
+                    <option value="FROTA">FROTA</option>
+                    <option value="AGREGADO">AGREGADO</option>
+                    <option value="AUTÔNOMO">AUTÔNOMO</option>
+                  </select>
+                </div>
+
+                {/* Tecnologia */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Tecnologia (SASCAR)
+                  </label>
+                  <select
+                    value={defaults.tecnologia}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, tecnologia: e.target.value }))}
+                    className="w-full bg-white border-2 border-cyan-300 rounded-xl px-3 py-2 font-black text-cyan-900 focus:outline-none focus:border-[#B32025]"
+                  >
+                    <option value="SASCAR">SASCAR</option>
+                    <option value="ONIXSAT">ONIXSAT</option>
+                    <option value="AUTOTRAC">AUTOTRAC</option>
+                  </select>
+                </div>
+
+                {/* Modelo Cavalo */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Modelo Cavalo
+                  </label>
+                  <select
+                    value={defaults.modeloCavalo}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, modeloCavalo: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                  >
+                    <option value="TRUCADO">TRUCADO</option>
+                    <option value="TOCO">TOCO</option>
+                    <option value="TRUCK">TRUCK</option>
+                  </select>
+                </div>
+
+                {/* Modelo Carreta (2 Baús) */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Modelo (2 Baús)
+                  </label>
+                  <select
+                    value={defaults.modeloCarreta2}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, modeloCarreta2: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                  >
+                    <option value="RODOTREM BAÚ">RODOTREM BAÚ</option>
+                    <option value="RODOTREM SIDER">RODOTREM SIDER</option>
+                    <option value="RODOTREM">RODOTREM</option>
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Status
+                  </label>
+                  <input
+                    type="text"
+                    value={defaults.status}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                  />
+                </div>
+
+                {/* Hora Liberado */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Hora Liberado
+                  </label>
+                  <input
+                    type="text"
+                    value={defaults.horaLiberado}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, horaLiberado: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                  />
+                </div>
+
+                {/* Vigência do Cadastro */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                    Vigência Cadastro
+                  </label>
+                  <input
+                    type="text"
+                    value={defaults.vigenciaCadastro}
+                    onChange={(e) => setDefaults(prev => ({ ...prev, vigenciaCadastro: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Instruction Box */}
-            <div className="bg-[#2D1A10]/5 border border-[#3A2414]/15 rounded-2xl p-3 text-xs text-[#2D1A10] space-y-1 mb-3">
-              <div className="flex items-center gap-2 font-bold text-[#B32025] uppercase text-[11px]">
-                <Info size={14} />
-                <span>Regras de Conversão Automática:</span>
-              </div>
-              <ul className="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 font-sans">
-                <li>Linhas com <strong>Baú 1 e Baú 2</strong> são duplicadas em 2 linhas separadas (uma para cada Baú).</li>
-                <li><strong>Paletização</strong> e <strong>Tonelagem</strong> são divididas meio a meio entre os baús (ex: 48 pallets/34 ton &rarr; 24 e 17 para cada).</li>
-                <li><strong>Categoria</strong> fixada em <strong className="text-purple-800">FROTA</strong> e <strong>Tecnologia</strong> fixada em <strong className="text-cyan-800">SASCAR</strong>.</li>
-              </ul>
-            </div>
-
-            {/* Textarea */}
-            <div className="relative">
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Cole aqui as linhas copiadas da tabela de escala..."
-                rows={7}
-                className="w-full bg-white border-2 border-[#3A2414]/30 rounded-2xl p-4 font-mono text-xs text-[#2D1A10] placeholder-slate-400 focus:outline-none focus:border-[#B32025] transition-colors shadow-inner resize-y leading-relaxed"
-              />
-              <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white font-mono text-[10px] font-bold">
-                {editableRows.length} linha(s) final(is)
+              {/* Checklist Legend Box */}
+              <div className="bg-slate-900 text-white rounded-2xl p-3 border border-slate-700 space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 font-black uppercase text-[10px] text-amber-400">
+                  <ShieldAlert size={14} />
+                  <span>Legenda da Validação do Checklist (Cavalo):</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold text-center">
+                  <div className="p-1 rounded bg-rose-600 text-white uppercase shadow-xs">
+                    🔴 Vencido
+                  </div>
+                  <div className="p-1 rounded bg-amber-400 text-amber-950 uppercase shadow-xs">
+                    🟡 Vence em até 2 dias
+                  </div>
+                  <div className="p-1 rounded bg-emerald-600 text-white uppercase shadow-xs">
+                    🟢 Checklist OK
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-between text-xs text-slate-600 border-t border-slate-200">
-            <span>
-              Status: <strong className="text-emerald-700 font-bold">{editableRows.length} linhas prontas</strong>
-            </span>
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 cursor-pointer font-bold select-none text-[11px] uppercase text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-amber-50 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={includeHeaderInCopy}
-                  onChange={(e) => setIncludeHeaderInCopy(e.target.checked)}
-                  className="rounded text-[#B32025] focus:ring-[#B32025] w-4 h-4 cursor-pointer"
-                />
-                <span>Incluir linha de cabeçalho ao copiar</span>
-              </label>
+          {/* Summary KPI Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold shrink-0">
+                <Truck size={20} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Linhas de Carga</span>
+                <span className="text-lg font-black text-[#2D1A10] font-mono">{editableRows.length}</span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                <Package size={20} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Pallets</span>
+                <span className="text-lg font-black text-[#2D1A10] font-mono">{totalPallets}</span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Tonelagem Total</span>
+                <span className="text-lg font-black text-[#2D1A10] font-mono">{totalTon} TON</span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold shrink-0">
+                <MapPin size={20} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Destinos Únicos</span>
+                <span className="text-xs font-bold text-[#2D1A10] truncate max-w-[140px] block" title={uniqueDestinations.join(', ')}>
+                  {uniqueDestinations.length > 0 ? uniqueDestinations.join(', ') : 'Nenhum'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Default Operational Configs (5 cols) */}
-        <div className="lg:col-span-5 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-xl bg-[#B32025] text-white flex items-center justify-center font-bold">
-              <Sliders size={16} />
+          {/* Main Table Preview Section */}
+          <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-4">
+            
+            {/* Table Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
+                  <FileSpreadsheet className="text-[#B32025]" size={20} />
+                  Pré-visualização da Tabela de Disponibilidade (31 Colunas)
+                </h3>
+                <p className="text-xs text-slate-600">
+                  * Ao clicar em <strong className="text-[#B32025]">Copiar</strong>, apenas o conteúdo dos dados é copiado (sem cores e sem cabeçalho por padrão).
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={handleAddRow}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Plus size={15} />
+                  <span>Adicionar Linha</span>
+                </button>
+
+                <button
+                  onClick={handleExportCSV}
+                  disabled={editableRows.length === 0}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  <Download size={15} />
+                  <span>Baixar CSV / Excel</span>
+                </button>
+
+                <button
+                  onClick={handleCopyToClipboard}
+                  disabled={editableRows.length === 0}
+                  className="px-5 py-2.5 rounded-xl bg-[#B32025] hover:bg-[#8c060a] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                >
+                  <Clipboard size={15} />
+                  <span>Copiar Dados ({editableRows.length} linhas)</span>
+                </button>
+              </div>
             </div>
+
+            {/* Scrollable Spreadsheet Table */}
+            {editableRows.length === 0 ? (
+              <div className="py-16 text-center text-slate-400 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+                <FileSpreadsheet size={40} className="mx-auto text-slate-300" />
+                <p className="text-sm font-bold text-slate-600">Nenhuma linha processada.</p>
+                <p className="text-xs text-slate-400">Cole os dados da escala no campo acima para gerar a tabela.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto no-scrollbar border border-slate-200 rounded-2xl shadow-inner max-h-[580px]">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-[#2D1A10] text-[#fdefd1] sticky top-0 z-20 font-mono text-[10px] uppercase tracking-wider">
+                    <tr>
+                      <th className="p-3 border-b border-[#8c6039]/40 text-center w-10">#</th>
+                      {DISPO_COLUMNS.map((col, idx) => (
+                        <th key={idx} className="p-3 border-b border-r border-[#8c6039]/40 whitespace-nowrap">
+                          {col}
+                        </th>
+                      ))}
+                      <th className="p-3 border-b border-[#8c6039]/40 text-center w-12">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white font-sans">
+                    {editableRows.map((row, idx) => {
+                      const chkStatus = getPlateChecklistStatus(row.cavalo);
+
+                      return (
+                        <tr key={row.id} className="hover:bg-amber-50/60 transition-colors group">
+                          <td className="p-2.5 text-center font-mono font-bold text-slate-400 bg-slate-50">
+                            {idx + 1}
+                          </td>
+
+                          {/* 1. MÊS */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-[#2D1A10]">
+                            <input
+                              type="text"
+                              value={row.mes}
+                              onChange={(e) => handleCellEdit(row.id, 'mes', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 2. ORIGEM */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
+                            <input
+                              type="text"
+                              value={row.origem}
+                              onChange={(e) => handleCellEdit(row.id, 'origem', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 3. DIA */}
+                          <td className="p-1.5 border-r border-slate-200 text-slate-700">
+                            <input
+                              type="text"
+                              value={row.dia}
+                              onChange={(e) => handleCellEdit(row.id, 'dia', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-xs"
+                            />
+                          </td>
+
+                          {/* 4. DATA */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-900">
+                            <input
+                              type="text"
+                              value={row.data}
+                              onChange={(e) => handleCellEdit(row.id, 'data', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
+                            />
+                          </td>
+
+                          {/* 5. CONTATO WHATS */}
+                          <td className="p-1.5 border-r border-slate-200 text-center font-bold text-emerald-700">
+                            <input
+                              type="text"
+                              value={row.contatoWhats}
+                              onChange={(e) => handleCellEdit(row.id, 'contatoWhats', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center text-xs"
+                            />
+                          </td>
+
+                          {/* 6. HORA LIBERADO */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-800">
+                            <input
+                              type="text"
+                              value={row.horaLiberado}
+                              onChange={(e) => handleCellEdit(row.id, 'horaLiberado', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
+                            />
+                          </td>
+
+                          {/* 7. STATUS */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-emerald-800">
+                            <input
+                              type="text"
+                              value={row.status}
+                              onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 8. MODELO CARRETA */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
+                            <input
+                              type="text"
+                              value={row.modeloCarreta}
+                              onChange={(e) => handleCellEdit(row.id, 'modeloCarreta', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 9. MODELO CAVALO */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
+                            <input
+                              type="text"
+                              value={row.modeloCavalo}
+                              onChange={(e) => handleCellEdit(row.id, 'modeloCavalo', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 10. FEZ CONTATO? */}
+                          <td className="p-1.5 border-r border-slate-200 text-center font-bold text-emerald-700">
+                            <input
+                              type="text"
+                              value={row.fezContato}
+                              onChange={(e) => handleCellEdit(row.id, 'fezContato', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center text-xs"
+                            />
+                          </td>
+
+                          {/* 11. DESTINO */}
+                          <td className="p-1.5 border-r border-slate-200 font-black text-blue-900 bg-blue-50/40">
+                            <input
+                              type="text"
+                              value={row.destino}
+                              onChange={(e) => handleCellEdit(row.id, 'destino', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-black text-xs text-blue-900"
+                            />
+                          </td>
+
+                          {/* 12. TRANSPORTADOR */}
+                          <td className="p-1.5 border-r border-slate-200 font-black text-amber-950 bg-amber-100/40">
+                            <input
+                              type="text"
+                              value={row.transportador}
+                              onChange={(e) => handleCellEdit(row.id, 'transportador', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-200 focus:outline-none rounded font-black text-xs text-amber-950"
+                            />
+                          </td>
+
+                          {/* 13. CAVALO (Highlighted based on Checklist validity) */}
+                          <td className={cn(
+                            "p-1.5 border-r border-slate-200 transition-colors relative",
+                            chkStatus.borderCell
+                          )}>
+                            <div className="flex items-center justify-between gap-1">
+                              <input
+                                type="text"
+                                value={row.cavalo}
+                                onChange={(e) => handleCellEdit(row.id, 'cavalo', e.target.value)}
+                                className={cn(
+                                  "w-full bg-transparent px-2 py-1 focus:bg-amber-200 focus:outline-none rounded font-mono font-black text-xs uppercase tracking-wider",
+                                  chkStatus.status === 'vencido' && "text-rose-900 font-black",
+                                  chkStatus.status === 'a_vencer' && "text-amber-950 font-black",
+                                  chkStatus.status === 'ok' && "text-emerald-900 font-black"
+                                )}
+                              />
+                              {chkStatus.status !== 'none' && (
+                                <span 
+                                  title={chkStatus.label}
+                                  className={cn(
+                                    "px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest shrink-0 uppercase border shadow-2xs cursor-help select-none",
+                                    chkStatus.badgeClass
+                                  )}
+                                >
+                                  {chkStatus.status === 'vencido' ? 'VENCIDO' : chkStatus.status === 'a_vencer' ? '2 DIAS' : 'OK'}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 14. CARRETA */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-800">
+                            <input
+                              type="text"
+                              value={row.carreta}
+                              onChange={(e) => handleCellEdit(row.id, 'carreta', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs uppercase"
+                            />
+                          </td>
+
+                          {/* 15. Nº PALLETS */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-center text-amber-900 bg-amber-50/40">
+                            <input
+                              type="text"
+                              value={row.pallets}
+                              onChange={(e) => handleCellEdit(row.id, 'pallets', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-center text-xs"
+                            />
+                          </td>
+
+                          {/* 16. TON */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-center text-slate-900">
+                            <input
+                              type="text"
+                              value={row.ton}
+                              onChange={(e) => handleCellEdit(row.id, 'ton', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-center text-xs"
+                            />
+                          </td>
+
+                          {/* 17. M³ */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono text-center text-slate-700">
+                            <input
+                              type="text"
+                              value={row.m3}
+                              onChange={(e) => handleCellEdit(row.id, 'm3', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-center text-xs"
+                            />
+                          </td>
+
+                          {/* 18. CATEGORIA (FROTA) */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-purple-900 bg-purple-50/30">
+                            <input
+                              type="text"
+                              value={row.categoria}
+                              onChange={(e) => handleCellEdit(row.id, 'categoria', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs text-purple-900"
+                            />
+                          </td>
+
+                          {/* 19. TECNOLOGIA (SASCAR) */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-cyan-900 bg-cyan-50/30">
+                            <input
+                              type="text"
+                              value={row.tecnologia}
+                              onChange={(e) => handleCellEdit(row.id, 'tecnologia', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs text-cyan-900"
+                            />
+                          </td>
+
+                          {/* 20. CONDUCTOR */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-[#2D1A10]">
+                            <input
+                              type="text"
+                              value={row.conductor}
+                              onChange={(e) => handleCellEdit(row.id, 'conductor', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs uppercase"
+                            />
+                          </td>
+
+                          {/* 21. CPF */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-blue-900 bg-blue-50/30">
+                            <input
+                              type="text"
+                              value={row.cpf}
+                              onChange={(e) => handleCellEdit(row.id, 'cpf', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 22. RG / SAP */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-blue-900 bg-blue-50/30">
+                            <input
+                              type="text"
+                              value={row.rgSap}
+                              onChange={(e) => handleCellEdit(row.id, 'rgSap', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
+                            />
+                          </td>
+
+                          {/* 23. CNH */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
+                            <input
+                              type="text"
+                              value={row.cnh}
+                              onChange={(e) => handleCellEdit(row.id, 'cnh', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
+                            />
+                          </td>
+
+                          {/* 24. TELEFONE */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
+                            <input
+                              type="text"
+                              value={row.telefone}
+                              onChange={(e) => handleCellEdit(row.id, 'telefone', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
+                            />
+                          </td>
+
+                          {/* 25. VIGÊNCIA DO CADASTRO */}
+                          <td className="p-1.5 border-r border-slate-200 text-slate-800">
+                            <input
+                              type="text"
+                              value={row.vigenciaCadastro}
+                              onChange={(e) => handleCellEdit(row.id, 'vigenciaCadastro', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-xs"
+                            />
+                          </td>
+
+                          {/* 26. CÓDIGO DA TRANSPORTADORA */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-800">
+                            <input
+                              type="text"
+                              value={row.codigoTransportadora}
+                              onChange={(e) => handleCellEdit(row.id, 'codigoTransportadora', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
+                            />
+                          </td>
+
+                          {/* 27. ID DA CARGA */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
+                            <input
+                              type="text"
+                              value={row.idCarga}
+                              onChange={(e) => handleCellEdit(row.id, 'idCarga', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
+                            />
+                          </td>
+
+                          {/* 28. ESTADO MOTORISTA */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
+                            <input
+                              type="text"
+                              value={row.estadoMotorista}
+                              onChange={(e) => handleCellEdit(row.id, 'estadoMotorista', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
+                            />
+                          </td>
+
+                          {/* 29. ESTADO CAVALO */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
+                            <input
+                              type="text"
+                              value={row.estadoCavalo}
+                              onChange={(e) => handleCellEdit(row.id, 'estadoCavalo', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
+                            />
+                          </td>
+
+                          {/* 30. ESTADO CARRETA */}
+                          <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
+                            <input
+                              type="text"
+                              value={row.estadoCarreta}
+                              onChange={(e) => handleCellEdit(row.id, 'estadoCarreta', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
+                            />
+                          </td>
+
+                          {/* 31. CHECK LIST (Vencimento do Checklist da Cavalo) */}
+                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-emerald-900 bg-emerald-50/50">
+                            <input
+                              type="text"
+                              value={row.checkList}
+                              onChange={(e) => handleCellEdit(row.id, 'checkList', e.target.value)}
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs text-emerald-900"
+                            />
+                          </td>
+
+                          {/* Action */}
+                          <td className="p-2 text-center">
+                            <button
+                              onClick={() => handleRemoveRow(row.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer rounded"
+                              title="Remover linha"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        /* Tab 2: Motoristas 3C Database Management */
+        <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
             <div>
-              <h3 className="text-base font-serif font-black uppercase tracking-tight text-[#2D1A10]">
-                2. Padrões da Planilha
-              </h3>
-              <p className="text-xs text-slate-600">
-                Ajuste as propriedades padrão pré-preenchidas.
+              <div className="flex items-center gap-2">
+                <Users className="text-[#B32025]" size={22} />
+                <h3 className="text-xl font-serif font-black uppercase tracking-tight text-[#2D1A10]">
+                  Cadastro de Motoristas 3C
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Sempre que um motorista desta lista aparecer nos dados colados da escala, seu CPF e RG serão inseridos automaticamente.
               </p>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            {/* Categoria */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Categoria (FROTA)
-              </label>
-              <select
-                value={defaults.categoria}
-                onChange={(e) => setDefaults(prev => ({ ...prev, categoria: e.target.value }))}
-                className="w-full bg-white border-2 border-purple-300 rounded-xl px-3 py-2 font-black text-purple-900 focus:outline-none focus:border-[#B32025]"
-              >
-                <option value="FROTA">FROTA</option>
-                <option value="AGREGADO">AGREGADO</option>
-                <option value="AUTÔNOMO">AUTÔNOMO</option>
-              </select>
-            </div>
-
-            {/* Tecnologia */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Tecnologia (SASCAR)
-              </label>
-              <select
-                value={defaults.tecnologia}
-                onChange={(e) => setDefaults(prev => ({ ...prev, tecnologia: e.target.value }))}
-                className="w-full bg-white border-2 border-cyan-300 rounded-xl px-3 py-2 font-black text-cyan-900 focus:outline-none focus:border-[#B32025]"
-              >
-                <option value="SASCAR">SASCAR</option>
-                <option value="ONIXSAT">ONIXSAT</option>
-                <option value="AUTOTRAC">AUTOTRAC</option>
-              </select>
-            </div>
-
-            {/* Transportador */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Transportador
-              </label>
-              <input
-                type="text"
-                value={defaults.transportador}
-                onChange={(e) => setDefaults(prev => ({ ...prev, transportador: e.target.value }))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-              />
-            </div>
-
-            {/* Modelo Cavalo */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Modelo Cavalo
-              </label>
-              <select
-                value={defaults.modeloCavalo}
-                onChange={(e) => setDefaults(prev => ({ ...prev, modeloCavalo: e.target.value }))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-              >
-                <option value="TRUCADO">TRUCADO</option>
-                <option value="TOCO">TOCO</option>
-                <option value="TRUCK">TRUCK</option>
-              </select>
-            </div>
-
-            {/* Modelo Carreta (2 Baús) */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Modelo (2 Baús)
-              </label>
-              <select
-                value={defaults.modeloCarreta2}
-                onChange={(e) => setDefaults(prev => ({ ...prev, modeloCarreta2: e.target.value }))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-              >
-                <option value="RODOTREM BAÚ">RODOTREM BAÚ</option>
-                <option value="RODOTREM SIDER">RODOTREM SIDER</option>
-                <option value="RODOTREM">RODOTREM</option>
-              </select>
-            </div>
-
-            {/* Status */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Status
-              </label>
-              <input
-                type="text"
-                value={defaults.status}
-                onChange={(e) => setDefaults(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-              />
-            </div>
-
-            {/* Hora Liberado */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Hora Liberado
-              </label>
-              <input
-                type="text"
-                value={defaults.horaLiberado}
-                onChange={(e) => setDefaults(prev => ({ ...prev, horaLiberado: e.target.value }))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-              />
-            </div>
-
-            {/* Vigência do Cadastro */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                Vigência Cadastro
-              </label>
-              <input
-                type="text"
-                value={defaults.vigenciaCadastro}
-                onChange={(e) => setDefaults(prev => ({ ...prev, vigenciaCadastro: e.target.value }))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-              />
-            </div>
-          </div>
-
-          {/* Checklist Legend Box */}
-          <div className="bg-slate-900 text-white rounded-2xl p-3 border border-slate-700 space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5 font-black uppercase text-[10px] text-amber-400">
-              <ShieldAlert size={14} />
-              <span>Legenda da Validação do Checklist (Cavalo):</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold text-center">
-              <div className="p-1 rounded bg-rose-600 text-white uppercase shadow-xs">
-                🔴 Vencido
+            <div className="flex items-center gap-3">
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-64">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por Nome, CPF ou RG..."
+                  value={searchMotorista}
+                  onChange={(e) => setSearchMotorista(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#B32025] font-sans"
+                />
               </div>
-              <div className="p-1 rounded bg-amber-400 text-amber-950 uppercase shadow-xs">
-                🟡 Vence em até 2 dias
-              </div>
-              <div className="p-1 rounded bg-emerald-600 text-white uppercase shadow-xs">
-                🟢 Checklist OK
-              </div>
+
+              {/* Add Motorista Button */}
+              <button
+                onClick={handleOpenAddMotoristaModal}
+                className="px-4 py-2 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center gap-2 shrink-0"
+              >
+                <UserPlus size={16} />
+                <span>Novo Motorista</span>
+              </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold shrink-0">
-            <Truck size={20} />
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Linhas de Carga</span>
-            <span className="text-lg font-black text-[#2D1A10] font-mono">{editableRows.length}</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold shrink-0">
-            <Package size={20} />
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Pallets</span>
-            <span className="text-lg font-black text-[#2D1A10] font-mono">{totalPallets}</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
-            <ShieldCheck size={20} />
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Tonelagem Total</span>
-            <span className="text-lg font-black text-[#2D1A10] font-mono">{totalTon} TON</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold shrink-0">
-            <MapPin size={20} />
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Destinos Únicos</span>
-            <span className="text-xs font-bold text-[#2D1A10] truncate max-w-[140px] block" title={uniqueDestinations.join(', ')}>
-              {uniqueDestinations.length > 0 ? uniqueDestinations.join(', ') : 'Nenhum'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Table Preview Section */}
-      <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-4">
-        
-        {/* Table Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-          <div>
-            <h3 className="text-lg font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
-              <FileSpreadsheet className="text-[#B32025]" size={20} />
-               Pré-visualização da Tabela de Disponibilidade (30 Colunas)
-            </h3>
-            <p className="text-xs text-slate-600">
-              * Ao clicar em <strong className="text-[#B32025]">Copiar</strong>, apenas o conteúdo dos dados é copiado (sem cores e sem cabeçalho por padrão).
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleAddRow}
-              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Plus size={15} />
-              <span>Adicionar Linha</span>
-            </button>
-
-            <button
-              onClick={handleExportCSV}
-              disabled={editableRows.length === 0}
-              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
-            >
-              <Download size={15} />
-              <span>Baixar CSV / Excel</span>
-            </button>
-
-            <button
-              onClick={handleCopyToClipboard}
-              disabled={editableRows.length === 0}
-              className="px-5 py-2.5 rounded-xl bg-[#B32025] hover:bg-[#8c060a] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
-            >
-              <Clipboard size={15} />
-              <span>Copiar Dados ({editableRows.length} linhas)</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Spreadsheet Table */}
-        {editableRows.length === 0 ? (
-          <div className="py-16 text-center text-slate-400 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
-            <FileSpreadsheet size={40} className="mx-auto text-slate-300" />
-            <p className="text-sm font-bold text-slate-600">Nenhuma linha processada.</p>
-            <p className="text-xs text-slate-400">Cole os dados da escala no campo acima para gerar a tabela.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto no-scrollbar border border-slate-200 rounded-2xl shadow-inner max-h-[580px]">
+          {/* Motoristas Table */}
+          <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-inner">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-[#2D1A10] text-[#fdefd1] sticky top-0 z-20 font-mono text-[10px] uppercase tracking-wider">
+              <thead className="bg-[#2D1A10] text-[#fdefd1] font-mono text-[10px] uppercase tracking-wider">
                 <tr>
-                  <th className="p-3 border-b border-[#8c6039]/40 text-center w-10">#</th>
-                  {DISPO_COLUMNS.map((col, idx) => (
-                    <th key={idx} className="p-3 border-b border-r border-[#8c6039]/40 whitespace-nowrap">
-                      {col}
-                    </th>
-                  ))}
-                  <th className="p-3 border-b border-[#8c6039]/40 text-center w-12">Ação</th>
+                  <th className="p-3 border-b border-[#8c6039]/40 text-center w-12">#</th>
+                  <th className="p-3 border-b border-[#8c6039]/40">NOME DO MOTORISTA</th>
+                  <th className="p-3 border-b border-[#8c6039]/40">CPF</th>
+                  <th className="p-3 border-b border-[#8c6039]/40">RG / SAP</th>
+                  <th className="p-3 border-b border-[#8c6039]/40 text-center w-28">AÇÕES</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white font-sans">
-                {editableRows.map((row, idx) => {
-                  const chkStatus = getPlateChecklistStatus(row.cavalo);
-
-                  return (
-                    <tr key={row.id} className="hover:bg-amber-50/60 transition-colors group">
-                      <td className="p-2.5 text-center font-mono font-bold text-slate-400 bg-slate-50">
-                        {idx + 1}
+                {filteredMotoristas.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-slate-500 font-bold">
+                      Nenhum motorista encontrado com os termos pesquisados.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMotoristas.map((motorista, index) => (
+                    <tr key={motorista.id} className="hover:bg-amber-50/50 transition-colors">
+                      <td className="p-3 text-center font-mono font-bold text-slate-400 bg-slate-50">
+                        {index + 1}
                       </td>
-
-                      {/* 1. MÊS */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-[#2D1A10]">
-                        <input
-                          type="text"
-                          value={row.mes}
-                          onChange={(e) => handleCellEdit(row.id, 'mes', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
-                        />
+                      <td className="p-3 font-bold text-[#2D1A10] uppercase">
+                        {motorista.nome}
                       </td>
-
-                      {/* 2. ORIGEM */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
-                        <input
-                          type="text"
-                          value={row.origem}
-                          onChange={(e) => handleCellEdit(row.id, 'origem', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                        />
+                      <td className="p-3 font-mono font-bold text-blue-900 bg-blue-50/30">
+                        {motorista.cpf || '-'}
                       </td>
-
-                      {/* 3. DIA */}
-                      <td className="p-1.5 border-r border-slate-200 text-slate-700">
-                        <input
-                          type="text"
-                          value={row.dia}
-                          onChange={(e) => handleCellEdit(row.id, 'dia', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-xs"
-                        />
+                      <td className="p-3 font-mono font-bold text-blue-900 bg-blue-50/30">
+                        {motorista.rg || '-'}
                       </td>
-
-                      {/* 4. DATA */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-900">
-                        <input
-                          type="text"
-                          value={row.data}
-                          onChange={(e) => handleCellEdit(row.id, 'data', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 5. CONTATO WHATS */}
-                      <td className="p-1.5 border-r border-slate-200 text-center font-bold text-emerald-700">
-                        <input
-                          type="text"
-                          value={row.contatoWhats}
-                          onChange={(e) => handleCellEdit(row.id, 'contatoWhats', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center text-xs"
-                        />
-                      </td>
-
-                      {/* 6. HORA LIBERADO */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-slate-800">
-                        <input
-                          type="text"
-                          value={row.horaLiberado}
-                          onChange={(e) => handleCellEdit(row.id, 'horaLiberado', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 7. STATUS */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-emerald-800">
-                        <input
-                          type="text"
-                          value={row.status}
-                          onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                        />
-                      </td>
-
-                      {/* 8. MODELO CARRETA */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-[#B32025]">
-                        <input
-                          type="text"
-                          value={row.modeloCarreta}
-                          onChange={(e) => handleCellEdit(row.id, 'modeloCarreta', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                        />
-                      </td>
-
-                      {/* 9. MODELO CAVALO */}
-                      <td className="p-1.5 border-r border-slate-200 text-slate-700 font-bold">
-                        <input
-                          type="text"
-                          value={row.modeloCavalo}
-                          onChange={(e) => handleCellEdit(row.id, 'modeloCavalo', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                        />
-                      </td>
-
-                      {/* 10. FEZ CONTATO? */}
-                      <td className="p-1.5 border-r border-slate-200 text-center font-bold text-emerald-700">
-                        <input
-                          type="text"
-                          value={row.fezContato}
-                          onChange={(e) => handleCellEdit(row.id, 'fezContato', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center text-xs"
-                        />
-                      </td>
-
-                      {/* 11. DESTINO */}
-                      <td className="p-1.5 border-r border-slate-200 font-black text-blue-900 bg-blue-50/40">
-                        <input
-                          type="text"
-                          value={row.destino}
-                          onChange={(e) => handleCellEdit(row.id, 'destino', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-black text-xs text-blue-900"
-                        />
-                      </td>
-
-                      {/* 12. TRANSPORTADOR */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
-                        <input
-                          type="text"
-                          value={row.transportador}
-                          onChange={(e) => handleCellEdit(row.id, 'transportador', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                        />
-                      </td>
-
-                      {/* 13. CAVALO (Highlighted based on Checklist validity) */}
-                      <td className={cn(
-                        "p-1.5 border-r border-slate-200 transition-colors relative",
-                        chkStatus.borderCell
-                      )}>
-                        <div className="flex items-center justify-between gap-1">
-                          <input
-                            type="text"
-                            value={row.cavalo}
-                            onChange={(e) => handleCellEdit(row.id, 'cavalo', e.target.value)}
-                            className={cn(
-                              "w-full bg-transparent px-2 py-1 focus:bg-amber-200 focus:outline-none rounded font-mono font-black text-xs uppercase tracking-wider",
-                              chkStatus.status === 'vencido' && "text-rose-900 font-black",
-                              chkStatus.status === 'a_vencer' && "text-amber-950 font-black",
-                              chkStatus.status === 'ok' && "text-emerald-900 font-black"
-                            )}
-                          />
-                          {chkStatus.status !== 'none' && (
-                            <span 
-                              title={chkStatus.label}
-                              className={cn(
-                                "px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest shrink-0 uppercase border shadow-2xs cursor-help select-none",
-                                chkStatus.badgeClass
-                              )}
-                            >
-                              {chkStatus.status === 'vencido' ? 'VENCIDO' : chkStatus.status === 'a_vencer' ? '2 DIAS' : 'OK'}
-                            </span>
-                          )}
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenEditMotoristaModal(motorista)}
+                            className="p-1.5 text-slate-600 hover:text-amber-800 bg-slate-100 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer"
+                            title="Editar Dados"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMotorista(motorista.id, motorista.nome)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
+                            title="Excluir Motorista"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </td>
-
-                      {/* 14. CARRETA */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-800">
-                        <input
-                          type="text"
-                          value={row.carreta}
-                          onChange={(e) => handleCellEdit(row.id, 'carreta', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs uppercase"
-                        />
-                      </td>
-
-                      {/* 15. Nº PALLETS */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-center text-amber-900 bg-amber-50/40">
-                        <input
-                          type="text"
-                          value={row.pallets}
-                          onChange={(e) => handleCellEdit(row.id, 'pallets', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-center text-xs"
-                        />
-                      </td>
-
-                      {/* 16. TON */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-center text-slate-900">
-                        <input
-                          type="text"
-                          value={row.ton}
-                          onChange={(e) => handleCellEdit(row.id, 'ton', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-center text-xs"
-                        />
-                      </td>
-
-                      {/* 17. M³ */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-center text-slate-700">
-                        <input
-                          type="text"
-                          value={row.m3}
-                          onChange={(e) => handleCellEdit(row.id, 'm3', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-center text-xs"
-                        />
-                      </td>
-
-                      {/* 18. CATEGORIA (FROTA) */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-purple-900 bg-purple-50/30">
-                        <input
-                          type="text"
-                          value={row.categoria}
-                          onChange={(e) => handleCellEdit(row.id, 'categoria', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs text-purple-900"
-                        />
-                      </td>
-
-                      {/* 19. TECNOLOGIA (SASCAR) */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-cyan-900 bg-cyan-50/30">
-                        <input
-                          type="text"
-                          value={row.tecnologia}
-                          onChange={(e) => handleCellEdit(row.id, 'tecnologia', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs text-cyan-900"
-                        />
-                      </td>
-
-                      {/* 20. CONDUCTOR */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-[#2D1A10]">
-                        <input
-                          type="text"
-                          value={row.conductor}
-                          onChange={(e) => handleCellEdit(row.id, 'conductor', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs uppercase"
-                        />
-                      </td>
-
-                      {/* 21. CPF */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                        <input
-                          type="text"
-                          value={row.cpf}
-                          onChange={(e) => handleCellEdit(row.id, 'cpf', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 22. RG / SAP */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-800">
-                        <input
-                          type="text"
-                          value={row.rgSap}
-                          onChange={(e) => handleCellEdit(row.id, 'rgSap', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
-                        />
-                      </td>
-
-                      {/* 23. CNH */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                        <input
-                          type="text"
-                          value={row.cnh}
-                          onChange={(e) => handleCellEdit(row.id, 'cnh', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 24. TELEFONE */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                        <input
-                          type="text"
-                          value={row.telefone}
-                          onChange={(e) => handleCellEdit(row.id, 'telefone', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 25. VIGÊNCIA DO CADASTRO */}
-                      <td className="p-1.5 border-r border-slate-200 text-slate-800">
-                        <input
-                          type="text"
-                          value={row.vigenciaCadastro}
-                          onChange={(e) => handleCellEdit(row.id, 'vigenciaCadastro', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-xs"
-                        />
-                      </td>
-
-                      {/* 26. CÓDIGO DA TRANSPORTADORA */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-slate-800">
-                        <input
-                          type="text"
-                          value={row.codigoTransportadora}
-                          onChange={(e) => handleCellEdit(row.id, 'codigoTransportadora', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 27. ID DA CARGA */}
-                      <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                        <input
-                          type="text"
-                          value={row.idCarga}
-                          onChange={(e) => handleCellEdit(row.id, 'idCarga', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                        />
-                      </td>
-
-                      {/* 28. ESTADO MOTORISTA */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
-                        <input
-                          type="text"
-                          value={row.estadoMotorista}
-                          onChange={(e) => handleCellEdit(row.id, 'estadoMotorista', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
-                        />
-                      </td>
-
-                      {/* 29. ESTADO CAVALO */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
-                        <input
-                          type="text"
-                          value={row.estadoCavalo}
-                          onChange={(e) => handleCellEdit(row.id, 'estadoCavalo', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
-                        />
-                      </td>
-
-                      {/* 30. ESTADO CARRETA */}
-                      <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
-                        <input
-                          type="text"
-                          value={row.estadoCarreta}
-                          onChange={(e) => handleCellEdit(row.id, 'estadoCarreta', e.target.value)}
-                          className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
-                        />
-                      </td>
-
-                      {/* Action */}
-                      <td className="p-2 text-center">
-                        <button
-                          onClick={() => handleRemoveRow(row.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer rounded"
-                          title="Remover linha"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Modal for Add / Edit Motorista 3C */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border-2 border-[#3A2414] rounded-3xl p-6 shadow-2xl w-full max-w-md space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="flex items-center gap-2">
+                  <Users className="text-[#B32025]" size={20} />
+                  <h3 className="text-lg font-serif font-black uppercase text-[#2D1A10]">
+                    {editingDriver ? 'Editar Motorista 3C' : 'Novo Motorista 3C'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveMotorista} className="space-y-4 text-xs font-sans">
+                <div>
+                  <label className="block text-slate-700 font-bold uppercase mb-1">
+                    Nome Completo do Motorista *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.nome}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                    placeholder="EX: ADILSON DOS REIS SILVA"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-900 focus:outline-none focus:border-[#B32025] uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold uppercase mb-1">
+                    CPF
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cpf}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                    placeholder="EX: 599.612.106.97"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:outline-none focus:border-[#B32025]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold uppercase mb-1">
+                    RG / SAP
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.rg}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rg: e.target.value }))}
+                    placeholder="EX: MG3330429"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:outline-none focus:border-[#B32025] uppercase"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold uppercase tracking-wider cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#B32025] hover:bg-[#8c060a] text-white rounded-xl font-black uppercase tracking-wider cursor-pointer shadow-md flex items-center gap-1.5"
+                  >
+                    <Save size={15} />
+                    <span>Salvar</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
-      </div>
+      </AnimatePresence>
+
     </div>
   );
 }
