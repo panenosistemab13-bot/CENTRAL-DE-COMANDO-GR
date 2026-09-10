@@ -109,6 +109,17 @@ export const DEFAULT_PAGES: PageDefinition[] = [
     badge: 'Gerais'
   },
   { 
+    id: 'escala', 
+    label: 'Escala', 
+    buttonLabel: 'Disponibilidade', 
+    category: 'Operacional & Frota',
+    iconName: 'FileSpreadsheet',
+    description: 'Conversor de escala para formato de planilha de Disponibilidade do Pátio (30 colunas).',
+    isDefaultVisible: true,
+    isRestrictedByDefault: false,
+    badge: 'Conversor'
+  },
+  { 
     id: 'presence', 
     label: 'Lista de Presença', 
     buttonLabel: 'Efetivo', 

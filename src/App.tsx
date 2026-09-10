@@ -51,6 +51,7 @@ import Rotas from './components/Rotas';
 import Patio from './components/Patio';
 import Checklist from './components/Checklist';
 import Controle from './components/Controle';
+import Escala from './components/Escala';
 import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
@@ -65,9 +66,9 @@ import {
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
-import { Globe, Database } from 'lucide-react';
+import { Globe, Database, FileSpreadsheet } from 'lucide-react';
 
-type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle';
+type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'escala';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -79,7 +80,8 @@ const backgroundImages: Record<Tab, string> = {
   rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
   patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
   checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
-  controle: '/images/bg_presence.jpg'
+  controle: '/images/bg_presence.jpg',
+  escala: '/images/bg_patio.jpg'
 };
 
 const allTabs = [
@@ -90,6 +92,7 @@ const allTabs = [
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
   { id: 'controle', label: 'Controle', icon: Sliders },
+  { id: 'escala', label: 'Escala', icon: FileSpreadsheet },
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
   { id: 'rotas', label: 'Rotas', icon: Route },
 ];
@@ -327,6 +330,8 @@ export default function App() {
         return <Checklist />;
       case 'controle':
         return <Controle onBack={() => setActiveTab('menu')} />;
+      case 'escala':
+        return <Escala onBack={() => setActiveTab('menu')} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-20 text-zinc-500">

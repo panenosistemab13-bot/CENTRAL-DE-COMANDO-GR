@@ -17,7 +17,8 @@ import {
   LogOut,
   Package,
   ShieldAlert,
-  Sparkles
+  Sparkles,
+  FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toAbsoluteUrl } from '../utils/url';
@@ -39,6 +40,7 @@ const baseMenuItems: MenuItem[] = [
   { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'text-zinc-300', description: 'Gestão de apólices e seguros integrados.' },
   { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'text-zinc-300', description: 'Criação e agendamento de solicitações de monitoramento.' },
   { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
+  { id: 'escala', label: 'Escala', buttonLabel: 'Disponibilidade', icon: FileSpreadsheet, color: 'text-zinc-300', description: 'Conversor de escala para a planilha de Disponibilidade do Pátio (30 colunas).' },
   { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
   { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
   { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
