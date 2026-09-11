@@ -208,10 +208,36 @@ export const DESTINOS_PADRAO = [
 
 export const normalizeDestino = (raw: string): string => {
   if (!raw || !raw.trim()) return '';
+  const rawUpper = raw.trim().toUpperCase();
   const clean = (s: string) =>
     s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
   const normRaw = clean(raw);
+
+  // Explicit city abbreviation mappings requested
+  if (normRaw === 'MOC' || normRaw === 'MOCMG') return 'MONTES CLAROS';
+  if (normRaw === 'RJO' || normRaw === 'RJOMG' || normRaw === 'RIO') return 'RIO DE JANEIRO';
+  if (normRaw === 'SPO' || normRaw === 'SPOMG' || normRaw === 'GRU') return 'GUARULHOS';
+  if (normRaw === 'BRA' || normRaw === 'BRAMG' || normRaw === 'BSB') return 'BRASÍLIA';
+  if (normRaw === 'LON' || normRaw === 'LONPR') return 'LONDRINA';
+  if (normRaw === 'VIA' || normRaw === 'VIAES') return 'VIANA';
+  if (normRaw === 'CAM' || normRaw === 'CAMSP' || normRaw === 'SUMARE') return 'SUMARÉ';
+  if (normRaw === 'PINH' || normRaw === 'PINHPR') return 'PINHAIS';
+  if (normRaw === 'VESP' || normRaw === 'VESPMG') return 'VESPASIANO';
+
+  // Check token-based abbreviation matches
+  const tokens = rawUpper.split(/[\s\/\-\|\_\,]+/).map(t => clean(t)).filter(Boolean);
+  for (const t of tokens) {
+    if (t === 'MOC') return 'MONTES CLAROS';
+    if (t === 'RJO') return 'RIO DE JANEIRO';
+    if (t === 'SPO') return 'GUARULHOS';
+    if (t === 'BRA') return 'BRASÍLIA';
+    if (t === 'LON') return 'LONDRINA';
+    if (t === 'VIA') return 'VIANA';
+    if (t === 'CAM') return 'SUMARÉ';
+    if (t === 'PINH') return 'PINHAIS';
+    if (t === 'VESP') return 'VESPASIANO';
+  }
 
   // Exact match after accent/punctuation stripping
   for (const dest of DESTINOS_PADRAO) {
@@ -833,7 +859,7 @@ export default function Escala({ onBack }: EscalaProps) {
       row.telefone,
       row.vigenciaCadastro,
       row.codigoTransportadora,
-      row.idCarga,
+      '', // Pendências / ID da Carga obrigatoriamente vazia
       row.estadoMotorista,
       row.estadoCavalo,
       row.estadoCarreta,
