@@ -310,6 +310,15 @@ export default function Escala({ onBack }: EscalaProps) {
   // Toggle for showing/hiding Section 2 (Padrões da Planilha) - Default HIDDEN (oculto)
   const [showDefaults, setShowDefaults] = useState<boolean>(false);
 
+  // Helper to get current time string HH:mm:ss
+  const getCurrentTimeString = (): string => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
   // Global default configuration for auto-filling
   const [defaults, setDefaults] = useState({
     transportador: '3C',
@@ -319,14 +328,14 @@ export default function Escala({ onBack }: EscalaProps) {
     categoria: 'FROTA',
     tecnologia: 'SASCAR',
     status: 'LIBERADO CARREGAMENTO',
-    horaLiberado: '08:00:00',
-    contatoWhats: 'SIM',
+    horaLiberado: getCurrentTimeString(),
+    contatoWhats: 'X',
     fezContato: 'SIM',
     vigenciaCadastro: 'FROTA 3C',
     codigoTransportadora: '1000000496',
-    estadoMotorista: 'MG',
-    estadoCavalo: 'MG',
-    estadoCarreta: 'MG'
+    estadoMotorista: 'FROTA 3C',
+    estadoCavalo: 'FROTA 3C',
+    estadoCarreta: 'FROTA 3C'
   });
 
   // Subscribe to checklist database for status lookup by Cavalo plate
@@ -580,8 +589,11 @@ export default function Escala({ onBack }: EscalaProps) {
       const rawPallets = cols[8] || '48';
       const rawTon = cols[9] || '34';
 
-      // Always format Santa Luzia as "SANTA LUZIA | MG"
-      let origem = 'SANTA LUZIA | MG';
+      // Helper to strip hyphen from carreta plate (e.g. UUH-3A45 -> UUH3A45)
+      const cleanCarretaPlate = (plateStr: string) => (plateStr || '').replace(/-/g, '').toUpperCase().trim();
+
+      // Always format Santa Luzia as "SANTA LUZIA|MG"
+      let origem = 'SANTA LUZIA|MG';
       let destino = '';
 
       if (trecho) {
@@ -589,13 +601,13 @@ export default function Escala({ onBack }: EscalaProps) {
         if (trechoParts.length >= 2) {
           const rawOrigem = trechoParts[0].trim().toUpperCase();
           if (rawOrigem.includes('SANTA LUZIA')) {
-            origem = 'SANTA LUZIA | MG';
+            origem = 'SANTA LUZIA|MG';
           } else if (rawOrigem.includes('|')) {
-            origem = rawOrigem;
+            origem = rawOrigem.replace(/\s*\|\s*/g, '|');
           } else if (rawOrigem.includes('/')) {
-            origem = rawOrigem.replace('/', ' | ');
+            origem = rawOrigem.replace(/\s*\/\s*/g, '|');
           } else {
-            origem = `${rawOrigem} | MG`;
+            origem = `${rawOrigem}|MG`;
           }
           destino = normalizeDestino(trechoParts[1].trim());
         } else {
@@ -612,20 +624,17 @@ export default function Escala({ onBack }: EscalaProps) {
         matchedRG = matched3CDriver.rg || '';
       }
 
-      // RG / SAP combined
-      let rgSap = matchedRG;
+      // RG / SAP combined (SKIP MATRICULA column)
+      let rgSap = '';
       if (matchedRG && codSap) {
         rgSap = `${matchedRG} / ${codSap}`;
-      } else if (!matchedRG) {
-        if (matricula && codSap) {
-          rgSap = `${matricula} / ${codSap}`;
-        } else if (matricula) {
-          rgSap = matricula;
-        } else {
-          rgSap = codSap;
-        }
+      } else if (matchedRG) {
+        rgSap = matchedRG;
+      } else if (codSap) {
+        rgSap = codSap;
       }
 
+      const currentTime = getCurrentTimeString();
       const isTwoBaus = Boolean(bau1 && bau2);
       const chkExpiry = getChecklistExpiryStr(placaCavalo);
 
@@ -651,8 +660,8 @@ export default function Escala({ onBack }: EscalaProps) {
           origem: origem.toUpperCase(),
           dia: getDayOfWeek(dataSaida),
           data: dataSaida,
-          contatoWhats: defaults.contatoWhats,
-          horaLiberado: defaults.horaLiberado,
+          contatoWhats: 'X',
+          horaLiberado: currentTime,
           status: defaults.status,
           modeloCarreta: defaults.modeloCarreta2, // RODOTREM BAÚ
           modeloCavalo: defaults.modeloCavalo,
@@ -660,7 +669,7 @@ export default function Escala({ onBack }: EscalaProps) {
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: placaCavalo.toUpperCase(),
-          carreta: bau1.toUpperCase(),
+          carreta: cleanCarretaPlate(bau1),
           pallets: palletsHalf,
           ton: tonHalf,
           m3: m3Half,
@@ -674,9 +683,9 @@ export default function Escala({ onBack }: EscalaProps) {
           vigenciaCadastro: defaults.vigenciaCadastro,
           codigoTransportadora: defaults.codigoTransportadora,
           idCarga: '',
-          estadoMotorista: defaults.estadoMotorista,
-          estadoCavalo: defaults.estadoCavalo,
-          estadoCarreta: defaults.estadoCarreta,
+          estadoMotorista: 'FROTA 3C',
+          estadoCavalo: 'FROTA 3C',
+          estadoCarreta: 'FROTA 3C',
           checkList: chkExpiry
         };
 
@@ -687,8 +696,8 @@ export default function Escala({ onBack }: EscalaProps) {
           origem: origem.toUpperCase(),
           dia: getDayOfWeek(dataSaida),
           data: dataSaida,
-          contatoWhats: defaults.contatoWhats,
-          horaLiberado: defaults.horaLiberado,
+          contatoWhats: 'X',
+          horaLiberado: currentTime,
           status: defaults.status,
           modeloCarreta: defaults.modeloCarreta2, // RODOTREM BAÚ
           modeloCavalo: defaults.modeloCavalo,
@@ -696,7 +705,7 @@ export default function Escala({ onBack }: EscalaProps) {
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: placaCavalo.toUpperCase(),
-          carreta: bau2.toUpperCase(),
+          carreta: cleanCarretaPlate(bau2),
           pallets: palletsHalf,
           ton: tonHalf,
           m3: m3Half,
@@ -710,9 +719,9 @@ export default function Escala({ onBack }: EscalaProps) {
           vigenciaCadastro: defaults.vigenciaCadastro,
           codigoTransportadora: defaults.codigoTransportadora,
           idCarga: '',
-          estadoMotorista: defaults.estadoMotorista,
-          estadoCavalo: defaults.estadoCavalo,
-          estadoCarreta: defaults.estadoCarreta,
+          estadoMotorista: 'FROTA 3C',
+          estadoCavalo: 'FROTA 3C',
+          estadoCarreta: 'FROTA 3C',
           checkList: chkExpiry
         };
 
@@ -734,8 +743,8 @@ export default function Escala({ onBack }: EscalaProps) {
           origem: origem.toUpperCase(),
           dia: getDayOfWeek(dataSaida),
           data: dataSaida,
-          contatoWhats: defaults.contatoWhats,
-          horaLiberado: defaults.horaLiberado,
+          contatoWhats: 'X',
+          horaLiberado: currentTime,
           status: defaults.status,
           modeloCarreta: defaults.modeloCarreta1, // BAÚ
           modeloCavalo: defaults.modeloCavalo,
@@ -743,7 +752,7 @@ export default function Escala({ onBack }: EscalaProps) {
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: placaCavalo.toUpperCase(),
-          carreta: singleCarreta.toUpperCase(),
+          carreta: cleanCarretaPlate(singleCarreta),
           pallets: rawPallets,
           ton: rawTon,
           m3: m3,
@@ -757,9 +766,9 @@ export default function Escala({ onBack }: EscalaProps) {
           vigenciaCadastro: defaults.vigenciaCadastro,
           codigoTransportadora: defaults.codigoTransportadora,
           idCarga: '',
-          estadoMotorista: defaults.estadoMotorista,
-          estadoCavalo: defaults.estadoCavalo,
-          estadoCarreta: defaults.estadoCarreta,
+          estadoMotorista: 'FROTA 3C',
+          estadoCavalo: 'FROTA 3C',
+          estadoCarreta: 'FROTA 3C',
           checkList: chkExpiry
         };
 
@@ -931,11 +940,11 @@ export default function Escala({ onBack }: EscalaProps) {
     const newRow: DispoRow = {
       id: `manual-${Date.now()}`,
       mes: 'SET | 26',
-      origem: 'SANTA LUZIA | MG',
+      origem: 'SANTA LUZIA|MG',
       dia: 'quinta-feira',
       data: '10/09/2026',
-      contatoWhats: defaults.contatoWhats,
-      horaLiberado: defaults.horaLiberado,
+      contatoWhats: 'X',
+      horaLiberado: getCurrentTimeString(),
       status: defaults.status,
       modeloCarreta: defaults.modeloCarreta2,
       modeloCavalo: defaults.modeloCavalo,
@@ -957,9 +966,9 @@ export default function Escala({ onBack }: EscalaProps) {
       vigenciaCadastro: defaults.vigenciaCadastro,
       codigoTransportadora: defaults.codigoTransportadora,
       idCarga: '',
-      estadoMotorista: defaults.estadoMotorista,
-      estadoCavalo: defaults.estadoCavalo,
-      estadoCarreta: defaults.estadoCarreta,
+      estadoMotorista: 'FROTA 3C',
+      estadoCavalo: 'FROTA 3C',
+      estadoCarreta: 'FROTA 3C',
       checkList: ''
     };
     setEditableRows(prev => [...prev, newRow]);
@@ -1066,7 +1075,7 @@ export default function Escala({ onBack }: EscalaProps) {
                   Transportador: 3C
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
-                  SANTA LUZIA | MG
+                  SANTA LUZIA|MG
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white uppercase">
