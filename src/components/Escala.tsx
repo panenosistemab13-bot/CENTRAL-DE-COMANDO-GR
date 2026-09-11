@@ -28,7 +28,9 @@ import {
   Edit2,
   Save,
   X,
-  UserPlus
+  UserPlus,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import FileSaver from 'file-saver';
@@ -318,7 +320,7 @@ interface EscalaProps {
 
 export default function Escala({ onBack }: EscalaProps) {
   const [activeTab, setActiveTab] = useState<'escala' | 'motoristas'>('escala');
-  const [inputText, setInputText] = useState<string>(SAMPLE_INPUT_TEXT);
+  const [inputText, setInputText] = useState<string>('');
   const [includeHeaderInCopy, setIncludeHeaderInCopy] = useState<boolean>(false);
   const [copiedStatus, setCopiedStatus] = useState<boolean>(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
@@ -335,6 +337,9 @@ export default function Escala({ onBack }: EscalaProps) {
 
   // Toggle for showing/hiding Section 2 (Padrões da Planilha) - Default HIDDEN (oculto)
   const [showDefaults, setShowDefaults] = useState<boolean>(false);
+
+  // Toggle for showing/hiding Table Preview (31 Colunas) - Default HIDDEN (oculto)
+  const [showTablePreview, setShowTablePreview] = useState<boolean>(false);
 
   // Helper to get current time string HH:mm:ss
   const getCurrentTimeString = (): string => {
@@ -1113,7 +1118,7 @@ export default function Escala({ onBack }: EscalaProps) {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white uppercase">
-                Conversor de Escala & Base Motoristas 3C
+                Escala 3C
               </h1>
               <p className="text-xs sm:text-sm text-[#dac0a3] mt-1 font-sans">
                 Desmembramento automático de baús, preenchimento de CPF/RG dos motoristas 3C e inclusão de checklist na planilha (31 colunas).
@@ -1288,15 +1293,6 @@ export default function Escala({ onBack }: EscalaProps) {
                   {/* Action buttons */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setShowDefaults(!showDefaults)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
-                      title={showDefaults ? "Ocultar Padrões da Planilha" : "Exibir Padrões da Planilha"}
-                    >
-                      <Sliders size={14} />
-                      <span>{showDefaults ? "Ocultar Padrões" : "Padrões da Planilha"}</span>
-                    </button>
-
-                    <button
                       onClick={() => setInputText(SAMPLE_INPUT_TEXT)}
                       className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                       title="Carregar exemplo da imagem anexa"
@@ -1314,21 +1310,6 @@ export default function Escala({ onBack }: EscalaProps) {
                       <span>Limpar</span>
                     </button>
                   </div>
-                </div>
-
-                {/* Instruction Box */}
-                <div className="bg-[#2D1A10]/5 border border-[#3A2414]/15 rounded-2xl p-3 text-xs text-[#2D1A10] space-y-1 mb-3">
-                  <div className="flex items-center gap-2 font-bold text-[#B32025] uppercase text-[11px]">
-                    <Info size={14} />
-                    <span>Regras de Conversão Automática:</span>
-                  </div>
-                  <ul className="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 font-sans">
-                    <li><strong>Transportador</strong>: Preenchido sempre como <strong className="text-amber-900">3C</strong>.</li>
-                    <li><strong>Origem</strong>: Santa Luzia padronizada como <strong className="text-slate-900">SANTA LUZIA | MG</strong>.</li>
-                    <li><strong>Mês</strong>: Formatado como <strong className="text-slate-900">SET | 26</strong>, <strong className="text-slate-900">OUT | 26</strong>, etc.</li>
-                    <li><strong>CPF & RG Auto-preenchidos</strong>: Se o motorista for da base <strong className="text-blue-800">Motoristas 3C</strong>, insere CPF e RG automaticamente.</li>
-                    <li><strong>Checklist</strong>: Inserido como a 31ª coluna na planilha final.</li>
-                  </ul>
                 </div>
 
                 {/* Textarea */}
@@ -1521,130 +1502,118 @@ export default function Escala({ onBack }: EscalaProps) {
             )}
           </div>
 
-          {/* Summary KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold shrink-0">
-                <Truck size={20} />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Linhas de Carga</span>
-                <span className="text-lg font-black text-[#2D1A10] font-mono">{editableRows.length}</span>
-              </div>
-            </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold shrink-0">
-                <Package size={20} />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Pallets</span>
-                <span className="text-lg font-black text-[#2D1A10] font-mono">{totalPallets}</span>
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
-                <ShieldCheck size={20} />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Tonelagem Total</span>
-                <span className="text-lg font-black text-[#2D1A10] font-mono">{totalTon} TON</span>
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold shrink-0">
-                <MapPin size={20} />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Destinos Únicos</span>
-                <span className="text-xs font-bold text-[#2D1A10] truncate max-w-[140px] block" title={uniqueDestinations.join(', ')}>
-                  {uniqueDestinations.length > 0 ? uniqueDestinations.join(', ') : 'Nenhum'}
-                </span>
-              </div>
-            </div>
-          </div>
 
           {/* Conjuntos (Veículos / Viagens) Section - Copiar por Conjunto */}
           {conjuntosList.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-950/10 via-amber-900/5 to-amber-950/10 border-2 border-amber-800/30 rounded-3xl p-5 shadow-sm space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-amber-800/20">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-900 text-amber-100 flex items-center justify-center font-bold">
-                    <Truck size={18} />
+            <div className="bg-gradient-to-r from-amber-950/10 via-amber-900/5 to-amber-950/10 border-2 border-amber-800/30 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+              {/* Section Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-800/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-900 text-amber-100 flex items-center justify-center font-bold shadow-md shrink-0">
+                    <Truck size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
-                      Copiar por Conjunto Individual ({conjuntosList.length} Conjunto{conjuntosList.length > 1 ? 's' : ''})
+                    <h3 className="text-base font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
+                      Copiar por Conjunto Individual ({conjuntosList.length} {conjuntosList.length === 1 ? 'Conjunto' : 'Conjuntos'})
                     </h3>
-                    <p className="text-[11px] text-slate-600">
-                      Clique em "Copiar Conjunto" para copiar apenas as linhas referentes a um motorista/veículo específico.
+                    <p className="text-xs text-slate-600">
+                      Lista de veículos e motoristas agrupados. Clique em "Copiar Conjunto" para copiar individualmente.
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-amber-200/80 text-amber-950 border border-amber-300 self-start sm:self-auto">
-                  {editableRows.length} linhas em {conjuntosList.length} conjunto(s)
+                <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-amber-200/90 text-amber-950 border border-amber-300/80 shadow-2xs self-start sm:self-auto shrink-0">
+                  {editableRows.length} {editableRows.length === 1 ? 'linha' : 'linhas'} em {conjuntosList.length} {conjuntosList.length === 1 ? 'conjunto' : 'conjuntos'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Vertical List of Conjuntos */}
+              <div className="flex flex-col gap-3">
                 {conjuntosList.map((conjunto, cIdx) => {
                   const isMultiRow = conjunto.rows.length > 1;
                   const firstRowId = conjunto.rows[0]?.id;
                   const isCopied = copiedRowId === firstRowId;
 
+                  const carretasArr = Array.from(new Set(conjunto.rows.map(r => r.carreta).filter(Boolean)));
+                  const carretasStr = carretasArr.length > 0 ? carretasArr.join(' + ') : 'SEM CARRETA';
+                  const checkListStr = conjunto.rows.map(r => r.checkList).filter(Boolean).join(' / ') || 'N/A';
+
                   return (
                     <div
                       key={conjunto.id}
-                      className="bg-white border-2 border-slate-200 hover:border-amber-500 rounded-2xl p-3.5 shadow-xs transition-all flex flex-col justify-between gap-3 group hover:shadow-md"
+                      className="bg-white border-2 border-slate-200/90 hover:border-amber-600/60 rounded-2xl p-4 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
                     >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-mono font-black uppercase text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                      {/* Left Info Column */}
+                      <div className="space-y-2.5 flex-1 min-w-0">
+                        {/* Badges row */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono font-black uppercase text-amber-900 bg-amber-100/90 border border-amber-200/80 px-2.5 py-0.5 rounded-lg shadow-2xs">
                             Conjunto #{cIdx + 1}
                           </span>
                           <span className={cn(
-                            "text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase border",
+                            "text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg uppercase border shadow-2xs",
                             isMultiRow 
                               ? "bg-purple-100 text-purple-900 border-purple-300 font-black" 
                               : "bg-blue-50 text-blue-800 border-blue-200"
                           )}>
-                            {isMultiRow ? `2 Linhas (Rodotrem)` : `1 Linha (Baú Único)`}
+                            {isMultiRow ? `Rodotrem (2 Linhas)` : `Baú Único (1 Linha)`}
                           </span>
+                          {conjunto.rows[0]?.data && (
+                            <span className="text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-lg">
+                              Data: {conjunto.rows[0].data}
+                            </span>
+                          )}
                         </div>
 
-                        <h4 className="text-xs font-black uppercase text-[#2D1A10] line-clamp-1 mt-1" title={conjunto.conductor}>
-                          {conjunto.conductor}
-                        </h4>
+                        {/* Driver Name Header */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center shrink-0">
+                            <User size={14} className="stroke-[2.5]" />
+                          </div>
+                          <h4 className="text-sm font-black uppercase text-[#2D1A10] truncate" title={conjunto.conductor}>
+                            {conjunto.conductor}
+                          </h4>
+                        </div>
 
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-700 font-mono font-bold flex-wrap">
-                          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                            Cavalo: {conjunto.cavalo}
+                        {/* Vehicle & Route Badges */}
+                        <div className="flex items-center gap-2 text-xs font-mono font-bold flex-wrap">
+                          <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 flex items-center gap-1.5 shadow-2xs">
+                            <span className="text-slate-500 font-normal">Cavalo:</span> {conjunto.cavalo}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
-                            Destino: {conjunto.destino}
+                          <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-900 border border-slate-200 flex items-center gap-1.5 shadow-2xs">
+                            <span className="text-slate-500 font-normal">Carreta:</span> {carretasStr}
                           </span>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 flex items-center gap-1.5 shadow-2xs">
+                            <MapPin size={13} className="text-emerald-700" />
+                            <span className="text-emerald-800/80 font-normal">Destino:</span> {conjunto.destino}
+                          </span>
+                          {checkListStr !== 'N/A' && (
+                            <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 flex items-center gap-1.5 shadow-2xs">
+                              <ShieldCheck size={13} className="text-blue-700" />
+                              <span className="text-blue-800/80 font-normal">Check List:</span> {checkListStr}
+                            </span>
+                          )}
                         </div>
                       </div>
 
+                      {/* Right Action Button */}
                       <button
                         onClick={() => handleCopyConjunto(conjunto.rows, conjunto.conductor)}
                         className={cn(
-                          "w-full py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border",
+                          "w-full md:w-auto px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs border shrink-0",
                           isCopied
-                            ? "bg-emerald-600 text-white border-emerald-500 shadow-md scale-102"
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-md scale-102"
                             : "bg-[#2D1A10] hover:bg-[#B32025] text-[#fdefd1] hover:text-white border-[#3d2417] hover:border-red-400 active:scale-98"
                         )}
                       >
                         {isCopied ? (
                           <>
-                            <Check size={14} className="stroke-[3]" />
+                            <Check size={16} className="stroke-[3]" />
                             <span>Copiado!</span>
                           </>
                         ) : (
                           <>
-                            <Copy size={14} />
+                            <Copy size={16} />
                             <span>Copiar Conjunto ({conjunto.rows.length} {conjunto.rows.length === 1 ? 'Linha' : 'Linhas'})</span>
                           </>
                         )}
@@ -1672,6 +1641,14 @@ export default function Escala({ onBack }: EscalaProps) {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setShowTablePreview(prev => !prev)}
+                  className="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                >
+                  {showTablePreview ? <EyeOff size={15} /> : <Eye size={15} />}
+                  <span>{showTablePreview ? 'Ocultar Tabela' : 'Mostrar Tabela (31 Colunas)'}</span>
+                </button>
+
                 <button
                   onClick={handleAddRow}
                   className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1701,14 +1678,15 @@ export default function Escala({ onBack }: EscalaProps) {
             </div>
 
             {/* Scrollable Spreadsheet Table */}
-            {editableRows.length === 0 ? (
-              <div className="py-16 text-center text-slate-400 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
-                <FileSpreadsheet size={40} className="mx-auto text-slate-300" />
-                <p className="text-sm font-bold text-slate-600">Nenhuma linha processada.</p>
-                <p className="text-xs text-slate-400">Cole os dados da escala no campo acima para gerar a tabela.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto no-scrollbar border border-slate-200 rounded-2xl shadow-inner max-h-[580px]">
+            {showTablePreview && (
+              editableRows.length === 0 ? (
+                <div className="py-16 text-center text-slate-400 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+                  <FileSpreadsheet size={40} className="mx-auto text-slate-300" />
+                  <p className="text-sm font-bold text-slate-600">Nenhuma linha processada.</p>
+                  <p className="text-xs text-slate-400">Cole os dados da escala no campo acima para gerar a tabela.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto no-scrollbar border border-slate-200 rounded-2xl shadow-inner max-h-[580px]">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead className="bg-[#2D1A10] text-[#fdefd1] sticky top-0 z-20 font-mono text-[10px] uppercase tracking-wider">
                     <tr>
@@ -2103,7 +2081,7 @@ export default function Escala({ onBack }: EscalaProps) {
                   </tbody>
                 </table>
               </div>
-            )}
+            ))}
           </div>
         </>
       ) : (
