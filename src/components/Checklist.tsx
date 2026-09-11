@@ -106,10 +106,10 @@ export default function Checklist() {
   });
 
   const [genData, setGenData] = useState({
-    greeting: 'Bom dia',
-    cavalo: '',
-    carretas: '',
-    contato: '(31) 984817047'
+    greeting: 'Boa noite',
+    cavalo: 'SAS2D02',
+    carretas: 'POG2095 / POR5E42',
+    contato: '(31) 98481-7047'
   });
   const [genCopied, setGenCopied] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
@@ -413,28 +413,28 @@ export default function Checklist() {
 
   const handleCopyGenerator = () => {
     const htmlContent = `
-      <div style="font-family: Arial, sans-serif; color: #1e293b; font-size: 11pt; padding: 20px;">
-        <p style="margin: 0 0 16px 0;">${genData.greeting},</p>
-        <p style="margin: 0 0 16px 0;">Solicito o <strong>checklist</strong> para os conjuntos abaixo:</p>
-        <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin-bottom: 20px;">
+      <div style="font-family: Arial, sans-serif; color: #000000; font-size: 11pt; line-height: 1.5; padding: 10px;">
+        <p style="margin: 0 0 16px 0; font-family: Georgia, serif; font-weight: bold; font-size: 13pt; color: #000000;">${genData.greeting},</p>
+        <p style="margin: 0 0 16px 0; font-size: 11pt; color: #000000;">Solicito o <span style="color: #c00000; font-weight: bold;">checklist</span> para os conjuntos abaixo:</p>
+        <table style="border-collapse: collapse; min-width: 320px; border: 1px solid #000000; margin: 16px 0 20px 0;">
           <thead>
-            <tr style="background-color: #0F2D59; color: #ffffff;">
-              <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center;">VEÍCULO CAVALO</th>
-              <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center;">CARRETAS DO CONJUNTO</th>
+            <tr style="background-color: #032b56; color: #ffffff;">
+              <th style="padding: 8px 16px; border: 1px solid #000000; text-align: center; font-weight: bold; font-size: 10pt; letter-spacing: 0.5px;">CAVALO</th>
+              <th style="padding: 8px 16px; border: 1px solid #000000; text-align: center; font-weight: bold; font-size: 10pt; letter-spacing: 0.5px;">CARRETAS</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; font-family: monospace;">${genData.cavalo || "—"}</td>
-              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; font-family: monospace;">${genData.carretas || "—"}</td>
+            <tr style="background-color: #ffffff;">
+              <td style="padding: 8px 16px; border: 1px solid #000000; text-align: center; font-weight: bold; font-family: Arial, monospace; font-size: 11pt; color: #000000;">${genData.cavalo || "—"}</td>
+              <td style="padding: 8px 16px; border: 1px solid #000000; text-align: center; font-weight: bold; font-family: Arial, monospace; font-size: 11pt; color: #000000;">${genData.carretas || "—"}</td>
             </tr>
           </tbody>
         </table>
-        <p style="margin: 0 0 8px 0;">Canal de Atendimento: <strong>${genData.contato}</strong></p>
-        <p style="margin: 20px 0 0 0;">Atenciosamente,<br/><strong>Jefferson Augusto</strong> - Agente de Risco</p>
+        <p style="margin: 0 0 20px 0; font-size: 11pt; color: #000000;">Contatos: ${genData.contato}</p>
+        <p style="margin: 0; font-size: 11pt; color: #000000;">Att,</p>
       </div>
     `;
-    const textContent = `*${genData.greeting}*,\n\nSolicito o *checklist* para os conjuntos abaixo:\n\n*VEÍCULO CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS DO CONJUNTO*: ${genData.carretas || "—"}\n\n*Canal de Atendimento*: ${genData.contato}\n\nAtenciosamente,\n*Jefferson Augusto* - Agente de Risco`;
+    const textContent = `${genData.greeting},\n\nSolicito o *checklist* para os conjuntos abaixo:\n\n*CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS*: ${genData.carretas || "—"}\n\nContatos: ${genData.contato}\n\nAtt,`;
     try {
       const typeHtml = "text/html";
       const typeText = "text/plain";
@@ -708,40 +708,43 @@ export default function Checklist() {
             </div>
 
             {/* Preview Document Card */}
-            <div className="lg:col-span-2 flex items-center justify-center bg-white border border-slate-200 p-8 rounded-2xl shadow-xs">
-              <div className="w-full max-w-xl bg-[#FAF8F5] p-8 rounded-2xl border border-[#3A2414]/15 shadow-sm text-slate-800">
-                <p className="mb-4 text-base font-bold text-[#2B180D] font-heading">{genData.greeting},</p>
-                <p className="mb-6 text-sm text-slate-700 font-medium">
-                  Solicito o <strong className="font-extrabold text-[#B32025]">checklist</strong> para os conjuntos abaixo:
+            <div className="lg:col-span-2 flex items-center justify-center bg-slate-100 border border-slate-200 p-6 sm:p-10 rounded-2xl shadow-inner">
+              <div className="w-full max-w-xl bg-white p-8 sm:p-10 rounded-xl border border-slate-300 shadow-md text-slate-900 font-sans">
+                
+                {/* Greeting */}
+                <p className="mb-5 text-lg font-serif font-bold text-slate-900 tracking-tight">
+                  {genData.greeting},
+                </p>
+
+                {/* Body Paragraph */}
+                <p className="mb-6 text-sm text-slate-800 font-medium">
+                  Solicito o <strong className="font-bold text-[#c00000]">checklist</strong> para os conjuntos abaixo:
                 </p>
                 
-                <table className="w-full border-collapse border border-slate-300 text-center mb-6 overflow-hidden rounded-lg">
+                {/* Table matching attached image */}
+                <table className="w-full border-collapse border border-black text-center mb-6 overflow-hidden">
                   <thead>
-                    <tr className="bg-[#2B180D] text-white text-xs uppercase font-extrabold tracking-wider font-heading">
-                      <th className="p-3 border border-[#3A2414]">Veículo Cavalo</th>
-                      <th className="p-3 border border-[#3A2414]">Carretas do Conjunto</th>
+                    <tr className="bg-[#032B56] text-white text-xs uppercase font-extrabold tracking-wider">
+                      <th className="p-2.5 border border-black w-1/2">CAVALO</th>
+                      <th className="p-2.5 border border-black w-1/2">CARRETAS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="bg-white font-mono font-bold text-[#2B180D]">
-                      <td className="p-3.5 border border-slate-300 uppercase">{genData.cavalo || "—"}</td>
-                      <td className="p-3.5 border border-slate-300 uppercase">{genData.carretas || "—"}</td>
+                    <tr className="bg-white font-mono font-bold text-slate-900 text-sm">
+                      <td className="p-3 border border-black uppercase">{genData.cavalo || "—"}</td>
+                      <td className="p-3 border border-black uppercase">{genData.carretas || "—"}</td>
                     </tr>
                   </tbody>
                 </table>
 
-                <div className="bg-[#B32025]/10 p-3 rounded-xl border border-[#B32025]/20 text-[#2B180D] font-mono text-xs mb-8 font-bold">
-                  Canal de Atendimento: {genData.contato}
+                {/* Contact and Sign-off */}
+                <div className="space-y-4 text-sm text-slate-900">
+                  <p className="font-normal">
+                    Contatos: <span className="font-bold">{genData.contato}</span>
+                  </p>
+                  <p className="pt-2 font-normal">Att,</p>
                 </div>
 
-                <div className="border-t border-slate-200 pt-6 flex justify-between items-end">
-                  <p className="text-slate-500 text-xs font-medium">Atenciosamente,</p>
-                  <div className="text-center mr-2">
-                    <p className="font-serif italic text-2xl text-[#2B180D] font-bold">Jefferson Augusto</p>
-                    <div className="w-32 h-[1.5px] bg-[#B32025] my-1 mx-auto"></div>
-                    <p className="text-[10px] uppercase tracking-widest text-[#B32025] font-extrabold font-sans">Agente de Risco</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
