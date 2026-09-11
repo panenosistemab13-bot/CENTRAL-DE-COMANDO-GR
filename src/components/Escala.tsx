@@ -307,6 +307,9 @@ export default function Escala({ onBack }: EscalaProps) {
   // Modal State for viewing standardized destinations (58)
   const [isDestinosModalOpen, setIsDestinosModalOpen] = useState<boolean>(false);
 
+  // Toggle for showing/hiding Section 2 (Padrões da Planilha) - Default HIDDEN (oculto)
+  const [showDefaults, setShowDefaults] = useState<boolean>(false);
+
   // Global default configuration for auto-filling
   const [defaults, setDefaults] = useState({
     transportador: '3C',
@@ -1218,8 +1221,11 @@ export default function Escala({ onBack }: EscalaProps) {
           {/* Main Grid: Left Paste Box & Right Default Configs */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {/* Left Column: Textarea Paste Area (7 cols) */}
-            <div className="lg:col-span-7 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4 flex flex-col justify-between">
+            {/* Left Column: Textarea Paste Area (full width when defaults are hidden) */}
+            <div className={cn(
+              "bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4 flex flex-col justify-between transition-all",
+              showDefaults ? "lg:col-span-7" : "lg:col-span-12"
+            )}>
               <div>
                 <div className="flex items-center justify-between gap-4 mb-3">
                   <div className="flex items-center gap-2">
@@ -1238,6 +1244,15 @@ export default function Escala({ onBack }: EscalaProps) {
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowDefaults(!showDefaults)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title={showDefaults ? "Ocultar Padrões da Planilha" : "Exibir Padrões da Planilha"}
+                    >
+                      <Sliders size={14} />
+                      <span>{showDefaults ? "Ocultar Padrões" : "Padrões da Planilha"}</span>
+                    </button>
+
                     <button
                       onClick={() => setInputText(SAMPLE_INPUT_TEXT)}
                       className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
@@ -1306,159 +1321,161 @@ export default function Escala({ onBack }: EscalaProps) {
               </div>
             </div>
 
-            {/* Right Column: Default Operational Configs (5 cols) */}
-            <div className="lg:col-span-5 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-xl bg-[#B32025] text-white flex items-center justify-center font-bold">
-                  <Sliders size={16} />
-                </div>
-                <div>
-                  <h3 className="text-base font-serif font-black uppercase tracking-tight text-[#2D1A10]">
-                    2. Padrões da Planilha
-                  </h3>
-                  <p className="text-xs text-slate-600">
-                    Ajuste as propriedades padrão pré-preenchidas.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                {/* Transportador */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Transportador
-                  </label>
-                  <input
-                    type="text"
-                    value={defaults.transportador}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, transportador: e.target.value }))}
-                    className="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-3 py-2 font-black text-amber-950 focus:outline-none focus:border-[#B32025]"
-                  />
-                </div>
-
-                {/* Categoria */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Categoria (FROTA)
-                  </label>
-                  <select
-                    value={defaults.categoria}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, categoria: e.target.value }))}
-                    className="w-full bg-white border-2 border-purple-300 rounded-xl px-3 py-2 font-black text-purple-900 focus:outline-none focus:border-[#B32025]"
-                  >
-                    <option value="FROTA">FROTA</option>
-                    <option value="AGREGADO">AGREGADO</option>
-                    <option value="AUTÔNOMO">AUTÔNOMO</option>
-                  </select>
-                </div>
-
-                {/* Tecnologia */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Tecnologia (SASCAR)
-                  </label>
-                  <select
-                    value={defaults.tecnologia}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, tecnologia: e.target.value }))}
-                    className="w-full bg-white border-2 border-cyan-300 rounded-xl px-3 py-2 font-black text-cyan-900 focus:outline-none focus:border-[#B32025]"
-                  >
-                    <option value="SASCAR">SASCAR</option>
-                    <option value="ONIXSAT">ONIXSAT</option>
-                    <option value="AUTOTRAC">AUTOTRAC</option>
-                  </select>
-                </div>
-
-                {/* Modelo Cavalo */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Modelo Cavalo
-                  </label>
-                  <select
-                    value={defaults.modeloCavalo}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, modeloCavalo: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-                  >
-                    <option value="TRUCADO">TRUCADO</option>
-                    <option value="TOCO">TOCO</option>
-                    <option value="TRUCK">TRUCK</option>
-                  </select>
-                </div>
-
-                {/* Modelo Carreta (2 Baús) */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Modelo (2 Baús)
-                  </label>
-                  <select
-                    value={defaults.modeloCarreta2}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, modeloCarreta2: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-                  >
-                    <option value="RODOTREM BAÚ">RODOTREM BAÚ</option>
-                    <option value="RODOTREM SIDER">RODOTREM SIDER</option>
-                    <option value="RODOTREM">RODOTREM</option>
-                  </select>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Status
-                  </label>
-                  <input
-                    type="text"
-                    value={defaults.status}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-                  />
-                </div>
-
-                {/* Hora Liberado */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Hora Liberado
-                  </label>
-                  <input
-                    type="text"
-                    value={defaults.horaLiberado}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, horaLiberado: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-                  />
-                </div>
-
-                {/* Vigência do Cadastro */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
-                    Vigência Cadastro
-                  </label>
-                  <input
-                    type="text"
-                    value={defaults.vigenciaCadastro}
-                    onChange={(e) => setDefaults(prev => ({ ...prev, vigenciaCadastro: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
-                  />
-                </div>
-              </div>
-
-              {/* Checklist Legend Box */}
-              <div className="bg-slate-900 text-white rounded-2xl p-3 border border-slate-700 space-y-1.5 text-xs">
-                <div className="flex items-center gap-1.5 font-black uppercase text-[10px] text-amber-400">
-                  <ShieldAlert size={14} />
-                  <span>Legenda da Validação do Checklist (Cavalo):</span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold text-center">
-                  <div className="p-1 rounded bg-rose-600 text-white uppercase shadow-xs">
-                    🔴 Vencido
+            {/* Right Column: Default Operational Configs (5 cols) - HIDDEN BY DEFAULT */}
+            {showDefaults && (
+              <div className="lg:col-span-5 bg-[#FAF8F5] border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-md space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#B32025] text-white flex items-center justify-center font-bold">
+                    <Sliders size={16} />
                   </div>
-                  <div className="p-1 rounded bg-amber-400 text-amber-950 uppercase shadow-xs">
-                    🟡 Vence em até 2 dias
-                  </div>
-                  <div className="p-1 rounded bg-emerald-600 text-white uppercase shadow-xs">
-                    🟢 Checklist OK
+                  <div>
+                    <h3 className="text-base font-serif font-black uppercase tracking-tight text-[#2D1A10]">
+                      2. Padrões da Planilha
+                    </h3>
+                    <p className="text-xs text-slate-600">
+                      Ajuste as propriedades padrão pré-preenchidas.
+                    </p>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  {/* Transportador */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Transportador
+                    </label>
+                    <input
+                      type="text"
+                      value={defaults.transportador}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, transportador: e.target.value }))}
+                      className="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-3 py-2 font-black text-amber-950 focus:outline-none focus:border-[#B32025]"
+                    />
+                  </div>
+
+                  {/* Categoria */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Categoria (FROTA)
+                    </label>
+                    <select
+                      value={defaults.categoria}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, categoria: e.target.value }))}
+                      className="w-full bg-white border-2 border-purple-300 rounded-xl px-3 py-2 font-black text-purple-900 focus:outline-none focus:border-[#B32025]"
+                    >
+                      <option value="FROTA">FROTA</option>
+                      <option value="AGREGADO">AGREGADO</option>
+                      <option value="AUTÔNOMO">AUTÔNOMO</option>
+                    </select>
+                  </div>
+
+                  {/* Tecnologia */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Tecnologia (SASCAR)
+                    </label>
+                    <select
+                      value={defaults.tecnologia}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, tecnologia: e.target.value }))}
+                      className="w-full bg-white border-2 border-cyan-300 rounded-xl px-3 py-2 font-black text-cyan-900 focus:outline-none focus:border-[#B32025]"
+                    >
+                      <option value="SASCAR">SASCAR</option>
+                      <option value="ONIXSAT">ONIXSAT</option>
+                      <option value="AUTOTRAC">AUTOTRAC</option>
+                    </select>
+                  </div>
+
+                  {/* Modelo Cavalo */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Modelo Cavalo
+                    </label>
+                    <select
+                      value={defaults.modeloCavalo}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, modeloCavalo: e.target.value }))}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                    >
+                      <option value="TRUCADO">TRUCADO</option>
+                      <option value="TOCO">TOCO</option>
+                      <option value="TRUCK">TRUCK</option>
+                    </select>
+                  </div>
+
+                  {/* Modelo Carreta (2 Baús) */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Modelo (2 Baús)
+                    </label>
+                    <select
+                      value={defaults.modeloCarreta2}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, modeloCarreta2: e.target.value }))}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                    >
+                      <option value="RODOTREM BAÚ">RODOTREM BAÚ</option>
+                      <option value="RODOTREM SIDER">RODOTREM SIDER</option>
+                      <option value="RODOTREM">RODOTREM</option>
+                    </select>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Status
+                    </label>
+                    <input
+                      type="text"
+                      value={defaults.status}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                    />
+                  </div>
+
+                  {/* Hora Liberado */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Hora Liberado
+                    </label>
+                    <input
+                      type="text"
+                      value={defaults.horaLiberado}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, horaLiberado: e.target.value }))}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                    />
+                  </div>
+
+                  {/* Vigência do Cadastro */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-[#2D1A10] mb-1">
+                      Vigência Cadastro
+                    </label>
+                    <input
+                      type="text"
+                      value={defaults.vigenciaCadastro}
+                      onChange={(e) => setDefaults(prev => ({ ...prev, vigenciaCadastro: e.target.value }))}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-[#B32025]"
+                    />
+                  </div>
+                </div>
+
+                {/* Checklist Legend Box */}
+                <div className="bg-slate-900 text-white rounded-2xl p-3 border border-slate-700 space-y-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 font-black uppercase text-[10px] text-amber-400">
+                    <ShieldAlert size={14} />
+                    <span>Legenda da Validação do Checklist (Cavalo):</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold text-center">
+                    <div className="p-1 rounded bg-rose-600 text-white uppercase shadow-xs">
+                      🔴 Vencido
+                    </div>
+                    <div className="p-1 rounded bg-amber-400 text-amber-950 uppercase shadow-xs">
+                      🟡 Vence em até 2 dias
+                    </div>
+                    <div className="p-1 rounded bg-emerald-600 text-white uppercase shadow-xs">
+                      🟢 Checklist OK
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Summary KPI Cards */}
