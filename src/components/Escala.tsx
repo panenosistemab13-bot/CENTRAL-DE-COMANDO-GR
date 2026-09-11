@@ -477,18 +477,30 @@ export default function Escala({ onBack }: EscalaProps) {
   };
 
   // Helper to extract checklist expiry date string for column 31
-  const getChecklistExpiryStr = (plate: string): string => {
-    if (!plate || !plate.trim()) return '';
-    const cleanPlate = plate.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const getChecklistExpiryStr = (cavaloPlate: string, carretaPlate?: string): string => {
+    if (!cavaloPlate && !carretaPlate) return '';
+    const cleanCav = (cavaloPlate || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const cleanCar = (carretaPlate || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
     const match = checklistItems.find(item => {
       const c = (item.cavalo || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-      return c === cleanPlate;
+      const car = (item.carretas || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      return (cleanCav && c === cleanCav) || (cleanCar && car && car.includes(cleanCar));
     });
 
     if (!match) return 'SEM CHECKLIST';
-    if (match.dataVencimento) return match.dataVencimento;
+
+    if (match.dataVencimento) {
+      const raw = match.dataVencimento.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        const [y, m, d] = raw.split('-');
+        return `${d}/${m}/${y}`;
+      }
+      return raw;
+    }
+
     if (match.statusOverride) return match.statusOverride;
-    return 'OK';
+    return 'SEM CHECKLIST';
   };
 
   // Calculate day of week string in Portuguese
@@ -509,7 +521,7 @@ export default function Escala({ onBack }: EscalaProps) {
     return 'quinta-feira';
   };
 
-  // Get month abbreviation with pipe e.g. "SET | 26" or "OUT | 26"
+  // Get month abbreviation with pipe e.g. "SET|26" or "OUT|26"
   const getMonthAbbrev = (dateStr: string): string => {
     try {
       const parts = dateStr.split('/');
@@ -518,12 +530,12 @@ export default function Escala({ onBack }: EscalaProps) {
         const year = parts[2].slice(-2);
         const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
         const mStr = months[month - 1] || 'SET';
-        return `${mStr} | ${year}`;
+        return `${mStr}|${year}`;
       }
     } catch (e) {
       // fallback
     }
-    return 'SET | 26';
+    return 'SET|26';
   };
 
   // Find 3C Driver matching name
@@ -636,7 +648,6 @@ export default function Escala({ onBack }: EscalaProps) {
 
       const currentTime = getCurrentTimeString();
       const isTwoBaus = Boolean(bau1 && bau2);
-      const chkExpiry = getChecklistExpiryStr(placaCavalo);
 
       if (isTwoBaus) {
         // Divide Pallets & Ton half-and-half between Baú 1 and Baú 2
@@ -652,6 +663,9 @@ export default function Escala({ onBack }: EscalaProps) {
           if (halfVal >= 20) m3Half = '55 m³';
           else m3Half = '43.5 m³';
         }
+
+        const chkExpiry1 = getChecklistExpiryStr(placaCavalo, bau1);
+        const chkExpiry2 = getChecklistExpiryStr(placaCavalo, bau2);
 
         // Row 1 for Baú 1
         const row1: DispoRow = {
@@ -686,7 +700,7 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: chkExpiry
+          checkList: chkExpiry1
         };
 
         // Row 2 for Baú 2
@@ -722,7 +736,7 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: chkExpiry
+          checkList: chkExpiry2
         };
 
         rows.push(row1, row2);
@@ -736,6 +750,8 @@ export default function Escala({ onBack }: EscalaProps) {
           else if (numT >= 30) m3 = '87 m³';
           else m3 = '80 m³';
         }
+
+        const chkExpiry = getChecklistExpiryStr(placaCavalo, singleCarreta);
 
         const row: DispoRow = {
           id: `row-${index}-${Date.now()}`,
@@ -939,7 +955,7 @@ export default function Escala({ onBack }: EscalaProps) {
   const handleAddRow = () => {
     const newRow: DispoRow = {
       id: `manual-${Date.now()}`,
-      mes: 'SET | 26',
+      mes: 'SET|26',
       origem: 'SANTA LUZIA|MG',
       dia: 'quinta-feira',
       data: '10/09/2026',
