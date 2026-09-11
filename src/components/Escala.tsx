@@ -686,7 +686,7 @@ export default function Escala({ onBack }: EscalaProps) {
           carreta: cleanCarretaPlate(bau1),
           pallets: palletsHalf,
           ton: tonHalf,
-          m3: m3Half,
+          m3: '',
           categoria: defaults.categoria, // FROTA
           tecnologia: defaults.tecnologia, // SASCAR
           conductor: motorista.toUpperCase(),
@@ -722,7 +722,7 @@ export default function Escala({ onBack }: EscalaProps) {
           carreta: cleanCarretaPlate(bau2),
           pallets: palletsHalf,
           ton: tonHalf,
-          m3: m3Half,
+          m3: '',
           categoria: defaults.categoria, // FROTA
           tecnologia: defaults.tecnologia, // SASCAR
           conductor: motorista.toUpperCase(),
@@ -743,14 +743,6 @@ export default function Escala({ onBack }: EscalaProps) {
       } else {
         // Single Baú
         const singleCarreta = bau1 || bau2;
-        let m3 = '87 m³';
-        const numT = parseFloat(rawTon);
-        if (!isNaN(numT)) {
-          if (numT >= 40) m3 = '110 m³';
-          else if (numT >= 30) m3 = '87 m³';
-          else m3 = '80 m³';
-        }
-
         const chkExpiry = getChecklistExpiryStr(placaCavalo, singleCarreta);
 
         const row: DispoRow = {
@@ -771,7 +763,7 @@ export default function Escala({ onBack }: EscalaProps) {
           carreta: cleanCarretaPlate(singleCarreta),
           pallets: rawPallets,
           ton: rawTon,
-          m3: m3,
+          m3: '',
           categoria: defaults.categoria, // FROTA
           tecnologia: defaults.tecnologia, // SASCAR
           conductor: motorista.toUpperCase(),
@@ -971,7 +963,7 @@ export default function Escala({ onBack }: EscalaProps) {
       carreta: '',
       pallets: '24',
       ton: '17',
-      m3: '43.5 m³',
+      m3: '',
       categoria: defaults.categoria,
       tecnologia: defaults.tecnologia,
       conductor: '',
