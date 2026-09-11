@@ -144,6 +144,133 @@ export const INITIAL_MOTORISTAS_3C: Omit<Motorista3C, 'id'>[] = [
   { nome: 'WELLINGTON TADEU MUNIZ', cpf: '050.728.216.69', rg: '' }
 ];
 
+// 58 Standardized Destinations from user's attached list (image.png)
+export const DESTINOS_PADRAO = [
+  'ARIQUEMES RO',
+  'BARBALHA',
+  'BARRA VELHA',
+  'BEBEDOURO-SP',
+  'BELÉM',
+  'BRASÍLIA',
+  'CAMPO GRANDE',
+  'CAMPO GRANDE / CUIABÁ',
+  'CARIACICA ES',
+  'CASTRO PR',
+  'CECONSLO',
+  'CLIENTE',
+  'CONDOR - CURITIBA',
+  'CONTAGEM MG',
+  'CSD - PAIÇANDU PR',
+  'CUIABÁ',
+  'CUIABÁ / ARIQUEMES',
+  'DESTRO - CURITIBA',
+  'DF SOLUÇÕES LOG',
+  'DMA',
+  'EXPORTAÇÃO',
+  'FUBOKA - BRASÍLIA',
+  'GASTRÔ',
+  'GOV. CELSO RAMOS',
+  'GRAVATAÍ',
+  'GUARULHOS',
+  'JOÃO PESSOA',
+  'JUAZEIRO DO NORTE',
+  'JUIZ DE FORA',
+  'JUNDIAÍ SP',
+  'LONDRINA',
+  'MACEIÓ',
+  'MANAUS',
+  'MONTES CLAROS',
+  'MOSSORÓ',
+  'MUFFATO - CAMBÉ/PR',
+  'NATAL',
+  'NATAL / EUSÉBIO',
+  'PATROCÍNIO PAULISTA',
+  'PINHAIS',
+  'PORTO ALEGRE MG',
+  'POUSO ALEGRE MG',
+  'RECIFE',
+  'RIO DE JANEIRO',
+  'S CAETTI',
+  'SALVADOR',
+  'SANTA LUZIA',
+  'SMART',
+  'SUMARÉ',
+  'SUPERFRIO',
+  'TERESINA',
+  'TOTAL SERVICE',
+  'TRIANGULO SP',
+  'UBERLÂNDIA MG',
+  'VARGEM GRANDE DO SUL SP',
+  'VESPASIANO',
+  'VIANA',
+  'XAXIM SC'
+] as const;
+
+export const normalizeDestino = (raw: string): string => {
+  if (!raw || !raw.trim()) return '';
+  const clean = (s: string) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  const normRaw = clean(raw);
+
+  // Exact match after accent/punctuation stripping
+  for (const dest of DESTINOS_PADRAO) {
+    if (clean(dest) === normRaw) {
+      return dest;
+    }
+  }
+
+  // Specific common mapping rules based on destination image
+  if (normRaw.includes('CAMPOGRANDE') && normRaw.includes('CUIABA')) return 'CAMPO GRANDE / CUIABÁ';
+  if (normRaw.includes('CUIABA') && normRaw.includes('ARIQUEMES')) return 'CUIABÁ / ARIQUEMES';
+  if (normRaw.includes('NATAL') && normRaw.includes('EUSEBIO')) return 'NATAL / EUSÉBIO';
+  if (normRaw.includes('DESTRO') && normRaw.includes('CURITIBA')) return 'DESTRO - CURITIBA';
+  if (normRaw.includes('CONDOR') && normRaw.includes('CURITIBA')) return 'CONDOR - CURITIBA';
+  if (normRaw.includes('FUBOKA')) return 'FUBOKA - BRASÍLIA';
+  if (normRaw.includes('MUFFATO')) return 'MUFFATO - CAMBÉ/PR';
+  if (normRaw.includes('CSD') || normRaw.includes('PAICANDU')) return 'CSD - PAIÇANDU PR';
+  if (normRaw.includes('DFSOLUCOES') || normRaw.includes('DFSOLUC')) return 'DF SOLUÇÕES LOG';
+  if (normRaw.includes('PATROCINIOPAULISTA') || normRaw.includes('PATROCINIO')) return 'PATROCÍNIO PAULISTA';
+  if (normRaw.includes('VARGEMGRANDE')) return 'VARGEM GRANDE DO SUL SP';
+  if (normRaw.includes('GOVCELSO') || normRaw.includes('CELSORAMOS')) return 'GOV. CELSO RAMOS';
+  if (normRaw.includes('TOTALSERVICE')) return 'TOTAL SERVICE';
+  if (normRaw.includes('JUIZDEFORA')) return 'JUIZ DE FORA';
+  if (normRaw.includes('PORTOALEGRE')) return 'PORTO ALEGRE MG';
+  if (normRaw.includes('POUSOALEGRE')) return 'POUSO ALEGRE MG';
+  if (normRaw.includes('UBERLANDIA')) return 'UBERLÂNDIA MG';
+  if (normRaw.includes('CONTAGEM')) return 'CONTAGEM MG';
+  if (normRaw.includes('SANTALUZIA')) return 'SANTA LUZIA';
+  if (normRaw.includes('RIODEJANEIRO')) return 'RIO DE JANEIRO';
+  if (normRaw.includes('JOAOPESSOA')) return 'JOÃO PESSOA';
+  if (normRaw.includes('JUAZEIRO')) return 'JUAZEIRO DO NORTE';
+  if (normRaw.includes('SCAETI') || normRaw.includes('SCAETTI') || normRaw.includes('SCAETANO')) return 'S CAETTI';
+  if (normRaw.includes('MONTESCLAROS')) return 'MONTES CLAROS';
+  if (normRaw.includes('BEBEDOURO')) return 'BEBEDOURO-SP';
+  if (normRaw.includes('CARIACICA')) return 'CARIACICA ES';
+  if (normRaw.includes('JUNDIAI')) return 'JUNDIAÍ SP';
+  if (normRaw.includes('TRIANGULO')) return 'TRIANGULO SP';
+  if (normRaw.includes('CASTRO')) return 'CASTRO PR';
+  if (normRaw.includes('ARIQUEMES')) return 'ARIQUEMES RO';
+  if (normRaw.includes('XAXIM')) return 'XAXIM SC';
+  if (normRaw.includes('MACEIO')) return 'MACEIÓ';
+  if (normRaw.includes('BELEM')) return 'BELÉM';
+  if (normRaw.includes('BRASILIA')) return 'BRASÍLIA';
+  if (normRaw.includes('CUIABA')) return 'CUIABÁ';
+  if (normRaw.includes('MOSSORO')) return 'MOSSORÓ';
+  if (normRaw.includes('GASTRO')) return 'GASTRÔ';
+  if (normRaw.includes('EXPORTACAO')) return 'EXPORTAÇÃO';
+
+  // Partial match fallback
+  for (const dest of DESTINOS_PADRAO) {
+    const cleanD = clean(dest);
+    if (cleanD.includes(normRaw) || normRaw.includes(cleanD)) {
+      return dest;
+    }
+  }
+
+  return raw.toUpperCase().trim();
+};
+
 interface ChecklistItem {
   id: string;
   cavalo: string;
@@ -177,6 +304,9 @@ export default function Escala({ onBack }: EscalaProps) {
   const [editingDriver, setEditingDriver] = useState<Motorista3C | null>(null);
   const [formData, setFormData] = useState({ nome: '', cpf: '', rg: '' });
 
+  // Modal State for viewing standardized destinations (58)
+  const [isDestinosModalOpen, setIsDestinosModalOpen] = useState<boolean>(false);
+
   // Global default configuration for auto-filling
   const [defaults, setDefaults] = useState({
     transportador: '3C',
@@ -189,7 +319,7 @@ export default function Escala({ onBack }: EscalaProps) {
     horaLiberado: '08:00:00',
     contatoWhats: 'SIM',
     fezContato: 'SIM',
-    vigenciaCadastro: 'SEGURO PRÓPRIO',
+    vigenciaCadastro: 'FROTA 3C',
     codigoTransportadora: '1000000496',
     estadoMotorista: 'MG',
     estadoCavalo: 'MG',
@@ -464,9 +594,9 @@ export default function Escala({ onBack }: EscalaProps) {
           } else {
             origem = `${rawOrigem} | MG`;
           }
-          destino = trechoParts[1].trim();
+          destino = normalizeDestino(trechoParts[1].trim());
         } else {
-          destino = trecho;
+          destino = normalizeDestino(trecho);
         }
       }
 
@@ -639,6 +769,8 @@ export default function Escala({ onBack }: EscalaProps) {
 
   // Editable rows state
   const [editableRows, setEditableRows] = useState<DispoRow[]>([]);
+  const [copiedRowId, setCopiedRowId] = useState<string | null>(null);
+  const [copyToastMessage, setCopyToastMessage] = useState<string | null>(null);
 
   // Update editableRows when parsedRows change
   useEffect(() => {
@@ -652,6 +784,43 @@ export default function Escala({ onBack }: EscalaProps) {
     );
   };
 
+  // Helper to convert a single DispoRow object into 31-column TSV string
+  const getRowTSV = (row: DispoRow): string => {
+    return [
+      row.mes,
+      row.origem,
+      row.dia,
+      row.data,
+      row.contatoWhats,
+      row.horaLiberado,
+      row.status,
+      row.modeloCarreta,
+      row.modeloCavalo,
+      row.fezContato,
+      row.destino,
+      row.transportador,
+      row.cavalo,
+      row.carreta,
+      row.pallets,
+      row.ton,
+      row.m3,
+      row.categoria,
+      row.tecnologia,
+      row.conductor,
+      row.cpf,
+      row.rgSap,
+      row.cnh,
+      row.telefone,
+      row.vigenciaCadastro,
+      row.codigoTransportadora,
+      row.idCarga,
+      row.estadoMotorista,
+      row.estadoCavalo,
+      row.estadoCarreta,
+      row.checkList
+    ].join('\t');
+  };
+
   // Convert rows to TSV string for copying (pure plain text without formatting or headers by default)
   const generateTSV = (includeHeader: boolean): string => {
     const lines: string[] = [];
@@ -661,44 +830,75 @@ export default function Escala({ onBack }: EscalaProps) {
     }
 
     editableRows.forEach(row => {
-      const lineValues = [
-        row.mes,
-        row.origem,
-        row.dia,
-        row.data,
-        row.contatoWhats,
-        row.horaLiberado,
-        row.status,
-        row.modeloCarreta,
-        row.modeloCavalo,
-        row.fezContato,
-        row.destino,
-        row.transportador,
-        row.cavalo,
-        row.carreta,
-        row.pallets,
-        row.ton,
-        row.m3,
-        row.categoria,
-        row.tecnologia,
-        row.conductor,
-        row.cpf,
-        row.rgSap,
-        row.cnh,
-        row.telefone,
-        row.vigenciaCadastro,
-        row.codigoTransportadora,
-        row.idCarga,
-        row.estadoMotorista,
-        row.estadoCavalo,
-        row.estadoCarreta,
-        row.checkList
-      ];
-      lines.push(lineValues.join('\t'));
+      lines.push(getRowTSV(row));
     });
 
     return lines.join('\n');
   };
+
+  // Copy single row
+  const handleCopySingleRow = async (row: DispoRow) => {
+    const lineText = getRowTSV(row);
+    try {
+      await navigator.clipboard.writeText(lineText);
+      setCopiedRowId(row.id);
+      setCopyToastMessage(`Linha de "${row.conductor || 'Motorista'}" (${row.cavalo || 'Sem Placa'}) copiada!`);
+      setTimeout(() => {
+        setCopiedRowId(null);
+        setCopyToastMessage(null);
+      }, 3500);
+    } catch (err) {
+      console.error('Erro ao copiar linha:', err);
+    }
+  };
+
+  // Copy a whole conjunto (set of rows for a truck/driver)
+  const handleCopyConjunto = async (rowsToCopy: DispoRow[], label: string) => {
+    const tsv = rowsToCopy.map(r => getRowTSV(r)).join('\n');
+    try {
+      await navigator.clipboard.writeText(tsv);
+      setCopiedRowId(rowsToCopy[0]?.id || 'conjunto');
+      setCopyToastMessage(`Conjunto de "${label}" copiado (${rowsToCopy.length} linha${rowsToCopy.length > 1 ? 's' : ''})!`);
+      setTimeout(() => {
+        setCopiedRowId(null);
+        setCopyToastMessage(null);
+      }, 3500);
+    } catch (err) {
+      console.error('Erro ao copiar conjunto:', err);
+    }
+  };
+
+  // Group rows into Conjuntos (by Conductor + Cavalo + Data)
+  const conjuntosList = useMemo(() => {
+    const groups: {
+      id: string;
+      conductor: string;
+      cavalo: string;
+      destino: string;
+      rows: DispoRow[];
+    }[] = [];
+
+    editableRows.forEach((row) => {
+      const cond = (row.conductor || '').trim().toUpperCase() || 'SEM_MOTORISTA';
+      const cav = (row.cavalo || '').trim().toUpperCase() || 'SEM_CAVALO';
+      const key = `${cond}_${cav}_${row.data}`;
+      
+      let group = groups.find(g => g.id === key);
+      if (!group) {
+        group = {
+          id: key,
+          conductor: row.conductor || 'MOTORISTA N/I',
+          cavalo: row.cavalo || 'SEM PLACA',
+          destino: row.destino || 'DESTINO N/I',
+          rows: []
+        };
+        groups.push(group);
+      }
+      group.rows.push(row);
+    });
+
+    return groups;
+  }, [editableRows]);
 
   // Copy TSV to clipboard
   const handleCopyToClipboard = async () => {
@@ -939,6 +1139,15 @@ export default function Escala({ onBack }: EscalaProps) {
               {motoristas3C.length}
             </span>
           </button>
+
+          <button
+            onClick={() => setIsDestinosModalOpen(true)}
+            className="ml-auto px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer bg-blue-950/80 hover:bg-blue-900 text-blue-100 border border-blue-400/30 hover:border-blue-300 shadow-md"
+            title="Visualizar a lista completa de 58 destinos padronizados"
+          >
+            <MapPin size={16} className="text-blue-300" />
+            <span>Destinos Padrão (58)</span>
+          </button>
         </div>
       </div>
 
@@ -972,6 +1181,35 @@ export default function Escala({ onBack }: EscalaProps) {
                   className="text-xs text-emerald-300 hover:text-white font-bold uppercase underline cursor-pointer"
                 >
                   Fechar
+                </button>
+              </motion.div>
+            )}
+
+            {copyToastMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                className="p-3.5 bg-slate-900 border-2 border-amber-400 text-amber-100 rounded-2xl shadow-xl flex items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black shrink-0">
+                    <Check size={20} className="stroke-[3]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wide text-white">
+                      {copyToastMessage}
+                    </h4>
+                    <p className="text-[11px] text-amber-200">
+                      Copiado em formato de colunas (TSV). Pronto para colar na planilha com <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-amber-400/40 text-white font-mono">Ctrl + V</kbd>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCopyToastMessage(null)}
+                  className="text-xs text-slate-400 hover:text-white font-bold uppercase cursor-pointer"
+                >
+                  <X size={16} />
                 </button>
               </motion.div>
             )}
@@ -1268,6 +1506,96 @@ export default function Escala({ onBack }: EscalaProps) {
             </div>
           </div>
 
+          {/* Conjuntos (Veículos / Viagens) Section - Copiar por Conjunto */}
+          {conjuntosList.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-950/10 via-amber-900/5 to-amber-950/10 border-2 border-amber-800/30 rounded-3xl p-5 shadow-sm space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-amber-800/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-900 text-amber-100 flex items-center justify-center font-bold">
+                    <Truck size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
+                      Copiar por Conjunto Individual ({conjuntosList.length} Conjunto{conjuntosList.length > 1 ? 's' : ''})
+                    </h3>
+                    <p className="text-[11px] text-slate-600">
+                      Clique em "Copiar Conjunto" para copiar apenas as linhas referentes a um motorista/veículo específico.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-amber-200/80 text-amber-950 border border-amber-300 self-start sm:self-auto">
+                  {editableRows.length} linhas em {conjuntosList.length} conjunto(s)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {conjuntosList.map((conjunto, cIdx) => {
+                  const isMultiRow = conjunto.rows.length > 1;
+                  const firstRowId = conjunto.rows[0]?.id;
+                  const isCopied = copiedRowId === firstRowId;
+
+                  return (
+                    <div
+                      key={conjunto.id}
+                      className="bg-white border-2 border-slate-200 hover:border-amber-500 rounded-2xl p-3.5 shadow-xs transition-all flex flex-col justify-between gap-3 group hover:shadow-md"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono font-black uppercase text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                            Conjunto #{cIdx + 1}
+                          </span>
+                          <span className={cn(
+                            "text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase border",
+                            isMultiRow 
+                              ? "bg-purple-100 text-purple-900 border-purple-300 font-black" 
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          )}>
+                            {isMultiRow ? `2 Linhas (Rodotrem)` : `1 Linha (Baú Único)`}
+                          </span>
+                        </div>
+
+                        <h4 className="text-xs font-black uppercase text-[#2D1A10] line-clamp-1 mt-1" title={conjunto.conductor}>
+                          {conjunto.conductor}
+                        </h4>
+
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-700 font-mono font-bold flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                            Cavalo: {conjunto.cavalo}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
+                            Destino: {conjunto.destino}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleCopyConjunto(conjunto.rows, conjunto.conductor)}
+                        className={cn(
+                          "w-full py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border",
+                          isCopied
+                            ? "bg-emerald-600 text-white border-emerald-500 shadow-md scale-102"
+                            : "bg-[#2D1A10] hover:bg-[#B32025] text-[#fdefd1] hover:text-white border-[#3d2417] hover:border-red-400 active:scale-98"
+                        )}
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check size={14} className="stroke-[3]" />
+                            <span>Copiado!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            <span>Copiar Conjunto ({conjunto.rows.length} {conjunto.rows.length === 1 ? 'Linha' : 'Linhas'})</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Main Table Preview Section */}
           <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-4">
             
@@ -1330,12 +1658,13 @@ export default function Escala({ onBack }: EscalaProps) {
                           {col}
                         </th>
                       ))}
-                      <th className="p-3 border-b border-[#8c6039]/40 text-center w-12">Ação</th>
+                      <th className="p-3 border-b border-[#8c6039]/40 text-center whitespace-nowrap min-w-[110px]">Ação / Copiar</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white font-sans">
                     {editableRows.map((row, idx) => {
                       const chkStatus = getPlateChecklistStatus(row.cavalo);
+                      const isCopied = copiedRowId === row.id;
 
                       return (
                         <tr key={row.id} className="hover:bg-amber-50/60 transition-colors group">
@@ -1447,9 +1776,17 @@ export default function Escala({ onBack }: EscalaProps) {
                           <td className="p-1.5 border-r border-slate-200 font-black text-blue-900 bg-blue-50/40">
                             <input
                               type="text"
+                              list="destinos-padrao-list"
                               value={row.destino}
                               onChange={(e) => handleCellEdit(row.id, 'destino', e.target.value)}
+                              onBlur={(e) => {
+                                const norm = normalizeDestino(e.target.value);
+                                if (norm && norm !== e.target.value) {
+                                  handleCellEdit(row.id, 'destino', norm);
+                                }
+                              }}
                               className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-black text-xs text-blue-900"
+                              placeholder="DESTINO"
                             />
                           </td>
 
@@ -1674,15 +2011,31 @@ export default function Escala({ onBack }: EscalaProps) {
                             />
                           </td>
 
-                          {/* Action */}
-                          <td className="p-2 text-center">
-                            <button
-                              onClick={() => handleRemoveRow(row.id)}
-                              className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer rounded"
-                              title="Remover linha"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                          {/* Action & Individual Copy */}
+                          <td className="p-2 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleCopySingleRow(row)}
+                                className={cn(
+                                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 border cursor-pointer shadow-2xs",
+                                  isCopied
+                                    ? "bg-emerald-600 text-white border-emerald-700"
+                                    : "bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-950 border-slate-300 hover:border-amber-400"
+                                )}
+                                title="Copiar individualmente apenas esta linha (31 colunas)"
+                              >
+                                {isCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} />}
+                                <span>{isCopied ? 'Copiado' : 'Copiar'}</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleRemoveRow(row.id)}
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer rounded-lg border border-transparent hover:border-rose-200"
+                                title="Remover linha"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1882,6 +2235,78 @@ export default function Escala({ onBack }: EscalaProps) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal for Viewing All 58 Standardized Destinations */}
+      <AnimatePresence>
+        {isDestinosModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border-2 border-blue-900 rounded-3xl p-6 shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-900 text-blue-100 flex items-center justify-center shadow-md">
+                    <MapPin size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-serif font-black uppercase text-[#2D1A10]">
+                      Destinos Padronizados ({DESTINOS_PADRAO.length})
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Todos os destinos na coluna DESTINO são formatados automaticamente conforme esta tabela oficial.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsDestinosModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Grid of 58 Destinations */}
+              <div className="overflow-y-auto pr-1 flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {DESTINOS_PADRAO.map((dest, idx) => (
+                    <div
+                      key={dest}
+                      className="p-2.5 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-blue-300 rounded-xl transition-colors flex items-center gap-2 font-mono text-xs font-bold text-slate-800"
+                    >
+                      <span className="w-6 h-6 rounded-md bg-blue-100 text-blue-900 flex items-center justify-center text-[10px] font-black shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="truncate">{dest}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between shrink-0 text-xs">
+                <span className="text-slate-500 font-bold">
+                  Dica: Ao digitar no campo DESTINO da tabela, o sistema auto-completa com estes valores.
+                </span>
+                <button
+                  onClick={() => setIsDestinosModalOpen(false)}
+                  className="px-5 py-2 bg-blue-900 hover:bg-blue-950 text-white rounded-xl font-black uppercase tracking-wider cursor-pointer shadow-md"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* HTML Datalist for Standardized Destinos (58) */}
+      <datalist id="destinos-padrao-list">
+        {DESTINOS_PADRAO.map((dest) => (
+          <option key={dest} value={dest} />
+        ))}
+      </datalist>
 
     </div>
   );

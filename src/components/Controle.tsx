@@ -91,6 +91,8 @@ const EMBARQUE_IMAGES = [
   { value: "https://lh3.googleusercontent.com/d/1EQ5fMDDHViGvBd8-ehlwhyE4yyOc_peH", label: "ALMOFADA" },
   { value: "https://lh3.googleusercontent.com/d/1-OVNvrvxJ_t6RCj8hQpU0ZDtk3BfVWBV", label: "LADO DIREITO SUPERIOR BATIDO (PORTA)" },
   { value: "https://lh3.googleusercontent.com/d/14F4wPXwU607GmwqphSzlXk7xZ_EhOdWS", label: "LADO ESQUERDO SUPERIOR BATIDO" },
+  { value: "https://lh3.googleusercontent.com/d/1t20tqT1GEkUUMcsWKcI4NAuinJmX1a8k", label: "LADO DIREITO SUPERIOR - BATIDO/PALETIZADO" },
+  { value: "https://lh3.googleusercontent.com/d/1cw1CQiD8FUzeIBh36sBObz91h8k3bls1", label: "LADO ESQUERDO SUPERIOR - BATIDO/PALETIZADO" },
   { value: "none", label: "Nenhum Embarque" },
 ];
 
@@ -105,6 +107,8 @@ export const getLocalFallbackImg = (url: string) => {
   if (url.includes("1EQ5fMDDHViGvBd8-ehlwhyE4yyOc_peH")) return "/images/img_6.png";
   if (url.includes("1-OVNvrvxJ_t6RCj8hQpU0ZDtk3BfVWBV")) return "/images/img_7.png";
   if (url.includes("14F4wPXwU607GmwqphSzlXk7xZ_EhOdWS")) return "/images/img_8.png";
+  if (url.includes("1t20tqT1GEkUUMcsWKcI4NAuinJmX1a8k")) return url;
+  if (url.includes("1cw1CQiD8FUzeIBh36sBObz91h8k3bls1")) return url;
   if (url.startsWith("/images/")) return url;
   return url;
 };
@@ -1771,7 +1775,15 @@ export default function Controle({ onBack }: ControleProps) {
 
       if (c1.esquema) {
         const upperE = c1.esquema.toUpperCase();
-        if (upperE.includes("SUPERIOR") || upperE.includes("BATIDO")) {
+        if (upperE.includes("LADO DIREITO") && (upperE.includes("PALETIZADO") || upperE.includes("BATIDO/PALETIZADO"))) {
+          setSidebarEmbarque1("https://lh3.googleusercontent.com/d/1t20tqT1GEkUUMcsWKcI4NAuinJmX1a8k");
+        } else if (upperE.includes("LADO ESQUERDO") && (upperE.includes("PALETIZADO") || upperE.includes("BATIDO/PALETIZADO"))) {
+          setSidebarEmbarque1("https://lh3.googleusercontent.com/d/1cw1CQiD8FUzeIBh36sBObz91h8k3bls1");
+        } else if (upperE.includes("LADO DIREITO")) {
+          setSidebarEmbarque1("https://lh3.googleusercontent.com/d/1-OVNvrvxJ_t6RCj8hQpU0ZDtk3BfVWBV");
+        } else if (upperE.includes("LADO ESQUERDO")) {
+          setSidebarEmbarque1("https://lh3.googleusercontent.com/d/14F4wPXwU607GmwqphSzlXk7xZ_EhOdWS");
+        } else if (upperE.includes("SUPERIOR") || upperE.includes("BATIDO")) {
           setSidebarEmbarque1("https://lh3.googleusercontent.com/d/17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh");
         } else if (upperE.includes("PALETIZADO")) {
           setSidebarEmbarque1("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
@@ -1792,7 +1804,15 @@ export default function Controle({ onBack }: ControleProps) {
 
         if (c2.esquema) {
           const upperE = c2.esquema.toUpperCase();
-          if (upperE.includes("SUPERIOR") || upperE.includes("BATIDO")) {
+          if (upperE.includes("LADO DIREITO") && (upperE.includes("PALETIZADO") || upperE.includes("BATIDO/PALETIZADO"))) {
+            setSidebarEmbarque2("https://lh3.googleusercontent.com/d/1t20tqT1GEkUUMcsWKcI4NAuinJmX1a8k");
+          } else if (upperE.includes("LADO ESQUERDO") && (upperE.includes("PALETIZADO") || upperE.includes("BATIDO/PALETIZADO"))) {
+            setSidebarEmbarque2("https://lh3.googleusercontent.com/d/1cw1CQiD8FUzeIBh36sBObz91h8k3bls1");
+          } else if (upperE.includes("LADO DIREITO")) {
+            setSidebarEmbarque2("https://lh3.googleusercontent.com/d/1-OVNvrvxJ_t6RCj8hQpU0ZDtk3BfVWBV");
+          } else if (upperE.includes("LADO ESQUERDO")) {
+            setSidebarEmbarque2("https://lh3.googleusercontent.com/d/14F4wPXwU607GmwqphSzlXk7xZ_EhOdWS");
+          } else if (upperE.includes("SUPERIOR") || upperE.includes("BATIDO")) {
             setSidebarEmbarque2("https://lh3.googleusercontent.com/d/17dIlYwXF3McL0Xr-Hs00COyFH9A0REEh");
           } else if (upperE.includes("PALETIZADO")) {
             setSidebarEmbarque2("https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF");
@@ -1853,11 +1873,11 @@ export default function Controle({ onBack }: ControleProps) {
     const isPaletizado1 =
       sidebarEmbarque1 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF" ||
       sidebarEmbarque1 === "/images/paletizado_lado_direito.png" ||
-      sidebarEmbarque1?.toLowerCase().includes("paletizado");
+      sidebarEmbarque1 === "/images/img_0.png";
     const isPaletizado2 =
       sidebarEmbarque2 === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF" ||
       sidebarEmbarque2 === "/images/paletizado_lado_direito.png" ||
-      sidebarEmbarque2?.toLowerCase().includes("paletizado");
+      sidebarEmbarque2 === "/images/img_0.png";
 
     const getEmbarqueImgSrc = (imgUrl: string) => {
       if (!imgUrl || imgUrl === "none") return "";
