@@ -522,7 +522,7 @@ export default function Escala({ onBack }: EscalaProps) {
       return (cleanCav && c === cleanCav) || (cleanCar && car && car.includes(cleanCar));
     });
 
-    if (!match) return { checkList: 'SEM CHECKLIST', pendencia: '' };
+    if (!match) return { checkList: '', pendencia: '' };
 
     let formattedDate = '';
     let isVencido = false;
@@ -552,8 +552,6 @@ export default function Escala({ onBack }: EscalaProps) {
         const y = parsed.getFullYear();
         formattedDate = `${d}/${m}/${y}`;
         expiryDate = parsed;
-      } else {
-        formattedDate = raw;
       }
 
       if (expiryDate && !isNaN(expiryDate.getTime())) {
@@ -598,13 +596,14 @@ export default function Escala({ onBack }: EscalaProps) {
       }
     }
 
-    if (!formattedDate) {
-      formattedDate = 'SEM CHECKLIST';
+    // Strictly enforce numeric DD/MM/YYYY format - never return text like "SEM CHECKLIST", "VENCIDO" or "CHECKLIST"
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+      formattedDate = '';
     }
 
     return {
-      checkList: formattedDate,
-      pendencia: isVencido ? 'CHECKLIST' : ''
+      checkList: isVencido ? 'CHECKLIST' : '',
+      pendencia: formattedDate
     };
   };
 
@@ -958,9 +957,9 @@ export default function Escala({ onBack }: EscalaProps) {
     );
   };
 
-  // Helper to convert a single DispoRow object into 33-column TSV string (Colunas A a AG)
+  // Helper to convert a single DispoRow object into 33-column TSV string (Colunas A a AG, ignorando AI, AJ, AK)
   const getRowTSV = (row: DispoRow): string => {
-    return [
+    const cols = [
       row.mes,                  // 1 (A)
       row.origem,               // 2 (B)
       row.dia,                  // 3 (C)
@@ -992,9 +991,12 @@ export default function Escala({ onBack }: EscalaProps) {
       row.estadoCavalo,         // 29 (AC)
       row.estadoCarreta,        // 30 (AD)
       '',                       // 31 (AE - Vazia)
-      row.pendencia || '',      // 32 (AF - Pendência: "CHECKLIST" quando vencido)
-      row.checkList             // 33 (AG - Check List / Validade dos veículos puxada do Checklist)
-    ].join('\t');
+      row.pendencia || '',      // 32 (AF - Pendência / Validade do Checklist)
+      row.checkList || ''       // 33 (AG - Vazia)
+    ];
+
+    // Ignora estritamente qualquer coluna além de AG (AI, AJ, AK, etc.)
+    return cols.slice(0, 33).join('\t');
   };
 
   // Convert rows to TSV string for copying (pure plain text without formatting or headers by default)
@@ -1666,7 +1668,6 @@ export default function Escala({ onBack }: EscalaProps) {
 
                   const carretasArr = Array.from(new Set(conjunto.rows.map(r => r.carreta).filter(Boolean)));
                   const carretasStr = carretasArr.length > 0 ? carretasArr.join(' + ') : 'SEM CARRETA';
-                  const checkListStr = conjunto.rows.map(r => r.checkList).filter(Boolean).join(' / ') || 'N/A';
 
                   return (
                     <div
@@ -1717,12 +1718,6 @@ export default function Escala({ onBack }: EscalaProps) {
                             <MapPin size={13} className="text-emerald-700" />
                             <span className="text-emerald-800/80 font-normal">Destino:</span> {conjunto.destino}
                           </span>
-                          {checkListStr !== 'N/A' && (
-                            <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 flex items-center gap-1.5 shadow-2xs">
-                              <ShieldCheck size={13} className="text-blue-700" />
-                              <span className="text-blue-800/80 font-normal">Check List:</span> {checkListStr}
-                            </span>
-                          )}
                         </div>
                       </div>
 
