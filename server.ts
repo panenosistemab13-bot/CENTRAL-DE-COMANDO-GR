@@ -213,38 +213,43 @@ Retorne estritamente o array JSON com as linhas encontradas.`;
           });
 
           const promptText = `Você é um especialista em logística, PGR e transporte de cargas da Três Corações (3C).
-Analise o documento em anexo (Ordem de Serviço 3C / OS de Terceiros / Transporte).
-Extraia com rigorosa precisão todos os campos da Ordem de Serviço:
-- transportador: Razão ou nome fantasia da transportadora (ex: TORNADOLOG, 3C, etc)
+Analise com rigorosa precisão o documento em anexo (pode ser uma Ordem de Serviço 3C, OS de Terceiros, Romaneio, CT-e, Manifesto ou relatório de embarques).
+
+Identifique com exatidão TODOS os dados operacionais de transporte presentes no documento:
+- Se houver mais de uma carga/veículo/viagem/OS no documento, extraia CADA UMA DELAS.
+- Se houver apenas uma Ordem de Serviço, extraia esse único registro.
+
+Para CADA embarque/viagem/veículo, extraia com máxima fidelidade:
+- transportador: Razão Social ou Nome Fantasia da transportadora (ex: TORNADOLOG, 3C, PATRUS, JAMEF, etc)
 - dataCarregamento: Data no formato DD/MM/AAAA (ex: 05/08/2026)
 - previsaoHorario: Previsão ou texto do horário (ex: FROTA ou 08:00)
-- filialOrigem: Filial de Origem (ex: VESPASIANO/MG, SANTA LUZIA/MG)
-- filialDestino: Filial de Destino (ex: EUSÉBIO/CE, NATAL/RN, RECIFE/PE)
-- agendaDescarregamento: Agenda de descarregamento se houver
+- filialOrigem: Cidade/UF de origem (ex: VESPASIANO/MG, SANTA LUZIA/MG)
+- filialDestino: Cidade/UF de destino (ex: EUSÉBIO/CE, NATAL/RN, RECIFE/PE, etc)
+- agendaDescarregamento: Data/hora agendada para descarga se houver
 - nomeMotorista: Nome completo do motorista em maiúsculas (ex: WILMER DIAZ SANCHEZ)
-- cpf: CPF do motorista (ex: 709.874.852-88)
-- vinculoMotorista: Vínculo do motorista (ex: TERCEIRO, FROTA, AGREGADO)
+- cpf: CPF do motorista formatado (ex: 709.874.852-88)
+- vinculoMotorista: Vínculo do motorista (ex: TERCEIRO, FROTA, AGREGADO, AUTÔNOMO)
 - rgUf: RG e UF do motorista (ex: F 439659 S PF / AM)
 - cnh: Número de registro da CNH (ex: 08359828273)
-- idCargo: ID 3 Cargo se houver
-- celular: Número de telefone ou celular (ex: 48 99219-2019)
-- perfilCavalo: Perfil do Cavalo (ex: TRUCADO, TOCO)
-- perfilCarreta: Perfil da Carreta (ex: SIDER, BAÚ, RODOTREM)
+- celular: Telefone celular ou WhatsApp com DDD (ex: 48 99219-2019)
+- perfilCavalo: Perfil do Cavalo (ex: TRUCADO, TOCO, 6X2, 6X4)
+- perfilCarreta: Perfil da Carreta (ex: SIDER, BAÚ, RODOTREM, BITREM, CARRETA LS)
 - capacidadePallets: Capacidade em pallets em número (ex: 30)
 - capacidadeToneladas: Capacidade em toneladas em número (ex: 30)
-- placaCavalo: Placa do cavalo mecânico com hífen (ex: TLN-3E35)
-- ufCavalo: UF do cavalo (ex: SC)
+- placaCavalo: Placa do cavalo mecânico com hífen (ex: TLN-3E35 ou ABC-1234)
+- ufCavalo: UF do cavalo (ex: SC, MG, SP)
 - placaCarreta1: Placa da carreta 1 com hífen (ex: TPI-4B34)
-- ufCarreta1: UF da carreta 1 (ex: SC)
-- placaCarreta2: Placa da carreta 2 se houver
+- ufCarreta1: UF da carreta 1 (ex: SC, MG, SP)
+- placaCarreta2: Placa da carreta 2 se houver (ex: rodotrem ou bitrem)
 - ufCarreta2: UF da carreta 2 se houver
-- rastreador: Tecnologia/marca do rastreador (ex: ONIX, SASCAR, AUTOTRAC)
-- quantEixos: Quantidade de eixos (ex: 6)
+- rastreador: Tecnologia/marca do rastreador (ex: ONIX, SASCAR, AUTOTRAC, OMNILINK, SIGHRA, KRONA)
+- quantEixos: Quantidade de eixos (ex: 6, 9)
 - comprimentoCarreta: Comprimento da carreta (ex: 14,6)
 - larguraCarreta: Largura da carreta (ex: 2,45)
 - alturaCarreta: Altura da carreta (ex: 2,82)
+- idCargo: Número da OS, Carga, CT-e ou Lacre se houver
 
-Retorne estritamente um objeto JSON com essas propriedades.`;
+IMPORTANTE: Retorne estritamente um ARRAY de objetos JSON (mesmo se houver apenas 1, retorne um array com 1 objeto).`;
 
           const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -269,8 +274,18 @@ Retorne estritamente um objeto JSON com essas propriedades.`;
           jsonText = jsonText.replace(/```json\n?|```/g, "").trim();
           const parsed = JSON.parse(jsonText);
 
-          if (parsed && (parsed.nomeMotorista || parsed.placaCavalo || parsed.transportador)) {
-            return res.status(200).json({ success: true, data: parsed });
+          let items: any[] = [];
+          if (Array.isArray(parsed)) {
+            items = parsed;
+          } else if (parsed && typeof parsed === 'object') {
+            if (Array.isArray(parsed.data)) items = parsed.data;
+            else if (Array.isArray(parsed.items)) items = parsed.items;
+            else if (Array.isArray(parsed.ordens)) items = parsed.ordens;
+            else items = [parsed];
+          }
+
+          if (items.length > 0) {
+            return res.status(200).json({ success: true, data: items });
           }
         } catch (geminiErr) {
           console.warn("Gemini extraction failed for OS PDF, fallback to text parser:", geminiErr);
@@ -284,32 +299,99 @@ Retorne estritamente um objeto JSON com essas propriedades.`;
           const pdfData = await pdf(buffer);
           const rawText = pdfData.text || "";
           
-          const plateRegex = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
-          const plates = (rawText.match(plateRegex) || []).map(p => p.replace(/\s+/g, '-').toUpperCase());
-          const dateMatch = rawText.match(/(\d{2}\/\d{2}\/\d{4})/);
-          const cpfMatch = rawText.match(/(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})/);
-          const cnhMatch = rawText.match(/(?:CNH|REGISTRO CNH)[\s\S]*?(\d{10,11})/i);
-          const celMatch = rawText.match(/(?:CELULAR|TELEFONE)[\s\S]*?(\(?\d{2}\)?\s*9?\d{4}[-\s]?\d{4})/i);
+          // Match all Brazilian plates (Standard ABC-1234 or Mercosul ABC1D23)
+          const plateRegex = /\b([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})\b/gi;
+          const rawPlates = (rawText.match(plateRegex) || []).map(p => {
+            const clean = p.replace(/[\s-]/g, '').toUpperCase();
+            if (clean.length === 7) {
+              return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+            }
+            return p.toUpperCase();
+          });
+          const plates = Array.from(new Set(rawPlates));
 
+          // Date
+          const dateMatch = rawText.match(/(?:DATA(?:\s+DE\s+CARREGAMENTO|\s+EMISS[ÃA]O)?[\s:]*)?(\d{2}[\/\.-]\d{2}[\/\.-]\d{2,4})/i);
+          
+          // CPF
+          const cpfMatch = rawText.match(/\b(\d{3}\.?\d{3}\.?\d{3}[-\/]?\d{2})\b/);
+          
+          // CNH
+          const cnhMatch = rawText.match(/(?:CNH|REGISTRO(?:\s+CNH)?)[\s:\-]+(\d{9,12})/i);
+          
+          // Telefone / Celular
+          const celMatch = rawText.match(/(?:CELULAR|TELEFONE|FONE|WHATSAPP|CONTATO)[\s:\-]+(\(?\d{2}\)?\s*9?\d{4}[-\s]?\d{4})/i);
+
+          // Transportador
           let transportador = '';
-          const trMatch = rawText.match(/(?:TRANSPORTADOR[\s\S]*?)(TORNADOLOG|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|[A-Z]{4,20})/i);
-          if (trMatch) transportador = trMatch[1].toUpperCase();
-
-          let motorista = '';
-          const motMatch = rawText.match(/NOME MOTORISTA\s*\n+([A-Za-zÀ-ÿ\s]+?)(?=\s+\d{3}|\n)/i);
-          if (motMatch) motorista = motMatch[1].trim().toUpperCase();
-
-          let orig = '';
-          let dest = '';
-          const odMatch = rawText.match(/FILIAL DE ORIGEM[\s\S]*?([A-Za-zÀ-ÿ0-9\s\/]+?)\s{2,}([A-Za-zÀ-ÿ0-9\s\/]+)/i);
-          if (odMatch) {
-            orig = odMatch[1].trim().toUpperCase();
-            dest = odMatch[2].trim().toUpperCase();
+          const trMatch = rawText.match(/(?:TRANSPORTADOR(?:A)?|EMPRESA)[\s:\-]+([A-Za-z0-9\.\-_ ]{3,40})/i);
+          if (trMatch) {
+            transportador = trMatch[1].trim().toUpperCase();
+          } else {
+            const trNamedMatch = rawText.match(/\b(TORNADOLOG|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|TRANSILVA|LOG EXPRESS|RODONAVES)\b/i);
+            if (trNamedMatch) transportador = trNamedMatch[1].toUpperCase();
           }
 
+          // Motorista / Condutor
+          let motorista = '';
+          const motMatch = rawText.match(/(?:NOME(?:\s+DO)?\s+MOTORISTA|CONDUTOR|NOME)[\s:\-]+([A-Za-zÀ-ÿ\s]{4,55})(?=\n|$|\s{3,}|CPF|RG|CNH)/i);
+          if (motMatch) {
+            motorista = motMatch[1].trim().toUpperCase();
+          } else {
+            // Alternative layout: Line after "NOME MOTORISTA"
+            const altMot = rawText.match(/NOME MOTORISTA\s*\n+([A-Za-zÀ-ÿ\s]+?)(?=\s+\d{3}|\n|$)/i);
+            if (altMot) motorista = altMot[1].trim().toUpperCase();
+          }
+
+          // RG / UF
+          let rgUf = '';
+          const rgMatch = rawText.match(/(?:RG(?:\s*[\/\-]\s*UF)?|SAP)[\s:\-]+([A-Za-z0-9\.\-\/\s]{4,25})/i);
+          if (rgMatch) rgUf = rgMatch[1].trim().toUpperCase();
+
+          // Origem & Destino
+          let orig = '';
+          let dest = '';
+          const origMatch = rawText.match(/(?:FILIAL DE ORIGEM|ORIGEM)[\s:\-]+([A-Za-zÀ-ÿ0-9\s\/\-_]{3,35})/i);
+          if (origMatch) orig = origMatch[1].trim().toUpperCase();
+
+          const destMatch = rawText.match(/(?:FILIAL DE DESTINO|DESTINO)[\s:\-]+([A-Za-zÀ-ÿ0-9\s\/\-_]{3,35})/i);
+          if (destMatch) dest = destMatch[1].trim().toUpperCase();
+
+          if (!orig && !dest) {
+            const odMatch = rawText.match(/FILIAL DE ORIGEM[\s\S]*?([A-Za-zÀ-ÿ0-9\s\/]+?)\s{2,}([A-Za-zÀ-ÿ0-9\s\/]+)/i);
+            if (odMatch) {
+              orig = odMatch[1].trim().toUpperCase();
+              dest = odMatch[2].trim().toUpperCase();
+            }
+          }
+
+          // Rastreador
           let rastreador = 'ONIX';
-          const rastMatch = rawText.match(/(?:RASTREADOR[\s\S]*?)(ONIX|SASCAR|AUTOTRAC|OMNILINK|SIGHRA)/i);
+          const rastMatch = rawText.match(/(?:RASTREADOR|TECNOLOGIA)[\s:\-]+(ONIX|SASCAR|AUTOTRAC|OMNILINK|SIGHRA|KRONA|[A-Za-z0-9\-]{3,20})/i);
           if (rastMatch) rastreador = rastMatch[1].toUpperCase();
+
+          // Pallets & Toneladas
+          let pallets = '30';
+          const pMatch = rawText.match(/(?:CAPACIDADE(?:\s+DE)?\s+PALLETS|PALLETS|PLTS)[\s:\-]+(\d{1,3})/i);
+          if (pMatch) pallets = pMatch[1];
+
+          let ton = '30';
+          const tMatch = rawText.match(/(?:CAPACIDADE(?:\s+DE)?\s+TONELADAS|TONELADAS|TON|PBT)[\s:\-]+(\d{1,3}(?:[,\.]\d{1,2})?)/i);
+          if (tMatch) ton = tMatch[1].replace(',', '.');
+
+          // Perfil Cavalo & Carreta
+          let perfilCavalo = 'TRUCADO';
+          const cavMatch = rawText.match(/(?:PERFIL(?:\s+DO)?\s+CAVALO|TIPO CAVALO)[\s:\-]+([A-Za-z0-9\- ]{3,25})/i);
+          if (cavMatch) perfilCavalo = cavMatch[1].trim().toUpperCase();
+
+          let perfilCarreta = 'SIDER';
+          const carMatch = rawText.match(/(?:PERFIL(?:\s+DA)?\s+CARRETA|TIPO CARRETA)[\s:\-]+([A-Za-z0-9\- ]{3,25})/i);
+          if (carMatch) perfilCarreta = carMatch[1].trim().toUpperCase();
+
+          // OS / ID Carga
+          let idCargo = '';
+          const osMatch = rawText.match(/(?:ID\s*CARGO|Nº\s*OS|ORDEM\s*DE\s*SERVIÇO|CARGA|CTE)[\s:\-]+([A-Za-z0-9\-_]{3,30})/i);
+          if (osMatch) idCargo = osMatch[1].trim().toUpperCase();
 
           const fallbackData = {
             transportador: transportador || 'TORNADOLOG',
@@ -319,23 +401,24 @@ Retorne estritamente um objeto JSON com essas propriedades.`;
             nomeMotorista: motorista || '',
             cpf: cpfMatch ? cpfMatch[1] : '',
             vinculoMotorista: 'TERCEIRO',
-            rgUf: '',
+            rgUf: rgUf || '',
             cnh: cnhMatch ? cnhMatch[1] : '',
             celular: celMatch ? celMatch[1] : '',
-            perfilCavalo: 'TRUCADO',
-            perfilCarreta: 'SIDER',
-            capacidadePallets: '30',
-            capacidadeToneladas: '30',
+            perfilCavalo: perfilCavalo,
+            perfilCarreta: perfilCarreta,
+            capacidadePallets: pallets,
+            capacidadeToneladas: ton,
             placaCavalo: plates[0] || '',
             ufCavalo: 'SC',
             placaCarreta1: plates[1] || '',
             ufCarreta1: 'SC',
             placaCarreta2: plates[2] || '',
-            ufCarreta2: '',
-            rastreador: rastreador
+            ufCarreta2: plates[2] ? 'SC' : '',
+            rastreador: rastreador,
+            idCargo: idCargo
           };
 
-          return res.status(200).json({ success: true, data: fallbackData });
+          return res.status(200).json({ success: true, data: [fallbackData] });
         } catch (pdfErr) {
           console.warn("PDF parse fallback error:", pdfErr);
         }

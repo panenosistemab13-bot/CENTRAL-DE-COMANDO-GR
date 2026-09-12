@@ -35,6 +35,8 @@ import {
   saveFullPageConfigToFirebase
 } from '../data/pagesConfig';
 import { cn } from '../lib/utils';
+import { rtdb } from '../firebase';
+import { ref, onValue } from 'firebase/database';
 
 interface RestrictedPagesModalProps {
   isOpen: boolean;
@@ -78,6 +80,32 @@ export default function RestrictedPagesModal({
   const [newPageVisible, setNewPageVisible] = useState(true);
   const [formError, setFormError] = useState('');
 
+  // Real-time synchronization when any device modifies restricted pages
+  React.useEffect(() => {
+    try {
+      const pagesConfigRef = ref(rtdb, 'pages_config');
+      const unsubscribe = onValue(pagesConfigRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const { visibility, customPages, pageOrder } = data;
+          if (customPages && Array.isArray(customPages)) {
+            saveStoredCustomPages(customPages);
+          }
+          if (pageOrder && Array.isArray(pageOrder)) {
+            saveStoredPageOrder(pageOrder);
+          }
+          if (visibility && typeof visibility === 'object') {
+            setVisibilityState(visibility);
+          }
+          setPagesList(getAllAvailablePages());
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Realtime listener error in modal:', err);
+    }
+  }, []);
+
   // Sync state if modal opens with new visibility
   React.useEffect(() => {
     if (isOpen) {
@@ -92,13 +120,17 @@ export default function RestrictedPagesModal({
   }, [isOpen, currentVisibility]);
 
   const togglePageVisibility = (pageId: string) => {
-    setVisibilityState(prev => ({
-      ...prev,
-      [pageId]: !prev[pageId]
-    }));
+    const updated = {
+      ...visibilityState,
+      [pageId]: !visibilityState[pageId]
+    };
+    setVisibilityState(updated);
+    // Instant real-time broadcast to all devices
+    saveFullPageConfigToFirebase(updated, getStoredCustomPages(), pagesList.map(p => p.id));
+    onSave(updated, pagesList);
   };
 
-  // Presets
+  // Presets with instant real-time sync
   const applyPreset = (preset: 'all_visible' | 'default' | 'operational' | 'admin' | 'executive') => {
     const updated: Record<string, boolean> = {};
 
@@ -123,9 +155,11 @@ export default function RestrictedPagesModal({
     });
 
     setVisibilityState(updated);
+    saveFullPageConfigToFirebase(updated, getStoredCustomPages(), pagesList.map(p => p.id));
+    onSave(updated, pagesList);
   };
 
-  // Handle Add New Page
+  // Handle Add New Page with instant real-time sync
   const handleAddNewPage = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanId = (newPageId || newPageLabel)
@@ -167,6 +201,7 @@ export default function RestrictedPagesModal({
     setVisibilityState(newVis);
 
     saveFullPageConfigToFirebase(newVis, updatedCustom, updatedPages.map(p => p.id));
+    onSave(newVis, updatedPages);
 
     // Reset Form
     setNewPageLabel('');
@@ -179,7 +214,7 @@ export default function RestrictedPagesModal({
     setFormError('');
   };
 
-  // Handle Delete Custom Page
+  // Handle Delete Custom Page with instant real-time sync
   const handleDeleteCustomPage = (pageId: string) => {
     const updatedCustom = getStoredCustomPages().filter(p => p.id !== pageId);
     const updatedPages = pagesList.filter(p => p.id !== pageId);
@@ -190,9 +225,10 @@ export default function RestrictedPagesModal({
     setVisibilityState(updatedVis);
 
     saveFullPageConfigToFirebase(updatedVis, updatedCustom, updatedPages.map(p => p.id));
+    onSave(updatedVis, updatedPages);
   };
 
-  // Page Sequence Reordering Handlers
+  // Page Sequence Reordering Handlers with instant real-time sync
   const movePageUp = (pageId: string) => {
     setPagesList(prev => {
       const idx = prev.findIndex(p => p.id === pageId);
@@ -201,6 +237,8 @@ export default function RestrictedPagesModal({
       const temp = copy[idx];
       copy[idx] = copy[idx - 1];
       copy[idx - 1] = temp;
+      saveFullPageConfigToFirebase(visibilityState, getStoredCustomPages(), copy.map(p => p.id));
+      onSave(visibilityState, copy);
       return copy;
     });
   };
@@ -213,6 +251,8 @@ export default function RestrictedPagesModal({
       const temp = copy[idx];
       copy[idx] = copy[idx + 1];
       copy[idx + 1] = temp;
+      saveFullPageConfigToFirebase(visibilityState, getStoredCustomPages(), copy.map(p => p.id));
+      onSave(visibilityState, copy);
       return copy;
     });
   };
@@ -226,6 +266,8 @@ export default function RestrictedPagesModal({
       const copy = [...prev];
       const [moved] = copy.splice(currentIndex, 1);
       copy.splice(targetIndex, 0, moved);
+      saveFullPageConfigToFirebase(visibilityState, getStoredCustomPages(), copy.map(p => p.id));
+      onSave(visibilityState, copy);
       return copy;
     });
   };
@@ -235,6 +277,7 @@ export default function RestrictedPagesModal({
     const defaultPages = getAllAvailablePages();
     setPagesList(defaultPages);
     saveFullPageConfigToFirebase(visibilityState, getStoredCustomPages(), defaultPages.map(p => p.id));
+    onSave(visibilityState, defaultPages);
   };
 
   // Counts

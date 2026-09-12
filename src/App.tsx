@@ -55,6 +55,7 @@ import Escala from './components/Escala';
 import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
+import MobileApp from './components/mobile/MobileApp';
 import { MobileBottomDock, MobileTopBar } from './components/MobileDock';
 import { 
   PageDefinition, 
@@ -73,7 +74,7 @@ import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 import { Globe, Database, FileSpreadsheet } from 'lucide-react';
 
-type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'escala';
+export type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'escala';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -411,6 +412,109 @@ export default function App() {
   const activeTodayApps = todayAppointments.filter(app => app.urgency !== 'past');
   const maxUrgencyApp = activeTodayApps[0];
   const maxUrgencyScore = maxUrgencyApp ? maxUrgencyApp.urgencyScore : 0;
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = passwordInput.trim().toLowerCase();
+    if (clean === '#trescafe2027' || clean === '#trescafe' || clean === 'trescafe' || clean === 'admin') {
+      setShowPasswordModal(false);
+      setPasswordInput('');
+      setPasswordError(false);
+      setShowRestrictedPagesModal(true);
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  // 100% NATIVE SMARTPHONE MOBILE APP EXPERIENCE
+  if (isMobile) {
+    return (
+      <div className="w-full min-h-screen bg-[#0d0603] text-[#f5ebd6] select-none font-sans overflow-x-hidden">
+        <MobileApp
+          activeTab={activeTab}
+          setActiveTab={(tab) => setActiveTab(tab)}
+          pageVisibility={pageVisibility}
+          availablePages={availablePages}
+          onOpenPageSelector={handleOpenPageSelector}
+          urgentAppointment={maxUrgencyApp}
+        />
+
+        {/* Mobile-adapted Admin Password Modal */}
+        {showPasswordModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-[#1e0e06] border-2 border-amber-500/40 rounded-3xl p-6 w-full max-w-xs shadow-2xl text-[#f5ebd6]"
+            >
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#B32025]/20 border border-[#B32025]/40 flex items-center justify-center text-[#B32025]">
+                  <Lock size={22} />
+                </div>
+              </div>
+              <h3 className="text-center font-sans font-black uppercase text-sm text-white mb-1">
+                Acesso Restrito
+              </h3>
+              <p className="text-center text-xs text-[#c2a67e] mb-4">
+                Digite a senha de administrador:
+              </p>
+              <form onSubmit={handlePasswordSubmit}>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  placeholder="••••••••"
+                  className={cn(
+                    "w-full bg-black/50 text-white placeholder-[#c2a67e]/40 border rounded-xl px-4 py-2.5 text-center font-mono tracking-widest text-sm focus:outline-none",
+                    passwordError ? "border-red-500" : "border-white/20 focus:border-amber-500"
+                  )}
+                  autoFocus
+                />
+                {passwordError && (
+                  <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider text-center mt-1.5">
+                    Senha incorreta!
+                  </p>
+                )}
+                <div className="flex gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setPasswordInput('');
+                      setPasswordError(false);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-white/10 text-white font-sans font-bold text-xs"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-[#B32025] hover:bg-[#c02428] text-white font-sans font-black text-xs uppercase tracking-wider shadow"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Global Restricted Pages Suggestion & Configuration Modal */}
+        <RestrictedPagesModal
+          isOpen={showRestrictedPagesModal}
+          onClose={() => setShowRestrictedPagesModal(false)}
+          currentVisibility={pageVisibility}
+          onSave={(newVisibility, updatedPages) => {
+            setPageVisibility(newVisibility);
+            setAvailablePages(updatedPages);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">

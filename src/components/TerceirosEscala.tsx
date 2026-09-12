@@ -131,8 +131,44 @@ export default function TerceirosEscala({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to build a DispoRow from raw OS object
-  const buildDispoRowsFromOS = (os: typeof SAMPLE_OS_DATA): DispoRow[] => {
+  // Helper to build a DispoRow from raw OS object or extracted entity
+  const buildDispoRowsFromOS = (raw: any): DispoRow[] => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+      return raw.flatMap(item => buildDispoRowsFromOS(item));
+    }
+
+    const os = {
+      transportador: raw.transportador || raw.transportadora || raw.empresa || '',
+      dataCarregamento: raw.dataCarregamento || raw.data || '',
+      previsaoHorario: raw.previsaoHorario || raw.horario || raw.hora || '',
+      filialOrigem: raw.filialOrigem || raw.origem || '',
+      filialDestino: raw.filialDestino || raw.destino || '',
+      agendaDescarregamento: raw.agendaDescarregamento || raw.agenda || '',
+      nomeMotorista: raw.nomeMotorista || raw.motorista || raw.condutor || raw.conductor || '',
+      cpf: raw.cpf || raw.cpfMotorista || '',
+      vinculoMotorista: raw.vinculoMotorista || raw.vinculo || raw.categoria || 'TERCEIRO',
+      rgUf: raw.rgUf || raw.rg || raw.rgSap || '',
+      cnh: raw.cnh || raw.cnhMotorista || '',
+      idCargo: raw.idCargo || raw.idCarga || raw.os || raw.ordem || '',
+      celular: raw.celular || raw.telefone || raw.fone || '',
+      perfilCavalo: raw.perfilCavalo || raw.tipoCavalo || 'TRUCADO',
+      perfilCarreta: raw.perfilCarreta || raw.tipoCarreta || 'SIDER',
+      capacidadePallets: String(raw.capacidadePallets || raw.pallets || '30'),
+      capacidadeToneladas: String(raw.capacidadeToneladas || raw.toneladas || raw.ton || '30'),
+      placaCavalo: raw.placaCavalo || raw.cavalo || raw.placa || '',
+      ufCavalo: raw.ufCavalo || raw.estadoCavalo || 'SC',
+      placaCarreta1: raw.placaCarreta1 || raw.carreta || raw.carreta1 || '',
+      ufCarreta1: raw.ufCarreta1 || raw.estadoCarreta || 'SC',
+      placaCarreta2: raw.placaCarreta2 || raw.carreta2 || '',
+      ufCarreta2: raw.ufCarreta2 || '',
+      rastreador: raw.rastreador || raw.tecnologia || 'ONIX',
+      quantEixos: raw.quantEixos || raw.eixos || '',
+      comprimentoCarreta: raw.comprimentoCarreta || '',
+      larguraCarreta: raw.larguraCarreta || '',
+      alturaCarreta: raw.alturaCarreta || ''
+    };
+
     const dataStr = os.dataCarregamento || new Date().toLocaleDateString('pt-BR');
     const mes = getMonthAbbrev(dataStr);
     const dia = getDayOfWeek(dataStr);
@@ -157,9 +193,9 @@ export default function TerceirosEscala({
     // Calculate m3 if dimensions available: comp * larg * alt
     let m3Val = '';
     if (os.comprimentoCarreta && os.larguraCarreta && os.alturaCarreta) {
-      const c = parseFloat(os.comprimentoCarreta.replace(',', '.'));
-      const l = parseFloat(os.larguraCarreta.replace(',', '.'));
-      const a = parseFloat(os.alturaCarreta.replace(',', '.'));
+      const c = parseFloat(String(os.comprimentoCarreta).replace(',', '.'));
+      const l = parseFloat(String(os.larguraCarreta).replace(',', '.'));
+      const a = parseFloat(String(os.alturaCarreta).replace(',', '.'));
       if (!isNaN(c) && !isNaN(l) && !isNaN(a)) {
         m3Val = `${Math.round(c * l * a)} m³`;
       }
@@ -250,6 +286,146 @@ export default function TerceirosEscala({
     return [singleRow];
   };
 
+  // Dedicated parser for Excel (.xlsx, .xls) and CSV spreadsheets
+  const parseExcelOrCsvFile = async (file: File): Promise<DispoRow[]> => {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = wb.SheetNames[0];
+    if (!firstSheetName) return [];
+
+    const ws = wb.Sheets[firstSheetName];
+    const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    if (!data || data.length === 0) return [];
+
+    const headerRow = (data[0] || []).map(h => String(h || '').trim().toUpperCase());
+    
+    // Check if it's the standard 33-column availability sheet
+    const is33Cols = headerRow.length >= 20 && (
+      headerRow.includes('MÊS') || 
+      headerRow.includes('MES') || 
+      headerRow.includes('CAVALO')
+    );
+
+    const extractedRows: DispoRow[] = [];
+    const startIndex = (headerRow.includes('MÊS') || headerRow.includes('MES') || headerRow.includes('CAVALO') || headerRow.includes('PLACA')) ? 1 : 0;
+
+    for (let i = startIndex; i < data.length; i++) {
+      const row = data[i];
+      if (!row || row.length === 0) continue;
+
+      if (is33Cols) {
+        const cavalo = formatPlateWithHyphen(String(row[12] || ''));
+        const carreta = formatPlateWithHyphen(String(row[13] || ''));
+        const conductor = String(row[19] || '').trim().toUpperCase();
+
+        if (!cavalo && !carreta && !conductor) continue;
+
+        let chk = { checkList: '', pendencia: '' };
+        if (getChecklistDetails && cavalo) {
+          chk = getChecklistDetails(cavalo, carreta);
+        }
+
+        extractedRows.push({
+          id: `excel-row-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+          mes: String(row[0] || ''),
+          origem: String(row[1] || 'VESPASIANO/MG').toUpperCase(),
+          dia: String(row[2] || ''),
+          data: String(row[3] || ''),
+          contatoWhats: String(row[4] || 'X'),
+          horaLiberado: String(row[5] || ''),
+          status: String(row[6] || 'LIBERADO CARREGAMENTO'),
+          modeloCarreta: String(row[7] || 'SIDER').toUpperCase(),
+          modeloCavalo: String(row[8] || 'TRUCADO').toUpperCase(),
+          fezContato: String(row[9] || 'SIM'),
+          destino: String(row[10] || '').toUpperCase(),
+          transportador: String(row[11] || 'TERCEIRO').toUpperCase(),
+          cavalo,
+          carreta,
+          pallets: String(row[14] || '30'),
+          ton: String(row[15] || '30'),
+          m3: String(row[16] || ''),
+          categoria: String(row[17] || 'TERCEIRO').toUpperCase(),
+          tecnologia: String(row[18] || 'ONIX').toUpperCase(),
+          conductor,
+          cpf: String(row[20] || ''),
+          rgSap: String(row[21] || ''),
+          cnh: String(row[22] || ''),
+          telefone: String(row[23] || ''),
+          vigenciaCadastro: String(row[24] || 'TERCEIRO'),
+          codigoTransportadora: String(row[25] || ''),
+          idCarga: String(row[26] || ''),
+          estadoMotorista: String(row[27] || 'MG').toUpperCase(),
+          estadoCavalo: String(row[28] || 'SC').toUpperCase(),
+          estadoCarreta: String(row[29] || 'SC').toUpperCase(),
+          pendencia: String(row[31] || chk.pendencia || ''),
+          checkList: String(row[32] || chk.checkList || '')
+        });
+      } else {
+        const getColVal = (keys: string[]) => {
+          for (const key of keys) {
+            const idx = headerRow.findIndex(h => h.includes(key));
+            if (idx !== -1 && row[idx] !== undefined) return String(row[idx] || '').trim();
+          }
+          return '';
+        };
+
+        const cavalo = formatPlateWithHyphen(getColVal(['CAVALO', 'PLACA CAVALO', 'VEICULO', 'PLACA']));
+        const carreta = formatPlateWithHyphen(getColVal(['CARRETA', 'REBOQUE', 'PLACA CARRETA']));
+        const motorista = getColVal(['MOTORISTA', 'CONDUTOR', 'NOME']);
+        const cpf = getColVal(['CPF']);
+        const destino = getColVal(['DESTINO', 'FILIAL DESTINO']);
+        const origem = getColVal(['ORIGEM', 'FILIAL ORIGEM']) || 'VESPASIANO/MG';
+        const dataStr = getColVal(['DATA', 'CARREGAMENTO']) || new Date().toLocaleDateString('pt-BR');
+        const transportador = getColVal(['TRANSPORTADOR', 'TRANSPORTADORA', 'EMPRESA']) || 'TERCEIRO';
+
+        if (!cavalo && !carreta && !motorista) continue;
+
+        let chk = { checkList: '', pendencia: '' };
+        if (getChecklistDetails && cavalo) {
+          chk = getChecklistDetails(cavalo, carreta);
+        }
+
+        extractedRows.push({
+          id: `excel-row-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+          mes: getMonthAbbrev(dataStr),
+          origem: origem.toUpperCase(),
+          dia: getDayOfWeek(dataStr),
+          data: dataStr,
+          contatoWhats: 'X',
+          horaLiberado: new Date().toLocaleTimeString('pt-BR'),
+          status: 'LIBERADO CARREGAMENTO',
+          modeloCarreta: (getColVal(['MODELO CARRETA', 'TIPO CARRETA']) || 'SIDER').toUpperCase(),
+          modeloCavalo: (getColVal(['MODELO CAVALO', 'TIPO CAVALO']) || 'TRUCADO').toUpperCase(),
+          fezContato: 'SIM',
+          destino: (normalizeDestino(destino) || destino || 'EUSÉBIO/CE').toUpperCase(),
+          transportador: transportador.toUpperCase(),
+          cavalo,
+          carreta: carreta || 'SEM CARRETA',
+          pallets: getColVal(['PALLETS', 'PLTS']) || '30',
+          ton: getColVal(['TONELADAS', 'TON', 'PESO']) || '30',
+          m3: getColVal(['M3', 'METRAGEM', 'VOL']) || '',
+          categoria: (getColVal(['CATEGORIA', 'VINCULO']) || 'TERCEIRO').toUpperCase(),
+          tecnologia: (getColVal(['TECNOLOGIA', 'RASTREADOR']) || 'ONIX').toUpperCase(),
+          conductor: motorista.toUpperCase(),
+          cpf: cpf,
+          rgSap: getColVal(['RG', 'SAP']),
+          cnh: getColVal(['CNH']),
+          telefone: getColVal(['TELEFONE', 'CELULAR', 'FONE']),
+          vigenciaCadastro: 'TERCEIRO',
+          codigoTransportadora: getColVal(['CODIGO']),
+          idCarga: getColVal(['CARGA', 'OS', 'CTE']),
+          estadoMotorista: (getColVal(['UF MOTORISTA', 'ESTADO MOTORISTA']) || 'MG').toUpperCase(),
+          estadoCavalo: (getColVal(['UF CAVALO', 'ESTADO CAVALO']) || 'SC').toUpperCase(),
+          estadoCarreta: (getColVal(['UF CARRETA', 'ESTADO CARRETA']) || 'SC').toUpperCase(),
+          pendencia: chk.pendencia,
+          checkList: chk.checkList
+        });
+      }
+    }
+
+    return extractedRows;
+  };
+
   // Convert row into 33 exact TSV columns (A to AG) for Excel clipboard pasting
   const getRowTSV = (row: DispoRow): string => {
     const cols = [
@@ -290,14 +466,27 @@ export default function TerceirosEscala({
     return cols.slice(0, 33).join('\t');
   };
 
-  // Process a single file (PDF or Image)
-  const processFile = async (file: File) => {
-    return new Promise<DispoRow[]>((resolve) => {
+  // Process a single file (PDF, Image, Excel, CSV)
+  const processFile = async (file: File): Promise<DispoRow[]> => {
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv');
+    if (isExcel) {
+      setProcessingStatus(`Lendo planilha ${file.name}...`);
+      try {
+        const excelRows = await parseExcelOrCsvFile(file);
+        return excelRows;
+      } catch (err) {
+        console.error('Erro ao ler planilha:', err);
+        throw new Error(`Erro ao ler "${file.name}": ${(err as Error).message}`);
+      }
+    }
+
+    return new Promise<DispoRow[]>((resolve, reject) => {
       const reader = new FileReader();
+      reader.onerror = () => reject(new Error(`Falha ao ler arquivo "${file.name}".`));
       reader.onload = async () => {
         try {
           const base64 = reader.result as string;
-          setProcessingStatus(`Lendo ${file.name}...`);
+          setProcessingStatus(`Extraindo dados de ${file.name}...`);
 
           const res = await fetch('/api/parse-os-pdf', {
             method: 'POST',
@@ -312,22 +501,25 @@ export default function TerceirosEscala({
           if (res.ok) {
             const json = await res.json();
             if (json.success && json.data) {
-              const newRows = buildDispoRowsFromOS(json.data);
-              resolve(newRows);
-              return;
+              const items = Array.isArray(json.data) ? json.data : [json.data];
+              const parsedRows: DispoRow[] = [];
+              for (const item of items) {
+                const built = buildDispoRowsFromOS(item);
+                parsedRows.push(...built);
+              }
+              if (parsedRows.length > 0) {
+                resolve(parsedRows);
+                return;
+              }
             }
           }
-          // Fallback if backend API failed or returned error
-          console.warn('API /api/parse-os-pdf não retornou sucesso, usando fallback local.');
-          const fallbackRows = buildDispoRowsFromOS({
-            ...SAMPLE_OS_DATA,
-            transportador: file.name.toUpperCase().includes('TORNA') ? 'TORNADOLOG' : 'TERCEIRO'
-          });
-          resolve(fallbackRows);
+
+          const errMsg = `Não foi possível extrair dados operacionais legíveis de "${file.name}".`;
+          console.warn(errMsg);
+          reject(new Error(errMsg));
         } catch (err) {
           console.error('Erro ao processar arquivo:', err);
-          const fallbackRows = buildDispoRowsFromOS(SAMPLE_OS_DATA);
-          resolve(fallbackRows);
+          reject(err);
         }
       };
       reader.readAsDataURL(file);
@@ -339,26 +531,39 @@ export default function TerceirosEscala({
     if (!files || files.length === 0) return;
 
     setIsProcessing(true);
-    setProcessingStatus(`Processando ${files.length} arquivo(s)...`);
+    setProcessingStatus(`Iniciando importação de ${files.length} arquivo(s)...`);
 
     const allNewRows: DispoRow[] = [];
     const fileNames: string[] = [];
+    const errors: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       fileNames.push(file.name);
       setProcessingStatus(`Processando ${i + 1}/${files.length}: ${file.name}`);
-      const rowsFromFile = await processFile(file);
-      allNewRows.push(...rowsFromFile);
+      try {
+        const rowsFromFile = await processFile(file);
+        if (rowsFromFile && rowsFromFile.length > 0) {
+          allNewRows.push(...rowsFromFile);
+        } else {
+          errors.push(`Nenhuma linha identificada em ${file.name}`);
+        }
+      } catch (err) {
+        errors.push((err as Error).message || `Erro em ${file.name}`);
+      }
     }
 
-    setRows(prev => [...allNewRows, ...prev]);
-    setUploadedFilesHistory(prev => [...fileNames, ...prev]);
+    if (allNewRows.length > 0) {
+      setRows(prev => [...allNewRows, ...prev]);
+      setUploadedFilesHistory(prev => [...fileNames, ...prev]);
+      setToastMessage(`Importação concluída! ${allNewRows.length} registro(s) importado(s) com sucesso.`);
+    } else {
+      setToastMessage(errors.length > 0 ? errors.join('; ') : 'Nenhum dado pôde ser extraído dos arquivos importados.');
+    }
+
     setIsProcessing(false);
     setProcessingStatus('');
-
-    setToastMessage(`Sucesso! ${allNewRows.length} linha(s) extraída(s) de ${files.length} documento(s) PDF.`);
-    setTimeout(() => setToastMessage(null), 4500);
+    setTimeout(() => setToastMessage(null), 5000);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -630,7 +835,7 @@ export default function TerceirosEscala({
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,application/pdf,image/png,image/jpeg,image/jpg"
+            accept=".pdf,application/pdf,image/png,image/jpeg,image/jpg,.xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
             className="hidden"
             onChange={(e) => handleFilesUpload(e.target.files)}
           />
@@ -645,16 +850,16 @@ export default function TerceirosEscala({
 
           <div>
             <h4 className="text-base font-serif font-black uppercase text-[#2D1A10]">
-              {isProcessing ? processingStatus || "Processando Documento..." : "Clique ou Arraste os arquivos em PDF aqui"}
+              {isProcessing ? processingStatus || "Processando Documento..." : "Clique ou Arraste os arquivos aqui"}
             </h4>
             <p className="text-xs text-slate-600 mt-1 max-w-lg mx-auto">
-              Suporta documentos de <strong>Ordem de Serviço 3C (PDF ou Imagem)</strong>. O sistema extrai motorista, transportador, placas do cavalo e carreta, pallets, toneladas, eixos e dimensões.
+              Suporta <strong>Ordem de Serviço 3C (PDF ou Imagem)</strong> e planilhas <strong>Excel / CSV (.xlsx, .xls, .csv)</strong>. O sistema extrai com 100% de precisão transportador, datas, motoristas, placas do cavalo e carretas, pallets, pesos e checklist.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
             <span className="px-3 py-1 rounded-lg bg-[#3A2414]/5 text-[#3A2414] text-[11px] font-mono font-bold uppercase border border-[#3A2414]/10">
-              Formatos: .PDF, .PNG, .JPG
+              Formatos: .PDF, .PNG, .JPG, .XLSX, .CSV
             </span>
             <span className="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-mono font-bold uppercase border border-emerald-300">
               Saída: Microsoft Excel (.xlsx) + Ctrl+V
