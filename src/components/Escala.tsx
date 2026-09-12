@@ -602,7 +602,7 @@ export default function Escala({ onBack }: EscalaProps) {
     }
 
     return {
-      checkList: '',
+      checkList: isVencido ? 'CHECKLIST' : '',
       pendencia: formattedDate
     };
   };
@@ -831,7 +831,7 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: '',
+          checkList: chkDetails1.checkList,
           pendencia: chkDetails1.pendencia
         };
 
@@ -868,7 +868,7 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: '',
+          checkList: chkDetails2.checkList,
           pendencia: chkDetails2.pendencia
         };
 
@@ -910,7 +910,7 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: '',
+          checkList: chkDetails.checkList,
           pendencia: chkDetails.pendencia
         };
 
@@ -949,7 +949,7 @@ export default function Escala({ onBack }: EscalaProps) {
           updated.cavalo = cav;
           updated.carreta = car;
           const chk = getChecklistDetails(cav, car);
-          updated.checkList = '';
+          updated.checkList = chk.checkList;
           updated.pendencia = chk.pendencia;
         }
         return updated;
