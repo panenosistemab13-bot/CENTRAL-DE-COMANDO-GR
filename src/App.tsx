@@ -134,42 +134,27 @@ export default function App() {
 
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 
-  const mobileTabs = [
+  // Dynamic visible tabs calculation
+  const visibleTabs = [
     { id: 'menu', label: 'Início', icon: LayoutGrid },
-    { id: 'presence', label: 'Lista de Presença', icon: Users2 },
-    { id: 'patio', label: 'Pátio', icon: Container }
+    ...availablePages
+      .filter(p => Boolean(pageVisibility[p.id]))
+      .map(p => {
+        const found = allTabs.find(t => t.id === p.id);
+        const IconComponent = ICON_MAP[p.iconName] || found?.icon || Sliders;
+        return {
+          id: p.id,
+          label: p.label,
+          icon: IconComponent
+        };
+      })
   ];
-
-  // Dynamic visible tabs calculation (mobile strictly limits to Início, Lista de Presença, and Pátio)
-  const visibleTabs = isMobile
-    ? mobileTabs
-    : [
-        { id: 'menu', label: 'Início', icon: LayoutGrid },
-        ...availablePages
-          .filter(p => Boolean(pageVisibility[p.id]))
-          .map(p => {
-            const found = allTabs.find(t => t.id === p.id);
-            const IconComponent = ICON_MAP[p.iconName] || found?.icon || Sliders;
-            return {
-              id: p.id,
-              label: p.label,
-              icon: IconComponent
-            };
-          })
-      ];
 
   const [activeTab, setActiveTab] = useState<Tab>('menu');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const [averbacaoView, setAverbacaoView] = useState<'generator' | 'codes'>('generator');
   const [smCreatorView, setSmCreatorView] = useState<'generator' | 'codes'>('generator');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
-
-  // Enforce mobile restriction: only menu, presence, and patio
-  useEffect(() => {
-    if (isMobile && activeTab !== 'menu' && activeTab !== 'presence' && activeTab !== 'patio') {
-      setActiveTab('menu');
-    }
-  }, [isMobile, activeTab]);
 
   const [appointments, setAppointments] = useState<Record<string, Appointment>>({});
   const [isAlertDismissed, setIsAlertDismissed] = useState(false);

@@ -34,6 +34,8 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import FileSaver from 'file-saver';
+import * as XLSX from 'xlsx';
+import TerceirosEscala from './TerceirosEscala';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, push, remove, update } from 'firebase/database';
 import { parseISO, differenceInDays } from 'date-fns';
@@ -322,7 +324,7 @@ interface EscalaProps {
 }
 
 export default function Escala({ onBack }: EscalaProps) {
-  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas'>('escala');
+  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros'>('escala');
   const [inputText, setInputText] = useState<string>('');
   const [includeHeaderInCopy, setIncludeHeaderInCopy] = useState<boolean>(false);
   const [copiedStatus, setCopiedStatus] = useState<boolean>(false);
@@ -1101,6 +1103,67 @@ export default function Escala({ onBack }: EscalaProps) {
     FileSaver.saveAs(blob, `ESCALA_DISPONIBILIDADE_${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
+  // Export as genuine Microsoft Excel (.xlsx) file
+  const handleExportXLSX = () => {
+    if (editableRows.length === 0) return;
+    const data = [
+      [...DISPO_COLUMNS],
+      ...editableRows.map(row => [
+        row.mes,
+        row.origem,
+        row.dia,
+        row.data,
+        row.contatoWhats,
+        row.horaLiberado,
+        row.status,
+        row.modeloCarreta,
+        row.modeloCavalo,
+        row.fezContato,
+        row.destino,
+        row.transportador,
+        formatPlateWithHyphen(row.cavalo),
+        formatPlateWithHyphen(row.carreta),
+        row.pallets,
+        row.ton,
+        row.m3,
+        row.categoria,
+        row.tecnologia,
+        row.conductor,
+        row.cpf,
+        row.rgSap,
+        row.cnh,
+        row.telefone,
+        row.vigenciaCadastro,
+        row.codigoTransportadora,
+        row.idCarga,
+        row.estadoMotorista,
+        row.estadoCavalo,
+        row.estadoCarreta,
+        '',
+        row.pendencia || '',
+        row.checkList || ''
+      ])
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const colWidths = DISPO_COLUMNS.map((col, i) => {
+      let maxLen = col.length;
+      editableRows.forEach(r => {
+        const val = String(data[editableRows.indexOf(r) + 1]?.[i] || '');
+        if (val.length > maxLen) maxLen = val.length;
+      });
+      return { wch: Math.min(Math.max(maxLen + 3, 11), 38) };
+    });
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Disponibilidade');
+    const fileName = `ESCALA_DISPONIBILIDADE_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    setCopyToastMessage(`Planilha Excel (.xlsx) gerada com sucesso!`);
+    setTimeout(() => setCopyToastMessage(null), 3500);
+  };
+
   // Add new empty row
   const handleAddRow = () => {
     const todayDateStr = getTodayDateStr();
@@ -1320,6 +1383,22 @@ export default function Escala({ onBack }: EscalaProps) {
             <span>2. Motoristas 3C</span>
             <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[10px] font-mono font-bold">
               {motoristas3C.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('terceiros')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              activeTab === 'terceiros'
+                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
+                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
+            )}
+          >
+            <Truck size={16} />
+            <span>3. Terceiros</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-mono font-bold">
+              PDF OS
             </span>
           </button>
 
@@ -1783,12 +1862,22 @@ export default function Escala({ onBack }: EscalaProps) {
                 </button>
 
                 <button
+                  onClick={handleExportXLSX}
+                  disabled={editableRows.length === 0}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  title="Baixar planilha em formato .xlsx para Microsoft Excel"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Baixar Excel (.xlsx)</span>
+                </button>
+
+                <button
                   onClick={handleExportCSV}
                   disabled={editableRows.length === 0}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  className="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   <Download size={15} />
-                  <span>Baixar CSV / Excel</span>
+                  <span>Baixar CSV</span>
                 </button>
 
                 <button
@@ -2241,7 +2330,7 @@ export default function Escala({ onBack }: EscalaProps) {
             ))}
           </div>
         </>
-      ) : (
+      ) : activeTab === 'motoristas' ? (
         /* Tab 2: Motoristas 3C Database Management */
         <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
@@ -2340,6 +2429,15 @@ export default function Escala({ onBack }: EscalaProps) {
             </table>
           </div>
         </div>
+      ) : (
+        /* Tab 3: Terceiros (Importar PDF OS) */
+        <TerceirosEscala
+          checklistItems={checklistItems}
+          getChecklistDetails={getChecklistDetails}
+          formatPlateWithHyphen={formatPlateWithHyphen}
+          getMonthAbbrev={getMonthAbbrev}
+          getDayOfWeek={getDayOfWeek}
+        />
       )}
 
       {/* Modal for Add / Edit Motorista 3C */}

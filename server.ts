@@ -185,6 +185,169 @@ Retorne estritamente o array JSON com as linhas encontradas.`;
     }
   });
 
+  app.post("/api/parse-os-pdf", async (req, res) => {
+    try {
+      const { fileBase64, mimeType, fileName } = req.body;
+
+      if (!fileBase64) {
+        return res.status(400).json({ error: "Arquivo base64 é obrigatório." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, "");
+      let effectiveMimeType = mimeType || "application/pdf";
+      if (fileName && fileName.toLowerCase().endsWith(".pdf")) {
+        effectiveMimeType = "application/pdf";
+      } else if (fileName && fileName.toLowerCase().endsWith(".png")) {
+        effectiveMimeType = "image/png";
+      } else if (fileName && (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg"))) {
+        effectiveMimeType = "image/jpeg";
+      }
+
+      // 1. Try Gemini 2.5 Flash if API key is present
+      if (apiKey) {
+        try {
+          const ai = new GoogleGenAI({
+            apiKey,
+            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+          });
+
+          const promptText = `Você é um especialista em logística, PGR e transporte de cargas da Três Corações (3C).
+Analise o documento em anexo (Ordem de Serviço 3C / OS de Terceiros / Transporte).
+Extraia com rigorosa precisão todos os campos da Ordem de Serviço:
+- transportador: Razão ou nome fantasia da transportadora (ex: TORNADOLOG, 3C, etc)
+- dataCarregamento: Data no formato DD/MM/AAAA (ex: 05/08/2026)
+- previsaoHorario: Previsão ou texto do horário (ex: FROTA ou 08:00)
+- filialOrigem: Filial de Origem (ex: VESPASIANO/MG, SANTA LUZIA/MG)
+- filialDestino: Filial de Destino (ex: EUSÉBIO/CE, NATAL/RN, RECIFE/PE)
+- agendaDescarregamento: Agenda de descarregamento se houver
+- nomeMotorista: Nome completo do motorista em maiúsculas (ex: WILMER DIAZ SANCHEZ)
+- cpf: CPF do motorista (ex: 709.874.852-88)
+- vinculoMotorista: Vínculo do motorista (ex: TERCEIRO, FROTA, AGREGADO)
+- rgUf: RG e UF do motorista (ex: F 439659 S PF / AM)
+- cnh: Número de registro da CNH (ex: 08359828273)
+- idCargo: ID 3 Cargo se houver
+- celular: Número de telefone ou celular (ex: 48 99219-2019)
+- perfilCavalo: Perfil do Cavalo (ex: TRUCADO, TOCO)
+- perfilCarreta: Perfil da Carreta (ex: SIDER, BAÚ, RODOTREM)
+- capacidadePallets: Capacidade em pallets em número (ex: 30)
+- capacidadeToneladas: Capacidade em toneladas em número (ex: 30)
+- placaCavalo: Placa do cavalo mecânico com hífen (ex: TLN-3E35)
+- ufCavalo: UF do cavalo (ex: SC)
+- placaCarreta1: Placa da carreta 1 com hífen (ex: TPI-4B34)
+- ufCarreta1: UF da carreta 1 (ex: SC)
+- placaCarreta2: Placa da carreta 2 se houver
+- ufCarreta2: UF da carreta 2 se houver
+- rastreador: Tecnologia/marca do rastreador (ex: ONIX, SASCAR, AUTOTRAC)
+- quantEixos: Quantidade de eixos (ex: 6)
+- comprimentoCarreta: Comprimento da carreta (ex: 14,6)
+- larguraCarreta: Largura da carreta (ex: 2,45)
+- alturaCarreta: Altura da carreta (ex: 2,82)
+
+Retorne estritamente um objeto JSON com essas propriedades.`;
+
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: effectiveMimeType,
+                    data: cleanBase64
+                  }
+                },
+                { text: promptText }
+              ]
+            },
+            config: {
+              responseMimeType: "application/json",
+              temperature: 0.1
+            }
+          });
+
+          let jsonText = response.text || "";
+          jsonText = jsonText.replace(/```json\n?|```/g, "").trim();
+          const parsed = JSON.parse(jsonText);
+
+          if (parsed && (parsed.nomeMotorista || parsed.placaCavalo || parsed.transportador)) {
+            return res.status(200).json({ success: true, data: parsed });
+          }
+        } catch (geminiErr) {
+          console.warn("Gemini extraction failed for OS PDF, fallback to text parser:", geminiErr);
+        }
+      }
+
+      // 2. Fallback text parsing via pdf-parse
+      if (effectiveMimeType === "application/pdf") {
+        try {
+          const buffer = Buffer.from(cleanBase64, 'base64');
+          const pdfData = await pdf(buffer);
+          const rawText = pdfData.text || "";
+          
+          const plateRegex = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
+          const plates = (rawText.match(plateRegex) || []).map(p => p.replace(/\s+/g, '-').toUpperCase());
+          const dateMatch = rawText.match(/(\d{2}\/\d{2}\/\d{4})/);
+          const cpfMatch = rawText.match(/(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})/);
+          const cnhMatch = rawText.match(/(?:CNH|REGISTRO CNH)[\s\S]*?(\d{10,11})/i);
+          const celMatch = rawText.match(/(?:CELULAR|TELEFONE)[\s\S]*?(\(?\d{2}\)?\s*9?\d{4}[-\s]?\d{4})/i);
+
+          let transportador = '';
+          const trMatch = rawText.match(/(?:TRANSPORTADOR[\s\S]*?)(TORNADOLOG|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|[A-Z]{4,20})/i);
+          if (trMatch) transportador = trMatch[1].toUpperCase();
+
+          let motorista = '';
+          const motMatch = rawText.match(/NOME MOTORISTA\s*\n+([A-Za-zÀ-ÿ\s]+?)(?=\s+\d{3}|\n)/i);
+          if (motMatch) motorista = motMatch[1].trim().toUpperCase();
+
+          let orig = '';
+          let dest = '';
+          const odMatch = rawText.match(/FILIAL DE ORIGEM[\s\S]*?([A-Za-zÀ-ÿ0-9\s\/]+?)\s{2,}([A-Za-zÀ-ÿ0-9\s\/]+)/i);
+          if (odMatch) {
+            orig = odMatch[1].trim().toUpperCase();
+            dest = odMatch[2].trim().toUpperCase();
+          }
+
+          let rastreador = 'ONIX';
+          const rastMatch = rawText.match(/(?:RASTREADOR[\s\S]*?)(ONIX|SASCAR|AUTOTRAC|OMNILINK|SIGHRA)/i);
+          if (rastMatch) rastreador = rastMatch[1].toUpperCase();
+
+          const fallbackData = {
+            transportador: transportador || 'TORNADOLOG',
+            dataCarregamento: dateMatch ? dateMatch[1] : '',
+            filialOrigem: orig || 'VESPASIANO/MG',
+            filialDestino: dest || 'EUSÉBIO/CE',
+            nomeMotorista: motorista || '',
+            cpf: cpfMatch ? cpfMatch[1] : '',
+            vinculoMotorista: 'TERCEIRO',
+            rgUf: '',
+            cnh: cnhMatch ? cnhMatch[1] : '',
+            celular: celMatch ? celMatch[1] : '',
+            perfilCavalo: 'TRUCADO',
+            perfilCarreta: 'SIDER',
+            capacidadePallets: '30',
+            capacidadeToneladas: '30',
+            placaCavalo: plates[0] || '',
+            ufCavalo: 'SC',
+            placaCarreta1: plates[1] || '',
+            ufCarreta1: 'SC',
+            placaCarreta2: plates[2] || '',
+            ufCarreta2: '',
+            rastreador: rastreador
+          };
+
+          return res.status(200).json({ success: true, data: fallbackData });
+        } catch (pdfErr) {
+          console.warn("PDF parse fallback error:", pdfErr);
+        }
+      }
+
+      return res.status(400).json({ error: "Não foi possível extrair dados do PDF fornecido." });
+    } catch (err) {
+      console.error("Erro na rota /api/parse-os-pdf:", err);
+      return res.status(500).json({ error: "Erro interno ao processar a OS." });
+    }
+  });
+
   app.post("/api/extract-table", async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Método não permitido' });
