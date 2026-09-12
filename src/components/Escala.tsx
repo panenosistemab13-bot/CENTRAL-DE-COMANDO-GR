@@ -38,39 +38,41 @@ import { rtdb } from '../firebase';
 import { ref, onValue, set, push, remove, update } from 'firebase/database';
 import { parseISO, differenceInDays } from 'date-fns';
 
-// 31 exact columns required for "Disponibilidade" (Pátio) spreadsheet
+// 33 exact columns required for "Disponibilidade" (Pátio) spreadsheet (Colunas A a AG)
 export const DISPO_COLUMNS = [
-  'MÊS',                            // 1
-  'ORIGEM',                         // 2
-  'DIA',                            // 3
-  'DATA',                           // 4
-  'CONTATO WHATS',                  // 5
-  'HORA LIBERADO',                  // 6
-  'STATUS',                         // 7
-  'MODELO CARRETA',                 // 8
-  'MODELO CAVALO',                  // 9
-  'FEZ CONTATO?',                   // 10
-  'DESTINO',                        // 11
-  'TRANSPORTADOR',                  // 12
-  'CAVALO',                         // 13
-  'CARRETA',                        // 14
-  'Nº PALLETS',                     // 15
-  'TON',                            // 16
-  'M³',                             // 17
-  'CATEGORIA',                      // 18
-  'TECNOLOGIA',                     // 19
-  'CONDUCTOR',                      // 20
-  'CPF',                            // 21
-  'RG / SAP',                       // 22
-  'CNH',                            // 23
-  'TELEFONE',                       // 24
-  'VIGÊNCIA DO CADASTRO',           // 25
-  'CÓDIGO DA TRANSPORTADORA',       // 26
-  'ID DA CARGA / LACRE EXPORTAÇÃO',  // 27
-  'ESTADO MOTORISTA',               // 28
-  'ESTADO CAVALO',                  // 29
-  'ESTADO CARRETA',                 // 30
-  'CHECK LIST'                      // 31
+  'MÊS',                            // 1 (A)
+  'ORIGEM',                         // 2 (B)
+  'DIA',                            // 3 (C)
+  'DATA',                           // 4 (D)
+  'CONTATO WHATS',                  // 5 (E)
+  'HORA LIBERADO',                  // 6 (F)
+  'STATUS',                         // 7 (G)
+  'MODELO CARRETA',                 // 8 (H)
+  'MODELO CAVALO',                  // 9 (I)
+  'FEZ CONTATO?',                   // 10 (J)
+  'DESTINO',                        // 11 (K)
+  'TRANSPORTADOR',                  // 12 (L)
+  'CAVALO',                         // 13 (M)
+  'CARRETA',                        // 14 (N)
+  'Nº PALLETS',                     // 15 (O)
+  'TON',                            // 16 (P)
+  'M³',                             // 17 (Q)
+  'CATEGORIA',                      // 18 (R)
+  'TECNOLOGIA',                     // 19 (S)
+  'CONDUCTOR',                      // 20 (T)
+  'CPF',                            // 21 (U)
+  'RG / SAP',                       // 22 (V)
+  'CNH',                            // 23 (W)
+  'TELEFONE',                       // 24 (X)
+  'VIGÊNCIA DO CADASTRO',           // 25 (Y)
+  'CÓDIGO DA TRANSPORTADORA',       // 26 (Z)
+  'ID DA CARGA / LACRE EXPORTAÇÃO',  // 27 (AA)
+  'ESTADO MOTORISTA',               // 28 (AB)
+  'ESTADO CAVALO',                  // 29 (AC)
+  'ESTADO CARRETA',                 // 30 (AD)
+  '',                               // 31 (AE)
+  'PENDENCIA',                      // 32 (AF)
+  'CHECK LIST'                      // 33 (AG)
 ] as const;
 
 export interface DispoRow {
@@ -835,40 +837,42 @@ export default function Escala({ onBack }: EscalaProps) {
     );
   };
 
-  // Helper to convert a single DispoRow object into 31-column TSV string
+  // Helper to convert a single DispoRow object into 33-column TSV string (Colunas A a AG)
   const getRowTSV = (row: DispoRow): string => {
     return [
-      row.mes,
-      row.origem,
-      row.dia,
-      row.data,
-      row.contatoWhats,
-      row.horaLiberado,
-      row.status,
-      row.modeloCarreta,
-      row.modeloCavalo,
-      row.fezContato,
-      row.destino,
-      row.transportador,
-      row.cavalo,
-      row.carreta,
-      row.pallets,
-      row.ton,
-      row.m3,
-      row.categoria,
-      row.tecnologia,
-      row.conductor,
-      row.cpf,
-      row.rgSap,
-      row.cnh,
-      row.telefone,
-      row.vigenciaCadastro,
-      row.codigoTransportadora,
-      '', // Pendências / ID da Carga obrigatoriamente vazia
-      row.estadoMotorista,
-      row.estadoCavalo,
-      row.estadoCarreta,
-      row.checkList
+      row.mes,                  // 1 (A)
+      row.origem,               // 2 (B)
+      row.dia,                  // 3 (C)
+      row.data,                 // 4 (D)
+      row.contatoWhats,         // 5 (E)
+      row.horaLiberado,         // 6 (F)
+      row.status,               // 7 (G)
+      row.modeloCarreta,        // 8 (H)
+      row.modeloCavalo,         // 9 (I)
+      row.fezContato,           // 10 (J)
+      row.destino,              // 11 (K)
+      row.transportador,        // 12 (L)
+      row.cavalo,               // 13 (M)
+      row.carreta,              // 14 (N)
+      row.pallets,              // 15 (O)
+      row.ton,                  // 16 (P)
+      row.m3,                   // 17 (Q)
+      row.categoria,            // 18 (R)
+      row.tecnologia,           // 19 (S)
+      row.conductor,            // 20 (T)
+      row.cpf,                  // 21 (U)
+      row.rgSap,                // 22 (V)
+      row.cnh,                  // 23 (W)
+      row.telefone,             // 24 (X)
+      row.vigenciaCadastro,     // 25 (Y)
+      row.codigoTransportadora, // 26 (Z)
+      row.idCarga,              // 27 (AA - ID da Carga / Lacre Exportação)
+      row.estadoMotorista,      // 28 (AB)
+      row.estadoCavalo,         // 29 (AC)
+      row.estadoCarreta,        // 30 (AD)
+      '',                       // 31 (AE - Vazia)
+      '',                       // 32 (AF - Pendência: pulada e sempre vazia)
+      row.checkList             // 33 (AG - Check List / Validade dos veículos puxada do Checklist)
     ].join('\t');
   };
 
@@ -1121,7 +1125,7 @@ export default function Escala({ onBack }: EscalaProps) {
                 Escala 3C
               </h1>
               <p className="text-xs sm:text-sm text-[#dac0a3] mt-1 font-sans">
-                Desmembramento automático de baús, preenchimento de CPF/RG dos motoristas 3C e inclusão de checklist na planilha (31 colunas).
+                Desmembramento automático de baús, preenchimento de CPF/RG dos motoristas 3C e inclusão de checklist na planilha (33 colunas).
               </p>
             </div>
           </div>
@@ -1633,7 +1637,7 @@ export default function Escala({ onBack }: EscalaProps) {
               <div>
                 <h3 className="text-lg font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
                   <FileSpreadsheet className="text-[#B32025]" size={20} />
-                  Pré-visualização da Tabela de Disponibilidade (31 Colunas)
+                  Pré-visualização da Tabela de Disponibilidade (33 Colunas)
                 </h3>
                 <p className="text-xs text-slate-600">
                   * Ao clicar em <strong className="text-[#B32025]">Copiar</strong>, apenas o conteúdo dos dados é copiado (sem cores e sem cabeçalho por padrão).
@@ -1646,7 +1650,7 @@ export default function Escala({ onBack }: EscalaProps) {
                   className="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                 >
                   {showTablePreview ? <EyeOff size={15} /> : <Eye size={15} />}
-                  <span>{showTablePreview ? 'Ocultar Tabela' : 'Mostrar Tabela (31 Colunas)'}</span>
+                  <span>{showTablePreview ? 'Ocultar Tabela' : 'Mostrar Tabela (33 Colunas)'}</span>
                 </button>
 
                 <button
@@ -2029,7 +2033,7 @@ export default function Escala({ onBack }: EscalaProps) {
                             />
                           </td>
 
-                          {/* 30. ESTADO CARRETA */}
+                          {/* 30. ESTADO CARRETA (AD) */}
                           <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
                             <input
                               type="text"
@@ -2039,13 +2043,36 @@ export default function Escala({ onBack }: EscalaProps) {
                             />
                           </td>
 
-                          {/* 31. CHECK LIST (Vencimento do Checklist da Cavalo) */}
+                          {/* 31. COLUNA AE (Vazia) */}
+                          <td className="p-1.5 border-r border-slate-200 bg-slate-50/30">
+                            <input
+                              type="text"
+                              value=""
+                              readOnly
+                              className="w-full bg-transparent px-2 py-1 text-center font-mono text-xs text-slate-300 select-none cursor-not-allowed"
+                            />
+                          </td>
+
+                          {/* 32. PENDENCIA (AF - Coluna Pendência, mantida sempre vazia) */}
+                          <td className="p-1.5 border-r border-slate-200 bg-slate-50/50">
+                            <input
+                              type="text"
+                              value=""
+                              readOnly
+                              placeholder="—"
+                              className="w-full bg-transparent px-2 py-1 text-center font-mono text-xs text-slate-400 select-none cursor-not-allowed"
+                              title="Coluna AF (Pendência) - mantida sempre vazia"
+                            />
+                          </td>
+
+                          {/* 33. CHECK LIST (AG - Validade do Checklist/Veículos) */}
                           <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-emerald-900 bg-emerald-50/50">
                             <input
                               type="text"
                               value={row.checkList}
                               onChange={(e) => handleCellEdit(row.id, 'checkList', e.target.value)}
                               className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs text-emerald-900"
+                              title="Coluna AG (Check List) - Validade dos veículos puxada da página Checklist"
                             />
                           </td>
 
@@ -2060,7 +2087,7 @@ export default function Escala({ onBack }: EscalaProps) {
                                     ? "bg-emerald-600 text-white border-emerald-700"
                                     : "bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-950 border-slate-300 hover:border-amber-400"
                                 )}
-                                title="Copiar individualmente apenas esta linha (31 colunas)"
+                                title="Copiar individualmente apenas esta linha (33 colunas)"
                               >
                                 {isCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} />}
                                 <span>{isCopied ? 'Copiado' : 'Copiar'}</span>

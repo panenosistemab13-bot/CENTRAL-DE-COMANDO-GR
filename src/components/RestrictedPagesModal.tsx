@@ -15,7 +15,12 @@ import {
   Sparkles, 
   ShieldCheck, 
   Layers,
-  HelpCircle
+  HelpCircle,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { 
   PageDefinition, 
@@ -24,7 +29,9 @@ import {
   getAllAvailablePages, 
   getStoredCustomPages, 
   saveStoredCustomPages, 
-  savePageVisibility 
+  savePageVisibility,
+  saveStoredPageOrder,
+  resetPageOrderToDefault
 } from '../data/pagesConfig';
 import { cn } from '../lib/utils';
 
@@ -182,6 +189,50 @@ export default function RestrictedPagesModal({
     });
   };
 
+  // Page Sequence Reordering Handlers
+  const movePageUp = (pageId: string) => {
+    setPagesList(prev => {
+      const idx = prev.findIndex(p => p.id === pageId);
+      if (idx <= 0) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[idx - 1];
+      copy[idx - 1] = temp;
+      return copy;
+    });
+  };
+
+  const movePageDown = (pageId: string) => {
+    setPagesList(prev => {
+      const idx = prev.findIndex(p => p.id === pageId);
+      if (idx === -1 || idx >= prev.length - 1) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[idx + 1];
+      copy[idx + 1] = temp;
+      return copy;
+    });
+  };
+
+  const movePageToPosition = (pageId: string, targetIndex: number) => {
+    setPagesList(prev => {
+      const currentIndex = prev.findIndex(p => p.id === pageId);
+      if (currentIndex === -1 || targetIndex < 0 || targetIndex >= prev.length || currentIndex === targetIndex) {
+        return prev;
+      }
+      const copy = [...prev];
+      const [moved] = copy.splice(currentIndex, 1);
+      copy.splice(targetIndex, 0, moved);
+      return copy;
+    });
+  };
+
+  const handleResetOrder = () => {
+    resetPageOrderToDefault();
+    const defaultPages = getAllAvailablePages();
+    setPagesList(defaultPages);
+  };
+
   // Counts
   const visibleCount = useMemo(() => {
     return pagesList.filter(p => visibilityState[p.id]).length;
@@ -213,6 +264,7 @@ export default function RestrictedPagesModal({
 
   const handleSaveAndApply = () => {
     savePageVisibility(visibilityState);
+    saveStoredPageOrder(pagesList.map(p => p.id));
     onSave(visibilityState, pagesList);
     setSaveSuccessToast(true);
     setTimeout(() => {
@@ -523,6 +575,22 @@ export default function RestrictedPagesModal({
           )}
         </AnimatePresence>
 
+        {/* SEQUENCE INFO BAR */}
+        <div className="mt-2.5 px-3 py-2 rounded-xl bg-[#24160E]/20 border border-[#311f14]/20 flex flex-wrap items-center justify-between gap-2 text-xs text-[#5c3e29] font-bold shrink-0">
+          <span className="flex items-center gap-1.5 text-[11px]">
+            <ArrowUpDown size={14} className="text-[#800609] shrink-0" />
+            <span><strong>Sequência das Páginas:</strong> Altere a ordem usando as setas (▲/▼) ou o seletor de posição em cada item.</span>
+          </span>
+          <button
+            type="button"
+            onClick={handleResetOrder}
+            className="px-2.5 py-1 rounded-lg bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-xs cursor-pointer shrink-0"
+            title="Restaurar a ordem original das páginas"
+          >
+            Restaurar Ordem Original
+          </button>
+        </div>
+
         {/* SCROLLABLE LIST OF ALL PAGES */}
         <div className="mt-3 flex-1 overflow-y-auto pr-1 space-y-2 min-h-[14rem] max-h-[42vh] custom-scrollbar">
           {filteredPages.length === 0 ? (
@@ -540,6 +608,9 @@ export default function RestrictedPagesModal({
             filteredPages.map((page) => {
               const isVisible = Boolean(visibilityState[page.id]);
               const IconComponent = ICON_MAP[page.iconName] || ICON_MAP.Sliders;
+              const globalIndex = pagesList.findIndex(p => p.id === page.id);
+              const isFirst = globalIndex === 0;
+              const isLast = globalIndex === pagesList.length - 1;
 
               return (
                 <div
@@ -552,7 +623,7 @@ export default function RestrictedPagesModal({
                   )}
                 >
                   {/* Left Info */}
-                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                     <div className={cn(
                       "w-11 h-11 rounded-xl flex items-center justify-center border-2 shrink-0 shadow-md transition-all",
                       isVisible
@@ -562,7 +633,7 @@ export default function RestrictedPagesModal({
                       <IconComponent size={20} strokeWidth={2.2} />
                     </div>
 
-                    <div className="flex flex-col min-w-0">
+                    <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-serif font-black text-sm text-[#2D1A10] uppercase tracking-wide">
                           {page.label}
@@ -590,6 +661,56 @@ export default function RestrictedPagesModal({
                         {page.description}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Middle / Reorder Sequence Controls */}
+                  <div className="flex items-center gap-1.5 bg-[#311f14]/10 p-1.5 rounded-xl border border-[#311f14]/20 shrink-0 self-start sm:self-center">
+                    <span className="px-2 py-1 rounded-lg bg-[#311f14] text-[#e5c687] font-mono text-[10px] font-black border border-[#5c3e29] shrink-0" title="Posição atual na sequência">
+                      #{globalIndex + 1}
+                    </span>
+
+                    <select
+                      value={globalIndex}
+                      onChange={(e) => movePageToPosition(page.id, Number(e.target.value))}
+                      className="bg-[#1c1109] text-[#fdefd1] text-[10px] font-bold rounded-lg px-1.5 py-1 border border-[#8c6039]/60 focus:outline-none focus:border-[#ca1a20] cursor-pointer"
+                      title="Alterar posição na sequência"
+                    >
+                      {pagesList.map((_, idx) => (
+                        <option key={idx} value={idx}>
+                          {idx + 1}ª Pos
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() => movePageUp(page.id)}
+                      disabled={isFirst}
+                      className={cn(
+                        "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border shadow-xs",
+                        isFirst
+                          ? "bg-black/5 text-zinc-400 border-transparent cursor-not-allowed opacity-40"
+                          : "bg-[#311f14] hover:bg-[#800609] text-[#fdefd1] border-[#8c6039]/50 hover:border-[#b32025] active:scale-90"
+                      )}
+                      title="Mover para cima (anterior)"
+                    >
+                      <ChevronUp size={16} className="stroke-[3]" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => movePageDown(page.id)}
+                      disabled={isLast}
+                      className={cn(
+                        "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border shadow-xs",
+                        isLast
+                          ? "bg-black/5 text-zinc-400 border-transparent cursor-not-allowed opacity-40"
+                          : "bg-[#311f14] hover:bg-[#800609] text-[#fdefd1] border-[#8c6039]/50 hover:border-[#b32025] active:scale-90"
+                      )}
+                      title="Mover para baixo (próxima)"
+                    >
+                      <ChevronDown size={16} className="stroke-[3]" />
+                    </button>
                   </div>
 
                   {/* Right Status & Toggle Button */}

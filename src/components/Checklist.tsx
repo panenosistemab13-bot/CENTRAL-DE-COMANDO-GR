@@ -109,7 +109,8 @@ export default function Checklist() {
     greeting: 'Boa noite',
     cavalo: 'SAS2D02',
     carretas: 'POG2095 / POR5E42',
-    contato: '(31) 98481-7047'
+    contato: '(31) 98481-7047',
+    templateStyle: 'card' as 'card' | 'simple'
   });
   const [genCopied, setGenCopied] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
@@ -412,42 +413,81 @@ export default function Checklist() {
   const sortedCavalos = [...items].sort((a, b) => a.cavalo.localeCompare(b.cavalo));
 
   const handleCopyGenerator = () => {
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 550px; background-color: #ffffff; border: 1px solid #c9a26b; border-radius: 12px; overflow: hidden; color: #3d2214; margin: 0 auto;">
-        <div style="background-color: #2c1810; color: #e6c687; text-align: center; padding: 6px 12px; font-size: 10px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">
-          EMPRESA TRÊS CORAÇÕES - COMUNICAÇÃO INTERNA
-        </div>
-        <div style="background: linear-gradient(135deg, #7a0c0f 0%, #b32025 40%, #d4a76a 70%, #b88b4b 100%); padding: 16px; text-align: center; border-bottom: 2px solid #c9a26b;">
-          <div style="display: inline-block; text-align: center;">
-            <span style="font-size: 10px; font-weight: bold; color: #fff2d6; letter-spacing: 2px; display: block;">CAFÉ</span>
-            <span style="font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; font-family: 'Arial Black', sans-serif;">TRÊS CORAÇÕES</span>
+    let htmlContent = '';
+    let textContent = '';
+
+    if (genData.templateStyle === 'card') {
+      htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 550px; background-color: #ffffff; border: 2px solid #23120a; border-radius: 16px; overflow: hidden; color: #23120a; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+          <div style="background-color: #23120a; color: #e5c687; text-align: center; padding: 8px 14px; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">
+            EMPRESA TRÊS CORAÇÕES - COMUNICAÇÃO INTERNA
           </div>
+          <div style="background: linear-gradient(135deg, #680a0d 0%, #a3181c 45%, #c89753 100%); padding: 18px 20px; text-align: center; border-bottom: 2px solid #c89753;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background-color: #a3181c; border: 2px solid rgba(255,255,255,0.4); display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+              <div style="display: inline-block; text-align: left; vertical-align: middle; margin-left: 8px;">
+                <span style="font-size: 10px; font-weight: bold; color: #fff2d6; letter-spacing: 2px; display: block; text-transform: uppercase;">CAFÉ</span>
+                <span style="font-size: 22px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Times New Roman', Georgia, serif;">TRÊS CORAÇÕES</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 32px 36px; background-color: #ffffff;">
+            <p style="margin: 0 0 18px 0; font-size: 15pt; font-weight: bold; color: #23120a;">${genData.greeting},</p>
+            <p style="margin: 0 0 22px 0; font-size: 11pt; color: #23120a; font-weight: 500;">Solicito o checklist para os conjuntos abaixo:</p>
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 2px solid #23120a; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+              <thead>
+                <tr style="background-color: #23120a; color: #ffffff;">
+                  <th style="padding: 12px 16px; text-align: center; font-size: 11pt; font-weight: bold; border-right: 1px solid #4a2c1c; width: 50%; letter-spacing: 1px;">CAVALO</th>
+                  <th style="padding: 12px 16px; text-align: center; font-size: 11pt; font-weight: bold; width: 50%; letter-spacing: 1px;">CARRETAS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background-color: #faf4eb; color: #23120a;">
+                  <td style="padding: 14px 16px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border-right: 1px solid #d6c3aa;">${genData.cavalo || "—"}</td>
+                  <td style="padding: 14px 16px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace;">${genData.carretas || "—"}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="margin: 0; font-size: 12pt; text-align: center; color: #23120a;">
+              <strong>Contatos:</strong> ${genData.contato}
+            </p>
+          </div>
+          <div style="border-top: 2px solid #c89753; background-color: #23120a; height: 12px;"></div>
         </div>
-        <div style="padding: 28px; background-color: #ffffff;">
-          <p style="margin: 0 0 16px 0; font-size: 14pt; font-weight: bold; color: #3d2214;">${genData.greeting},</p>
-          <p style="margin: 0 0 20px 0; font-size: 11pt; color: #3d2214;">Solicito o checklist para os conjuntos abaixo:</p>
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 2px solid #c9a26b; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+      `;
+      textContent = `${genData.greeting},\n\nSolicito o checklist para os conjuntos abaixo:\n\n*CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS*: ${genData.carretas || "—"}\n\n*Contatos*: ${genData.contato}`;
+    } else {
+      htmlContent = `
+        <div style="font-family: Arial, sans-serif; color: #000000; max-width: 500px;">
+          <p style="font-family: Georgia, serif; font-size: 14pt; margin: 0 0 16px 0; font-weight: bold;">${genData.greeting},</p>
+          <p style="font-size: 11pt; margin: 0 0 20px 0;">Solicito o <span style="color: #a3181c; font-weight: bold;">checklist</span> para os conjuntos abaixo:</p>
+          <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; margin-bottom: 20px;">
             <thead>
-              <tr style="background-color: #3d2214; color: #ffffff;">
-                <th style="padding: 10px 16px; text-align: center; font-size: 11pt; font-weight: bold; border-right: 1px solid #c9a26b; width: 50%;">CAVALO</th>
-                <th style="padding: 10px 16px; text-align: center; font-size: 11pt; font-weight: bold; width: 50%;">CARRETAS</th>
+              <tr style="background-color: #0b3b60; color: #ffffff;">
+                <th style="padding: 8px 14px; text-align: center; font-size: 11pt; font-weight: bold; border: 1.5px solid #000000; width: 50%;">CAVALO</th>
+                <th style="padding: 8px 14px; text-align: center; font-size: 11pt; font-weight: bold; border: 1.5px solid #000000; width: 50%;">CARRETAS</th>
               </tr>
             </thead>
             <tbody>
-              <tr style="background-color: #faf4eb; color: #3d2214;">
-                <td style="padding: 12px 16px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border-right: 1px solid #c9a26b;">${genData.cavalo || "—"}</td>
-                <td style="padding: 12px 16px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace;">${genData.carretas || "—"}</td>
+              <tr style="background-color: #ffffff; color: #000000;">
+                <td style="padding: 10px 14px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border: 1.5px solid #000000;">${genData.cavalo || "—"}</td>
+                <td style="padding: 10px 14px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border: 1.5px solid #000000;">${genData.carretas || "—"}</td>
               </tr>
             </tbody>
           </table>
-          <p style="margin: 0 0 10px 0; font-size: 12pt; text-align: center; color: #3d2214;">
+          <p style="font-size: 11pt; margin: 0 0 20px 0;">
             <strong>Contatos:</strong> ${genData.contato}
           </p>
+          <p style="font-family: Georgia, serif; font-size: 11pt; margin: 0;">Att,</p>
         </div>
-        <div style="border-top: 2px solid #c9a26b; background-color: #2c1810; height: 10px;"></div>
-      </div>
-    `;
-    const textContent = `${genData.greeting},\n\nSolicito o checklist para os conjuntos abaixo:\n\n*CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS*: ${genData.carretas || "—"}\n\n*Contatos*: ${genData.contato}`;
+      `;
+      textContent = `${genData.greeting},\n\nSolicito o checklist para os conjuntos abaixo:\n\n*CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS*: ${genData.carretas || "—"}\n\n*Contatos*: ${genData.contato}\n\nAtt,`;
+    }
+
     try {
       const typeHtml = "text/html";
       const typeText = "text/plain";
@@ -648,6 +688,36 @@ export default function Checklist() {
               
               <div className="space-y-4">
                 <div>
+                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Modelo de Layout</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGenData(prev => ({ ...prev, templateStyle: 'card' }))}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider border text-center transition-all cursor-pointer font-sans",
+                        genData.templateStyle === 'card'
+                          ? "bg-[#23120A] text-[#E5C687] border-[#23120A] shadow-xs"
+                          : "bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                      )}
+                    >
+                      Card (Imagem 1)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGenData(prev => ({ ...prev, templateStyle: 'simple' }))}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider border text-center transition-all cursor-pointer font-sans",
+                        genData.templateStyle === 'simple'
+                          ? "bg-[#0B3B60] text-white border-[#0B3B60] shadow-xs"
+                          : "bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                      )}
+                    >
+                      E-mail (Imagem 2)
+                    </button>
+                  </div>
+                </div>
+
+                <div>
                   <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Saudação</label>
                   <select
                     value={genData.greeting}
@@ -716,77 +786,112 @@ export default function Checklist() {
                 )}
               >
                 {genCopied ? <Check size={16} /> : <Copy size={16} />}
-                <span>{genCopied ? 'Solicitação Copiada!' : 'Copiar para WhatsApp'}</span>
+                <span>{genCopied ? 'Solicitação Copiada!' : 'Copiar Solicitação'}</span>
               </button>
             </div>
 
             {/* Preview Document Card */}
-            <div className="lg:col-span-2 flex items-center justify-center bg-slate-100 border border-slate-200 p-4 sm:p-8 rounded-2xl shadow-inner">
-              <div className="w-full max-w-xl bg-white rounded-xl border border-[#C9A26B] shadow-lg overflow-hidden text-[#3D2214] font-sans">
-                
-                {/* Top header bar */}
-                <div className="bg-[#2C1810] text-[#E6C687] text-center py-2 px-4 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
-                  EMPRESA TRÊS CORAÇÕES - COMUNICAÇÃO INTERNA
-                </div>
-
-                {/* Banner Header with Logo */}
-                <div className="relative bg-gradient-to-r from-[#7A0C0F] via-[#B32025] to-[#D4A76A] p-5 text-center border-b-2 border-[#C9A26B] flex items-center justify-center gap-3">
-                  {/* Coffee Beans Heart Emblem SVG */}
-                  <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-xs flex items-center justify-center border border-white/20 shadow-inner shrink-0 text-white">
-                    <svg className="w-6 h-6 fill-current text-[#FFF2D6]" viewBox="0 0 24 24">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
+            <div className="lg:col-span-2 flex items-center justify-center bg-slate-100 border border-slate-200 p-4 sm:p-8 rounded-2xl shadow-inner min-h-[480px]">
+              {genData.templateStyle === 'card' ? (
+                /* CARD TRÊS CORAÇÕES (IMAGEM 1) */
+                <div className="w-full max-w-xl bg-white rounded-2xl border-2 border-[#23120A] shadow-2xl overflow-hidden text-[#23120A] font-sans">
+                  
+                  {/* Top header bar */}
+                  <div className="bg-[#23120A] text-[#E5C687] text-center py-2 px-4 text-[10px] sm:text-[11px] font-extrabold tracking-widest uppercase">
+                    EMPRESA TRÊS CORAÇÕES - COMUNICAÇÃO INTERNA
                   </div>
-                  <div className="text-left">
-                    <span className="block text-[10px] font-black tracking-widest text-[#FFF2D6] uppercase">CAFÉ</span>
-                    <span className="block text-xl sm:text-2xl font-black tracking-tight text-white font-heading uppercase drop-shadow-xs">
-                      TRÊS CORAÇÕES
-                    </span>
-                  </div>
-                </div>
 
-                {/* Document Body */}
-                <div className="p-6 sm:p-10 space-y-6 bg-white">
-                  {/* Greeting */}
-                  <p className="text-lg font-bold text-[#3D2214]">
+                  {/* Banner Header with Logo */}
+                  <div className="relative bg-gradient-to-r from-[#680A0D] via-[#A3181C] to-[#C89753] p-5 text-center border-b-2 border-[#C89753] flex items-center justify-center gap-3">
+                    {/* Coffee Beans / Heart Emblem SVG */}
+                    <div className="w-11 h-11 rounded-full bg-[#A3181C] border-2 border-white/40 flex items-center justify-center shadow-inner shrink-0 text-white">
+                      <svg className="w-6 h-6 fill-white text-white" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-[11px] font-bold tracking-widest text-[#FFF2D6] uppercase">CAFÉ</span>
+                      <span className="block text-2xl sm:text-3xl font-black tracking-tight text-white font-serif uppercase drop-shadow-xs">
+                        TRÊS CORAÇÕES
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Document Body */}
+                  <div className="p-7 sm:p-10 space-y-6 bg-white">
+                    {/* Greeting */}
+                    <p className="text-lg sm:text-xl font-bold text-[#23120A]">
+                      {genData.greeting},
+                    </p>
+
+                    {/* Body Paragraph */}
+                    <p className="text-base text-[#23120A] font-medium leading-relaxed">
+                      Solicito o checklist para os conjuntos abaixo:
+                    </p>
+                    
+                    {/* Styled Table matching attached Image 1 */}
+                    <div className="border-2 border-[#23120A] rounded-xl overflow-hidden shadow-xs">
+                      <table className="w-full text-center border-collapse">
+                        <thead>
+                          <tr className="bg-[#23120A] text-white text-xs sm:text-sm font-bold uppercase tracking-wider">
+                            <th className="py-3 px-4 border-r border-[#4A2C1C] w-1/2">CAVALO</th>
+                            <th className="py-3 px-4 w-1/2">CARRETAS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-[#FAF4EB] text-[#23120A] font-mono font-bold text-sm sm:text-base border-t border-[#23120A]">
+                            <td className="py-3.5 px-4 border-r border-[#D6C3AA] uppercase">{genData.cavalo || "—"}</td>
+                            <td className="py-3.5 px-4 uppercase">{genData.carretas || "—"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Contact Line */}
+                    <div className="text-center pt-2 pb-1">
+                      <p className="text-base text-[#23120A]">
+                        <strong className="font-extrabold">Contatos:</strong> {genData.contato}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bottom Footer Accent */}
+                  <div className="border-t-2 border-[#C89753] bg-[#23120A] h-3.5 w-full"></div>
+
+                </div>
+              ) : (
+                /* E-MAIL SIMPLES (IMAGEM 2) */
+                <div className="w-full max-w-lg bg-white rounded-xl border border-slate-300 shadow-md p-8 text-slate-900 font-sans space-y-5">
+                  <p className="text-lg font-serif font-bold text-slate-900">
                     {genData.greeting},
                   </p>
-
-                  {/* Body Paragraph */}
-                  <p className="text-base text-[#3D2214] font-medium leading-relaxed">
-                    Solicito o checklist para os conjuntos abaixo:
+                  <p className="text-base text-slate-800 font-medium">
+                    Solicito o <span className="text-[#A3181C] font-bold">checklist</span> para os conjuntos abaixo:
                   </p>
-                  
-                  {/* Styled Table matching attached image */}
-                  <div className="border-2 border-[#C9A26B] rounded-xl overflow-hidden shadow-xs">
+                  <div className="overflow-hidden border-2 border-slate-900">
                     <table className="w-full text-center border-collapse">
                       <thead>
-                        <tr className="bg-[#3D2214] text-white text-xs sm:text-sm font-bold uppercase tracking-wider">
-                          <th className="py-3 px-4 border-r border-[#C9A26B] w-1/2">CAVALO</th>
-                          <th className="py-3 px-4 w-1/2">CARRETAS</th>
+                        <tr className="bg-[#0B3B60] text-white text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 border-slate-900">
+                          <th className="py-2.5 px-4 border-r-2 border-slate-900 w-1/2">CAVALO</th>
+                          <th className="py-2.5 px-4 w-1/2">CARRETAS</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="bg-[#FAF4EB] text-[#3D2214] font-mono font-bold text-sm sm:text-base">
-                          <td className="py-3.5 px-4 border-r border-[#C9A26B] uppercase">{genData.cavalo || "—"}</td>
-                          <td className="py-3.5 px-4 uppercase">{genData.carretas || "—"}</td>
+                        <tr className="bg-white text-slate-900 font-mono font-bold text-sm sm:text-base">
+                          <td className="py-3 px-4 border-r-2 border-slate-900 uppercase">{genData.cavalo || "—"}</td>
+                          <td className="py-3 px-4 uppercase">{genData.carretas || "—"}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-
-                  {/* Contact Line */}
-                  <div className="text-center pt-2 pb-1">
-                    <p className="text-base font-normal text-[#3D2214]">
-                      <strong className="font-bold">Contatos:</strong> {genData.contato}
-                    </p>
-                  </div>
+                  <p className="text-base text-slate-900 pt-1">
+                    <strong className="font-bold">Contatos:</strong> {genData.contato}
+                  </p>
+                  <p className="text-base font-serif text-slate-900 pt-2">
+                    Att,
+                  </p>
                 </div>
-
-                {/* Bottom Footer Double Line Accent */}
-                <div className="border-t-2 border-[#C9A26B] bg-[#2C1810] h-3"></div>
-
-              </div>
+              )}
             </div>
           </div>
         ) : activeView === 'os' ? (

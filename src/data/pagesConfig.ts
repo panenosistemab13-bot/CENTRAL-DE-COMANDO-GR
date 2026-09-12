@@ -156,6 +156,35 @@ export const DEFAULT_PAGES: PageDefinition[] = [
 
 const VISIBILITY_STORAGE_KEY = 'pgr_page_visibility_v2';
 const CUSTOM_PAGES_STORAGE_KEY = 'pgr_custom_pages_v2';
+const PAGE_ORDER_STORAGE_KEY = 'pgr_page_order_v2';
+
+export function getStoredPageOrder(): string[] {
+  try {
+    const raw = localStorage.getItem(PAGE_ORDER_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch (err) {
+    console.error('Erro ao ler ordem das páginas:', err);
+  }
+  return [];
+}
+
+export function saveStoredPageOrder(order: string[]) {
+  try {
+    localStorage.setItem(PAGE_ORDER_STORAGE_KEY, JSON.stringify(order));
+  } catch (err) {
+    console.error('Erro ao salvar ordem das páginas:', err);
+  }
+}
+
+export function resetPageOrderToDefault() {
+  try {
+    localStorage.removeItem(PAGE_ORDER_STORAGE_KEY);
+  } catch (err) {
+    console.error('Erro ao resetar ordem das páginas:', err);
+  }
+}
 
 export function getStoredCustomPages(): PageDefinition[] {
   try {
@@ -184,7 +213,23 @@ export function getAllAvailablePages(): PageDefinition[] {
   DEFAULT_PAGES.forEach(p => baseMap.set(p.id, p));
   custom.forEach(p => baseMap.set(p.id, p));
   
-  return Array.from(baseMap.values());
+  const allPages = Array.from(baseMap.values());
+  const savedOrder = getStoredPageOrder();
+
+  if (!savedOrder || savedOrder.length === 0) {
+    return allPages;
+  }
+
+  // Sort based on savedOrder index
+  const sorted = [...allPages].sort((a, b) => {
+    const indexA = savedOrder.indexOf(a.id);
+    const indexB = savedOrder.indexOf(b.id);
+    const posA = indexA !== -1 ? indexA : 999;
+    const posB = indexB !== -1 ? indexB : 999;
+    return posA - posB;
+  });
+
+  return sorted;
 }
 
 export function loadPageVisibility(): Record<string, boolean> {

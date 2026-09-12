@@ -1262,7 +1262,13 @@ export default function Controle({ onBack }: ControleProps) {
 
   const handlePastePlanilhaChange = (text: string) => {
     setPastePlanilha(text);
-    if (!text.trim()) return;
+    if (!text.trim()) {
+      setIsca1Endereco("");
+      setIsca2Endereco("");
+      setIsca1Data("");
+      setIsca2Data("");
+      return;
+    }
 
     const lines = text
       .split("\n")
@@ -1983,6 +1989,13 @@ export default function Controle({ onBack }: ControleProps) {
             <div style="display: flex; align-items: center;">
               <span style="color: #0284C7; font-weight: 900; margin-right: 10px; font-size: 14px;">•</span> ${instrucao1}
             </div>
+            ${
+              !pastePlanilha.trim()
+                ? `<div style="margin-top: 8px; display: flex; align-items: center; color: #DC2626; font-weight: 800;">
+                    <span style="color: #DC2626; font-weight: 900; margin-right: 10px; font-size: 14px;">•</span> O site das iscas está temporariamente fora do ar.
+                  </div>`
+                : ""
+            }
           </div>
         </div>
 
@@ -2063,7 +2076,7 @@ export default function Controle({ onBack }: ControleProps) {
               ? `
           <tr style="background-color: #F8FAFC;">
             <td style="padding: 9px; border: 1px solid #CBD5E1; text-transform: uppercase; font-weight: 900; color: ${iscaHighlightColor};">${isca2 === "SEM ISCA" ? "" : isca2}</td>
-            <td style="padding: 9px; border: 1px solid #CBD5E1; text-align: left; padding-left: 12px; font-weight: 600; color: #334155;">${isca2 === "SEM ISCA" ? "" : isca2Endereco}</td>
+            <td style="padding: 9px; border: 1px solid #CBD5E1; text-align: left; padding-left: 12px; font-weight: 600; color: ${!pastePlanilha.trim() && !isca2Endereco ? "#DC2626" : "#334155"};">${isca2 === "SEM ISCA" ? "" : (isca2Endereco || (!pastePlanilha.trim() ? "O site das iscas está temporariamente fora do ar." : ""))}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1; font-weight: 600; color: #0F172A;">${isca2 === "SEM ISCA" ? "" : isca2Data}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1;">
               <div style="display: flex; align-items: center; justify-content: center;">
@@ -2080,7 +2093,7 @@ export default function Controle({ onBack }: ControleProps) {
           }
           <tr style="background-color: #FFFFFF;">
             <td style="padding: 9px; border: 1px solid #CBD5E1; text-transform: uppercase; font-weight: 900; color: ${iscaHighlightColor};">${isca1}</td>
-            <td style="padding: 9px; border: 1px solid #CBD5E1; text-align: left; padding-left: 12px; font-weight: 600; color: #334155;">${isca1Endereco}</td>
+            <td style="padding: 9px; border: 1px solid #CBD5E1; text-align: left; padding-left: 12px; font-weight: 600; color: ${!pastePlanilha.trim() && !isca1Endereco ? "#DC2626" : "#334155"};">${isca1Endereco || (!pastePlanilha.trim() ? "O site das iscas está temporariamente fora do ar." : "")}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1; font-weight: 600; color: #0F172A;">${isca1Data}</td>
             <td style="padding: 9px; border: 1px solid #CBD5E1;">
               <div style="display: flex; align-items: center; justify-content: center;">
@@ -2168,7 +2181,7 @@ ${alertaResgate}
 ${infoAbaixo}
 
 · ${rota1};
-· ${instrucao1}
+· ${instrucao1}${!pastePlanilha.trim() ? "\n· O site das iscas está temporariamente fora do ar." : ""}
 
 -----------------------------------------------------------------------------------------------------------------
 NÚMERO DA NF: ${[nfInicio, (numCarretas === 2 && isca2 !== "SEM ISCA" ? nfFim : "")].filter(Boolean).map(v => v.replace(/-/g, '')).join(' ')} | TRANSPORTADORA: ${transportadora}${valorCarga ? ` | VALOR CARGA: ${valorCarga}` : ""}
@@ -2952,6 +2965,14 @@ Embarque: ${
                       placeholder="· * Favor, acusar o recebimento do pré-alerta;"
                     />
                   </div>
+                  {!pastePlanilha.trim() && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-red-600 text-sm font-black">•</span>
+                      <span className="font-extrabold text-xs text-red-600 uppercase tracking-wide py-0.5 px-1.5 rounded bg-red-50 border border-red-200/60 w-full">
+                        O site das iscas está temporariamente fora do ar.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 5. BIG INTERACTIVE SPREADSHEET TABLE 1 */}
@@ -3412,11 +3433,14 @@ Embarque: ${
                         </td>
                         <td className="border-r border-slate-300 p-1.5 text-left font-medium text-xs bg-slate-50 align-middle">
                           <textarea
-                            value={isca2 === "SEM ISCA" ? "" : isca2Endereco}
+                            value={isca2 === "SEM ISCA" ? "" : (isca2Endereco || (!pastePlanilha.trim() ? "O site das iscas está temporariamente fora do ar." : ""))}
                             onChange={(e) => setIsca2Endereco(e.target.value)}
                             disabled={isca2 === "SEM ISCA"}
                             rows={1}
-                            className="w-full bg-transparent border-none outline-none hover:bg-slate-200/50 focus:bg-slate-200 rounded px-1.5 py-0.5 text-xs text-slate-900 resize-y leading-tight font-bold transition-all duration-200 disabled:opacity-50"
+                            className={cn(
+                              "w-full bg-transparent border-none outline-none hover:bg-slate-200/50 focus:bg-slate-200 rounded px-1.5 py-0.5 text-xs resize-y leading-tight font-bold transition-all duration-200 disabled:opacity-50",
+                              !pastePlanilha.trim() && !isca2Endereco ? "text-red-600 font-extrabold uppercase" : "text-slate-900"
+                            )}
                             placeholder={isca2 === "SEM ISCA" ? "" : "Endereço da Isca 2..."}
                           />
                         </td>
@@ -3467,10 +3491,13 @@ Embarque: ${
                       </td>
                       <td className="border-r border-slate-300 p-1.5 text-left font-medium text-xs bg-white align-middle">
                         <textarea
-                          value={isca1Endereco}
+                          value={isca1Endereco || (!pastePlanilha.trim() ? "O site das iscas está temporariamente fora do ar." : "")}
                           onChange={(e) => setIsca1Endereco(e.target.value)}
                           rows={1}
-                          className="w-full bg-transparent border-none outline-none hover:bg-slate-100 focus:bg-slate-200/70 rounded px-1.5 py-0.5 text-xs text-slate-900 resize-y leading-tight font-bold transition-all duration-200"
+                          className={cn(
+                            "w-full bg-transparent border-none outline-none hover:bg-slate-100 focus:bg-slate-200/70 rounded px-1.5 py-0.5 text-xs resize-y leading-tight font-bold transition-all duration-200",
+                            !pastePlanilha.trim() && !isca1Endereco ? "text-red-600 font-extrabold uppercase" : "text-slate-900"
+                          )}
                           placeholder="Endereço da Isca 1..."
                         />
                       </td>
