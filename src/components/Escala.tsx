@@ -524,27 +524,36 @@ export default function Escala({ onBack }: EscalaProps) {
 
     if (!match) return { checkList: 'SEM CHECKLIST', pendencia: '' };
 
-    let checkList = '';
+    let formattedDate = '';
     let isVencido = false;
 
     if (match.statusOverride === 'VENCIDO' || match.statusOverride === 'NEGATIVADO' || match.statusOverride === 'REPROVADO') {
       isVencido = true;
     }
 
-    if (match.dataVencimento) {
-      const raw = match.dataVencimento.trim();
+    const rawDate = match.dataVencimento || (match as any).vencimento || (match as any).data_vencimento || (match as any).validade || '';
+
+    if (rawDate && typeof rawDate === 'string' && rawDate.trim()) {
+      const raw = rawDate.trim();
       let expiryDate: Date | null = null;
 
       if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
         const [y, m, d] = raw.split('-');
-        checkList = `${d}/${m}/${y}`;
+        formattedDate = `${d}/${m}/${y}`;
         expiryDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
       } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
-        checkList = raw;
+        formattedDate = raw;
         const [d, m, y] = raw.split('/');
         expiryDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      } else if (!isNaN(Date.parse(raw))) {
+        const parsed = new Date(raw);
+        const d = String(parsed.getDate()).padStart(2, '0');
+        const m = String(parsed.getMonth() + 1).padStart(2, '0');
+        const y = parsed.getFullYear();
+        formattedDate = `${d}/${m}/${y}`;
+        expiryDate = parsed;
       } else {
-        checkList = raw;
+        formattedDate = raw;
       }
 
       if (expiryDate && !isNaN(expiryDate.getTime())) {
@@ -557,14 +566,44 @@ export default function Escala({ onBack }: EscalaProps) {
           isVencido = true;
         }
       }
-    } else if (match.statusOverride) {
-      checkList = match.statusOverride;
-    } else {
-      checkList = 'SEM CHECKLIST';
+    } else if (match.dataTeste) {
+      // Fallback: calculate date from dataTeste if dataVencimento is missing
+      try {
+        const rawT = match.dataTeste.trim();
+        let testDate: Date | null = null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(rawT)) {
+          const [y, m, d] = rawT.split('-');
+          testDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(rawT)) {
+          const [d, m, y] = rawT.split('/');
+          testDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        }
+        if (testDate && !isNaN(testDate.getTime())) {
+          const expDate = new Date(testDate);
+          expDate.setDate(expDate.getDate() + 60);
+          const d = String(expDate.getDate()).padStart(2, '0');
+          const m = String(expDate.getMonth() + 1).padStart(2, '0');
+          const y = expDate.getFullYear();
+          formattedDate = `${d}/${m}/${y}`;
+
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          expDate.setHours(0, 0, 0, 0);
+          if (expDate < today) {
+            isVencido = true;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (!formattedDate) {
+      formattedDate = 'SEM CHECKLIST';
     }
 
     return {
-      checkList: checkList || 'SEM CHECKLIST',
+      checkList: formattedDate,
       pendencia: isVencido ? 'CHECKLIST' : ''
     };
   };
