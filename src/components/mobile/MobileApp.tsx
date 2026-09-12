@@ -71,33 +71,14 @@ export default function MobileApp({
     }
   };
 
-  // Redirect to menu in real time if the current page becomes restricted
-  React.useEffect(() => {
-    if (activeTab !== 'menu' && pageVisibility[activeTab] === false) {
-      setActiveTab('menu');
-    }
-  }, [activeTab, pageVisibility, setActiveTab]);
-
-  // Dynamic bottom bar: Menu + the first 3 visible primary tabs
-  const defaultNavOptions = [
+  const navItems = [
+    { id: 'menu' as Tab, label: 'Início', icon: LayoutGrid },
     { id: 'patio' as Tab, label: 'Pátio', icon: Truck },
     { id: 'escala' as Tab, label: 'Escala', icon: FileSpreadsheet },
     { id: 'checklist' as Tab, label: 'Checklist', icon: ClipboardCheck },
-    { id: 'presence' as Tab, label: 'Presença', icon: Users },
-    { id: 'averbacao' as Tab, label: 'Averbação', icon: FileCheck2 },
-    { id: 'sm_creator' as Tab, label: 'Criador SM', icon: CalendarDays },
-    { id: 'controle' as Tab, label: 'Iscas', icon: Radio },
-    { id: 'rotas' as Tab, label: 'Rotas', icon: Route },
-    { id: 'slides' as Tab, label: 'Painel', icon: Activity }
   ];
 
-  const visibleNavOptions = defaultNavOptions.filter(item => pageVisibility[item.id] !== false);
-  const navItems = [
-    { id: 'menu' as Tab, label: 'Início', icon: LayoutGrid },
-    ...visibleNavOptions.slice(0, 3)
-  ];
-
-  const allDrawerModules = [
+  const drawerModules = [
     { id: 'presence' as Tab, label: 'Presença & Escala 12x36', icon: Users, desc: 'Plantão, folgas e agenda corporativa' },
     { id: 'averbacao' as Tab, label: 'Averbação de Carga', icon: FileCheck2, desc: 'Apólices de seguro Porto Seguro e protocolos' },
     { id: 'sm_creator' as Tab, label: 'Criador de S.M.', icon: CalendarDays, desc: 'Solicitação de monitoramento para PGR' },
@@ -105,8 +86,6 @@ export default function MobileApp({
     { id: 'rotas' as Tab, label: 'Rotas & Pontos de Parada', icon: Route, desc: 'Distâncias, pedágios e credenciados' },
     { id: 'slides' as Tab, label: 'Painel Executivo', icon: Activity, desc: 'Métricas gerais e conformidade' }
   ];
-
-  const drawerModules = allDrawerModules.filter(mod => pageVisibility[mod.id] !== false);
 
   const navigateTo = (tab: Tab) => {
     setActiveTab(tab);
