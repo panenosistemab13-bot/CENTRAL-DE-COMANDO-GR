@@ -574,6 +574,20 @@ export default function Escala({ onBack }: EscalaProps) {
     return getChecklistDetails(cavaloPlate, carretaPlate).checkList;
   };
 
+  // Helper to format license plate with hyphen e.g. POZ4431 -> POZ-4431, UUO8D35 -> UUO-8D35
+  const formatPlateWithHyphen = (plateStr: string): string => {
+    if (!plateStr) return '';
+    const trimmed = plateStr.trim().toUpperCase();
+    if (trimmed.includes('-')) {
+      return trimmed;
+    }
+    const clean = trimmed.replace(/[^A-Z0-9]/g, '');
+    if (/^[A-Z]{3}[A-Z0-9]{4}$/.test(clean)) {
+      return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+    }
+    return trimmed;
+  };
+
   // Helper to get current date formatted dd/MM/yyyy
   const getTodayDateStr = (): string => {
     const now = new Date();
@@ -682,17 +696,18 @@ export default function Escala({ onBack }: EscalaProps) {
       // 8: Paletização
       // 9: TON
       const motorista = cols[1] || '';
-      const placaCavalo = cols[2] || '';
-      const bau1 = cols[3] || '';
-      const bau2 = cols[4] || '';
+      const rawPlacaCavalo = cols[2] || '';
+      const rawBau1 = cols[3] || '';
+      const rawBau2 = cols[4] || '';
       const trecho = cols[5] || '';
       const matricula = cols[6] || '';
       const codSap = cols[7] || '';
       const rawPallets = cols[8] || '48';
       const rawTon = cols[9] || '34';
 
-      // Helper to strip hyphen from carreta plate (e.g. UUH-3A45 -> UUH3A45)
-      const cleanCarretaPlate = (plateStr: string) => (plateStr || '').replace(/-/g, '').toUpperCase().trim();
+      const placaCavalo = formatPlateWithHyphen(rawPlacaCavalo);
+      const bau1 = formatPlateWithHyphen(rawBau1);
+      const bau2 = formatPlateWithHyphen(rawBau2);
 
       // Always format Santa Luzia as "SANTA LUZIA|MG" (Fixed requirement)
       const origem = 'SANTA LUZIA|MG';
@@ -760,8 +775,8 @@ export default function Escala({ onBack }: EscalaProps) {
           fezContato: defaults.fezContato,
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
-          cavalo: placaCavalo.toUpperCase(),
-          carreta: cleanCarretaPlate(bau1),
+          cavalo: formatPlateWithHyphen(placaCavalo),
+          carreta: formatPlateWithHyphen(bau1),
           pallets: palletsHalf,
           ton: tonHalf,
           m3: '',
@@ -797,8 +812,8 @@ export default function Escala({ onBack }: EscalaProps) {
           fezContato: defaults.fezContato,
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
-          cavalo: placaCavalo.toUpperCase(),
-          carreta: cleanCarretaPlate(bau2),
+          cavalo: formatPlateWithHyphen(placaCavalo),
+          carreta: formatPlateWithHyphen(bau2),
           pallets: palletsHalf,
           ton: tonHalf,
           m3: '',
@@ -839,8 +854,8 @@ export default function Escala({ onBack }: EscalaProps) {
           fezContato: defaults.fezContato,
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
-          cavalo: placaCavalo.toUpperCase(),
-          carreta: cleanCarretaPlate(singleCarreta),
+          cavalo: formatPlateWithHyphen(placaCavalo),
+          carreta: formatPlateWithHyphen(singleCarreta),
           pallets: rawPallets,
           ton: rawTon,
           m3: '',
@@ -891,8 +906,10 @@ export default function Escala({ onBack }: EscalaProps) {
             if (matched3CDriver.rg) updated.rgSap = matched3CDriver.rg;
           }
         } else if (field === 'cavalo' || field === 'carreta') {
-          const cav = field === 'cavalo' ? value : r.cavalo;
-          const car = field === 'carreta' ? value : r.carreta;
+          const cav = field === 'cavalo' ? formatPlateWithHyphen(value) : formatPlateWithHyphen(r.cavalo);
+          const car = field === 'carreta' ? formatPlateWithHyphen(value) : formatPlateWithHyphen(r.carreta);
+          updated.cavalo = cav;
+          updated.carreta = car;
           const chk = getChecklistDetails(cav, car);
           updated.checkList = chk.checkList;
           updated.pendencia = chk.pendencia;
@@ -917,8 +934,8 @@ export default function Escala({ onBack }: EscalaProps) {
       row.fezContato,           // 10 (J)
       row.destino,              // 11 (K)
       row.transportador,        // 12 (L)
-      row.cavalo,               // 13 (M)
-      row.carreta,              // 14 (N)
+      formatPlateWithHyphen(row.cavalo),  // 13 (M)
+      formatPlateWithHyphen(row.carreta), // 14 (N)
       row.pallets,              // 15 (O)
       row.ton,                  // 16 (P)
       row.m3,                   // 17 (Q)
