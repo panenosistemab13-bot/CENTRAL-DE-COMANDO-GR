@@ -25,7 +25,15 @@ import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, remove, update } from 'firebase/database';
 import { AnimatePresence } from 'motion/react';
-import { format, differenceInDays, parseISO, addDays } from 'date-fns';
+import { format, differenceInDays, differenceInCalendarDays, startOfDay, parseISO, addDays } from 'date-fns';
+
+export const formatPlateWithHyphen = (plateStr?: string): string => {
+  if (!plateStr) return '';
+  const clean = plateStr.trim().toUpperCase();
+  // Formats plates like SAS2D02 -> SAS-2D02, POZ4431 -> POZ-4431
+  // Handles multiple plates separated by slashes or spaces e.g. POG2095 / POF7735 -> POG-2095 / POF-7735
+  return clean.replace(/\b([A-Z]{3})([0-9][A-Z0-9]{3})\b/g, '$1-$2');
+};
 
 interface PdfFile {
   id: string;
@@ -51,7 +59,7 @@ interface ChecklistItem {
 
 const LicensePlate: React.FC<{ plate: string; type?: 'cavalo' | 'carreta' }> = ({ plate, type }) => {
   if (!plate || plate === '-') return <span className="text-slate-400 font-mono font-bold">-</span>;
-  const cleanPlate = plate.trim().toUpperCase();
+  const cleanPlate = formatPlateWithHyphen(plate);
   const isCarreta = type === 'carreta';
   const isCavalo = type === 'cavalo';
   const headerText = isCavalo ? 'CAVALO' : isCarreta ? 'CARRETA' : 'BRASIL';
@@ -163,7 +171,9 @@ export default function Checklist() {
       }
 
       if (cavalo) {
-        cavalo = cavalo.replace(/[^a-zA-Z0-9\s-]/g, '').toUpperCase();
+        cavalo = formatPlateWithHyphen(cavalo);
+        carretas = formatPlateWithHyphen(carretas);
+
         const parseDate = (d: string) => {
           if (!d || d === 'REPROVADO' || d === 'VENCIDO' || d === '#VALUE!') return format(new Date(), 'yyyy-MM-dd');
           const [dd, mm, yyyy] = d.split('/');
@@ -176,13 +186,16 @@ export default function Checklist() {
           ? format(addDays(new Date(), -1), 'yyyy-MM-dd') 
           : parseDate(dataVencStr);
 
-        const isNegated = statusStr.includes('VENCIDO') || statusStr.includes('NEGATIVADO') || statusStr.includes('REPROVADO') || dataVencStr === 'REPROVADO';
-        const resolvedStatus = isNegated ? 'NEGATIVADO' : 'APROVADO';
+        const isNegated = statusStr.includes('NEGATIVADO') || statusStr.includes('REPROVADO') || dataVencStr === 'REPROVADO';
+        const resolvedStatus = isNegated ? (statusStr.includes('REPROVADO') ? 'REPROVADO' : 'NEGATIVADO') : undefined;
 
-        const existing = items.find(item => item.cavalo.toUpperCase() === cavalo.toUpperCase());
+        const cleanCavalo = cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        const existing = items.find(item => item.cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase() === cleanCavalo);
+
         if (existing) {
           updates[`checklist_veiculos/${existing.id}`] = {
             ...existing,
+            cavalo,
             carretas: carretas || existing.carretas,
             statusOverride: resolvedStatus as ChecklistItem['statusOverride'],
             dataTeste: parsedTeste,
@@ -295,16 +308,41 @@ export default function Checklist() {
 
   useEffect(() => {
     const checklistRef = ref(rtdb, 'checklist_veiculos');
-    const unsubscribe = onValue(checklistRef, (snapshot) => {
+    const unsubscribe = onValue(checklistRef, async (snapshot) => {
       const data = snapshot.val();
-      if (data) {
+      if (data && Object.keys(data).length > 0) {
         const list = Object.entries(data).map(([key, val]: [string, any]) => ({
           id: key,
-          ...val
+          ...val,
+          cavalo: formatPlateWithHyphen(val.cavalo),
+          carretas: formatPlateWithHyphen(val.carretas)
         }));
         setItems(list);
       } else {
-        setItems([]);
+        // Seed default fleet list if database is empty so plates remain fixed and persistent
+        const initialSeed: Record<string, any> = {
+          "v1": { id: "v1", cavalo: "POZ-4431", carretas: "", dataTeste: "2026-06-10", dataVencimento: "2026-08-09", manutencaoOs: "", periferico: "", observacao: "" },
+          "v2": { id: "v2", cavalo: "POZ-3241", carretas: "", dataTeste: "2026-06-30", dataVencimento: "2026-08-29", manutencaoOs: "", periferico: "", observacao: "" },
+          "v3": { id: "v3", cavalo: "SBK-5A52", carretas: "POG-2095 / POF-7735", dataTeste: "2026-07-09", dataVencimento: "2026-09-07", manutencaoOs: "", periferico: "", observacao: "" },
+          "v4": { id: "v4", cavalo: "SBK-5C22", carretas: "POG-1245 / POG-0885", dataTeste: "2026-07-16", dataVencimento: "2026-09-14", manutencaoOs: "", periferico: "", observacao: "" },
+          "v5": { id: "v5", cavalo: "TYQ-6F51", carretas: "PNE-7353 / PNE-7433", dataTeste: "2026-07-18", dataVencimento: "2026-09-16", manutencaoOs: "", periferico: "", observacao: "" },
+          "v6": { id: "v6", cavalo: "SBK-5B52", carretas: "PNC-8303 / PNC-8953", dataTeste: "2026-07-29", dataVencimento: "2026-09-27", manutencaoOs: "", periferico: "", observacao: "" },
+          "v7": { id: "v7", cavalo: "TYT-8A14", carretas: "QOX-3164 / QOX-3168", dataTeste: "2026-08-08", dataVencimento: "2026-10-07", manutencaoOs: "", periferico: "", observacao: "" },
+          "v8": { id: "v8", cavalo: "SAR-8D82", carretas: "SBF-9G98 / TIC-0F85", dataTeste: "2026-08-09", dataVencimento: "2026-10-08", manutencaoOs: "", periferico: "", observacao: "" },
+          "v9": { id: "v9", cavalo: "THX-5I51", carretas: "POG-0685 / POG-0545", dataTeste: "2026-08-10", dataVencimento: "2026-10-09", manutencaoOs: "", periferico: "", observacao: "" },
+          "v10": { id: "v10", cavalo: "SBK-4J52", carretas: "SBG-0B88 / PZX-4633", dataTeste: "2026-08-10", dataVencimento: "2026-10-09", manutencaoOs: "900382", periferico: "", observacao: "" },
+          "v11": { id: "v11", cavalo: "POD-0255", carretas: "SBJ-0E22 / SBJ-0C82", dataTeste: "2026-08-12", dataVencimento: "2026-10-11", manutencaoOs: "", periferico: "", observacao: "" },
+          "v12": { id: "v12", cavalo: "PNY-2605", carretas: "POF-9075 / POF-8375", dataTeste: "2026-08-21", dataVencimento: "2026-10-20", manutencaoOs: "", periferico: "", observacao: "" },
+          "v13": { id: "v13", cavalo: "UUF-7I05", carretas: "PNW-5562", dataTeste: "2026-08-21", dataVencimento: "2026-10-20", manutencaoOs: "", periferico: "", observacao: "" },
+          "v14": { id: "v14", cavalo: "PNY-2215", carretas: "SBJ-0E22 / SBJ-0C82", dataTeste: "2026-08-28", dataVencimento: "2026-10-27", manutencaoOs: "", periferico: "", observacao: "" },
+          "v15": { id: "v15", cavalo: "SBN-4J62", carretas: "PNC-8603 / PNC-8873", dataTeste: "2026-08-29", dataVencimento: "2026-10-28", manutencaoOs: "", periferico: "", observacao: "" },
+          "v16": { id: "v16", cavalo: "POD-0345", carretas: "POF-8075 / POF-7875", dataTeste: "2026-08-31", dataVencimento: "2026-10-30", manutencaoOs: "", periferico: "", observacao: "" },
+          "v17": { id: "v17", cavalo: "POD-0645", carretas: "MIN-8723 / TIC-0D95", dataTeste: "2026-09-04", dataVencimento: "2026-11-03", manutencaoOs: "", periferico: "", observacao: "" },
+          "v18": { id: "v18", cavalo: "THX-8C51", carretas: "PNE-4812 / POG-0885", dataTeste: "2026-09-08", dataVencimento: "2026-11-07", manutencaoOs: "", periferico: "", observacao: "" },
+          "v19": { id: "v19", cavalo: "SBK-4I42", carretas: "POF-9785 / POR-5E42", dataTeste: "2026-09-10", dataVencimento: "2026-11-09", manutencaoOs: "", periferico: "", observacao: "" },
+          "v20": { id: "v20", cavalo: "SAS-2D02", carretas: "SBI-8C02 / SBJ-0A72", dataTeste: "2026-09-11", dataVencimento: "2026-11-10", manutencaoOs: "", periferico: "", observacao: "" }
+        };
+        await set(checklistRef, initialSeed);
       }
     });
     return () => unsubscribe();
@@ -313,8 +351,15 @@ export default function Checklist() {
   const handleAdd = async () => {
     if (!newItem.cavalo) return;
     const id = Date.now().toString();
+    const formattedCavalo = formatPlateWithHyphen(newItem.cavalo);
+    const formattedCarretas = formatPlateWithHyphen(newItem.carretas);
     try {
-      await set(ref(rtdb, `checklist_veiculos/${id}`), { ...newItem, id });
+      await set(ref(rtdb, `checklist_veiculos/${id}`), {
+        ...newItem,
+        cavalo: formattedCavalo,
+        carretas: formattedCarretas,
+        id
+      });
       setIsAdding(false);
       setNewItem({
         cavalo: '',
@@ -338,7 +383,12 @@ export default function Checklist() {
     if (!editingItem || !editingItem.cavalo) return;
     try {
       const { id, ...data } = editingItem;
-      await update(ref(rtdb, `checklist_veiculos/${id}`), data);
+      const updatedData = {
+        ...data,
+        cavalo: formatPlateWithHyphen(data.cavalo),
+        carretas: formatPlateWithHyphen(data.carretas)
+      };
+      await update(ref(rtdb, `checklist_veiculos/${id}`), updatedData);
       setEditingItem(null);
     } catch (error) {
       console.error("Erro ao atualizar checklist:", error);
@@ -365,37 +415,63 @@ export default function Checklist() {
   };
 
   const safeParseDate = (dateStr?: string): Date | null => {
-    if (!dateStr) return null;
-    let d = parseISO(dateStr);
-    if (!isNaN(d.getTime())) return d;
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      d = new Date(year, month, day);
-      if (!isNaN(d.getTime())) return d;
+    if (!dateStr || dateStr === 'REPROVADO' || dateStr === 'VENCIDO' || dateStr === '#VALUE!') return null;
+    const trimmed = dateStr.trim();
+    if (trimmed.includes('/')) {
+      const parts = trimmed.split('/');
+      if (parts.length === 3) {
+        const [dd, mm, yyyy] = parts;
+        if (dd && mm && yyyy) {
+          return new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
+        }
+      }
     }
-    const timestampDate = new Date(dateStr);
-    if (!isNaN(timestampDate.getTime())) return timestampDate;
-    return null;
+    if (trimmed.includes('-')) {
+      const parts = trimmed.split('T')[0].split('-');
+      if (parts.length === 3) {
+        const [yyyy, mm, dd] = parts;
+        if (yyyy && mm && dd) {
+          return new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
+        }
+      }
+    }
+    const d = new Date(trimmed);
+    return isNaN(d.getTime()) ? null : d;
   };
 
   const getStatus = (item: ChecklistItem) => {
+    const today = startOfDay(new Date());
+    const expiry = safeParseDate(item.dataVencimento);
+
+    // If expiration date exists and has passed (diff < 0), ALWAYS return VENCIDO
+    if (expiry) {
+      const expStart = startOfDay(expiry);
+      const diff = differenceInCalendarDays(expStart, today);
+      if (diff < 0) {
+        return { label: 'VENCIDO', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200' };
+      }
+    }
+
     if (item.statusOverride) {
       if (item.statusOverride === 'VENCIDO' || item.statusOverride === 'REPROVADO' || item.statusOverride === 'NEGATIVADO') {
         return { label: item.statusOverride, color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200' };
       }
-      return { label: item.statusOverride, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
+      if (item.statusOverride === 'APROVADO') {
+        return { label: 'APROVADO', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
+      }
     }
-    const today = new Date();
-    const expiry = safeParseDate(item.dataVencimento);
+
     if (!expiry) {
       return { label: 'PENDENTE', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' };
     }
-    const diff = differenceInDays(expiry, today);
-    if (diff < 0) return { label: 'VENCIDO', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200' };
-    if (diff <= 3) return { label: 'A VENCER', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' };
+
+    const expStart = startOfDay(expiry);
+    const diff = differenceInCalendarDays(expStart, today);
+
+    if (diff <= 3) {
+      return { label: 'A VENCER', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' };
+    }
+
     return { label: 'APROVADO', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
   };
 
@@ -1084,10 +1160,18 @@ export default function Checklist() {
                             break;
                         }
 
+                        const itemStatus = getStatus(item);
+                        const isRowVencido = itemStatus.label === 'VENCIDO' || itemStatus.label === 'NEGATIVADO' || itemStatus.label === 'REPROVADO';
+
                         return (
                           <tr 
                             key={item.id} 
-                            className="text-xs text-slate-900 hover:bg-[#FAF8F5] transition-colors border-b border-slate-100 h-16"
+                            className={cn(
+                              "text-xs transition-colors border-b h-16",
+                              isRowVencido 
+                                ? "bg-rose-50/95 hover:bg-rose-100/95 text-rose-950 border-rose-200 font-medium" 
+                                : "text-slate-900 hover:bg-[#FAF8F5] border-slate-100"
+                            )}
                           >
                             {/* Index */}
                             <td className="p-2 text-center text-slate-400 font-mono text-xs w-12 select-none font-bold">
@@ -1293,12 +1377,25 @@ export default function Checklist() {
                 {filteredItems.map((item) => {
                   const status = getStatus(item);
                   const parsedExpiry = safeParseDate(item.dataVencimento);
-                  const diasParaVencer = parsedExpiry ? differenceInDays(parsedExpiry, new Date()) : 0;
+                  const diasParaVencer = parsedExpiry ? differenceInCalendarDays(startOfDay(parsedExpiry), startOfDay(new Date())) : 0;
                   const formattedVencimento = parsedExpiry ? format(parsedExpiry, 'dd/MM/yyyy') : (item.dataVencimento || '—');
+                  const isVencido = status.label === 'VENCIDO' || status.label === 'NEGATIVADO' || status.label === 'REPROVADO' || diasParaVencer < 0;
 
                   return (
-                    <div key={item.id} className="bg-white border border-slate-200 hover:border-[#B32025]/40 rounded-2xl p-5 shadow-xs transition-all">
-                      <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                    <div 
+                      key={item.id} 
+                      className={cn(
+                        "rounded-2xl p-5 shadow-xs transition-all relative overflow-hidden border-2",
+                        isVencido 
+                          ? "bg-rose-50/90 border-rose-400 ring-2 ring-rose-500/20 shadow-md shadow-rose-100" 
+                          : "bg-white border-slate-200 hover:border-[#B32025]/40"
+                      )}
+                    >
+                      {isVencido && (
+                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-rose-600 animate-pulse" />
+                      )}
+
+                      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pl-1">
                         
                         {/* Plates Section */}
                         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 w-full lg:w-auto">
@@ -1310,7 +1407,10 @@ export default function Checklist() {
                           {item.carretas && (
                             <div className="flex flex-col items-center lg:items-start">
                               <span className="text-[10px] font-extrabold text-[#2B180D] uppercase mb-1.5 tracking-wider font-sans">Carretas do Conjunto</span>
-                              <div className="bg-[#FAF8F5] border border-[#3A2414]/20 rounded-xl px-4 py-2 flex items-center gap-2.5">
+                              <div className={cn(
+                                "border rounded-xl px-4 py-2 flex items-center gap-2.5",
+                                isVencido ? "bg-rose-100/70 border-rose-300" : "bg-[#FAF8F5] border-[#3A2414]/20"
+                              )}>
                                 <Truck size={18} className="text-[#B32025]" />
                                 <span className="font-mono font-black text-sm text-[#2B180D] uppercase tracking-wide">{item.carretas}</span>
                               </div>
@@ -1449,63 +1549,63 @@ export default function Checklist() {
 
       {/* ================= EDIT MODAL ================= */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative">
-            <h3 className="text-base font-bold uppercase text-blue-950 mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
-              <span>Editar Checklist: {editingItem.cavalo}</span>
-              <button onClick={() => setEditingItem(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
-                <X size={20} />
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 pt-24 sm:pt-20 pb-12 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full shadow-2xl relative max-h-[78vh] flex flex-col transform scale-90 sm:scale-95 transition-transform my-auto">
+            <h3 className="text-xs sm:text-sm font-black uppercase text-blue-950 mb-3 flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
+              <span className="truncate pr-2">EDITAR CHECKLIST: {editingItem.cavalo}</span>
+              <button onClick={() => setEditingItem(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer p-1 shrink-0">
+                <X size={18} />
               </button>
             </h3>
 
-            <div className="space-y-4 text-sm">
+            <div className="space-y-2.5 text-xs overflow-y-auto pr-1 flex-1 custom-scrollbar">
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Placa Cavalo</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Placa Cavalo</label>
                 <input
                   type="text"
                   value={editingItem.cavalo}
                   onChange={(e) => setEditingItem({ ...editingItem, cavalo: e.target.value.toUpperCase() })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 font-mono uppercase font-bold text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Carretas do Conjunto</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Carretas do Conjunto</label>
                 <input
                   type="text"
                   value={editingItem.carretas}
                   onChange={(e) => setEditingItem({ ...editingItem, carretas: e.target.value.toUpperCase() })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 font-mono uppercase font-bold text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Teste</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Data Teste</label>
                   <input
                     type="date"
                     value={editingItem.dataTeste}
                     onChange={(e) => setEditingItem({ ...editingItem, dataTeste: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Vencimento</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Data Vencimento</label>
                   <input
                     type="date"
                     value={editingItem.dataVencimento}
                     onChange={(e) => setEditingItem({ ...editingItem, dataVencimento: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Status Manual</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Status Manual</label>
                 <select
                   value={editingItem.statusOverride || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, statusOverride: e.target.value as any || undefined })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium text-xs cursor-pointer"
                 >
                   <option value="">Automático (Calculado pela Data)</option>
                   <option value="APROVADO">APROVADO</option>
@@ -1515,35 +1615,35 @@ export default function Checklist() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Nº da O.S</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Nº da O.S</label>
                   <input
                     type="text"
                     value={editingItem.manutencaoOs || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, manutencaoOs: e.target.value.toUpperCase() })}
                     placeholder="EX: 900382"
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 uppercase font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 uppercase font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Agendamento O.S</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Data Agendamento O.S</label>
                   <input
                     type="date"
                     value={editingItem.dataAgendamento || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, dataAgendamento: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Status da O.S</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Status da O.S</label>
                   <select
                     value={editingItem.osStatus || 'PENDENTE'}
                     onChange={(e) => setEditingItem({ ...editingItem, osStatus: e.target.value as any })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold text-xs cursor-pointer"
                   >
                     <option value="PENDENTE">🔴 PENDENTE</option>
                     <option value="AGENDADO">🔵 AGENDADO</option>
@@ -1553,11 +1653,11 @@ export default function Checklist() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Checklist Realizado</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Checklist Realizado</label>
                   <select
                     value={editingItem.checklistRealizado || 'não'}
                     onChange={(e) => setEditingItem({ ...editingItem, checklistRealizado: e.target.value as any })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold text-xs cursor-pointer"
                   >
                     <option value="não">❌ NÃO</option>
                     <option value="sim">✔️ SIM</option>
@@ -1566,34 +1666,34 @@ export default function Checklist() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Periférico</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Periférico</label>
                 <input
                   type="text"
                   value={editingItem.periferico || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, periferico: e.target.value.toUpperCase() })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 uppercase font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 uppercase font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Observação</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Observação</label>
                 <textarea
                   value={editingItem.observacao || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, observacao: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 h-20 resize-none"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 h-14 resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100 shrink-0">
                 <button
                   onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
+                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold uppercase tracking-wider text-[11px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleUpdate}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-xs cursor-pointer"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold uppercase tracking-wider text-[11px] shadow-xs cursor-pointer"
                 >
                   Salvar Alterações
                 </button>
@@ -1605,21 +1705,21 @@ export default function Checklist() {
 
       {/* ================= NEW REGISTRATION MODAL ================= */}
       {isAdding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative">
-            <h3 className="text-base font-bold uppercase text-blue-950 mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
-              <span>Novo Registro de Checklist</span>
-              <button onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
-                <X size={20} />
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 pt-24 sm:pt-20 pb-12 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full shadow-2xl relative max-h-[78vh] flex flex-col transform scale-90 sm:scale-95 transition-transform my-auto">
+            <h3 className="text-xs sm:text-sm font-black uppercase text-blue-950 mb-3 flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
+              <span className="truncate pr-2">Novo Registro de Checklist</span>
+              <button onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer p-1 shrink-0">
+                <X size={18} />
               </button>
             </h3>
 
-            <div className="space-y-4 text-sm">
+            <div className="space-y-2.5 text-xs overflow-y-auto pr-1 flex-1 custom-scrollbar">
               {/* Dropdown to pull existing plate from Checklist */}
               {sortedCavalos.length > 0 && (
-                <div className="bg-blue-50/70 border border-blue-200 p-3 rounded-xl space-y-1.5">
-                  <label className="text-xs font-bold text-blue-950 uppercase flex items-center gap-1.5">
-                    <Truck size={14} className="text-blue-600" />
+                <div className="bg-blue-50/70 border border-blue-200 p-2.5 rounded-xl space-y-1">
+                  <label className="text-[10px] font-bold text-blue-950 uppercase flex items-center gap-1.5">
+                    <Truck size={13} className="text-blue-600" />
                     <span>Puxar Placa da aba Checklist</span>
                   </label>
                   <select
@@ -1643,7 +1743,7 @@ export default function Checklist() {
                         });
                       }
                     }}
-                    className="w-full bg-white border border-blue-300 rounded-lg px-3 py-2 text-xs text-blue-950 font-mono font-bold outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 uppercase cursor-pointer"
+                    className="w-full bg-white border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs text-blue-950 font-mono font-bold outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 uppercase cursor-pointer"
                   >
                     <option value="">-- Selecione uma placa da aba Checklist --</option>
                     {sortedCavalos.map(item => (
@@ -1652,86 +1752,86 @@ export default function Checklist() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-blue-800 font-medium">
+                  <p className="text-[9.5px] text-blue-800 font-medium">
                     Preenche automaticamente a placa do cavalo e conjunto com os dados do Checklist.
                   </p>
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Placa Cavalo *</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Placa Cavalo *</label>
                 <input
                   type="text"
                   value={newItem.cavalo}
                   onChange={(e) => setNewItem({ ...newItem, cavalo: e.target.value.toUpperCase() })}
                   placeholder="EX: POZ4431"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 font-mono uppercase font-bold text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Carretas do Conjunto</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Carretas do Conjunto</label>
                 <input
                   type="text"
                   value={newItem.carretas}
                   onChange={(e) => setNewItem({ ...newItem, carretas: e.target.value.toUpperCase() })}
                   placeholder="EX: PNE7353 / PNE7433"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono uppercase font-bold outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 font-mono uppercase font-bold text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Teste</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Data Teste</label>
                   <input
                     type="date"
                     value={newItem.dataTeste}
                     onChange={(e) => setNewItem({ ...newItem, dataTeste: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Data Vencimento</label>
+                  <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Data Vencimento</label>
                   <input
                     type="date"
                     value={newItem.dataVencimento}
                     onChange={(e) => setNewItem({ ...newItem, dataVencimento: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Periférico</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Periférico</label>
                 <input
                   type="text"
                   value={newItem.periferico}
                   onChange={(e) => setNewItem({ ...newItem, periferico: e.target.value.toUpperCase() })}
                   placeholder="EX: TECLADO / SENSOR"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 uppercase font-mono outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 uppercase font-mono text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-blue-950 uppercase mb-1 block">Observação</label>
+                <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Observação</label>
                 <textarea
                   value={newItem.observacao}
                   onChange={(e) => setNewItem({ ...newItem, observacao: e.target.value })}
                   placeholder="Observações adicionais..."
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 h-20 resize-none"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 text-xs outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 h-14 resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100 shrink-0">
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold uppercase tracking-wider text-xs cursor-pointer"
+                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold uppercase tracking-wider text-[11px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAdd}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-xs cursor-pointer"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold uppercase tracking-wider text-[11px] shadow-xs cursor-pointer"
                 >
                   Cadastrar Checklist
                 </button>

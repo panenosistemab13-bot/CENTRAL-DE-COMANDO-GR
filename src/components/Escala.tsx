@@ -637,23 +637,13 @@ export default function Escala({ onBack }: EscalaProps) {
       // Helper to strip hyphen from carreta plate (e.g. UUH-3A45 -> UUH3A45)
       const cleanCarretaPlate = (plateStr: string) => (plateStr || '').replace(/-/g, '').toUpperCase().trim();
 
-      // Always format Santa Luzia as "SANTA LUZIA|MG"
-      let origem = 'SANTA LUZIA|MG';
+      // Always format Santa Luzia as "SANTA LUZIA|MG" (Fixed requirement)
+      const origem = 'SANTA LUZIA|MG';
       let destino = '';
 
       if (trecho) {
         const trechoParts = trecho.split(/\s+X\s+|\s+x\s+|X|x/);
         if (trechoParts.length >= 2) {
-          const rawOrigem = trechoParts[0].trim().toUpperCase();
-          if (rawOrigem.includes('SANTA LUZIA')) {
-            origem = 'SANTA LUZIA|MG';
-          } else if (rawOrigem.includes('|')) {
-            origem = rawOrigem.replace(/\s*\|\s*/g, '|');
-          } else if (rawOrigem.includes('/')) {
-            origem = rawOrigem.replace(/\s*\/\s*/g, '|');
-          } else {
-            origem = `${rawOrigem}|MG`;
-          }
           destino = normalizeDestino(trechoParts[1].trim());
         } else {
           destino = normalizeDestino(trecho);
@@ -1125,7 +1115,7 @@ export default function Escala({ onBack }: EscalaProps) {
                 Escala 3C
               </h1>
               <p className="text-xs sm:text-sm text-[#dac0a3] mt-1 font-sans">
-                Desmembramento automático de baús, preenchimento de CPF/RG dos motoristas 3C e inclusão de checklist na planilha (33 colunas).
+                Desmembramento automático de baús, Origem fixa (<strong className="text-[#fdefd1]">SANTA LUZIA|MG</strong>), preenchimento de CPF/RG dos motoristas 3C e cópia de 33 colunas (preservando a Coluna <strong className="text-amber-300">AJ - DIAS</strong> intacta).
               </p>
             </div>
           </div>
