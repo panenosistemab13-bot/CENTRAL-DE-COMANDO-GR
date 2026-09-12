@@ -108,6 +108,7 @@ export interface DispoRow {
   estadoCavalo: string;
   estadoCarreta: string;
   checkList: string;
+  pendencia: string;
 }
 
 export interface Motorista3C {
@@ -509,9 +510,9 @@ export default function Escala({ onBack }: EscalaProps) {
     };
   };
 
-  // Helper to extract checklist expiry date string for column 31
-  const getChecklistExpiryStr = (cavaloPlate: string, carretaPlate?: string): string => {
-    if (!cavaloPlate && !carretaPlate) return '';
+  // Helper to extract checklist expiry date string and pendencia status for columns AF and AG
+  const getChecklistDetails = (cavaloPlate: string, carretaPlate?: string): { checkList: string; pendencia: string } => {
+    if (!cavaloPlate && !carretaPlate) return { checkList: '', pendencia: '' };
     const cleanCav = (cavaloPlate || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     const cleanCar = (carretaPlate || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
@@ -521,19 +522,72 @@ export default function Escala({ onBack }: EscalaProps) {
       return (cleanCav && c === cleanCav) || (cleanCar && car && car.includes(cleanCar));
     });
 
-    if (!match) return 'SEM CHECKLIST';
+    if (!match) return { checkList: 'SEM CHECKLIST', pendencia: '' };
+
+    let checkList = '';
+    let isVencido = false;
+
+    if (match.statusOverride === 'VENCIDO' || match.statusOverride === 'NEGATIVADO' || match.statusOverride === 'REPROVADO') {
+      isVencido = true;
+    }
 
     if (match.dataVencimento) {
       const raw = match.dataVencimento.trim();
+      let expiryDate: Date | null = null;
+
       if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
         const [y, m, d] = raw.split('-');
-        return `${d}/${m}/${y}`;
+        checkList = `${d}/${m}/${y}`;
+        expiryDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+        checkList = raw;
+        const [d, m, y] = raw.split('/');
+        expiryDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      } else {
+        checkList = raw;
       }
-      return raw;
+
+      if (expiryDate && !isNaN(expiryDate.getTime())) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const exp = new Date(expiryDate);
+        exp.setHours(0, 0, 0, 0);
+
+        if (exp < today) {
+          isVencido = true;
+        }
+      }
+    } else if (match.statusOverride) {
+      checkList = match.statusOverride;
+    } else {
+      checkList = 'SEM CHECKLIST';
     }
 
-    if (match.statusOverride) return match.statusOverride;
-    return 'SEM CHECKLIST';
+    return {
+      checkList: checkList || 'SEM CHECKLIST',
+      pendencia: isVencido ? 'CHECKLIST' : ''
+    };
+  };
+
+  // Helper to extract checklist expiry date string for column 33
+  const getChecklistExpiryStr = (cavaloPlate: string, carretaPlate?: string): string => {
+    return getChecklistDetails(cavaloPlate, carretaPlate).checkList;
+  };
+
+  // Helper to get current date formatted dd/MM/yyyy
+  const getTodayDateStr = (): string => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper to get current day of week in Portuguese (e.g., sábado)
+  const getTodayDayOfWeek = (): string => {
+    const now = new Date();
+    const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+    return days[now.getDay()] || 'sábado';
   };
 
   // Calculate day of week string in Portuguese
@@ -587,6 +641,10 @@ export default function Escala({ onBack }: EscalaProps) {
   const parsedRows = useMemo<DispoRow[]>(() => {
     if (!inputText.trim()) return [];
 
+    const todayDateStr = getTodayDateStr();
+    const todayDayOfWeek = getTodayDayOfWeek();
+    const todayMonth = getMonthAbbrev(todayDateStr);
+
     const lines = inputText
       .split('\n')
       .map(l => l.trim())
@@ -623,7 +681,6 @@ export default function Escala({ onBack }: EscalaProps) {
       // 7: COD. SAP
       // 8: Paletização
       // 9: TON
-      const dataSaida = cols[0] || '10/09/2026';
       const motorista = cols[1] || '';
       const placaCavalo = cols[2] || '';
       const bau1 = cols[3] || '';
@@ -659,11 +716,9 @@ export default function Escala({ onBack }: EscalaProps) {
         matchedRG = matched3CDriver.rg || '';
       }
 
-      // RG / SAP combined (SKIP MATRICULA column)
+      // RG / SAP combined (When Motoristas 3C has RG/SAP filled, use ONLY that info directly)
       let rgSap = '';
-      if (matchedRG && codSap) {
-        rgSap = `${matchedRG} / ${codSap}`;
-      } else if (matchedRG) {
+      if (matchedRG) {
         rgSap = matchedRG;
       } else if (codSap) {
         rgSap = codSap;
@@ -687,16 +742,16 @@ export default function Escala({ onBack }: EscalaProps) {
           else m3Half = '43.5 m³';
         }
 
-        const chkExpiry1 = getChecklistExpiryStr(placaCavalo, bau1);
-        const chkExpiry2 = getChecklistExpiryStr(placaCavalo, bau2);
+        const chkDetails1 = getChecklistDetails(placaCavalo, bau1);
+        const chkDetails2 = getChecklistDetails(placaCavalo, bau2);
 
         // Row 1 for Baú 1
         const row1: DispoRow = {
           id: `row-${index}-bau1-${Date.now()}`,
-          mes: getMonthAbbrev(dataSaida),
+          mes: todayMonth,
           origem: origem.toUpperCase(),
-          dia: getDayOfWeek(dataSaida),
-          data: dataSaida,
+          dia: todayDayOfWeek,
+          data: todayDateStr,
           contatoWhats: 'X',
           horaLiberado: currentTime,
           status: defaults.status,
@@ -723,16 +778,17 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: chkExpiry1
+          checkList: chkDetails1.checkList,
+          pendencia: chkDetails1.pendencia
         };
 
         // Row 2 for Baú 2
         const row2: DispoRow = {
           id: `row-${index}-bau2-${Date.now()}`,
-          mes: getMonthAbbrev(dataSaida),
+          mes: todayMonth,
           origem: origem.toUpperCase(),
-          dia: getDayOfWeek(dataSaida),
-          data: dataSaida,
+          dia: todayDayOfWeek,
+          data: todayDateStr,
           contatoWhats: 'X',
           horaLiberado: currentTime,
           status: defaults.status,
@@ -759,21 +815,22 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: chkExpiry2
+          checkList: chkDetails2.checkList,
+          pendencia: chkDetails2.pendencia
         };
 
         rows.push(row1, row2);
       } else {
         // Single Baú
         const singleCarreta = bau1 || bau2;
-        const chkExpiry = getChecklistExpiryStr(placaCavalo, singleCarreta);
+        const chkDetails = getChecklistDetails(placaCavalo, singleCarreta);
 
         const row: DispoRow = {
           id: `row-${index}-${Date.now()}`,
-          mes: getMonthAbbrev(dataSaida),
+          mes: todayMonth,
           origem: origem.toUpperCase(),
-          dia: getDayOfWeek(dataSaida),
-          data: dataSaida,
+          dia: todayDayOfWeek,
+          data: todayDateStr,
           contatoWhats: 'X',
           horaLiberado: currentTime,
           status: defaults.status,
@@ -800,7 +857,8 @@ export default function Escala({ onBack }: EscalaProps) {
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
-          checkList: chkExpiry
+          checkList: chkDetails.checkList,
+          pendencia: chkDetails.pendencia
         };
 
         rows.push(row);
@@ -823,7 +881,24 @@ export default function Escala({ onBack }: EscalaProps) {
   // Handle cell edit
   const handleCellEdit = (rowId: string, field: keyof DispoRow, value: string) => {
     setEditableRows(prev =>
-      prev.map(r => (r.id === rowId ? { ...r, [field]: value } : r))
+      prev.map(r => {
+        if (r.id !== rowId) return r;
+        const updated = { ...r, [field]: value };
+        if (field === 'conductor') {
+          const matched3CDriver = findDriver3C(value);
+          if (matched3CDriver) {
+            if (matched3CDriver.cpf) updated.cpf = matched3CDriver.cpf;
+            if (matched3CDriver.rg) updated.rgSap = matched3CDriver.rg;
+          }
+        } else if (field === 'cavalo' || field === 'carreta') {
+          const cav = field === 'cavalo' ? value : r.cavalo;
+          const car = field === 'carreta' ? value : r.carreta;
+          const chk = getChecklistDetails(cav, car);
+          updated.checkList = chk.checkList;
+          updated.pendencia = chk.pendencia;
+        }
+        return updated;
+      })
     );
   };
 
@@ -861,7 +936,7 @@ export default function Escala({ onBack }: EscalaProps) {
       row.estadoCavalo,         // 29 (AC)
       row.estadoCarreta,        // 30 (AD)
       '',                       // 31 (AE - Vazia)
-      '',                       // 32 (AF - Pendência: pulada e sempre vazia)
+      row.pendencia || '',      // 32 (AF - Pendência: "CHECKLIST" quando vencido)
       row.checkList             // 33 (AG - Check List / Validade dos veículos puxada do Checklist)
     ].join('\t');
   };
@@ -970,12 +1045,16 @@ export default function Escala({ onBack }: EscalaProps) {
 
   // Add new empty row
   const handleAddRow = () => {
+    const todayDateStr = getTodayDateStr();
+    const todayDayOfWeek = getTodayDayOfWeek();
+    const todayMonth = getMonthAbbrev(todayDateStr);
+
     const newRow: DispoRow = {
       id: `manual-${Date.now()}`,
-      mes: 'SET|26',
+      mes: todayMonth,
       origem: 'SANTA LUZIA|MG',
-      dia: 'quinta-feira',
-      data: '10/09/2026',
+      dia: todayDayOfWeek,
+      data: todayDateStr,
       contatoWhats: 'X',
       horaLiberado: getCurrentTimeString(),
       status: defaults.status,
@@ -1002,7 +1081,8 @@ export default function Escala({ onBack }: EscalaProps) {
       estadoMotorista: 'FROTA 3C',
       estadoCavalo: 'FROTA 3C',
       estadoCarreta: 'FROTA 3C',
-      checkList: ''
+      checkList: '',
+      pendencia: ''
     };
     setEditableRows(prev => [...prev, newRow]);
   };
@@ -2043,25 +2123,34 @@ export default function Escala({ onBack }: EscalaProps) {
                             />
                           </td>
 
-                          {/* 32. PENDENCIA (AF - Coluna Pendência, mantida sempre vazia) */}
-                          <td className="p-1.5 border-r border-slate-200 bg-slate-50/50">
+                          {/* 32. PENDENCIA (AF - Coluna Pendência: CHECKLIST se vencido) */}
+                          <td className={cn(
+                            "p-1.5 border-r border-slate-200 transition-colors text-center font-mono font-bold",
+                            row.pendencia === 'CHECKLIST' ? "bg-amber-100/90 text-amber-950 font-black" : "bg-slate-50/50 text-slate-400"
+                          )}>
                             <input
                               type="text"
-                              value=""
-                              readOnly
+                              value={row.pendencia || ''}
+                              onChange={(e) => handleCellEdit(row.id, 'pendencia', e.target.value)}
                               placeholder="—"
-                              className="w-full bg-transparent px-2 py-1 text-center font-mono text-xs text-slate-400 select-none cursor-not-allowed"
-                              title="Coluna AF (Pendência) - mantida sempre vazia"
+                              className={cn(
+                                "w-full bg-transparent px-2 py-1 text-center font-mono font-black text-xs focus:bg-amber-200 focus:outline-none rounded uppercase",
+                                row.pendencia === 'CHECKLIST' ? "text-amber-950 font-black" : "text-slate-400"
+                              )}
+                              title="Coluna AF (Pendência) - preenchida com 'CHECKLIST' se o checklist estiver vencido"
                             />
                           </td>
 
                           {/* 33. CHECK LIST (AG - Validade do Checklist/Veículos) */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-emerald-900 bg-emerald-50/50">
+                          <td className={cn(
+                            "p-1.5 border-r border-slate-200 font-mono font-bold transition-colors",
+                            row.pendencia === 'CHECKLIST' ? "bg-rose-50 text-rose-900 font-black" : "bg-emerald-50/50 text-emerald-900"
+                          )}>
                             <input
                               type="text"
                               value={row.checkList}
                               onChange={(e) => handleCellEdit(row.id, 'checkList', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs text-emerald-900"
+                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs text-slate-900"
                               title="Coluna AG (Check List) - Validade dos veículos puxada da página Checklist"
                             />
                           </td>

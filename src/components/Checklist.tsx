@@ -219,6 +219,7 @@ export default function Checklist() {
 
     if (Object.keys(updates).length > 0) {
       try {
+        localStorage.removeItem('checklist_cleared_permanently');
         await update(ref(rtdb), updates);
         alert('Checklist atualizado com sucesso via colagem!');
       } catch (error) {
@@ -319,30 +320,38 @@ export default function Checklist() {
         }));
         setItems(list);
       } else {
-        // Seed default fleet list if database is empty so plates remain fixed and persistent
-        const initialSeed: Record<string, any> = {
-          "v1": { id: "v1", cavalo: "POZ-4431", carretas: "", dataTeste: "2026-06-10", dataVencimento: "2026-08-09", manutencaoOs: "", periferico: "", observacao: "" },
-          "v2": { id: "v2", cavalo: "POZ-3241", carretas: "", dataTeste: "2026-06-30", dataVencimento: "2026-08-29", manutencaoOs: "", periferico: "", observacao: "" },
-          "v3": { id: "v3", cavalo: "SBK-5A52", carretas: "POG-2095 / POF-7735", dataTeste: "2026-07-09", dataVencimento: "2026-09-07", manutencaoOs: "", periferico: "", observacao: "" },
-          "v4": { id: "v4", cavalo: "SBK-5C22", carretas: "POG-1245 / POG-0885", dataTeste: "2026-07-16", dataVencimento: "2026-09-14", manutencaoOs: "", periferico: "", observacao: "" },
-          "v5": { id: "v5", cavalo: "TYQ-6F51", carretas: "PNE-7353 / PNE-7433", dataTeste: "2026-07-18", dataVencimento: "2026-09-16", manutencaoOs: "", periferico: "", observacao: "" },
-          "v6": { id: "v6", cavalo: "SBK-5B52", carretas: "PNC-8303 / PNC-8953", dataTeste: "2026-07-29", dataVencimento: "2026-09-27", manutencaoOs: "", periferico: "", observacao: "" },
-          "v7": { id: "v7", cavalo: "TYT-8A14", carretas: "QOX-3164 / QOX-3168", dataTeste: "2026-08-08", dataVencimento: "2026-10-07", manutencaoOs: "", periferico: "", observacao: "" },
-          "v8": { id: "v8", cavalo: "SAR-8D82", carretas: "SBF-9G98 / TIC-0F85", dataTeste: "2026-08-09", dataVencimento: "2026-10-08", manutencaoOs: "", periferico: "", observacao: "" },
-          "v9": { id: "v9", cavalo: "THX-5I51", carretas: "POG-0685 / POG-0545", dataTeste: "2026-08-10", dataVencimento: "2026-10-09", manutencaoOs: "", periferico: "", observacao: "" },
-          "v10": { id: "v10", cavalo: "SBK-4J52", carretas: "SBG-0B88 / PZX-4633", dataTeste: "2026-08-10", dataVencimento: "2026-10-09", manutencaoOs: "900382", periferico: "", observacao: "" },
-          "v11": { id: "v11", cavalo: "POD-0255", carretas: "SBJ-0E22 / SBJ-0C82", dataTeste: "2026-08-12", dataVencimento: "2026-10-11", manutencaoOs: "", periferico: "", observacao: "" },
-          "v12": { id: "v12", cavalo: "PNY-2605", carretas: "POF-9075 / POF-8375", dataTeste: "2026-08-21", dataVencimento: "2026-10-20", manutencaoOs: "", periferico: "", observacao: "" },
-          "v13": { id: "v13", cavalo: "UUF-7I05", carretas: "PNW-5562", dataTeste: "2026-08-21", dataVencimento: "2026-10-20", manutencaoOs: "", periferico: "", observacao: "" },
-          "v14": { id: "v14", cavalo: "PNY-2215", carretas: "SBJ-0E22 / SBJ-0C82", dataTeste: "2026-08-28", dataVencimento: "2026-10-27", manutencaoOs: "", periferico: "", observacao: "" },
-          "v15": { id: "v15", cavalo: "SBN-4J62", carretas: "PNC-8603 / PNC-8873", dataTeste: "2026-08-29", dataVencimento: "2026-10-28", manutencaoOs: "", periferico: "", observacao: "" },
-          "v16": { id: "v16", cavalo: "POD-0345", carretas: "POF-8075 / POF-7875", dataTeste: "2026-08-31", dataVencimento: "2026-10-30", manutencaoOs: "", periferico: "", observacao: "" },
-          "v17": { id: "v17", cavalo: "POD-0645", carretas: "MIN-8723 / TIC-0D95", dataTeste: "2026-09-04", dataVencimento: "2026-11-03", manutencaoOs: "", periferico: "", observacao: "" },
-          "v18": { id: "v18", cavalo: "THX-8C51", carretas: "PNE-4812 / POG-0885", dataTeste: "2026-09-08", dataVencimento: "2026-11-07", manutencaoOs: "", periferico: "", observacao: "" },
-          "v19": { id: "v19", cavalo: "SBK-4I42", carretas: "POF-9785 / POR-5E42", dataTeste: "2026-09-10", dataVencimento: "2026-11-09", manutencaoOs: "", periferico: "", observacao: "" },
-          "v20": { id: "v20", cavalo: "SAS-2D02", carretas: "SBI-8C02 / SBJ-0A72", dataTeste: "2026-09-11", dataVencimento: "2026-11-10", manutencaoOs: "", periferico: "", observacao: "" }
-        };
-        await set(checklistRef, initialSeed);
+        const hasBeenCleared = localStorage.getItem('checklist_cleared_permanently') === 'true';
+        const hasBeenSeeded = localStorage.getItem('checklist_seeded_v1') === 'true';
+
+        if (!hasBeenCleared && !hasBeenSeeded) {
+          // Seed initial default fleet list only once on first run
+          const initialSeed: Record<string, any> = {
+            "v1": { id: "v1", cavalo: "POZ-4431", carretas: "", dataTeste: "2026-06-10", dataVencimento: "2026-08-09", manutencaoOs: "", periferico: "", observacao: "" },
+            "v2": { id: "v2", cavalo: "POZ-3241", carretas: "", dataTeste: "2026-06-30", dataVencimento: "2026-08-29", manutencaoOs: "", periferico: "", observacao: "" },
+            "v3": { id: "v3", cavalo: "SBK-5A52", carretas: "POG-2095 / POF-7735", dataTeste: "2026-07-09", dataVencimento: "2026-09-07", manutencaoOs: "", periferico: "", observacao: "" },
+            "v4": { id: "v4", cavalo: "SBK-5C22", carretas: "POG-1245 / POG-0885", dataTeste: "2026-07-16", dataVencimento: "2026-09-14", manutencaoOs: "", periferico: "", observacao: "" },
+            "v5": { id: "v5", cavalo: "TYQ-6F51", carretas: "PNE-7353 / PNE-7433", dataTeste: "2026-07-18", dataVencimento: "2026-09-16", manutencaoOs: "", periferico: "", observacao: "" },
+            "v6": { id: "v6", cavalo: "SBK-5B52", carretas: "PNC-8303 / PNC-8953", dataTeste: "2026-07-29", dataVencimento: "2026-09-27", manutencaoOs: "", periferico: "", observacao: "" },
+            "v7": { id: "v7", cavalo: "TYT-8A14", carretas: "QOX-3164 / QOX-3168", dataTeste: "2026-08-08", dataVencimento: "2026-10-07", manutencaoOs: "", periferico: "", observacao: "" },
+            "v8": { id: "v8", cavalo: "SAR-8D82", carretas: "SBF-9G98 / TIC-0F85", dataTeste: "2026-08-09", dataVencimento: "2026-10-08", manutencaoOs: "", periferico: "", observacao: "" },
+            "v9": { id: "v9", cavalo: "THX-5I51", carretas: "POG-0685 / POG-0545", dataTeste: "2026-08-10", dataVencimento: "2026-10-09", manutencaoOs: "", periferico: "", observacao: "" },
+            "v10": { id: "v10", cavalo: "SBK-4J52", carretas: "SBG-0B88 / PZX-4633", dataTeste: "2026-08-10", dataVencimento: "2026-10-09", manutencaoOs: "900382", periferico: "", observacao: "" },
+            "v11": { id: "v11", cavalo: "POD-0255", carretas: "SBJ-0E22 / SBJ-0C82", dataTeste: "2026-08-12", dataVencimento: "2026-10-11", manutencaoOs: "", periferico: "", observacao: "" },
+            "v12": { id: "v12", cavalo: "PNY-2605", carretas: "POF-9075 / POF-8375", dataTeste: "2026-08-21", dataVencimento: "2026-10-20", manutencaoOs: "", periferico: "", observacao: "" },
+            "v13": { id: "v13", cavalo: "UUF-7I05", carretas: "PNW-5562", dataTeste: "2026-08-21", dataVencimento: "2026-10-20", manutencaoOs: "", periferico: "", observacao: "" },
+            "v14": { id: "v14", cavalo: "PNY-2215", carretas: "SBJ-0E22 / SBJ-0C82", dataTeste: "2026-08-28", dataVencimento: "2026-10-27", manutencaoOs: "", periferico: "", observacao: "" },
+            "v15": { id: "v15", cavalo: "SBN-4J62", carretas: "PNC-8603 / PNC-8873", dataTeste: "2026-08-29", dataVencimento: "2026-10-28", manutencaoOs: "", periferico: "", observacao: "" },
+            "v16": { id: "v16", cavalo: "POD-0345", carretas: "POF-8075 / POF-7875", dataTeste: "2026-08-31", dataVencimento: "2026-10-30", manutencaoOs: "", periferico: "", observacao: "" },
+            "v17": { id: "v17", cavalo: "POD-0645", carretas: "MIN-8723 / TIC-0D95", dataTeste: "2026-09-04", dataVencimento: "2026-11-03", manutencaoOs: "", periferico: "", observacao: "" },
+            "v18": { id: "v18", cavalo: "THX-8C51", carretas: "PNE-4812 / POG-0885", dataTeste: "2026-09-08", dataVencimento: "2026-11-07", manutencaoOs: "", periferico: "", observacao: "" },
+            "v19": { id: "v19", cavalo: "SBK-4I42", carretas: "POF-9785 / POR-5E42", dataTeste: "2026-09-10", dataVencimento: "2026-11-09", manutencaoOs: "", periferico: "", observacao: "" },
+            "v20": { id: "v20", cavalo: "SAS-2D02", carretas: "SBI-8C02 / SBJ-0A72", dataTeste: "2026-09-11", dataVencimento: "2026-11-10", manutencaoOs: "", periferico: "", observacao: "" }
+          };
+          localStorage.setItem('checklist_seeded_v1', 'true');
+          await set(checklistRef, initialSeed);
+        } else {
+          setItems([]);
+        }
       }
     });
     return () => unsubscribe();
@@ -354,6 +363,7 @@ export default function Checklist() {
     const formattedCavalo = formatPlateWithHyphen(newItem.cavalo);
     const formattedCarretas = formatPlateWithHyphen(newItem.carretas);
     try {
+      localStorage.removeItem('checklist_cleared_permanently');
       await set(ref(rtdb, `checklist_veiculos/${id}`), {
         ...newItem,
         cavalo: formattedCavalo,
@@ -407,6 +417,7 @@ export default function Checklist() {
   const handleClearAll = async () => {
     if (!confirm("Tem certeza de que deseja apagar TODOS os registros do checklist?")) return;
     try {
+      localStorage.setItem('checklist_cleared_permanently', 'true');
       await remove(ref(rtdb, 'checklist_veiculos'));
       setItems([]);
     } catch (error) {
@@ -1162,6 +1173,7 @@ export default function Checklist() {
 
                         const itemStatus = getStatus(item);
                         const isRowVencido = itemStatus.label === 'VENCIDO' || itemStatus.label === 'NEGATIVADO' || itemStatus.label === 'REPROVADO';
+                        const isRowAVencer = !isRowVencido && itemStatus.label === 'A VENCER';
 
                         return (
                           <tr 
@@ -1170,6 +1182,8 @@ export default function Checklist() {
                               "text-xs transition-colors border-b h-16",
                               isRowVencido 
                                 ? "bg-rose-50/95 hover:bg-rose-100/95 text-rose-950 border-rose-200 font-medium" 
+                                : isRowAVencer
+                                ? "bg-amber-50/95 hover:bg-amber-100/95 text-amber-950 border-amber-200 font-medium"
                                 : "text-slate-900 hover:bg-[#FAF8F5] border-slate-100"
                             )}
                           >
@@ -1380,6 +1394,7 @@ export default function Checklist() {
                   const diasParaVencer = parsedExpiry ? differenceInCalendarDays(startOfDay(parsedExpiry), startOfDay(new Date())) : 0;
                   const formattedVencimento = parsedExpiry ? format(parsedExpiry, 'dd/MM/yyyy') : (item.dataVencimento || '—');
                   const isVencido = status.label === 'VENCIDO' || status.label === 'NEGATIVADO' || status.label === 'REPROVADO' || diasParaVencer < 0;
+                  const isAVencer = !isVencido && (status.label === 'A VENCER' || (diasParaVencer >= 0 && diasParaVencer <= 3));
 
                   return (
                     <div 
@@ -1388,11 +1403,16 @@ export default function Checklist() {
                         "rounded-2xl p-5 shadow-xs transition-all relative overflow-hidden border-2",
                         isVencido 
                           ? "bg-rose-50/90 border-rose-400 ring-2 ring-rose-500/20 shadow-md shadow-rose-100" 
+                          : isAVencer
+                          ? "bg-amber-50/90 border-amber-400 ring-2 ring-amber-500/30 shadow-md shadow-amber-200"
                           : "bg-white border-slate-200 hover:border-[#B32025]/40"
                       )}
                     >
                       {isVencido && (
                         <div className="absolute left-0 top-0 bottom-0 w-2 bg-rose-600 animate-pulse" />
+                      )}
+                      {isAVencer && (
+                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-amber-500 animate-pulse" />
                       )}
 
                       <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pl-1">
@@ -1409,7 +1429,7 @@ export default function Checklist() {
                               <span className="text-[10px] font-extrabold text-[#2B180D] uppercase mb-1.5 tracking-wider font-sans">Carretas do Conjunto</span>
                               <div className={cn(
                                 "border rounded-xl px-4 py-2 flex items-center gap-2.5",
-                                isVencido ? "bg-rose-100/70 border-rose-300" : "bg-[#FAF8F5] border-[#3A2414]/20"
+                                isVencido ? "bg-rose-100/70 border-rose-300" : isAVencer ? "bg-amber-100/80 border-amber-300" : "bg-[#FAF8F5] border-[#3A2414]/20"
                               )}>
                                 <Truck size={18} className="text-[#B32025]" />
                                 <span className="font-mono font-black text-sm text-[#2B180D] uppercase tracking-wide">{item.carretas}</span>
