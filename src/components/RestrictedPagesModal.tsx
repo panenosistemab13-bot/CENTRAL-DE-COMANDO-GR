@@ -31,7 +31,8 @@ import {
   saveStoredCustomPages, 
   savePageVisibility,
   saveStoredPageOrder,
-  resetPageOrderToDefault
+  resetPageOrderToDefault,
+  saveFullPageConfigToFirebase
 } from '../data/pagesConfig';
 import { cn } from '../lib/utils';
 
@@ -156,14 +157,16 @@ export default function RestrictedPagesModal({
     };
 
     const updatedCustom = [...getStoredCustomPages(), newPage];
-    saveStoredCustomPages(updatedCustom);
-
     const updatedPages = [...pagesList, newPage];
-    setPagesList(updatedPages);
-    setVisibilityState(prev => ({
-      ...prev,
+    const newVis = {
+      ...visibilityState,
       [cleanId]: newPageVisible
-    }));
+    };
+
+    setPagesList(updatedPages);
+    setVisibilityState(newVis);
+
+    saveFullPageConfigToFirebase(newVis, updatedCustom, updatedPages.map(p => p.id));
 
     // Reset Form
     setNewPageLabel('');
@@ -179,14 +182,14 @@ export default function RestrictedPagesModal({
   // Handle Delete Custom Page
   const handleDeleteCustomPage = (pageId: string) => {
     const updatedCustom = getStoredCustomPages().filter(p => p.id !== pageId);
-    saveStoredCustomPages(updatedCustom);
+    const updatedPages = pagesList.filter(p => p.id !== pageId);
+    const updatedVis = { ...visibilityState };
+    delete updatedVis[pageId];
 
-    setPagesList(prev => prev.filter(p => p.id !== pageId));
-    setVisibilityState(prev => {
-      const copy = { ...prev };
-      delete copy[pageId];
-      return copy;
-    });
+    setPagesList(updatedPages);
+    setVisibilityState(updatedVis);
+
+    saveFullPageConfigToFirebase(updatedVis, updatedCustom, updatedPages.map(p => p.id));
   };
 
   // Page Sequence Reordering Handlers
@@ -231,6 +234,7 @@ export default function RestrictedPagesModal({
     resetPageOrderToDefault();
     const defaultPages = getAllAvailablePages();
     setPagesList(defaultPages);
+    saveFullPageConfigToFirebase(visibilityState, getStoredCustomPages(), defaultPages.map(p => p.id));
   };
 
   // Counts
@@ -263,8 +267,9 @@ export default function RestrictedPagesModal({
   }, [pagesList, visibilityState, filterTab, searchQuery]);
 
   const handleSaveAndApply = () => {
-    savePageVisibility(visibilityState);
-    saveStoredPageOrder(pagesList.map(p => p.id));
+    const pageOrder = pagesList.map(p => p.id);
+    const customPages = getStoredCustomPages();
+    saveFullPageConfigToFirebase(visibilityState, customPages, pageOrder);
     onSave(visibilityState, pagesList);
     setSaveSuccessToast(true);
     setTimeout(() => {

@@ -61,6 +61,11 @@ import {
   getAllAvailablePages, 
   loadPageVisibility, 
   savePageVisibility, 
+  saveStoredCustomPages,
+  saveStoredPageOrder,
+  getStoredCustomPages,
+  getStoredPageOrder,
+  saveFullPageConfigToFirebase,
   ICON_MAP 
 } from './data/pagesConfig';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
@@ -179,6 +184,38 @@ export default function App() {
         setAppointments({});
       }
     });
+    return () => unsubscribe();
+  }, []);
+
+  // Real-time synchronization of Restricted Pages Configuration across ALL devices
+  useEffect(() => {
+    const pagesConfigRef = ref(db, 'pages_config');
+    const unsubscribe = onValue(pagesConfigRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const { visibility, customPages, pageOrder } = data;
+
+        if (customPages && Array.isArray(customPages)) {
+          saveStoredCustomPages(customPages);
+        }
+        if (pageOrder && Array.isArray(pageOrder)) {
+          saveStoredPageOrder(pageOrder);
+        }
+        if (visibility && typeof visibility === 'object') {
+          savePageVisibility(visibility);
+          setPageVisibility(visibility);
+        }
+
+        setAvailablePages(getAllAvailablePages());
+      } else {
+        // Initial setup if empty in Firebase RTDB
+        const curVis = loadPageVisibility();
+        const curCustom = getStoredCustomPages();
+        const curOrder = getStoredPageOrder();
+        saveFullPageConfigToFirebase(curVis, curCustom, curOrder);
+      }
+    });
+
     return () => unsubscribe();
   }, []);
 

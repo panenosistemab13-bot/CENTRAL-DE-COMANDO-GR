@@ -19,6 +19,9 @@ import {
   LayoutGrid
 } from 'lucide-react';
 
+import { rtdb } from '../firebase';
+import { ref, set } from 'firebase/database';
+
 export interface PageDefinition {
   id: string;
   label: string;
@@ -290,5 +293,29 @@ export function savePageVisibility(visibility: Record<string, boolean>) {
     }
   } catch (err) {
     console.error('Erro ao salvar visibilidade:', err);
+  }
+}
+
+export function saveFullPageConfigToFirebase(
+  visibility: Record<string, boolean>,
+  customPages: PageDefinition[],
+  pageOrder: string[]
+) {
+  savePageVisibility(visibility);
+  saveStoredCustomPages(customPages);
+  saveStoredPageOrder(pageOrder);
+
+  try {
+    const configRef = ref(rtdb, 'pages_config');
+    set(configRef, {
+      visibility,
+      customPages,
+      pageOrder,
+      updatedAt: Date.now()
+    }).catch(err => {
+      console.error('Erro ao salvar no Firebase Realtime Database:', err);
+    });
+  } catch (err) {
+    console.error('Erro ao conectar ao Firebase:', err);
   }
 }
