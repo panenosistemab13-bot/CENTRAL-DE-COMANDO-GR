@@ -25,7 +25,8 @@ import {
   Eye,
   Sliders,
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
@@ -1082,24 +1083,41 @@ export default function TerceirosEscala({
                         />
                       </td>
 
-                      {/* 7: STATUS */}
+                      {/* 7: STATUS (Menu Suspenso) */}
                       <td className="p-2 border-r border-slate-200">
-                        <input
-                          type="text"
-                          value={normalizeStatus(row.status)}
-                          onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
-                          className="w-44 bg-transparent font-bold text-rose-500 focus:bg-white focus:outline-none px-1 rounded uppercase"
-                        />
+                        <div className="relative flex items-center w-48">
+                          <select
+                            value={normalizeStatus(row.status)}
+                            onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
+                            className="w-full appearance-none bg-transparent font-black text-[#f43f5e] text-xs py-1 pl-1 pr-6 cursor-pointer focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-400 rounded uppercase tracking-wide font-sans"
+                            title="Status de emissão (Menu Suspenso)"
+                          >
+                            <option value="REALIZAR IMPRESSÃO" className="text-rose-600 font-bold bg-white">REALIZAR IMPRESSÃO</option>
+                            <option value="AGUARDANDO LIBERAÇÃO" className="text-amber-600 font-bold bg-white">AGUARDANDO LIBERAÇÃO</option>
+                            <option value="LIBERADO" className="text-emerald-600 font-bold bg-white">LIBERADO</option>
+                            <option value="IMPRESSO" className="text-blue-600 font-bold bg-white">IMPRESSO</option>
+                            <option value="CANCELADO" className="text-slate-500 font-bold bg-white">CANCELADO</option>
+                          </select>
+                          <ChevronDown size={14} className="absolute right-1 text-slate-500 pointer-events-none stroke-[2.5]" />
+                        </div>
                       </td>
 
-                      {/* 8: MODELO CARRETA */}
+                      {/* 8: MODELO CARRETA (Menu Suspenso) */}
                       <td className="p-2 border-r border-slate-200">
-                        <input
-                          type="text"
-                          value={normalizeModeloCarreta(row.modeloCarreta)}
-                          onChange={(e) => handleCellEdit(row.id, 'modeloCarreta', e.target.value)}
-                          className="w-24 bg-transparent font-bold text-slate-800 focus:bg-white focus:outline-none px-1 rounded uppercase"
-                        />
+                        <div className="relative flex items-center w-28">
+                          <select
+                            value={normalizeModeloCarreta(row.modeloCarreta)}
+                            onChange={(e) => handleCellEdit(row.id, 'modeloCarreta', e.target.value)}
+                            className="w-full appearance-none bg-transparent font-black text-slate-800 text-xs py-1 pl-1 pr-5 cursor-pointer focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 rounded uppercase font-sans"
+                            title="Modelo da Carreta (Menu Suspenso)"
+                          >
+                            <option value="BAÚ" className="text-slate-900 font-bold bg-white">BAÚ</option>
+                            <option value="RODOTREM BAÚ" className="text-slate-900 font-bold bg-white">RODOTREM BAÚ</option>
+                            <option value="SIDER" className="text-slate-900 font-bold bg-white">SIDER</option>
+                            <option value="CARRETA" className="text-slate-900 font-bold bg-white">CARRETA</option>
+                          </select>
+                          <ChevronDown size={13} className="absolute right-1 text-slate-500 pointer-events-none stroke-[2]" />
+                        </div>
                       </td>
 
                       {/* 9: MODELO CAVALO */}
