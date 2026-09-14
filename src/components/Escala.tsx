@@ -819,10 +819,46 @@ export default function Escala({ onBack }: EscalaProps) {
       .map(l => l.trim())
       .filter(l => l.length > 0);
 
+    // Intelligent header detection
+    let headerColMap: { [key: string]: number } = {};
+    let dataLines = lines;
+
+    if (lines.length > 0) {
+      const firstLine = lines[0];
+      const firstLineUpper = firstLine.toUpperCase();
+      if (
+        firstLineUpper.includes('DATA') ||
+        firstLineUpper.includes('MOTORISTA') ||
+        firstLineUpper.includes('PLACA') ||
+        firstLineUpper.includes('SAP') ||
+        firstLineUpper.includes('BAU') ||
+        firstLineUpper.includes('BAÚ') ||
+        firstLineUpper.includes('TRECHO')
+      ) {
+        let headerCols = firstLine.split('\t').map(c => c.trim().toUpperCase());
+        if (headerCols.length < 3) headerCols = firstLine.split(';').map(c => c.trim().toUpperCase());
+        if (headerCols.length < 3) headerCols = firstLine.split(/\s{2,}/).map(c => c.trim().toUpperCase());
+
+        headerCols.forEach((col, idx) => {
+          if (col.includes('DATA')) headerColMap['data'] = idx;
+          else if (col.includes('MOTORISTA') || col.includes('CONDUTOR')) headerColMap['motorista'] = idx;
+          else if (col.includes('PLACA') || col.includes('CAVALO')) headerColMap['cavalo'] = idx;
+          else if (col.includes('BAÚ 1') || col.includes('BAU 1') || col.includes('CARRETA 1')) headerColMap['bau1'] = idx;
+          else if (col.includes('BAÚ 2') || col.includes('BAU 2') || col.includes('CARRETA 2')) headerColMap['bau2'] = idx;
+          else if (col.includes('TRECHO') || col.includes('DESTINO')) headerColMap['trecho'] = idx;
+          else if (col.includes('MATRICULA') || col.includes('MATRÍCULA')) headerColMap['matricula'] = idx;
+          else if (col.includes('SAP') || col.includes('COD. SAP') || col.includes('CÓD. SAP') || col.includes('CODIGO SAP') || col.includes('CÓDIGO SAP') || col.includes('CODIGO.SAP') || col.includes('CÓDIGO.SAP') || col.includes('COD.SAP')) headerColMap['codSap'] = idx;
+          else if (col.includes('PALET') || col.includes('PALLET')) headerColMap['pallets'] = idx;
+          else if (col.includes('TON')) headerColMap['ton'] = idx;
+        });
+        dataLines = lines.slice(1);
+      }
+    }
+
     const rows: DispoRow[] = [];
 
-    lines.forEach((line, index) => {
-      // Ignore header if pasted
+    dataLines.forEach((line, index) => {
+      // Ignore header if pasted again
       const upper = line.toUpperCase();
       if (upper.includes('DATA DA SAÍDA') || upper.includes('MOTORISTA') || upper.includes('PALETIZAÇÃO')) {
         return;
@@ -839,7 +875,14 @@ export default function Escala({ onBack }: EscalaProps) {
 
       if (cols.length < 2) return;
 
-      // Extract fields based on order in image.png:
+      const getCol = (key: string, defaultIdx: number) => {
+        if (headerColMap[key] !== undefined && cols[headerColMap[key]] !== undefined) {
+          return cols[headerColMap[key]];
+        }
+        return cols[defaultIdx] || '';
+      };
+
+      // Extract fields based on detected headers or default indices:
       // 0: DATA DA SAÍDA
       // 1: MOTORISTA
       // 2: PLACA (Cavalo)
@@ -847,18 +890,18 @@ export default function Escala({ onBack }: EscalaProps) {
       // 4: BAÚ 2
       // 5: TRECHO
       // 6: MATRICULA
-      // 7: COD. SAP
+      // 7: COD. SAP (código.sap)
       // 8: Paletização
       // 9: TON
-      const motorista = cols[1] || '';
-      const rawPlacaCavalo = cols[2] || '';
-      const rawBau1 = cols[3] || '';
-      const rawBau2 = cols[4] || '';
-      const trecho = cols[5] || '';
-      const matricula = cols[6] || '';
-      const codSap = cols[7] || '';
-      const rawPallets = cols[8] || '48';
-      const rawTon = cols[9] || '34';
+      const motorista = getCol('motorista', 1);
+      const rawPlacaCavalo = getCol('cavalo', 2);
+      const rawBau1 = getCol('bau1', 3);
+      const rawBau2 = getCol('bau2', 4);
+      const trecho = getCol('trecho', 5);
+      const matricula = getCol('matricula', 6);
+      const codSap = getCol('codSap', 7);
+      const rawPallets = getCol('pallets', 8) || '48';
+      const rawTon = getCol('ton', 9) || '34';
 
       const placaCavalo = formatPlateWithHyphen(rawPlacaCavalo);
       const bau1 = formatPlateWithoutHyphen(rawBau1);
@@ -886,12 +929,14 @@ export default function Escala({ onBack }: EscalaProps) {
         matchedRG = matched3CDriver.rg || '';
       }
 
-      // RG / SAP combined (When Motoristas 3C has RG/SAP filled, use ONLY that info directly)
+      // A coluna RG / SAP (Coluna 22 / W) precisa puxar a informação da coluna código.sap colada no campo em branco
       let rgSap = '';
-      if (matchedRG) {
+      if (codSap && codSap.trim()) {
+        rgSap = codSap.trim();
+      } else if (matchedRG) {
         rgSap = matchedRG;
-      } else if (codSap) {
-        rgSap = codSap;
+      } else if (matricula) {
+        rgSap = matricula;
       }
 
       const currentTime = getCurrentTimeString();
@@ -1057,8 +1102,8 @@ export default function Escala({ onBack }: EscalaProps) {
         if (field === 'conductor') {
           const matched3CDriver = findDriver3C(value);
           if (matched3CDriver) {
-            if (matched3CDriver.cpf) updated.cpf = matched3CDriver.cpf;
-            if (matched3CDriver.rg) updated.rgSap = matched3CDriver.rg;
+            if (matched3CDriver.cpf && !updated.cpf) updated.cpf = matched3CDriver.cpf;
+            if (matched3CDriver.rg && !updated.rgSap) updated.rgSap = matched3CDriver.rg;
           }
         } else if (field === 'cavalo' || field === 'carreta') {
           const cav = field === 'cavalo' ? formatPlateWithHyphen(value) : formatPlateWithHyphen(r.cavalo);
