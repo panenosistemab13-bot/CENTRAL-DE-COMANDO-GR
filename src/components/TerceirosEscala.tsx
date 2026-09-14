@@ -30,6 +30,7 @@ import {
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
 import { DISPO_COLUMNS, DispoRow, normalizeDestino } from './Escala';
+import { ApoliceItem } from './ApoliceEscala';
 
 interface ChecklistItem {
   id: string;
@@ -42,6 +43,7 @@ interface ChecklistItem {
 
 interface TerceirosEscalaProps {
   checklistItems?: ChecklistItem[];
+  apoliceItems?: ApoliceItem[];
   getChecklistDetails?: (cavalo: string, carreta?: string) => { checkList: string; pendencia: string };
   formatPlateWithHyphen?: (plate: string) => string;
   getMonthAbbrev?: (dateStr: string) => string;
@@ -90,6 +92,7 @@ const SAMPLE_OS_DATA = {
 
 export default function TerceirosEscala({
   checklistItems = [],
+  apoliceItems = [],
   getChecklistDetails,
   formatPlateWithHyphen = (p: string) => {
     if (!p) return '';
@@ -129,6 +132,108 @@ export default function TerceirosEscala({
   const [showColumnMappingModal, setShowColumnMappingModal] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper functions to clean and normalize plate & driver name for matching with Apólice
+  const cleanPlateForMatch = (p: string): string => {
+    if (!p) return '';
+    return p.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
+  };
+
+  const cleanDriverNameForMatch = (name: string): string => {
+    if (!name) return '';
+    return name
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  // Helper to find matching entry in apoliceItems by Cavalo + Carretas + Motorista
+  const findMatchingApolice = (
+    plateCavalo: string,
+    trailerPlates: string[],
+    driverName: string
+  ): ApoliceItem | null => {
+    if (!apoliceItems || apoliceItems.length === 0) {
+      // Also try reading from localStorage as fallback
+      try {
+        const saved = localStorage.getItem('apolice_escala_items');
+        if (saved) {
+          const parsed = JSON.parse(saved) as ApoliceItem[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return findMatchingApoliceInList(plateCavalo, trailerPlates, driverName, parsed);
+          }
+        }
+      } catch {
+        // ignore
+      }
+      return null;
+    }
+    return findMatchingApoliceInList(plateCavalo, trailerPlates, driverName, apoliceItems);
+  };
+
+  const findMatchingApoliceInList = (
+    plateCavalo: string,
+    trailerPlates: string[],
+    driverName: string,
+    list: ApoliceItem[]
+  ): ApoliceItem | null => {
+    const normCav = cleanPlateForMatch(plateCavalo);
+    if (!normCav) return null;
+
+    const normTargetTrailers = trailerPlates
+      .map(cleanPlateForMatch)
+      .filter(Boolean)
+      .sort();
+    const targetTrailersKey = normTargetTrailers.join('|');
+
+    const normDriver = cleanDriverNameForMatch(driverName);
+
+    // Pass 1: Exact match on (Cavalo + exact trailers + Motorista)
+    for (const item of list) {
+      const itemCav = cleanPlateForMatch(item.cavalo);
+      if (itemCav !== normCav) continue;
+
+      const itemTrailers = (item.carretas || '')
+        .split(/[\/\,\;\s]+/)
+        .map(cleanPlateForMatch)
+        .filter(Boolean)
+        .sort();
+      const itemTrailersKey = itemTrailers.join('|');
+
+      const itemDriver = cleanDriverNameForMatch(item.motorista || '');
+
+      const trailersMatch =
+        targetTrailersKey === itemTrailersKey ||
+        (normTargetTrailers.length > 0 &&
+          itemTrailers.length > 0 &&
+          normTargetTrailers.every(t => itemTrailers.includes(t)));
+
+      const driverMatch =
+        normDriver && itemDriver && (normDriver === itemDriver || normDriver.includes(itemDriver) || itemDriver.includes(normDriver));
+
+      if (trailersMatch && driverMatch) {
+        return item;
+      }
+    }
+
+    // Pass 2: Match Cavalo + Motorista (even if trailer presentation differs slightly)
+    if (normDriver) {
+      for (const item of list) {
+        const itemCav = cleanPlateForMatch(item.cavalo);
+        if (itemCav !== normCav) continue;
+
+        const itemDriver = cleanDriverNameForMatch(item.motorista || '');
+        if (normDriver === itemDriver || normDriver.includes(itemDriver) || itemDriver.includes(normDriver)) {
+          return item;
+        }
+      }
+    }
+
+    return null;
+  };
 
   // Helper to build a DispoRow from raw OS object
   const buildDispoRowsFromOS = (os: typeof SAMPLE_OS_DATA): DispoRow[] => {
@@ -188,6 +293,27 @@ export default function TerceirosEscala({
 
     const vinculo = (os.vinculoMotorista || 'FROTA').toUpperCase();
 
+    // MATCH WITH APÓLICE:
+    // Se for identificado o mesmo conjunto: placa do cavalo e as mesmas carretas e o mesmo motorista,
+    // puxe para completar: VIGÊNCIA DO CADASTRO e CHECK LIST
+    const trailerList = [os.placaCarreta1, os.placaCarreta2].filter(Boolean) as string[];
+    const apoliceMatch = findMatchingApolice(
+      os.placaCavalo || '',
+      trailerList,
+      os.nomeMotorista || ''
+    );
+
+    let defaultVigencia = vinculo === 'FROTA' ? 'SEGURO PROPRIO' : 'TERCEIRO';
+    if (apoliceMatch && apoliceMatch.vigenciaCadastro && apoliceMatch.vigenciaCadastro !== '-') {
+      defaultVigencia = apoliceMatch.vigenciaCadastro;
+    }
+
+    // Check checklist from apolice match if available
+    let apoliceChecklist = '';
+    if (apoliceMatch && apoliceMatch.checkList && apoliceMatch.checkList !== 'N/A' && apoliceMatch.checkList !== '-') {
+      apoliceChecklist = apoliceMatch.checkList;
+    }
+
     // Informações fixas solicitadas pelo usuário:
     // 1. coluna status: REALIZAR IMPRESSÃO
     // 2. coluna origem: SANTA LUZIA|MG
@@ -204,7 +330,7 @@ export default function TerceirosEscala({
       modeloCavalo: (os.perfilCavalo || 'TRUCADO').toUpperCase(),
       fezContato: 'SIM',
       destino: (destinoNorm || os.filialDestino || 'GUARULHOS').toUpperCase(),
-      transportador: (os.transportador || 'TRANSMAGNA').toUpperCase(),
+      transportador: (os.transportador || (apoliceMatch ? apoliceMatch.transportador : 'TRANSMAGNA')).toUpperCase(),
       cavalo,
       categoria: vinculo,
       tecnologia: (os.rastreador || 'SIGHRA').toUpperCase(),
@@ -213,7 +339,7 @@ export default function TerceirosEscala({
       rgSap: os.rgUf || '',
       cnh: os.cnh || '',
       telefone: os.celular || '',
-      vigenciaCadastro: vinculo === 'FROTA' ? 'SEGURO PROPRIO' : 'TERCEIRO',
+      vigenciaCadastro: defaultVigencia,
       codigoTransportadora: '',
       idCarga: os.idCargo || '',
       estadoMotorista,
@@ -228,6 +354,9 @@ export default function TerceirosEscala({
       const halfP = !isNaN(numP) ? String(Math.round(numP / 2)) : os.capacidadePallets;
       const halfT = !isNaN(numT) ? String(numT / 2) : os.capacidadeToneladas;
 
+      const finalCheckList1 = chkDetails1.checkList || apoliceChecklist;
+      const finalCheckList2 = chkDetails2.checkList || apoliceChecklist;
+
       const row1: DispoRow = {
         ...baseRow,
         id: `os-row-${Date.now()}-1`,
@@ -235,7 +364,7 @@ export default function TerceirosEscala({
         pallets: halfP,
         ton: halfT,
         m3: m3Val,
-        checkList: chkDetails1.checkList,
+        checkList: finalCheckList1,
         pendencia: chkDetails1.pendencia
       };
 
@@ -247,12 +376,14 @@ export default function TerceirosEscala({
         pallets: halfP,
         ton: halfT,
         m3: m3Val,
-        checkList: chkDetails2.checkList,
+        checkList: finalCheckList2,
         pendencia: chkDetails2.pendencia
       };
 
       return [row1, row2];
     }
+
+    const finalCheckList = chkDetails1.checkList || apoliceChecklist;
 
     const singleRow: DispoRow = {
       ...baseRow,
@@ -261,7 +392,7 @@ export default function TerceirosEscala({
       pallets: os.capacidadePallets || '30',
       ton: os.capacidadeToneladas || '30',
       m3: m3Val,
-      checkList: chkDetails1.checkList,
+      checkList: finalCheckList,
       pendencia: chkDetails1.pendencia
     };
 
@@ -589,9 +720,15 @@ export default function TerceirosEscala({
                 <span className="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-400/40 text-[10px] font-mono font-bold uppercase">
                   IA & OCR Integrados
                 </span>
+                {apoliceItems && apoliceItems.length > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                    {apoliceItems.length} Apólice(s) Vinculada(s)
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-600">
-                Importe o arquivo PDF da <strong>Ordem de Serviço 3C</strong> para converter automaticamente nas 33 colunas da planilha de Disponibilidade.
+                Importe o arquivo PDF da <strong>Ordem de Serviço 3C</strong>. Se o conjunto (Cavalo + Carreta(s) + Motorista) constar na aba <strong>Apólice</strong>, a <strong>Vigência do Cadastro</strong> e o <strong>Check List</strong> serão preenchidos automaticamente.
               </p>
             </div>
           </div>

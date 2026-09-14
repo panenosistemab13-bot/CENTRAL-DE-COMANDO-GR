@@ -36,7 +36,7 @@ import { cn } from '../lib/utils';
 import FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 import TerceirosEscala from './TerceirosEscala';
-import ApoliceEscala from './ApoliceEscala';
+import ApoliceEscala, { ApoliceItem } from './ApoliceEscala';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, push, remove, update } from 'firebase/database';
 import { parseISO, differenceInDays } from 'date-fns';
@@ -325,11 +325,24 @@ interface EscalaProps {
 }
 
 export default function Escala({ onBack }: EscalaProps) {
-  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros' | 'apolice'>('apolice');
+  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros' | 'apolice'>('escala');
+
+  // Ensure '1. Conversor de Escala' is always selected when entering Escala
+  useEffect(() => {
+    setActiveTab('escala');
+  }, []);
   const [inputText, setInputText] = useState<string>('');
   const [includeHeaderInCopy, setIncludeHeaderInCopy] = useState<boolean>(false);
   const [copiedStatus, setCopiedStatus] = useState<boolean>(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [apoliceItems, setApoliceItems] = useState<ApoliceItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('apolice_escala_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [motoristas3C, setMotoristas3C] = useState<Motorista3C[]>([]);
   const [searchMotorista, setSearchMotorista] = useState<string>('');
 
@@ -421,6 +434,53 @@ export default function Escala({ onBack }: EscalaProps) {
       console.error('Erro ao conectar aos motoristas 3C:', err);
     }
   }, []);
+
+  // Subscribe to Apólice database (Firebase RTDB + LocalStorage sync)
+  useEffect(() => {
+    try {
+      const apoliceRef = ref(rtdb, 'apolice_escala_items');
+      const unsubscribe = onValue(apoliceRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          let list: ApoliceItem[] = [];
+          if (Array.isArray(data)) {
+            list = data.filter(Boolean);
+          } else if (typeof data === 'object') {
+            list = Object.entries(data).map(([key, val]: [string, any]) => ({
+              id: val.id || key,
+              ...val
+            }));
+          }
+          if (list.length > 0) {
+            setApoliceItems(list);
+            try {
+              localStorage.setItem('apolice_escala_items', JSON.stringify(list));
+            } catch (err) {
+              console.error('Erro ao sincronizar apólices no localStorage:', err);
+            }
+          }
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.error('Erro ao conectar às apólices no Firebase RTDB:', err);
+    }
+  }, []);
+
+  const handleSaveApoliceItems = (newItems: ApoliceItem[]) => {
+    setApoliceItems(newItems);
+    try {
+      localStorage.setItem('apolice_escala_items', JSON.stringify(newItems));
+    } catch (err) {
+      console.error('Erro ao salvar apólices no localStorage:', err);
+    }
+    try {
+      const apoliceRef = ref(rtdb, 'apolice_escala_items');
+      set(apoliceRef, newItems);
+    } catch (err) {
+      console.error('Erro ao salvar apólices no Firebase RTDB:', err);
+    }
+  };
 
   // Calculate checklist status for a given plate
   const getPlateChecklistStatus = (plate: string) => {
@@ -2450,6 +2510,7 @@ export default function Escala({ onBack }: EscalaProps) {
         /* Tab 3: Terceiros (Importar PDF OS) */
         <TerceirosEscala
           checklistItems={checklistItems}
+          apoliceItems={apoliceItems}
           getChecklistDetails={getChecklistDetails}
           formatPlateWithHyphen={formatPlateWithHyphen}
           getMonthAbbrev={getMonthAbbrev}
@@ -2457,7 +2518,10 @@ export default function Escala({ onBack }: EscalaProps) {
         />
       ) : (
         /* Tab 4: Apólice (Classificação de Apólices & Conjuntos) */
-        <ApoliceEscala />
+        <ApoliceEscala
+          items={apoliceItems}
+          onItemsChange={handleSaveApoliceItems}
+        />
       )}
 
       {/* Modal for Add / Edit Motorista 3C */}

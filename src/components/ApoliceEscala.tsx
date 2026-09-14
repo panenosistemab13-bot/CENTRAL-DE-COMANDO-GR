@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Truck,
   Building2,
@@ -14,11 +14,20 @@ import {
   Check,
   ChevronDown,
   AlertCircle,
-  FileText
+  FileText,
+  Plus,
+  Edit2,
+  Cloud,
+  Database,
+  Save,
+  X,
+  CheckCircle2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
 import highwayNightBg from '../assets/images/highway_night_bg_1789344097881.jpg';
+import { rtdb } from '../firebase';
+import { ref, set, onValue } from 'firebase/database';
 
 export interface ApoliceItem {
   id: string;
@@ -39,14 +48,109 @@ SET|26\tSANTA LUZIA|MG\tsábado\t12/09/2026\t04:12:00\t07:16:30\tLIBERADO CARREG
 SET|26\tSANTA LUZIA|MG\tsexta-feira\t11/09/2026\tX\t10:01:20\tCOLETAR ASSINATURA\tRODOTREM SIDER\tTRUCADO\tSIM\tGUARULHOS\tMOEDENSE\tQWK6A22\tOLN7307\t31\t22\t87 m³\tFROTA\tSASCAR\tRAYSON BARBOSA DE OLIVEIRA\t051.851.135-44\t14364422 SSP MG\t06983057212\t5531 9 8652-0925\t21/06/2027\t1000587291\t\tMG\tMG\tMG\t\t09/11/2026\tVALIDO
 SET|26\tSANTA LUZIA|MG\tsexta-feira\t11/09/2026\tX\t10:01:20\tCOLETAR ASSINATURA\tRODOTREM SIDER\tTRUCADO\tSIM\tGUARULHOS\tMOEDENSE\tQWK6A22\tOLN7457\t31\t22\t87 m³\tFROTA\tSASCAR\tRAYSON BARBOSA DE OLIVEIRA\t051.851.135-44\t14364422 SSP MG\t06983057212\t5531 9 8652-0925\t21/06/2027\t1000587291\t\tMG\tMG\tMG\t\t09/11/2026\tVALIDO`;
 
-export default function ApoliceEscala() {
+export interface ApoliceEscalaProps {
+  items?: ApoliceItem[];
+  onItemsChange?: (items: ApoliceItem[]) => void;
+}
+
+export default function ApoliceEscala({
+  items: externalItems,
+  onItemsChange
+}: ApoliceEscalaProps = {}) {
   const [pasteInput, setPasteInput] = useState<string>('');
-  const [items, setItems] = useState<ApoliceItem[]>([]);
+  const [internalItems, setInternalItems] = useState<ApoliceItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('apolice_escala_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Subscribe to Firebase Realtime Database for permanent synchronization if standalone
+  useEffect(() => {
+    if (externalItems !== undefined) return;
+    try {
+      const apoliceRef = ref(rtdb, 'apolice_escala_items');
+      const unsubscribe = onValue(apoliceRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          let list: ApoliceItem[] = [];
+          if (Array.isArray(data)) {
+            list = data.filter(Boolean);
+          } else if (typeof data === 'object') {
+            list = Object.entries(data).map(([key, val]: [string, any]) => ({
+              id: val.id || key,
+              ...val
+            }));
+          }
+          if (list.length > 0) {
+            setInternalItems(list);
+            try {
+              localStorage.setItem('apolice_escala_items', JSON.stringify(list));
+            } catch (err) {
+              console.error('Erro ao salvar apólices no localStorage:', err);
+            }
+          }
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.error('Erro ao conectar às apólices no RTDB:', err);
+    }
+  }, [externalItems]);
+
+  const items = externalItems !== undefined ? externalItems : internalItems;
+
+  // Central save function: guarantees persistence to Firebase RTDB and LocalStorage
+  const setItems = (newItemsOrUpdater: ApoliceItem[] | ((prev: ApoliceItem[]) => ApoliceItem[])) => {
+    const updated = typeof newItemsOrUpdater === 'function' ? newItemsOrUpdater(items) : newItemsOrUpdater;
+    
+    if (onItemsChange) {
+      onItemsChange(updated);
+    } else {
+      setInternalItems(updated);
+    }
+
+    try {
+      localStorage.setItem('apolice_escala_items', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Erro ao salvar apólices no localStorage:', err);
+    }
+
+    try {
+      const apoliceRef = ref(rtdb, 'apolice_escala_items');
+      set(apoliceRef, updated);
+    } catch (err) {
+      console.error('Erro ao salvar apólices no Firebase RTDB:', err);
+    }
+  };
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterApolice, setFilterApolice] = useState<string>('TODAS');
   const [copiedNotification, setCopiedNotification] = useState<boolean>(false);
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
+
+  // Status and notification toast
+  const [syncNotification, setSyncNotification] = useState<{
+    show: boolean;
+    message: string;
+    type?: 'success' | 'delete' | 'info';
+  }>({ show: false, message: '' });
+
+  // Modal State for Add / Edit
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingItem, setEditingItem] = useState<ApoliceItem | null>(null);
+  const [modalForm, setModalForm] = useState({
+    cavalo: '',
+    carretas: '',
+    transportador: '',
+    motorista: '',
+    vigenciaCadastro: '',
+    checkList: '',
+    apolice: 'MACRO'
+  });
 
   // Clean plate format
   const cleanPlate = (p: string): string => {
@@ -383,7 +487,85 @@ export default function ApoliceEscala() {
       });
     });
 
-    setItems(resultItems);
+    // CRITICAL: Merge new parsed items into the database without erasing existing items!
+    // "toda informação adicionada na aba apolice da pagina escala preciam ficar salvas sempre! somente o usuario pode apagar"
+    setItems((prevItems) => {
+      const updatedList = [...prevItems];
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const newItem of resultItems) {
+        const normCav = cleanPlate(newItem.cavalo);
+        const normTrailers = (newItem.carretas || '')
+          .split(/[\/\,\;\s]+/)
+          .map(cleanPlate)
+          .filter(Boolean)
+          .sort()
+          .join('|');
+        const normDriver = (newItem.motorista || '')
+          .toUpperCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^A-Z0-9\s]/g, '')
+          .trim();
+
+        // Check if an entry with same Cavalo and Carretas/Motorista already exists
+        const existingIdx = updatedList.findIndex((it) => {
+          const itCav = cleanPlate(it.cavalo);
+          if (itCav !== normCav) return false;
+
+          const itTrailers = (it.carretas || '')
+            .split(/[\/\,\;\s]+/)
+            .map(cleanPlate)
+            .filter(Boolean)
+            .sort()
+            .join('|');
+          const itDriver = (it.motorista || '')
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Z0-9\s]/g, '')
+            .trim();
+
+          const trailersMatch = !normTrailers || !itTrailers || normTrailers === itTrailers;
+          const driverMatch = !normDriver || !itDriver || normDriver === itDriver || normDriver.includes(itDriver) || itDriver.includes(normDriver);
+
+          return trailersMatch && driverMatch;
+        });
+
+        if (existingIdx >= 0) {
+          // Update existing while preserving ID and not duplicating
+          const current = updatedList[existingIdx];
+          updatedList[existingIdx] = {
+            ...current,
+            transportador: newItem.transportador || current.transportador,
+            vigenciaCadastro: newItem.vigenciaCadastro || current.vigenciaCadastro,
+            checkList:
+              newItem.checkList && newItem.checkList !== 'N/A' && newItem.checkList !== '-'
+                ? newItem.checkList
+                : current.checkList,
+            apolice: newItem.apolice || current.apolice,
+            dataHoraViagem: newItem.dataHoraViagem || current.dataHoraViagem,
+            motorista: newItem.motorista || current.motorista
+          };
+          updatedCount++;
+        } else {
+          // Add as new entry
+          updatedList.unshift(newItem);
+          addedCount++;
+        }
+      }
+
+      setSyncNotification({
+        show: true,
+        message: `${addedCount} novos conjuntos salvos e ${updatedCount} atualizados na Apólice permanentemente!`,
+        type: 'success'
+      });
+      setTimeout(() => setSyncNotification({ show: false, message: '' }), 4000);
+
+      return updatedList;
+    });
+
     setPasteInput('');
   };
 
@@ -398,16 +580,148 @@ export default function ApoliceEscala() {
     setActiveDropdownId(null);
   };
 
-  const handleDeleteRow = (id: string) => {
+  // Only user can explicitly delete records
+  const handleDeleteRow = (id: string, cavalo?: string) => {
+    if (!window.confirm(`Tem certeza que deseja apagar o conjunto ${cavalo || ''}? Esta ação removerá o registro permanentemente do banco de dados.`)) {
+      return;
+    }
     setItems(prev => prev.filter(i => i.id !== id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setActiveDropdownId(null);
+    setSyncNotification({
+      show: true,
+      message: `Conjunto ${cavalo || ''} apagado pelo usuário com sucesso.`,
+      type: 'delete'
+    });
+    setTimeout(() => setSyncNotification({ show: false, message: '' }), 3500);
+  };
+
+  // User bulk delete selected items
+  const handleDeleteSelected = () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Tem certeza que deseja apagar permanentemente os ${selectedIds.size} registros selecionados da Apólice?`)) {
+      return;
+    }
+    const count = selectedIds.size;
+    setItems(prev => prev.filter(i => !selectedIds.has(i.id)));
+    setSelectedIds(new Set());
+    setSyncNotification({
+      show: true,
+      message: `${count} conjuntos apagados pelo usuário com sucesso.`,
+      type: 'delete'
+    });
+    setTimeout(() => setSyncNotification({ show: false, message: '' }), 3500);
   };
 
   const handleClearAll = () => {
-    if (items.length > 0 && !window.confirm('Deseja realmente limpar toda a lista de apólices?')) {
+    if (items.length === 0) return;
+    if (!window.confirm(`ATENÇÃO: Deseja realmente excluir permanentemente TODOS os ${items.length} conjuntos cadastrados na Apólice? Somente você pode executar esta ação e ela não poderá ser desfeita.`)) {
       return;
     }
     setItems([]);
     setSelectedIds(new Set());
+    setSyncNotification({
+      show: true,
+      message: 'Todos os registros foram apagados pelo usuário.',
+      type: 'delete'
+    });
+    setTimeout(() => setSyncNotification({ show: false, message: '' }), 3500);
+  };
+
+  // Open modal to add manual conjunto
+  const handleOpenAddModal = () => {
+    setEditingItem(null);
+    setModalForm({
+      cavalo: '',
+      carretas: '',
+      transportador: '3C',
+      motorista: '',
+      vigenciaCadastro: 'SEGURO PRÓPRIO',
+      checkList: 'VALIDO',
+      apolice: 'MACRO'
+    });
+    setIsModalOpen(true);
+  };
+
+  // Open modal to edit existing conjunto
+  const handleOpenEditModal = (item: ApoliceItem) => {
+    setEditingItem(item);
+    setModalForm({
+      cavalo: item.cavalo,
+      carretas: item.carretas === '-' ? '' : item.carretas,
+      transportador: item.transportador,
+      motorista: item.motorista || '',
+      vigenciaCadastro: item.vigenciaCadastro,
+      checkList: item.checkList,
+      apolice: item.apolice
+    });
+    setIsModalOpen(true);
+  };
+
+  // Save Add/Edit modal
+  const handleSaveModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalForm.cavalo.trim()) {
+      alert('Por favor, informe ao menos a placa do cavalo.');
+      return;
+    }
+
+    const cavaloClean = modalForm.cavalo.toUpperCase().trim();
+    const carretasClean = modalForm.carretas.toUpperCase().trim() || '-';
+    const transportadorClean = modalForm.transportador.toUpperCase().trim() || '3C';
+    const motoristaClean = modalForm.motorista.toUpperCase().trim();
+    const vigenciaClean = modalForm.vigenciaCadastro.toUpperCase().trim() || 'SEGURO PRÓPRIO';
+    const checkListClean = modalForm.checkList.toUpperCase().trim() || 'VALIDO';
+
+    if (editingItem) {
+      setItems(prev =>
+        prev.map(it =>
+          it.id === editingItem.id
+            ? {
+                ...it,
+                cavalo: cavaloClean,
+                carretas: carretasClean,
+                transportador: transportadorClean,
+                motorista: motoristaClean,
+                vigenciaCadastro: vigenciaClean,
+                checkList: checkListClean,
+                apolice: modalForm.apolice
+              }
+            : it
+        )
+      );
+      setSyncNotification({
+        show: true,
+        message: `Conjunto ${cavaloClean} atualizado e salvo permanentemente!`,
+        type: 'success'
+      });
+    } else {
+      const newItem: ApoliceItem = {
+        id: `apolice-${cavaloClean}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        cavalo: cavaloClean,
+        carretas: carretasClean,
+        transportador: transportadorClean,
+        motorista: motoristaClean,
+        vigenciaCadastro: vigenciaClean,
+        checkList: checkListClean,
+        apolice: modalForm.apolice,
+        dataHoraViagem: new Date().toLocaleDateString('pt-BR')
+      };
+      setItems(prev => [newItem, ...prev]);
+      setSyncNotification({
+        show: true,
+        message: `Novo conjunto ${cavaloClean} adicionado e salvo permanentemente!`,
+        type: 'success'
+      });
+    }
+
+    setIsModalOpen(false);
+    setEditingItem(null);
+    setTimeout(() => setSyncNotification({ show: false, message: '' }), 3500);
   };
 
   // Checkbox selection
@@ -523,6 +837,48 @@ export default function ApoliceEscala() {
         </div>
       )}
 
+      {/* Persistence & Sync Notification Toast */}
+      {syncNotification.show && (
+        <div
+          className={cn(
+            "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold tracking-wide border transition-all animate-in fade-in slide-in-from-bottom-4",
+            syncNotification.type === 'delete'
+              ? "bg-rose-950/95 border-rose-500/50 text-rose-200 shadow-[0_0_20px_rgba(225,29,72,0.4)]"
+              : "bg-emerald-950/95 border-emerald-500/50 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+          )}
+        >
+          {syncNotification.type === 'delete' ? (
+            <Trash2 size={18} className="text-rose-400 shrink-0" />
+          ) : (
+            <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+          )}
+          <span>{syncNotification.message}</span>
+        </div>
+      )}
+
+      {/* TOP STATUS BAR: Cloud Persistence Indicator */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#091322]/90 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] text-xs text-slate-300">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-bold text-[11px]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <Cloud size={13} className="text-emerald-400" />
+            <span>SALVO PERMANENTEMENTE NA NUVEM</span>
+          </div>
+
+          <span className="text-slate-400 font-medium">
+            <strong className="text-white font-black">{items.length}</strong> {items.length === 1 ? 'conjunto cadastrado' : 'conjuntos cadastrados'} na base
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 text-[11px] text-amber-300/90 font-medium">
+          <ShieldCheck size={14} className="text-amber-400 shrink-0" />
+          <span>Informações mantidas permanentemente: somente o usuário pode apagar</span>
+        </div>
+      </div>
+
       {/* TOP CARD: COLAR INFORMAÇÕES DA PLANILHA DE ESCALA */}
       <div className="relative rounded-2xl md:rounded-3xl border border-cyan-500/25 bg-[#070e1b]/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_35px_rgba(0,0,0,0.6)] space-y-4">
         {/* Header line inside card */}
@@ -545,6 +901,16 @@ export default function ApoliceEscala() {
 
           {/* Top Right Action Buttons */}
           <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={handleOpenAddModal}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 border border-blue-400/40 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-950/60 hover:scale-102"
+              title="Adicionar conjunto manualmente à base de dados"
+            >
+              <Plus size={16} />
+              <span>+ NOVO CONJUNTO</span>
+            </button>
+
             <button
               type="button"
               onClick={handleLoadSample}
@@ -587,7 +953,7 @@ export default function ApoliceEscala() {
               i
             </span>
             <span>
-              Identificação inteligente: conjuntos com mesmo <strong className="text-amber-400 font-black">Cavalo</strong>, <strong className="text-amber-400 font-black">Carretas</strong> e <strong className="text-amber-400 font-black">Motorista</strong> mantêm automaticamente a informação mais recente.
+              Ao processar, novos conjuntos são adicionados à base permanente e conjuntos existentes são atualizados automaticamente sem perda de dados.
             </span>
           </div>
 
@@ -603,7 +969,7 @@ export default function ApoliceEscala() {
         </div>
       </div>
 
-      {/* BOTTOM CARD: TABLE EXACTLY MATCHING image.png */}
+      {/* BOTTOM CARD: TABLE */}
       <div className="relative rounded-2xl md:rounded-3xl border border-cyan-500/25 bg-[#070e1b]/85 backdrop-blur-md overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.7)] space-y-0">
         {/* Table Top Controls Bar */}
         <div className="p-3.5 sm:p-4 bg-[#091122]/90 border-b border-cyan-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -636,6 +1002,18 @@ export default function ApoliceEscala() {
                 <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
             </div>
+
+            {/* Bulk Delete Button when items selected */}
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleDeleteSelected}
+                className="px-3 py-1.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm animate-in fade-in"
+              >
+                <Trash2 size={14} />
+                <span>EXCLUIR SELECIONADOS ({selectedIds.size})</span>
+              </button>
+            )}
           </div>
 
           {/* Action Buttons: Copiar Tabela & Exportar Excel */}
@@ -715,25 +1093,29 @@ export default function ApoliceEscala() {
                   </div>
                 </th>
 
-                <th className="py-3 px-4 whitespace-nowrap min-w-[170px]">
+                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[170px]">
                   <div className="flex items-center justify-center gap-1.5">
                     <ShieldCheck size={15} />
                     <span>APÓLICE</span>
                   </div>
+                </th>
+
+                <th className="py-3 px-3 whitespace-nowrap text-center w-24">
+                  <span>AÇÕES</span>
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/80">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-14 text-center text-slate-400 font-sans">
+                  <td colSpan={8} className="py-14 text-center text-slate-400 font-sans">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Truck size={36} className="text-slate-600" />
                       <p className="font-bold text-slate-300 text-sm">
                         Nenhum conjunto na lista de apólices
                       </p>
                       <p className="text-xs text-slate-500">
-                        Cole as linhas da planilha acima ou clique em "Carregar Exemplo da Planilha"
+                        Cole as linhas da planilha acima ou adicione manualmente no botão "+ Novo Conjunto"
                       </p>
                     </div>
                   </td>
@@ -802,7 +1184,7 @@ export default function ApoliceEscala() {
                       </td>
 
                       {/* APÓLICE (Pill button dropdown matching image.png) */}
-                      <td className="py-2.5 px-4 relative">
+                      <td className="py-2.5 px-4 relative border-r border-slate-800/60">
                         <div className="inline-block relative">
                           <button
                             type="button"
@@ -846,7 +1228,15 @@ export default function ApoliceEscala() {
                                 <div className="border-t border-slate-700 my-1" />
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteRow(item.id)}
+                                  onClick={() => handleOpenEditModal(item)}
+                                  className="w-full px-3 py-2 hover:bg-blue-950/60 text-blue-400 font-bold flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                  <Edit2 size={13} />
+                                  <span>Editar Linha</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteRow(item.id, item.cavalo)}
                                   className="w-full px-3 py-2 hover:bg-rose-950/60 text-rose-400 font-bold flex items-center gap-2 cursor-pointer transition-colors"
                                 >
                                   <Trash2 size={13} />
@@ -857,6 +1247,28 @@ export default function ApoliceEscala() {
                           )}
                         </div>
                       </td>
+
+                      {/* AÇÕES (Edit and Delete buttons) */}
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(item)}
+                            className="p-1.5 rounded-lg bg-blue-950/60 hover:bg-blue-800/70 border border-blue-500/30 text-blue-300 transition-all cursor-pointer hover:scale-105"
+                            title="Editar conjunto"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRow(item.id, item.cavalo)}
+                            className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-800/70 border border-rose-500/30 text-rose-300 transition-all cursor-pointer hover:scale-105"
+                            title="Excluir conjunto (somente você pode apagar)"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
@@ -865,7 +1277,7 @@ export default function ApoliceEscala() {
           </table>
         </div>
 
-        {/* Table Footer with metrics matching image.png */}
+        {/* Table Footer with metrics */}
         <div className="p-3.5 sm:p-4 bg-[#070e1b]/95 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400 font-medium">
           <div>
             Exibindo <strong>{filteredItems.length}</strong> de <strong>{items.length}</strong> {items.length === 1 ? 'conjunto' : 'conjuntos'}
@@ -882,6 +1294,179 @@ export default function ApoliceEscala() {
           </div>
         </div>
       </div>
+
+      {/* MODAL: ADICIONAR OU EDITAR CONJUNTO NA APÓLICE */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg bg-[#08111e] border-2 border-cyan-500/40 rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] space-y-5">
+            <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-black uppercase text-white tracking-wide">
+                    {editingItem ? 'Editar Conjunto na Apólice' : 'Novo Conjunto na Apólice'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    O registro ficará salvo permanentemente na base de dados
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingItem(null);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveModal} className="space-y-4 text-xs font-bold text-slate-200">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                    Placa Cavalo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={modalForm.cavalo}
+                    onChange={(e) => setModalForm({ ...modalForm, cavalo: e.target.value })}
+                    placeholder="Ex: QWK6A22"
+                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl font-mono text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                    Carretas
+                  </label>
+                  <input
+                    type="text"
+                    value={modalForm.carretas}
+                    onChange={(e) => setModalForm({ ...modalForm, carretas: e.target.value })}
+                    placeholder="Ex: OLN7307 ou OLN7307 OLN7457"
+                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl font-mono text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                    Motorista
+                  </label>
+                  <input
+                    type="text"
+                    value={modalForm.motorista}
+                    onChange={(e) => setModalForm({ ...modalForm, motorista: e.target.value })}
+                    placeholder="Nome do motorista"
+                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                    Transportador
+                  </label>
+                  <input
+                    type="text"
+                    value={modalForm.transportador}
+                    onChange={(e) => setModalForm({ ...modalForm, transportador: e.target.value })}
+                    placeholder="Ex: 3C, MOEDENSE, TRANSMAGNA"
+                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                    Vigência do Cadastro
+                  </label>
+                  <input
+                    type="text"
+                    value={modalForm.vigenciaCadastro}
+                    onChange={(e) => setModalForm({ ...modalForm, vigenciaCadastro: e.target.value })}
+                    placeholder="Ex: SEGURO PRÓPRIO ou 13/05/2027"
+                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                    Check List
+                  </label>
+                  <input
+                    type="text"
+                    value={modalForm.checkList}
+                    onChange={(e) => setModalForm({ ...modalForm, checkList: e.target.value })}
+                    placeholder="Ex: VALIDO, VENCIDO ou 10/11/2026"
+                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                  Classificação da Apólice
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalForm({ ...modalForm, apolice: 'MACRO' })}
+                    className={cn(
+                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer",
+                      modalForm.apolice === 'MACRO'
+                        ? "bg-gradient-to-r from-[#0051b8] to-[#0066e0] border-blue-400 text-white shadow-[0_0_12px_rgba(0,102,224,0.4)]"
+                        : "bg-[#050a14] border-slate-700 text-slate-400 hover:text-white"
+                    )}
+                  >
+                    MACRO
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalForm({ ...modalForm, apolice: 'SEGURO PRÓPRIO' })}
+                    className={cn(
+                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer",
+                      modalForm.apolice === 'SEGURO PRÓPRIO'
+                        ? "bg-gradient-to-r from-[#800c1f] to-[#991026] border-rose-400 text-white shadow-[0_0_12px_rgba(153,16,38,0.4)]"
+                        : "bg-[#050a14] border-slate-700 text-slate-400 hover:text-white"
+                    )}
+                  >
+                    SEGURO PRÓPRIO
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingItem(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-emerald-950/60 transition-all cursor-pointer"
+                >
+                  <Save size={15} />
+                  <span>Salvar Registro</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
