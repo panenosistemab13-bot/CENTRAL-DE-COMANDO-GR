@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import * as pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 
 const pdf = (pdfParse as any).default || pdfParse;
 
@@ -195,8 +196,23 @@ Retorne estritamente o array JSON com as linhas encontradas.`;
 
       const apiKey = process.env.GEMINI_API_KEY;
       const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, "");
+      
       let effectiveMimeType = mimeType || "application/pdf";
-      if (fileName && fileName.toLowerCase().endsWith(".pdf")) {
+      const isDocx = Boolean(fileName && (fileName.toLowerCase().endsWith(".docx") || fileName.toLowerCase().endsWith(".doc"))) ||
+        mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        mimeType === "application/msword";
+
+      let docxText = "";
+      if (isDocx) {
+        effectiveMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        try {
+          const buffer = Buffer.from(cleanBase64, 'base64');
+          const result = await mammoth.extractRawText({ buffer });
+          docxText = result.value || "";
+        } catch (mErr) {
+          console.warn("Mammoth docx extraction error:", mErr);
+        }
+      } else if (fileName && fileName.toLowerCase().endsWith(".pdf")) {
         effectiveMimeType = "application/pdf";
       } else if (fileName && fileName.toLowerCase().endsWith(".png")) {
         effectiveMimeType = "image/png";
@@ -255,19 +271,23 @@ Extraia com exatidão e sem alucinações:
 
 Retorne estritamente o objeto JSON correspondente.`;
 
+          const parts: any[] = [];
+          if (isDocx && docxText) {
+            parts.push({ text: `CONTEÚDO EXTRAÍDO DO DOCUMENTO WORD (.DOCX):\n${docxText}` });
+            parts.push({ text: promptText });
+          } else {
+            parts.push({
+              inlineData: {
+                mimeType: effectiveMimeType,
+                data: cleanBase64
+              }
+            });
+            parts.push({ text: promptText });
+          }
+
           const response = await ai.models.generateContent({
             model: "gemini-3.8-flash",
-            contents: {
-              parts: [
-                {
-                  inlineData: {
-                    mimeType: effectiveMimeType,
-                    data: cleanBase64
-                  }
-                },
-                { text: promptText }
-              ]
-            },
+            contents: { parts },
             config: {
               responseMimeType: "application/json",
               temperature: 0.1
@@ -282,98 +302,103 @@ Retorne estritamente o objeto JSON correspondente.`;
             return res.status(200).json({ success: true, data: parsed });
           }
         } catch (geminiErr) {
-          console.warn("Gemini extraction failed for OS PDF, fallback to text parser:", geminiErr);
+          console.warn("Gemini extraction failed for OS PDF/Word, fallback to text parser:", geminiErr);
         }
       }
 
-      // 2. Fallback text parsing via pdf-parse
-      if (effectiveMimeType === "application/pdf") {
+      // 2. Fallback text parsing
+      let rawText = "";
+      if (isDocx && docxText) {
+        rawText = docxText;
+      } else if (effectiveMimeType === "application/pdf") {
         try {
           const buffer = Buffer.from(cleanBase64, 'base64');
           const pdfData = await pdf(buffer);
-          const rawText = pdfData.text || "";
-          
-          const plateRegex = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
-          const plates = (rawText.match(plateRegex) || []).map(p => p.replace(/\s+/g, '').toUpperCase());
-          const dateMatch = rawText.match(/(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})/);
-          const timeMatch = rawText.match(/(\d{2}:\d{2}(?::\d{2})?)/);
-          const cpfMatch = rawText.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\b\d{11}\b)/);
-          const cnhMatch = rawText.match(/(?:CNH|REGISTRO CNH|Nº DO REGISTRO CNH)[\s\S]*?(\d{10,11})/i);
-          const celMatch = rawText.match(/(?:CELULAR|TELEFONE)[\s\S]*?([0-9\s\(\)\-]{8,16})/i);
-
-          let transportador = '';
-          const trMatch = rawText.match(/(?:TRANSPORTADOR[\s\S]*?)(TRANSMAGNA|TORNADOLOG|TORNADO|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|MOSDENNA|[A-Z]{4,20})/i);
-          if (trMatch) transportador = trMatch[1].toUpperCase();
-
-          let motorista = '';
-          const motMatch = rawText.match(/(?:NOME(?:\s+MOTORISTA)?|CONDUTOR)[\s\:\-]+([A-Za-zÀ-ÿ\s]{5,45}?)(?=\s+(?:CPF|RG|CNH|\d{3}|\n))/i);
-          if (motMatch) motorista = motMatch[1].trim().toUpperCase();
-
-          let orig = '';
-          let dest = '';
-          const origMatch = rawText.match(/FILIAL DE ORIGEM[\s\:\-]+([A-Za-zÀ-ÿ0-9\s\/\(\)]+?)(?=\s+FILIAL DE DESTINO|\n)/i);
-          if (origMatch) orig = origMatch[1].trim().toUpperCase();
-
-          const destMatch = rawText.match(/FILIAL DE DESTINO[\s\:\-]+([A-Za-zÀ-ÿ0-9\s\/\(\)]+?)(?=\s+AGENDA|\n)/i);
-          if (destMatch) dest = destMatch[1].trim().toUpperCase();
-
-          let vinculo = 'FROTA';
-          const vincMatch = rawText.match(/(?:VINCULO(?:\s+MOTORISTA)?[\s\S]*?)(FROTA|TERCEIRO|AGREGADO)/i);
-          if (vincMatch) vinculo = vincMatch[1].toUpperCase();
-
-          let perfilCav = 'TRUCADO';
-          const pcavMatch = rawText.match(/(?:PERFIL DO CAVALO[\s\S]*?)(TRUCADO|TOCO|BI-TRUCK|4X2|6X2|6X4)/i);
-          if (pcavMatch) perfilCav = pcavMatch[1].toUpperCase();
-
-          let perfilCar = 'BAU';
-          const pcarMatch = rawText.match(/(?:PERFIL CARRETA[\s\S]*?)(BAU|BAÚ|SIDER|RODOTREM|GRANELEIRO)/i);
-          if (pcarMatch) perfilCar = pcarMatch[1].toUpperCase();
-
-          let pallets = '28';
-          const palMatch = rawText.match(/(?:CAPACIDADE PALLETS[\s\S]*?)(\d{1,3})/i);
-          if (palMatch) pallets = palMatch[1];
-
-          let toneladas = '30';
-          const tonMatch = rawText.match(/(?:CAPACIDADE TONELADAS[\s\S]*?)(\d{1,3}(?:[\,\.]\d)?)/i);
-          if (tonMatch) toneladas = tonMatch[1].replace(',', '.');
-
-          let rastreador = 'SIGHRA';
-          const rastMatch = rawText.match(/(?:RASTREADOR[\s\S]*?)(SIGHRA|ONIX|SASCAR|AUTOTRAC|OMNILINK|JABUR)/i);
-          if (rastMatch) rastreador = rastMatch[1].toUpperCase();
-
-          let rgVal = '';
-          const rgMatch = rawText.match(/(?:RG)[\s\:\-]+([A-Za-z0-9\.\-\/\s]{4,20}?)(?=\s+Nº|\n)/i);
-          if (rgMatch) rgVal = rgMatch[1].trim().toUpperCase();
-
-          const fallbackData = {
-            transportador: transportador || 'TRANSMAGNA',
-            dataCarregamento: dateMatch ? dateMatch[1] : '24/07/2026',
-            previsaoHorario: timeMatch ? timeMatch[1] : '08:00',
-            filialOrigem: orig || 'SANTA LUZIA MG',
-            filialDestino: dest || 'GUARULHOS SP',
-            nomeMotorista: motorista || 'WISTOR FRANKLIN BELISARIO BRITO',
-            cpf: cpfMatch ? cpfMatch[1] : '71323870148',
-            vinculoMotorista: vinculo,
-            rgUf: rgVal || 'G465211T',
-            cnh: cnhMatch ? cnhMatch[1] : '07277322482',
-            celular: celMatch ? celMatch[1].trim() : '04 1 91094136',
-            perfilCavalo: perfilCav,
-            perfilCarreta: perfilCar,
-            capacidadePallets: pallets,
-            capacidadeToneladas: toneladas,
-            placaCavalo: plates[0] || 'SEV5A39',
-            ufCavalo: 'SC',
-            placaCarreta1: plates[1] || 'TPY3G57',
-            ufCarreta1: 'SC',
-            placaCarreta2: plates[2] || '',
-            ufCarreta2: '',
-            rastreador: rastreador
-          };
-
-          return res.status(200).json({ success: true, data: fallbackData });
+          rawText = pdfData.text || "";
         } catch (pdfErr) {
           console.warn("PDF parse fallback error:", pdfErr);
         }
+      }
+
+      if (rawText) {
+        const plateRegex = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
+        const plates = (rawText.match(plateRegex) || []).map(p => p.replace(/\s+/g, '').toUpperCase());
+        const dateMatch = rawText.match(/(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})/);
+        const timeMatch = rawText.match(/(\d{2}:\d{2}(?::\d{2})?)/);
+        const cpfMatch = rawText.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\b\d{11}\b)/);
+        const cnhMatch = rawText.match(/(?:CNH|REGISTRO CNH|Nº DO REGISTRO CNH)[\s\S]*?(\d{10,11})/i);
+        const celMatch = rawText.match(/(?:CELULAR|TELEFONE)[\s\S]*?([0-9\s\(\)\-]{8,16})/i);
+
+        let transportador = '';
+        const trMatch = rawText.match(/(?:TRANSPORTADOR[\s\S]*?)(TRANSMAGNA|TORNADOLOG|TORNADO|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|MOSDENNA|[A-Z]{4,20})/i);
+        if (trMatch) transportador = trMatch[1].toUpperCase();
+
+        let motorista = '';
+        const motMatch = rawText.match(/(?:NOME(?:\s+MOTORISTA)?|CONDUTOR)[\s\:\-]+([A-Za-zÀ-ÿ\s]{5,45}?)(?=\s+(?:CPF|RG|CNH|\d{3}|\n))/i);
+        if (motMatch) motorista = motMatch[1].trim().toUpperCase();
+
+        let orig = '';
+        let dest = '';
+        const origMatch = rawText.match(/FILIAL DE ORIGEM[\s\:\-]+([A-Za-zÀ-ÿ0-9\s\/\(\)]+?)(?=\s+FILIAL DE DESTINO|\n)/i);
+        if (origMatch) orig = origMatch[1].trim().toUpperCase();
+
+        const destMatch = rawText.match(/FILIAL DE DESTINO[\s\:\-]+([A-Za-zÀ-ÿ0-9\s\/\(\)]+?)(?=\s+AGENDA|\n)/i);
+        if (destMatch) dest = destMatch[1].trim().toUpperCase();
+
+        let vinculo = 'FROTA';
+        const vincMatch = rawText.match(/(?:VINCULO(?:\s+MOTORISTA)?[\s\S]*?)(FROTA|TERCEIRO|AGREGADO)/i);
+        if (vincMatch) vinculo = vincMatch[1].toUpperCase();
+
+        let perfilCav = 'TRUCADO';
+        const pcavMatch = rawText.match(/(?:PERFIL DO CAVALO[\s\S]*?)(TRUCADO|TOCO|BI-TRUCK|4X2|6X2|6X4)/i);
+        if (pcavMatch) perfilCav = pcavMatch[1].toUpperCase();
+
+        let perfilCar = 'BAU';
+        const pcarMatch = rawText.match(/(?:PERFIL CARRETA[\s\S]*?)(BAU|BAÚ|SIDER|RODOTREM|GRANELEIRO)/i);
+        if (pcarMatch) perfilCar = pcarMatch[1].toUpperCase();
+
+        let pallets = '28';
+        const palMatch = rawText.match(/(?:CAPACIDADE PALLETS[\s\S]*?)(\d{1,3})/i);
+        if (palMatch) pallets = palMatch[1];
+
+        let toneladas = '30';
+        const tonMatch = rawText.match(/(?:CAPACIDADE TONELADAS[\s\S]*?)(\d{1,3}(?:[\,\.]\d)?)/i);
+        if (tonMatch) toneladas = tonMatch[1].replace(',', '.');
+
+        let rastreador = 'SIGHRA';
+        const rastMatch = rawText.match(/(?:RASTREADOR[\s\S]*?)(SIGHRA|ONIX|SASCAR|AUTOTRAC|OMNILINK|JABUR)/i);
+        if (rastMatch) rastreador = rastMatch[1].toUpperCase();
+
+        let rgVal = '';
+        const rgMatch = rawText.match(/(?:RG)[\s\:\-]+([A-Za-z0-9\.\-\/\s]{4,20}?)(?=\s+Nº|\n)/i);
+        if (rgMatch) rgVal = rgMatch[1].trim().toUpperCase();
+
+        const fallbackData = {
+          transportador: transportador || 'TRANSMAGNA',
+          dataCarregamento: dateMatch ? dateMatch[1] : '24/07/2026',
+          previsaoHorario: timeMatch ? timeMatch[1] : '08:00',
+          filialOrigem: orig || 'SANTA LUZIA MG',
+          filialDestino: dest || 'GUARULHOS SP',
+          nomeMotorista: motorista || 'WISTOR FRANKLIN BELISARIO BRITO',
+          cpf: cpfMatch ? cpfMatch[1] : '71323870148',
+          vinculoMotorista: vinculo,
+          rgUf: rgVal || 'G465211T',
+          cnh: cnhMatch ? cnhMatch[1] : '07277322482',
+          celular: celMatch ? celMatch[1].trim() : '04 1 91094136',
+          perfilCavalo: perfilCav,
+          perfilCarreta: perfilCar,
+          capacidadePallets: pallets,
+          capacidadeToneladas: toneladas,
+          placaCavalo: plates[0] || 'SEV5A39',
+          ufCavalo: 'SC',
+          placaCarreta1: plates[1] || 'TPY3G57',
+          ufCarreta1: 'SC',
+          placaCarreta2: plates[2] || '',
+          ufCarreta2: '',
+          rastreador: rastreador
+        };
+
+        return res.status(200).json({ success: true, data: fallbackData });
       }
 
       return res.status(400).json({ error: "Não foi possível extrair dados do PDF fornecido." });

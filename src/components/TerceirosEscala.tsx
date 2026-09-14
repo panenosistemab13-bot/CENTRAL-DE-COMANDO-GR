@@ -460,7 +460,7 @@ export default function TerceirosEscala({
     return cols.slice(0, 33).join('\t');
   };
 
-  // Process a single file (PDF or Image)
+  // Process a single file (PDF, Word .docx, or Image)
   const processFile = async (file: File) => {
     return new Promise<DispoRow[]>((resolve) => {
       const reader = new FileReader();
@@ -469,13 +469,24 @@ export default function TerceirosEscala({
           const base64 = reader.result as string;
           setProcessingStatus(`Lendo ${file.name}...`);
 
+          let mimeType = file.type;
+          if (!mimeType) {
+            if (file.name.toLowerCase().endsWith('.docx')) {
+              mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            } else if (file.name.toLowerCase().endsWith('.doc')) {
+              mimeType = 'application/msword';
+            } else if (file.name.toLowerCase().endsWith('.pdf')) {
+              mimeType = 'application/pdf';
+            }
+          }
+
           const res = await fetch('/api/parse-os-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               fileBase64: base64,
               fileName: file.name,
-              mimeType: file.type || 'application/pdf'
+              mimeType: mimeType || 'application/pdf'
             })
           });
 
@@ -527,7 +538,7 @@ export default function TerceirosEscala({
     setIsProcessing(false);
     setProcessingStatus('');
 
-    setToastMessage(`Sucesso! ${allNewRows.length} linha(s) extraída(s) de ${files.length} documento(s) PDF.`);
+    setToastMessage(`Sucesso! ${allNewRows.length} linha(s) extraída(s) de ${files.length} documento(s) (PDF / Word).`);
     setTimeout(() => setToastMessage(null), 4500);
 
     if (fileInputRef.current) {
@@ -736,7 +747,7 @@ export default function TerceirosEscala({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-serif font-black uppercase tracking-tight text-[#2D1A10]">
-                  Importação de Ordens de Serviço (PDF Terceiros)
+                  Importação de Ordens de Serviço (PDF & Word Terceiros)
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-400/40 text-[10px] font-mono font-bold uppercase">
                   IA & OCR Integrados
@@ -749,7 +760,7 @@ export default function TerceirosEscala({
                 )}
               </div>
               <p className="text-xs text-slate-600">
-                Importe o arquivo PDF da <strong>Ordem de Serviço 3C</strong>. Se o conjunto (Cavalo + Carreta(s) + Motorista) constar na aba <strong>Apólice</strong>, a <strong>Vigência do Cadastro</strong> e o <strong>Check List</strong> serão preenchidos automaticamente.
+                Importe o arquivo PDF ou Word (.docx) da <strong>Ordem de Serviço 3C</strong>. Se o conjunto (Cavalo + Carreta(s) + Motorista) constar na aba <strong>Apólice</strong>, a <strong>Vigência do Cadastro</strong> e o <strong>Check List</strong> serão preenchidos automaticamente.
               </p>
             </div>
           </div>
@@ -760,10 +771,10 @@ export default function TerceirosEscala({
               type="button"
               onClick={() => setShowColumnMappingModal(true)}
               className="px-3.5 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-950 border border-sky-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-102"
-              title="Ver relação completa das colunas da Ficha PDF vs Planilha de Escala"
+              title="Ver relação completa das colunas da Ficha PDF/Word vs Planilha de Escala"
             >
               <HelpCircle size={15} className="text-sky-700" />
-              <span>Mapeamento das Colunas (PDF ➔ Planilha)</span>
+              <span>Mapeamento das Colunas (PDF/Word ➔ Planilha)</span>
             </button>
 
             <button
@@ -816,7 +827,7 @@ export default function TerceirosEscala({
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,application/pdf,image/png,image/jpeg,image/jpg"
+            accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,image/png,image/jpeg,image/jpg"
             className="hidden"
             onChange={(e) => handleFilesUpload(e.target.files)}
           />
@@ -831,16 +842,16 @@ export default function TerceirosEscala({
 
           <div>
             <h4 className="text-base font-serif font-black uppercase text-[#2D1A10]">
-              {isProcessing ? processingStatus || "Processando Documento..." : "Clique ou Arraste os arquivos em PDF aqui"}
+              {isProcessing ? processingStatus || "Processando Documento..." : "Clique ou Arraste os arquivos em PDF ou Word (.docx) aqui"}
             </h4>
             <p className="text-xs text-slate-600 mt-1 max-w-lg mx-auto">
-              Suporta documentos de <strong>Ordem de Serviço 3C (PDF ou Imagem)</strong>. O sistema extrai motorista, transportador, placas do cavalo e carreta, pallets, toneladas, eixos e dimensões.
+              Suporta documentos de <strong>Ordem de Serviço 3C (PDF, Word .docx ou Imagem)</strong>. O sistema extrai motorista, transportador, placas do cavalo e carreta, pallets, toneladas, eixos e dimensões.
             </p>
           </div>
 
           <div className="flex items-center gap-2 mt-1">
             <span className="px-3 py-1 rounded-lg bg-[#3A2414]/5 text-[#3A2414] text-[11px] font-mono font-bold uppercase border border-[#3A2414]/10">
-              Formatos: .PDF, .PNG, .JPG
+              Formatos: .PDF, .DOCX, .DOC, .PNG, .JPG
             </span>
             <span className="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-mono font-bold uppercase border border-emerald-300">
               Saída: Microsoft Excel (.xlsx) + Ctrl+V
