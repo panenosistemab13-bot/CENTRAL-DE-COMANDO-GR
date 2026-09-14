@@ -36,6 +36,7 @@ import { cn } from '../lib/utils';
 import FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 import TerceirosEscala from './TerceirosEscala';
+import ApoliceEscala from './ApoliceEscala';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, push, remove, update } from 'firebase/database';
 import { parseISO, differenceInDays } from 'date-fns';
@@ -324,7 +325,7 @@ interface EscalaProps {
 }
 
 export default function Escala({ onBack }: EscalaProps) {
-  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros'>('escala');
+  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros' | 'apolice'>('apolice');
   const [inputText, setInputText] = useState<string>('');
   const [includeHeaderInCopy, setIncludeHeaderInCopy] = useState<boolean>(false);
   const [copiedStatus, setCopiedStatus] = useState<boolean>(false);
@@ -1403,6 +1404,22 @@ export default function Escala({ onBack }: EscalaProps) {
           </button>
 
           <button
+            onClick={() => setActiveTab('apolice')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              activeTab === 'apolice'
+                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
+                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
+            )}
+          >
+            <ShieldCheck size={16} className="text-blue-400" />
+            <span>4. Apólice</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-mono font-bold">
+              Lista
+            </span>
+          </button>
+
+          <button
             onClick={() => setIsDestinosModalOpen(true)}
             className="ml-auto px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer bg-blue-950/80 hover:bg-blue-900 text-blue-100 border border-blue-400/30 hover:border-blue-300 shadow-md"
             title="Visualizar a lista completa de 58 destinos padronizados"
@@ -2429,7 +2446,7 @@ export default function Escala({ onBack }: EscalaProps) {
             </table>
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'terceiros' ? (
         /* Tab 3: Terceiros (Importar PDF OS) */
         <TerceirosEscala
           checklistItems={checklistItems}
@@ -2438,6 +2455,9 @@ export default function Escala({ onBack }: EscalaProps) {
           getMonthAbbrev={getMonthAbbrev}
           getDayOfWeek={getDayOfWeek}
         />
+      ) : (
+        /* Tab 4: Apólice (Classificação de Apólices & Conjuntos) */
+        <ApoliceEscala />
       )}
 
       {/* Modal for Add / Edit Motorista 3C */}

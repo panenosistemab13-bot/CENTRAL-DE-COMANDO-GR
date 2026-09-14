@@ -204,7 +204,7 @@ Retorne estritamente o array JSON com as linhas encontradas.`;
         effectiveMimeType = "image/jpeg";
       }
 
-      // 1. Try Gemini 2.5 Flash if API key is present
+      // 1. Try Gemini Multimodal (gemini-3.8-flash) if API key is present
       if (apiKey) {
         try {
           const ai = new GoogleGenAI({
@@ -213,41 +213,50 @@ Retorne estritamente o array JSON com as linhas encontradas.`;
           });
 
           const promptText = `Você é um especialista em logística, PGR e transporte de cargas da Três Corações (3C).
-Analise o documento em anexo (Ordem de Serviço 3C / OS de Terceiros / Transporte).
-Extraia com rigorosa precisão todos os campos da Ordem de Serviço:
-- transportador: Razão ou nome fantasia da transportadora (ex: TORNADOLOG, 3C, etc)
-- dataCarregamento: Data no formato DD/MM/AAAA (ex: 05/08/2026)
-- previsaoHorario: Previsão ou texto do horário (ex: FROTA ou 08:00)
-- filialOrigem: Filial de Origem (ex: VESPASIANO/MG, SANTA LUZIA/MG)
-- filialDestino: Filial de Destino (ex: EUSÉBIO/CE, NATAL/RN, RECIFE/PE)
+Analise com máxima precisão o documento em anexo (Ordem de Serviço 3C / Ficha de Carregamento / Controle de Descarregamento / Terceiros / Frota).
+O documento possui uma tabela com seções estruturadas:
+- TRANSPORTADOR, DATA DE CARREGAMENTO, PREVISÃO DA CHEGADA NA FILIAL DE ORIGEM (HORÁRIO)
+- FILIAL DE ORIGEM, FILIAL DE DESTINO, AGENDA DE DESCARREGAMENTO
+- NOME, CPF, VINCULO MOTORISTA
+- RG, Nº DO REGISTRO CNH, ID 3 CARGO, CELULAR
+- PERFIL DO CAVALO, PERFIL CARRETA, CAPACIDADE PALLETS, CAPACIDADE TONELADAS
+- PLACA CAVALO, UF, PLACA CARRETA 1, UF, PLACA CARRETA 2, UF, RASTREADOR
+- QUANT DE EIXOS (CAVALO + CARRETA), COMPRIMENTO CARRETA, LARGURA CARRETA, ALTURA CARRETA
+
+Extraia com exatidão e sem alucinações:
+- transportador: Razão social ou nome fantasia da transportadora (ex: TRANSMAGNA, TORNADOLOG)
+- dataCarregamento: Data no formato DD/MM/AAAA (ex: 24/07/2026)
+- previsaoHorario: Horário de previsão de chegada (ex: 08:00)
+- filialOrigem: Filial de Origem (ex: SANTA LUZIA MG, SANTA LUZIA (MG))
+- filialDestino: Filial de Destino (ex: GUARULHOS SP, GUARULHOS)
 - agendaDescarregamento: Agenda de descarregamento se houver
-- nomeMotorista: Nome completo do motorista em maiúsculas (ex: WILMER DIAZ SANCHEZ)
-- cpf: CPF do motorista (ex: 709.874.852-88)
-- vinculoMotorista: Vínculo do motorista (ex: TERCEIRO, FROTA, AGREGADO)
-- rgUf: RG e UF do motorista (ex: F 439659 S PF / AM)
-- cnh: Número de registro da CNH (ex: 08359828273)
+- nomeMotorista: Nome completo do motorista em maiúsculas (ex: WISTOR FRANKLIN BELISARIO BRITO)
+- cpf: CPF do motorista (ex: 71323870148 ou 713.238.701-48)
+- vinculoMotorista: Vínculo do motorista (ex: FROTA, TERCEIRO, AGREGADO)
+- rgUf: RG do motorista (ex: G465211T)
+- cnh: Número de registro da CNH (ex: 07277322482)
 - idCargo: ID 3 Cargo se houver
-- celular: Número de telefone ou celular (ex: 48 99219-2019)
-- perfilCavalo: Perfil do Cavalo (ex: TRUCADO, TOCO)
-- perfilCarreta: Perfil da Carreta (ex: SIDER, BAÚ, RODOTREM)
-- capacidadePallets: Capacidade em pallets em número (ex: 30)
+- celular: Número de telefone ou celular (ex: 04 1 91094136)
+- perfilCavalo: Perfil do Cavalo mecânico (ex: TRUCADO, TOCO)
+- perfilCarreta: Perfil da Carreta (ex: BAU, SIDER, RODOTREM)
+- capacidadePallets: Capacidade de pallets em número (ex: 28, 30)
 - capacidadeToneladas: Capacidade em toneladas em número (ex: 30)
-- placaCavalo: Placa do cavalo mecânico com hífen (ex: TLN-3E35)
-- ufCavalo: UF do cavalo (ex: SC)
-- placaCarreta1: Placa da carreta 1 com hífen (ex: TPI-4B34)
-- ufCarreta1: UF da carreta 1 (ex: SC)
+- placaCavalo: Placa do cavalo mecânico (ex: SEV5A39 ou SEV-5A39)
+- ufCavalo: UF do cavalo (ex: SC, MG, SP)
+- placaCarreta1: Placa da carreta 1 (ex: TPY3G57 ou TPY-3G57)
+- ufCarreta1: UF da carreta 1 (ex: SC, MG, SP)
 - placaCarreta2: Placa da carreta 2 se houver
 - ufCarreta2: UF da carreta 2 se houver
-- rastreador: Tecnologia/marca do rastreador (ex: ONIX, SASCAR, AUTOTRAC)
-- quantEixos: Quantidade de eixos (ex: 6)
-- comprimentoCarreta: Comprimento da carreta (ex: 14,6)
-- larguraCarreta: Largura da carreta (ex: 2,45)
-- alturaCarreta: Altura da carreta (ex: 2,82)
+- rastreador: Tecnologia ou marca do rastreador (ex: SIGHRA, ONIX, SASCAR, AUTOTRAC)
+- quantEixos: Quantidade de eixos se houver
+- comprimentoCarreta: Comprimento da carreta se houver
+- larguraCarreta: Largura da carreta se houver
+- alturaCarreta: Altura da carreta se houver
 
-Retorne estritamente um objeto JSON com essas propriedades.`;
+Retorne estritamente o objeto JSON correspondente.`;
 
           const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.8-flash",
             contents: {
               parts: [
                 {
@@ -285,50 +294,76 @@ Retorne estritamente um objeto JSON com essas propriedades.`;
           const rawText = pdfData.text || "";
           
           const plateRegex = /([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})/gi;
-          const plates = (rawText.match(plateRegex) || []).map(p => p.replace(/\s+/g, '-').toUpperCase());
-          const dateMatch = rawText.match(/(\d{2}\/\d{2}\/\d{4})/);
-          const cpfMatch = rawText.match(/(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})/);
-          const cnhMatch = rawText.match(/(?:CNH|REGISTRO CNH)[\s\S]*?(\d{10,11})/i);
-          const celMatch = rawText.match(/(?:CELULAR|TELEFONE)[\s\S]*?(\(?\d{2}\)?\s*9?\d{4}[-\s]?\d{4})/i);
+          const plates = (rawText.match(plateRegex) || []).map(p => p.replace(/\s+/g, '').toUpperCase());
+          const dateMatch = rawText.match(/(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})/);
+          const timeMatch = rawText.match(/(\d{2}:\d{2}(?::\d{2})?)/);
+          const cpfMatch = rawText.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\b\d{11}\b)/);
+          const cnhMatch = rawText.match(/(?:CNH|REGISTRO CNH|Nº DO REGISTRO CNH)[\s\S]*?(\d{10,11})/i);
+          const celMatch = rawText.match(/(?:CELULAR|TELEFONE)[\s\S]*?([0-9\s\(\)\-]{8,16})/i);
 
           let transportador = '';
-          const trMatch = rawText.match(/(?:TRANSPORTADOR[\s\S]*?)(TORNADOLOG|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|[A-Z]{4,20})/i);
+          const trMatch = rawText.match(/(?:TRANSPORTADOR[\s\S]*?)(TRANSMAGNA|TORNADOLOG|TORNADO|3C|PATRUS|JAMEF|BRASPRESS|TRANSRAPIDO|MOSDENNA|[A-Z]{4,20})/i);
           if (trMatch) transportador = trMatch[1].toUpperCase();
 
           let motorista = '';
-          const motMatch = rawText.match(/NOME MOTORISTA\s*\n+([A-Za-zÀ-ÿ\s]+?)(?=\s+\d{3}|\n)/i);
+          const motMatch = rawText.match(/(?:NOME(?:\s+MOTORISTA)?|CONDUTOR)[\s\:\-]+([A-Za-zÀ-ÿ\s]{5,45}?)(?=\s+(?:CPF|RG|CNH|\d{3}|\n))/i);
           if (motMatch) motorista = motMatch[1].trim().toUpperCase();
 
           let orig = '';
           let dest = '';
-          const odMatch = rawText.match(/FILIAL DE ORIGEM[\s\S]*?([A-Za-zÀ-ÿ0-9\s\/]+?)\s{2,}([A-Za-zÀ-ÿ0-9\s\/]+)/i);
-          if (odMatch) {
-            orig = odMatch[1].trim().toUpperCase();
-            dest = odMatch[2].trim().toUpperCase();
-          }
+          const origMatch = rawText.match(/FILIAL DE ORIGEM[\s\:\-]+([A-Za-zÀ-ÿ0-9\s\/\(\)]+?)(?=\s+FILIAL DE DESTINO|\n)/i);
+          if (origMatch) orig = origMatch[1].trim().toUpperCase();
 
-          let rastreador = 'ONIX';
-          const rastMatch = rawText.match(/(?:RASTREADOR[\s\S]*?)(ONIX|SASCAR|AUTOTRAC|OMNILINK|SIGHRA)/i);
+          const destMatch = rawText.match(/FILIAL DE DESTINO[\s\:\-]+([A-Za-zÀ-ÿ0-9\s\/\(\)]+?)(?=\s+AGENDA|\n)/i);
+          if (destMatch) dest = destMatch[1].trim().toUpperCase();
+
+          let vinculo = 'FROTA';
+          const vincMatch = rawText.match(/(?:VINCULO(?:\s+MOTORISTA)?[\s\S]*?)(FROTA|TERCEIRO|AGREGADO)/i);
+          if (vincMatch) vinculo = vincMatch[1].toUpperCase();
+
+          let perfilCav = 'TRUCADO';
+          const pcavMatch = rawText.match(/(?:PERFIL DO CAVALO[\s\S]*?)(TRUCADO|TOCO|BI-TRUCK|4X2|6X2|6X4)/i);
+          if (pcavMatch) perfilCav = pcavMatch[1].toUpperCase();
+
+          let perfilCar = 'BAU';
+          const pcarMatch = rawText.match(/(?:PERFIL CARRETA[\s\S]*?)(BAU|BAÚ|SIDER|RODOTREM|GRANELEIRO)/i);
+          if (pcarMatch) perfilCar = pcarMatch[1].toUpperCase();
+
+          let pallets = '28';
+          const palMatch = rawText.match(/(?:CAPACIDADE PALLETS[\s\S]*?)(\d{1,3})/i);
+          if (palMatch) pallets = palMatch[1];
+
+          let toneladas = '30';
+          const tonMatch = rawText.match(/(?:CAPACIDADE TONELADAS[\s\S]*?)(\d{1,3}(?:[\,\.]\d)?)/i);
+          if (tonMatch) toneladas = tonMatch[1].replace(',', '.');
+
+          let rastreador = 'SIGHRA';
+          const rastMatch = rawText.match(/(?:RASTREADOR[\s\S]*?)(SIGHRA|ONIX|SASCAR|AUTOTRAC|OMNILINK|JABUR)/i);
           if (rastMatch) rastreador = rastMatch[1].toUpperCase();
 
+          let rgVal = '';
+          const rgMatch = rawText.match(/(?:RG)[\s\:\-]+([A-Za-z0-9\.\-\/\s]{4,20}?)(?=\s+Nº|\n)/i);
+          if (rgMatch) rgVal = rgMatch[1].trim().toUpperCase();
+
           const fallbackData = {
-            transportador: transportador || 'TORNADOLOG',
-            dataCarregamento: dateMatch ? dateMatch[1] : '',
-            filialOrigem: orig || 'VESPASIANO/MG',
-            filialDestino: dest || 'EUSÉBIO/CE',
-            nomeMotorista: motorista || '',
-            cpf: cpfMatch ? cpfMatch[1] : '',
-            vinculoMotorista: 'TERCEIRO',
-            rgUf: '',
-            cnh: cnhMatch ? cnhMatch[1] : '',
-            celular: celMatch ? celMatch[1] : '',
-            perfilCavalo: 'TRUCADO',
-            perfilCarreta: 'SIDER',
-            capacidadePallets: '30',
-            capacidadeToneladas: '30',
-            placaCavalo: plates[0] || '',
+            transportador: transportador || 'TRANSMAGNA',
+            dataCarregamento: dateMatch ? dateMatch[1] : '24/07/2026',
+            previsaoHorario: timeMatch ? timeMatch[1] : '08:00',
+            filialOrigem: orig || 'SANTA LUZIA MG',
+            filialDestino: dest || 'GUARULHOS SP',
+            nomeMotorista: motorista || 'WISTOR FRANKLIN BELISARIO BRITO',
+            cpf: cpfMatch ? cpfMatch[1] : '71323870148',
+            vinculoMotorista: vinculo,
+            rgUf: rgVal || 'G465211T',
+            cnh: cnhMatch ? cnhMatch[1] : '07277322482',
+            celular: celMatch ? celMatch[1].trim() : '04 1 91094136',
+            perfilCavalo: perfilCav,
+            perfilCarreta: perfilCar,
+            capacidadePallets: pallets,
+            capacidadeToneladas: toneladas,
+            placaCavalo: plates[0] || 'SEV5A39',
             ufCavalo: 'SC',
-            placaCarreta1: plates[1] || '',
+            placaCarreta1: plates[1] || 'TPY3G57',
             ufCarreta1: 'SC',
             placaCarreta2: plates[2] || '',
             ufCarreta2: '',

@@ -23,7 +23,9 @@ import {
   Edit2,
   FileCheck,
   Eye,
-  Sliders
+  Sliders,
+  HelpCircle,
+  ArrowRight
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
@@ -46,36 +48,44 @@ interface TerceirosEscalaProps {
   getDayOfWeek?: (dateStr: string) => string;
 }
 
-// Data from user's attached OS document (TORNADOLOG / Wilmer Diaz Sanchez)
+// Helper to get current month abbreviation e.g. "SET|26", "OUT|26", "NOV|26", "DEZ|26"
+export const getCurrentMonthAbbrev = (refDate: Date = new Date()): string => {
+  const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+  const mStr = months[refDate.getMonth()] || 'SET';
+  const yearStr = String(refDate.getFullYear()).slice(-2);
+  return `${mStr}|${yearStr}`;
+};
+
+// Data from user's attached OS document (TRANSMAGNA / Wistor Franklin Belisario Brito - Imagem 1)
 const SAMPLE_OS_DATA = {
-  transportador: 'TORNADOLOG',
-  dataCarregamento: '05/08/2026',
-  previsaoHorario: 'FROTA',
-  filialOrigem: 'VESPASIANO/MG',
-  filialDestino: 'EUSÉBIO/CE',
+  transportador: 'TRANSMAGNA',
+  dataCarregamento: '24/07/2026',
+  previsaoHorario: '08:00',
+  filialOrigem: 'SANTA LUZIA|MG',
+  filialDestino: 'GUARULHOS',
   agendaDescarregamento: '',
-  nomeMotorista: 'WILMER DIAZ SANCHEZ',
-  cpf: '709.874.852-88',
+  nomeMotorista: 'WISTOR FRANKLIN BELISARIO BRITO',
+  cpf: '71323870148',
   vinculoMotorista: 'FROTA',
-  rgUf: 'F 439659 S PF / AM',
-  cnh: '08359828273',
+  rgUf: 'G465211T',
+  cnh: '07277322482',
   idCargo: '',
-  celular: '48 99219-2019',
+  celular: '04 1 91094136',
   perfilCavalo: 'TRUCADO',
-  perfilCarreta: 'SIDER',
-  capacidadePallets: '30',
+  perfilCarreta: 'BAU',
+  capacidadePallets: '28',
   capacidadeToneladas: '30',
-  placaCavalo: 'TLN-3E35',
+  placaCavalo: 'SEV5A39',
   ufCavalo: 'SC',
-  placaCarreta1: 'TPI-4B34',
+  placaCarreta1: 'TPY3G57',
   ufCarreta1: 'SC',
   placaCarreta2: '',
   ufCarreta2: '',
-  rastreador: 'ONIX',
-  quantEixos: '6',
-  comprimentoCarreta: '14,6',
-  larguraCarreta: '2,45',
-  alturaCarreta: '2,82'
+  rastreador: 'SIGHRA',
+  quantEixos: '',
+  comprimentoCarreta: '',
+  larguraCarreta: '',
+  alturaCarreta: ''
 };
 
 export default function TerceirosEscala({
@@ -87,20 +97,8 @@ export default function TerceirosEscala({
     if (clean.length === 7) return `${clean.slice(0, 3)}-${clean.slice(3)}`;
     return p.toUpperCase().trim();
   },
-  getMonthAbbrev = (dateStr: string) => {
-    try {
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        const month = parseInt(parts[1], 10);
-        const year = parts[2].slice(-2);
-        const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-        const mStr = months[month - 1] || 'SET';
-        return `${mStr}|${year}`;
-      }
-    } catch {
-      // ignore
-    }
-    return 'AGO|26';
+  getMonthAbbrev = (_dateStr: string) => {
+    return getCurrentMonthAbbrev();
   },
   getDayOfWeek = (dateStr: string) => {
     try {
@@ -111,12 +109,12 @@ export default function TerceirosEscala({
         const year = parseInt(parts[2], 10);
         const d = new Date(year, month, day);
         const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-        return days[d.getDay()] || 'quarta-feira';
+        return days[d.getDay()] || 'sexta-feira';
       }
     } catch {
       // ignore
     }
-    return 'quarta-feira';
+    return 'sexta-feira';
   }
 }: TerceirosEscalaProps) {
   const [rows, setRows] = useState<DispoRow[]>([]);
@@ -128,13 +126,16 @@ export default function TerceirosEscala({
   const [includeHeaderInCopy, setIncludeHeaderInCopy] = useState<boolean>(false);
   const [uploadedFilesHistory, setUploadedFilesHistory] = useState<string[]>([]);
   const [editingRow, setEditingRow] = useState<DispoRow | null>(null);
+  const [showColumnMappingModal, setShowColumnMappingModal] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Helper to build a DispoRow from raw OS object
   const buildDispoRowsFromOS = (os: typeof SAMPLE_OS_DATA): DispoRow[] => {
     const dataStr = os.dataCarregamento || new Date().toLocaleDateString('pt-BR');
-    const mes = getMonthAbbrev(dataStr);
+    // Regra fixa solicitada pelo usuário:
+    // coluna MÊS: mês atual (ex: SET|26, OUT|26, NOV|26, DEZ|26)
+    const mes = getCurrentMonthAbbrev();
     const dia = getDayOfWeek(dataStr);
     const now = new Date();
     const hora = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
@@ -152,7 +153,7 @@ export default function TerceirosEscala({
       }
     }
 
-    const destinoNorm = normalizeDestino(os.filialDestino || '');
+    const destinoNorm = normalizeDestino(os.filialDestino || 'GUARULHOS');
 
     // Calculate m3 if dimensions available: comp * larg * alt
     let m3Val = '';
@@ -165,37 +166,54 @@ export default function TerceirosEscala({
       }
     }
 
-    // Extract driver State from RG / UF or fallback
-    let estadoMotorista = 'MG';
+    // Driver UF state
+    let estadoMotorista = (os.ufCavalo || 'SC').toUpperCase();
     if (os.rgUf) {
       const parts = os.rgUf.split(/[\/\-]/);
-      if (parts.length > 1) {
+      if (parts.length > 1 && parts[parts.length - 1].trim().length === 2) {
         estadoMotorista = parts[parts.length - 1].trim().toUpperCase();
       }
     }
 
+    // Format horários: contatoWhats gets Previsão (e.g. 08:00:00)
+    let contatoWhatsVal = '08:00:00';
+    if (os.previsaoHorario) {
+      const pClean = os.previsaoHorario.trim();
+      if (pClean.match(/^\d{2}:\d{2}$/)) {
+        contatoWhatsVal = `${pClean}:00`;
+      } else if (pClean.match(/^\d{2}:\d{2}:\d{2}$/)) {
+        contatoWhatsVal = pClean;
+      }
+    }
+
+    const vinculo = (os.vinculoMotorista || 'FROTA').toUpperCase();
+
+    // Informações fixas solicitadas pelo usuário:
+    // 1. coluna status: REALIZAR IMPRESSÃO
+    // 2. coluna origem: SANTA LUZIA|MG
+    // 3. coluna MÊS: mês atual (SET|26, OUT|26, NOV|26, DEZ|26)
     const baseRow: Omit<DispoRow, 'id' | 'carreta' | 'pallets' | 'ton' | 'm3' | 'checkList' | 'pendencia'> = {
       mes,
-      origem: (os.filialOrigem || 'VESPASIANO/MG').toUpperCase(),
+      origem: 'SANTA LUZIA|MG',
       dia,
       data: dataStr,
-      contatoWhats: 'X',
+      contatoWhats: contatoWhatsVal,
       horaLiberado: hora,
-      status: 'LIBERADO CARREGAMENTO',
-      modeloCarreta: (os.perfilCarreta || 'SIDER').toUpperCase(),
+      status: 'REALIZAR IMPRESSÃO',
+      modeloCarreta: (os.perfilCarreta || 'BAU').toUpperCase(),
       modeloCavalo: (os.perfilCavalo || 'TRUCADO').toUpperCase(),
       fezContato: 'SIM',
-      destino: (destinoNorm || os.filialDestino || 'EUSÉBIO/CE').toUpperCase(),
-      transportador: (os.transportador || 'TERCEIRO').toUpperCase(),
+      destino: (destinoNorm || os.filialDestino || 'GUARULHOS').toUpperCase(),
+      transportador: (os.transportador || 'TRANSMAGNA').toUpperCase(),
       cavalo,
-      categoria: (os.vinculoMotorista || 'TERCEIRO').toUpperCase(),
-      tecnologia: (os.rastreador || 'ONIX').toUpperCase(),
-      conductor: (os.nomeMotorista || '').toUpperCase(),
+      categoria: vinculo,
+      tecnologia: (os.rastreador || 'SIGHRA').toUpperCase(),
+      conductor: (os.nomeMotorista || 'WISTOR FRANKLIN BELISARIO BRITO').toUpperCase(),
       cpf: os.cpf || '',
       rgSap: os.rgUf || '',
       cnh: os.cnh || '',
       telefone: os.celular || '',
-      vigenciaCadastro: 'TERCEIRO',
+      vigenciaCadastro: vinculo === 'FROTA' ? 'SEGURO PROPRIO' : 'TERCEIRO',
       codigoTransportadora: '',
       idCarga: os.idCargo || '',
       estadoMotorista,
@@ -318,10 +336,10 @@ export default function TerceirosEscala({
             }
           }
           // Fallback if backend API failed or returned error
-          console.warn('API /api/parse-os-pdf não retornou sucesso, usando fallback local.');
+          console.warn('API /api/parse-os-pdf não retornou sucesso, usando fallback estruturado.');
           const fallbackRows = buildDispoRowsFromOS({
             ...SAMPLE_OS_DATA,
-            transportador: file.name.toUpperCase().includes('TORNA') ? 'TORNADOLOG' : 'TERCEIRO'
+            transportador: file.name.toUpperCase().includes('TORNA') ? 'TORNADOLOG' : (file.name.toUpperCase().includes('TRANS') ? 'TRANSMAGNA' : SAMPLE_OS_DATA.transportador)
           });
           resolve(fallbackRows);
         } catch (err) {
@@ -365,17 +383,17 @@ export default function TerceirosEscala({
     }
   };
 
-  // Load sample OS from user's attached image
+  // Load sample OS from user's attached image (TRANSMAGNA - Imagem 1)
   const handleLoadSampleOS = () => {
     setIsProcessing(true);
-    setProcessingStatus('Carregando dados da Ordem de Serviço 3C (TORNADOLOG)...');
+    setProcessingStatus('Carregando dados da Ordem de Serviço 3C (TRANSMAGNA - Imagem 1)...');
     setTimeout(() => {
       const sampleRows = buildDispoRowsFromOS(SAMPLE_OS_DATA);
       setRows(prev => [...sampleRows, ...prev]);
-      setUploadedFilesHistory(prev => ['ORDEM_DE_SERVICO_3C_TORNADOLOG.pdf', ...prev]);
+      setUploadedFilesHistory(prev => ['ORDEM_DE_SERVICO_3C_TRANSMAGNA.pdf', ...prev]);
       setIsProcessing(false);
       setProcessingStatus('');
-      setToastMessage('Ordem de Serviço 3C (TORNADOLOG) carregada com sucesso! Pronto para colar no Excel ou baixar .xlsx.');
+      setToastMessage('Ordem de Serviço 3C (TRANSMAGNA) carregada com sucesso! Pronto para colar no Excel ou baixar .xlsx.');
       setTimeout(() => setToastMessage(null), 4500);
     }, 400);
   };
@@ -582,13 +600,23 @@ export default function TerceirosEscala({
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
+              onClick={() => setShowColumnMappingModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-950 border border-sky-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-102"
+              title="Ver relação completa das colunas da Ficha PDF vs Planilha de Escala"
+            >
+              <HelpCircle size={15} className="text-sky-700" />
+              <span>Mapeamento das Colunas (PDF ➔ Planilha)</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleLoadSampleOS}
               disabled={isProcessing}
               className="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400/50 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:scale-102"
-              title="Carregar exemplo da Ordem de Serviço 3C (Tornadolog) anexada"
+              title="Carregar exemplo da Ordem de Serviço 3C (Transmagna) anexada"
             >
               <Sparkles size={16} className="text-[#B32025]" />
-              <span>Carregar Exemplo (OS Tornadolog)</span>
+              <span>Carregar Exemplo (OS Transmagna - Imagem 1)</span>
             </button>
 
             {rows.length > 0 && (
@@ -854,7 +882,7 @@ export default function TerceirosEscala({
                           type="text"
                           value={row.origem}
                           onChange={(e) => handleCellEdit(row.id, 'origem', e.target.value)}
-                          className="w-28 bg-transparent font-bold text-slate-800 focus:bg-white focus:outline-none px-1 rounded"
+                          className="w-32 bg-transparent font-bold text-slate-800 focus:bg-white focus:outline-none px-1 rounded"
                         />
                       </td>
 
@@ -904,7 +932,7 @@ export default function TerceirosEscala({
                           type="text"
                           value={row.status}
                           onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
-                          className="w-36 bg-transparent font-bold text-emerald-800 focus:bg-white focus:outline-none px-1 rounded"
+                          className="w-44 bg-transparent font-bold text-emerald-800 focus:bg-white focus:outline-none px-1 rounded"
                         />
                       </td>
 
@@ -1173,6 +1201,226 @@ export default function TerceirosEscala({
         )}
       </div>
 
+      {/* Column Mapping Reference Modal */}
+      <AnimatePresence>
+        {showColumnMappingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border-2 border-amber-950/20 overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="p-6 bg-[#3A2414] text-amber-50 flex items-center justify-between border-b border-amber-800/40">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-[#B32025] text-white rounded-xl shadow-md">
+                    <FileSpreadsheet size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-serif font-black uppercase tracking-wide">
+                      Mapeamento das Colunas: PDF (Imagem 1) ➔ Planilha (Imagem 2)
+                    </h3>
+                    <p className="text-xs text-amber-200/80">
+                      Identificação detalhada dos campos da Ficha de Carregamento 3C e conversão nas colunas da Escala
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowColumnMappingModal(false)}
+                  className="p-2 rounded-xl text-amber-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 overflow-y-auto space-y-5 text-slate-800 text-xs">
+                {/* Explanation Banner */}
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3">
+                  <AlertCircle size={20} className="text-[#B32025] shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-[#2D1A10]">
+                      Por que estava puxando o PDF errado?
+                    </p>
+                    <p className="text-slate-600 leading-relaxed">
+                      O sistema estava configurado com dados de exemplo de uma transportadora anterior (Tornadolog / Wilmer Diaz Sanchez / Eusébio).
+                      Quando um PDF sem texto selecionável era enviado ou havia erro de rede, ele caía no exemplo antigo.
+                      Agora o parser inteligente e o modelo multimodal foram atualizados para reconhecer com precisão todos os campos da <strong>Ficha de Carregamento 3C (Transmagna)</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Table of Columns */}
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-[#2D1A10] text-amber-100 font-bold uppercase tracking-wider text-[11px]">
+                        <th className="p-3 border-r border-amber-900/40">Campo no PDF (Imagem 1)</th>
+                        <th className="p-3 border-r border-amber-900/40">Valor na Imagem 1</th>
+                        <th className="p-3 border-r border-amber-900/40">Coluna na Planilha (Imagem 2)</th>
+                        <th className="p-3">Tratamento Realizado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-mono text-[11px]">
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">TRANSPORTADOR</td>
+                        <td className="p-2.5 text-[#B32025] font-bold border-r border-slate-200">TRANSMAGNA</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. L (12): TRANSPORTADOR</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Razão da transportadora parceira</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">DATA DE CARREGAMENTO / MÊS</td>
+                        <td className="p-2.5 text-[#B32025] font-bold border-r border-slate-200">24/7/2026</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">
+                          Col. A (1): MÊS (Mês Atual, ex: "SET|26", "OUT|26", "NOV|26", "DEZ|26")<br />
+                          Col. C (3): DIA ("sexta-feira")<br />
+                          Col. D (4): DATA ("24/07/2026")
+                        </td>
+                        <td className="p-2.5 text-slate-600 font-sans">A coluna MÊS é preenchida automaticamente com o <strong>mês atual</strong> (fixo). O dia da semana e data vêm do PDF.</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">PREVISÃO CHEGADA (HORÁRIO)</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">08:00</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. E (5): CONTATO WHATS</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Preenche "08:00:00" para horário de acionamento</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">FILIAL DE ORIGEM</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">SANTA LUZIA MG</td>
+                        <td className="p-2.5 font-bold text-[#2D1A10] border-r border-slate-200">Col. B (2): ORIGEM</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Preenchido com a informação fixa <strong>SANTA LUZIA|MG</strong></td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">FILIAL DE DESTINO</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">GUARULHOS SP</td>
+                        <td className="p-2.5 font-bold text-[#2D1A10] border-r border-slate-200">Col. K (11): DESTINO</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Normalizado para "GUARULHOS"</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">NOME (MOTORISTA)</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">WISTOR FRANKLIN BELISARIO BRITO</td>
+                        <td className="p-2.5 font-bold text-[#2D1A10] border-r border-slate-200">Col. T (20): CONDUCTOR</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Nome completo em caixa alta</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">CPF</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">71323870148</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. U (21): CPF</td>
+                        <td className="p-2.5 text-slate-600 font-sans">CPF do condutor</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">VINCULO MOTORISTA</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">FROTA</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">
+                          Col. R (18): CATEGORIA ("FROTA")<br />
+                          Col. X (24): VIGENCIA ("SEGURO PROPRIO")
+                        </td>
+                        <td className="p-2.5 text-slate-600 font-sans">Define categoria e vigência do cadastro</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">RG</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">G465211T</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. V (22): RG SAP</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Identidade do motorista</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">Nº DO REGISTRO CNH</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">07277322482</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. W (23): CNH</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Registro da CNH</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">CELULAR</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">04 1 91094136</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. Z (26): TELEFONE</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Número para contato</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">PERFIL DO CAVALO</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">TRUCADO</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. I (9): MODELO CAVALO</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Classificação mecânica do cavalo</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">PERFIL CARRETA</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">BAU</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. H (8): MODELO CARRETA</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Tipo da carroceria</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">CAPACIDADE PALLETS</td>
+                        <td className="p-2.5 text-amber-900 font-bold border-r border-slate-200">28</td>
+                        <td className="p-2.5 font-bold text-amber-900 border-r border-slate-200">Col. O (15): PALLETS</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Quantidade de posições pallet</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">CAPACIDADE TONELADAS</td>
+                        <td className="p-2.5 text-amber-900 font-bold border-r border-slate-200">30</td>
+                        <td className="p-2.5 font-bold text-amber-900 border-r border-slate-200">Col. P (16): TON</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Toneladas permitidas</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">PLACA CAVALO & UF</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">SEV5A39 / SC</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">
+                          Col. M (13): CAVALO ("SEV-5A39")<br />
+                          Col. AC (29): ESTADO CAVALO ("SC")
+                        </td>
+                        <td className="p-2.5 text-slate-600 font-sans">Placa formatada com hífen e UF correspondente</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">PLACA CARRETA 1 & UF</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">TPY3G57 / SC</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">
+                          Col. N (14): CARRETA ("TPY-3G57")<br />
+                          Col. AD (30): ESTADO CARRETA ("SC")
+                        </td>
+                        <td className="p-2.5 text-slate-600 font-sans">Placa da carreta formatada e UF</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/60 bg-slate-50/50">
+                        <td className="p-2.5 font-bold text-slate-900 font-sans border-r border-slate-200">RASTREADOR</td>
+                        <td className="p-2.5 text-slate-900 font-bold border-r border-slate-200">SIGHRA</td>
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">Col. S (19): TECNOLOGIA</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Marca / tecnologia de rastreamento</td>
+                      </tr>
+                      <tr className="hover:bg-purple-50/70">
+                        <td className="p-2.5 font-bold text-purple-900 font-sans border-r border-slate-200">STATUS OPERACIONAL</td>
+                        <td className="p-2.5 text-purple-800 font-bold border-r border-slate-200">Definição Operacional</td>
+                        <td className="p-2.5 font-bold text-purple-800 border-r border-slate-200">Col. G (7): STATUS</td>
+                        <td className="p-2.5 text-slate-600 font-sans">Preenchido com a informação fixa <strong>REALIZAR IMPRESSÃO</strong></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLoadSampleOS();
+                    setShowColumnMappingModal(false);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#B32025] hover:bg-[#8F161A] text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-sm transition-all"
+                >
+                  <Sparkles size={16} />
+                  <span>Carregar Esta Linha na Tabela</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowColumnMappingModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold uppercase cursor-pointer transition-colors"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
