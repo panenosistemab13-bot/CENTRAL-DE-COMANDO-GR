@@ -21,7 +21,8 @@ import {
   Database,
   Save,
   X,
-  CheckCircle2
+  CheckCircle2,
+  User
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
@@ -752,6 +753,7 @@ export default function ApoliceEscala({
         !searchTerm ||
         item.cavalo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.carretas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.motorista && item.motorista.toLowerCase().includes(searchTerm.toLowerCase())) ||
         item.transportador.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.vigenciaCadastro.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.checkList.toLowerCase().includes(searchTerm.toLowerCase());
@@ -784,11 +786,12 @@ export default function ApoliceEscala({
   const handleCopyTable = () => {
     if (filteredItems.length === 0) return;
 
-    const headers = ['CAVALO', 'CARRETAS', 'TRANSPORTADOR', 'VIGENCIA DO CADASTRO', 'CHECK LIST', 'APOLICE'];
+    const headers = ['CAVALO', 'CARRETAS', 'TRANSPORTADOR', 'MOTORISTA', 'VIGENCIA DO CADASTRO', 'CHECK LIST', 'APOLICE'];
     const rows = filteredItems.map(i => [
       i.cavalo,
       i.carretas,
       i.transportador,
+      i.motorista || '-',
       i.vigenciaCadastro,
       i.checkList,
       i.apolice
@@ -809,6 +812,7 @@ export default function ApoliceEscala({
       CAVALO: i.cavalo,
       CARRETAS: i.carretas,
       TRANSPORTADOR: i.transportador,
+      MOTORISTA: i.motorista || '-',
       'VIGENCIA DO CADASTRO': i.vigenciaCadastro,
       'CHECK LIST': i.checkList,
       APOLICE: i.apolice
@@ -1081,6 +1085,13 @@ export default function ApoliceEscala({
 
                 <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[180px]">
                   <div className="flex items-center justify-center gap-1.5">
+                    <User size={15} />
+                    <span>MOTORISTA</span>
+                  </div>
+                </th>
+
+                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[180px]">
+                  <div className="flex items-center justify-center gap-1.5">
                     <Calendar size={15} />
                     <span>VIGÊNCIA DO CADASTRO</span>
                   </div>
@@ -1108,7 +1119,7 @@ export default function ApoliceEscala({
             <tbody className="divide-y divide-slate-800/80">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-14 text-center text-slate-400 font-sans">
+                  <td colSpan={9} className="py-14 text-center text-slate-400 font-sans">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Truck size={36} className="text-slate-600" />
                       <p className="font-bold text-slate-300 text-sm">
@@ -1162,6 +1173,18 @@ export default function ApoliceEscala({
                       {/* TRANSPORTADOR */}
                       <td className="py-3.5 px-4 font-black uppercase text-white border-r border-slate-800/60">
                         {item.transportador}
+                      </td>
+
+                      {/* MOTORISTA */}
+                      <td className="py-3.5 px-4 font-bold text-white border-r border-slate-800/60 whitespace-nowrap text-left">
+                        {item.motorista ? (
+                          <div className="flex items-center gap-1.5">
+                            <User size={14} className="text-cyan-400 shrink-0" />
+                            <span className="text-slate-100 uppercase">{item.motorista}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-500 font-normal">-</span>
+                        )}
                       </td>
 
                       {/* VIGÊNCIA DO CADASTRO (Green badge block when SEGURO PRÓPRIO as in image.png) */}

@@ -186,7 +186,7 @@ Retorne estritamente o array JSON com as linhas encontradas.`;
     }
   });
 
-  app.post("/api/parse-os-pdf", async (req, res) => {
+  app.post(["/api/parse-os-pdf", "/api/parse-terceiros-pdf"], async (req, res) => {
     try {
       const { fileBase64, mimeType, fileName } = req.body;
 
