@@ -238,7 +238,7 @@ Extraia com exatidão e sem alucinações:
 - idCargo: ID 3 Cargo se houver
 - celular: Número de telefone ou celular (ex: 04 1 91094136)
 - perfilCavalo: Perfil do Cavalo mecânico (ex: TRUCADO, TOCO)
-- perfilCarreta: Perfil da Carreta (ex: BAU, SIDER, RODOTREM)
+- perfilCarreta: Perfil da Carreta (ex: BAÚ, SIDER, RODOTREM BAÚ)
 - capacidadePallets: Capacidade de pallets em número (ex: 28, 30)
 - capacidadeToneladas: Capacidade em toneladas em número (ex: 30)
 - placaCavalo: Placa do cavalo mecânico (ex: SEV5A39 ou SEV-5A39)

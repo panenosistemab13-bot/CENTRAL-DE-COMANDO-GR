@@ -58,6 +58,25 @@ export const getCurrentMonthAbbrev = (refDate: Date = new Date()): string => {
   return `${mStr}|${yearStr}`;
 };
 
+// Helper to normalize STATUS to match exact format: REALIZAR IMPRESSÃO
+export const normalizeStatus = (status?: string): string => {
+  if (!status || !status.trim()) return 'REALIZAR IMPRESSÃO';
+  const clean = status.trim().toUpperCase();
+  if (clean === 'REALIZAR IMPRESSAO' || clean === 'REALIZAR IMPRESSÃO') return 'REALIZAR IMPRESSÃO';
+  return clean;
+};
+
+// Helper to normalize MODELO CARRETA to match exact format: BAÚ (with accent Ú)
+export const normalizeModeloCarreta = (perfil?: string): string => {
+  if (!perfil || !perfil.trim()) return 'BAÚ';
+  let clean = perfil.trim().toUpperCase();
+  if (clean === 'BAU') return 'BAÚ';
+  if (clean.includes('BAU') && !clean.includes('BAÚ')) {
+    clean = clean.replace(/\bBAU\b/g, 'BAÚ');
+  }
+  return clean;
+};
+
 // Data from user's attached OS document (TRANSMAGNA / Wistor Franklin Belisario Brito - Imagem 1)
 const SAMPLE_OS_DATA = {
   transportador: 'TRANSMAGNA',
@@ -74,7 +93,7 @@ const SAMPLE_OS_DATA = {
   idCargo: '',
   celular: '04 1 91094136',
   perfilCavalo: 'TRUCADO',
-  perfilCarreta: 'BAU',
+  perfilCarreta: 'BAÚ',
   capacidadePallets: '28',
   capacidadeToneladas: '30',
   placaCavalo: 'SEV5A39',
@@ -326,7 +345,7 @@ export default function TerceirosEscala({
       contatoWhats: contatoWhatsVal,
       horaLiberado: hora,
       status: 'REALIZAR IMPRESSÃO',
-      modeloCarreta: (os.perfilCarreta || 'BAU').toUpperCase(),
+      modeloCarreta: normalizeModeloCarreta(os.perfilCarreta || 'BAÚ'),
       modeloCavalo: (os.perfilCavalo || 'TRUCADO').toUpperCase(),
       fezContato: 'SIM',
       destino: (destinoNorm || os.filialDestino || 'GUARULHOS').toUpperCase(),
@@ -402,15 +421,15 @@ export default function TerceirosEscala({
   // Convert row into 33 exact TSV columns (A to AG) for Excel clipboard pasting
   const getRowTSV = (row: DispoRow): string => {
     const cols = [
-      row.mes,                            // 1 (A)
-      row.origem,                         // 2 (B)
-      row.dia,                            // 3 (C)
-      row.data,                           // 4 (D)
-      row.contatoWhats,                   // 5 (E)
-      row.horaLiberado,                   // 6 (F)
-      row.status,                         // 7 (G)
-      row.modeloCarreta,                  // 8 (H)
-      row.modeloCavalo,                   // 9 (I)
+      row.mes,                                      // 1 (A)
+      row.origem,                                   // 2 (B)
+      row.dia,                                      // 3 (C)
+      row.data,                                     // 4 (D)
+      row.contatoWhats,                             // 5 (E)
+      row.horaLiberado,                             // 6 (F)
+      normalizeStatus(row.status),                  // 7 (G)
+      normalizeModeloCarreta(row.modeloCarreta),    // 8 (H)
+      row.modeloCavalo,                             // 9 (I)
       row.fezContato,                     // 10 (J)
       row.destino,                        // 11 (K)
       row.transportador,                  // 12 (L)
@@ -581,8 +600,8 @@ export default function TerceirosEscala({
         row.data,
         row.contatoWhats,
         row.horaLiberado,
-        row.status,
-        row.modeloCarreta,
+        normalizeStatus(row.status),
+        normalizeModeloCarreta(row.modeloCarreta),
         row.modeloCavalo,
         row.fezContato,
         row.destino,
@@ -1067,9 +1086,9 @@ export default function TerceirosEscala({
                       <td className="p-2 border-r border-slate-200">
                         <input
                           type="text"
-                          value={row.status}
+                          value={normalizeStatus(row.status)}
                           onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
-                          className="w-44 bg-transparent font-bold text-emerald-800 focus:bg-white focus:outline-none px-1 rounded"
+                          className="w-44 bg-transparent font-bold text-rose-500 focus:bg-white focus:outline-none px-1 rounded uppercase"
                         />
                       </td>
 
@@ -1077,9 +1096,9 @@ export default function TerceirosEscala({
                       <td className="p-2 border-r border-slate-200">
                         <input
                           type="text"
-                          value={row.modeloCarreta}
+                          value={normalizeModeloCarreta(row.modeloCarreta)}
                           onChange={(e) => handleCellEdit(row.id, 'modeloCarreta', e.target.value)}
-                          className="w-24 bg-transparent font-bold text-slate-700 focus:bg-white focus:outline-none px-1 rounded"
+                          className="w-24 bg-transparent font-bold text-slate-800 focus:bg-white focus:outline-none px-1 rounded uppercase"
                         />
                       </td>
 
