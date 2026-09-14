@@ -723,7 +723,7 @@ export default function Escala({ onBack }: EscalaProps) {
     return getChecklistDetails(cavaloPlate, carretaPlate).checkList;
   };
 
-  // Helper to format license plate with hyphen e.g. POZ4431 -> POZ-4431, UUO8D35 -> UUO-8D35
+  // Helper to format license plate with hyphen e.g. POZ4431 -> POZ-4431, UUO8D35 -> UUO-8D35 (Usado para Cavalo)
   const formatPlateWithHyphen = (plateStr: string): string => {
     if (!plateStr) return '';
     const trimmed = plateStr.trim().toUpperCase();
@@ -735,6 +735,12 @@ export default function Escala({ onBack }: EscalaProps) {
       return `${clean.slice(0, 3)}-${clean.slice(3)}`;
     }
     return trimmed;
+  };
+
+  // Helper to format trailer license plate WITHOUT hyphen e.g. POG-7735 -> POG7735, ABC-1D23 -> ABC1D23 (Usado para Carreta)
+  const formatPlateWithoutHyphen = (plateStr: string): string => {
+    if (!plateStr) return '';
+    return plateStr.replace(/[^A-Z0-9]/gi, '').toUpperCase().trim();
   };
 
   // Helper to get current date formatted dd/MM/yyyy
@@ -855,8 +861,8 @@ export default function Escala({ onBack }: EscalaProps) {
       const rawTon = cols[9] || '34';
 
       const placaCavalo = formatPlateWithHyphen(rawPlacaCavalo);
-      const bau1 = formatPlateWithHyphen(rawBau1);
-      const bau2 = formatPlateWithHyphen(rawBau2);
+      const bau1 = formatPlateWithoutHyphen(rawBau1);
+      const bau2 = formatPlateWithoutHyphen(rawBau2);
 
       // Always format Santa Luzia as "SANTA LUZIA|MG" (Fixed requirement)
       const origem = 'SANTA LUZIA|MG';
@@ -925,7 +931,7 @@ export default function Escala({ onBack }: EscalaProps) {
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: formatPlateWithHyphen(placaCavalo),
-          carreta: formatPlateWithHyphen(bau1),
+          carreta: formatPlateWithoutHyphen(bau1),
           pallets: palletsHalf,
           ton: tonHalf,
           m3: '',
@@ -962,7 +968,7 @@ export default function Escala({ onBack }: EscalaProps) {
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: formatPlateWithHyphen(placaCavalo),
-          carreta: formatPlateWithHyphen(bau2),
+          carreta: formatPlateWithoutHyphen(bau2),
           pallets: palletsHalf,
           ton: tonHalf,
           m3: '',
@@ -1004,7 +1010,7 @@ export default function Escala({ onBack }: EscalaProps) {
           destino: destino.toUpperCase(),
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: formatPlateWithHyphen(placaCavalo),
-          carreta: formatPlateWithHyphen(singleCarreta),
+          carreta: formatPlateWithoutHyphen(singleCarreta),
           pallets: rawPallets,
           ton: rawTon,
           m3: '',
@@ -1056,7 +1062,7 @@ export default function Escala({ onBack }: EscalaProps) {
           }
         } else if (field === 'cavalo' || field === 'carreta') {
           const cav = field === 'cavalo' ? formatPlateWithHyphen(value) : formatPlateWithHyphen(r.cavalo);
-          const car = field === 'carreta' ? formatPlateWithHyphen(value) : formatPlateWithHyphen(r.carreta);
+          const car = field === 'carreta' ? formatPlateWithoutHyphen(value) : formatPlateWithoutHyphen(r.carreta);
           updated.cavalo = cav;
           updated.carreta = car;
           const chk = getChecklistDetails(cav, car);
@@ -1083,8 +1089,8 @@ export default function Escala({ onBack }: EscalaProps) {
       row.fezContato,           // 10 (J)
       row.destino,              // 11 (K)
       row.transportador,        // 12 (L)
-      formatPlateWithHyphen(row.cavalo),  // 13 (M)
-      formatPlateWithHyphen(row.carreta), // 14 (N)
+      formatPlateWithHyphen(row.cavalo),     // 13 (M) - Cavalo COM hífen
+      formatPlateWithoutHyphen(row.carreta), // 14 (N/O) - Carreta SEM hífen (Ex: POG7735)
       row.pallets,              // 15 (O)
       row.ton,                  // 16 (P)
       row.m3,                   // 17 (Q)
@@ -1231,7 +1237,7 @@ export default function Escala({ onBack }: EscalaProps) {
         row.destino,
         row.transportador,
         formatPlateWithHyphen(row.cavalo),
-        formatPlateWithHyphen(row.carreta),
+        formatPlateWithoutHyphen(row.carreta),
         row.pallets,
         row.ton,
         row.m3,
