@@ -59,12 +59,13 @@ export const getCurrentMonthAbbrev = (refDate: Date = new Date()): string => {
   return `${mStr}|${yearStr}`;
 };
 
-// Helper to normalize STATUS to match exact format: REALIZAR IMPRESSÃO
+// Helper to normalize STATUS to match exact format: REALIZAR IMPRESSÃO  
 export const normalizeStatus = (status?: string): string => {
-  if (!status || !status.trim()) return 'REALIZAR IMPRESSÃO';
-  const clean = status.trim().toUpperCase();
-  if (clean === 'REALIZAR IMPRESSAO' || clean === 'REALIZAR IMPRESSÃO') return 'REALIZAR IMPRESSÃO';
-  return clean;
+  if (!status) return 'REALIZAR IMPRESSÃO  ';
+  const trimmed = status.trim().toUpperCase();
+  if (trimmed === 'REALIZAR IMPRESSAO' || trimmed === 'REALIZAR IMPRESSÃO') return 'REALIZAR IMPRESSÃO  ';
+  if (status === 'REALIZAR IMPRESSÃO  ') return 'REALIZAR IMPRESSÃO  ';
+  return status;
 };
 
 // Helper to normalize MODELO CARRETA to match exact format: BAÚ (with accent Ú)
@@ -345,7 +346,7 @@ export default function TerceirosEscala({
       data: dataStr,
       contatoWhats: contatoWhatsVal,
       horaLiberado: hora,
-      status: 'REALIZAR IMPRESSÃO',
+      status: 'REALIZAR IMPRESSÃO  ',
       modeloCarreta: normalizeModeloCarreta(os.perfilCarreta || 'BAÚ'),
       modeloCavalo: (os.perfilCavalo || 'TRUCADO').toUpperCase(),
       fezContato: 'SIM',
@@ -1092,7 +1093,7 @@ export default function TerceirosEscala({
                             className="w-full appearance-none bg-transparent font-black text-[#f43f5e] text-xs py-1 pl-1 pr-6 cursor-pointer focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-400 rounded uppercase tracking-wide font-sans"
                             title="Status de emissão (Menu Suspenso)"
                           >
-                            <option value="REALIZAR IMPRESSÃO" className="text-rose-600 font-bold bg-white">REALIZAR IMPRESSÃO</option>
+                            <option value="REALIZAR IMPRESSÃO  " className="text-rose-600 font-bold bg-white">REALIZAR IMPRESSÃO  </option>
                             <option value="AGUARDANDO LIBERAÇÃO" className="text-amber-600 font-bold bg-white">AGUARDANDO LIBERAÇÃO</option>
                             <option value="LIBERADO" className="text-emerald-600 font-bold bg-white">LIBERADO</option>
                             <option value="IMPRESSO" className="text-blue-600 font-bold bg-white">IMPRESSO</option>
