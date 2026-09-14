@@ -37,6 +37,8 @@ import FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 import TerceirosEscala from './TerceirosEscala';
 import ApoliceEscala, { ApoliceItem } from './ApoliceEscala';
+import TransportadorEscala from './TransportadorEscala';
+import { DEFAULT_TRANSPORTADORAS } from '../data/transportadoras';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, push, remove, update } from 'firebase/database';
 import { parseISO, differenceInDays } from 'date-fns';
@@ -325,7 +327,7 @@ interface EscalaProps {
 }
 
 export default function Escala({ onBack }: EscalaProps) {
-  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros' | 'apolice'>('escala');
+  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros' | 'apolice' | 'transportador'>('escala');
 
   // Ensure '1. Conversor de Escala' is always selected when entering Escala
   useEffect(() => {
@@ -342,6 +344,16 @@ export default function Escala({ onBack }: EscalaProps) {
     } catch {
       return [];
     }
+  });
+  const [transportadoras, setTransportadoras] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('transportadoras_lista');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_TRANSPORTADORAS;
   });
   const [motoristas3C, setMotoristas3C] = useState<Motorista3C[]>([]);
   const [searchMotorista, setSearchMotorista] = useState<string>('');
@@ -479,6 +491,42 @@ export default function Escala({ onBack }: EscalaProps) {
       set(apoliceRef, newItems);
     } catch (err) {
       console.error('Erro ao salvar apólices no Firebase RTDB:', err);
+    }
+  };
+
+  // Subscribe to Transportadoras database (Firebase RTDB + LocalStorage sync)
+  useEffect(() => {
+    try {
+      const transpRef = ref(rtdb, 'transportadoras_lista');
+      const unsubscribe = onValue(transpRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && Array.isArray(data) && data.length > 0) {
+          setTransportadoras(data);
+          try {
+            localStorage.setItem('transportadoras_lista', JSON.stringify(data));
+          } catch (err) {
+            console.error('Erro ao salvar transportadoras no localStorage:', err);
+          }
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.error('Erro ao conectar às transportadoras no Firebase RTDB:', err);
+    }
+  }, []);
+
+  const handleUpdateTransportadoras = (newList: string[]) => {
+    setTransportadoras(newList);
+    try {
+      localStorage.setItem('transportadoras_lista', JSON.stringify(newList));
+    } catch (err) {
+      console.error('Erro ao salvar transportadoras no localStorage:', err);
+    }
+    try {
+      const transpRef = ref(rtdb, 'transportadoras_lista');
+      set(transpRef, newList);
+    } catch (err) {
+      console.error('Erro ao salvar transportadoras no Firebase RTDB:', err);
     }
   };
 
@@ -1476,6 +1524,22 @@ export default function Escala({ onBack }: EscalaProps) {
             <span>4. Apólice</span>
             <span className="ml-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-mono font-bold">
               Lista
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('transportador')}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              activeTab === 'transportador'
+                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
+                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
+            )}
+          >
+            <Truck size={16} className="text-amber-400" />
+            <span>5. Transportador</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-mono font-bold">
+              {transportadoras.length}
             </span>
           </button>
 
@@ -2511,16 +2575,23 @@ export default function Escala({ onBack }: EscalaProps) {
         <TerceirosEscala
           checklistItems={checklistItems}
           apoliceItems={apoliceItems}
+          transportadoras={transportadoras}
           getChecklistDetails={getChecklistDetails}
           formatPlateWithHyphen={formatPlateWithHyphen}
           getMonthAbbrev={getMonthAbbrev}
           getDayOfWeek={getDayOfWeek}
         />
-      ) : (
+      ) : activeTab === 'apolice' ? (
         /* Tab 4: Apólice (Classificação de Apólices & Conjuntos) */
         <ApoliceEscala
           items={apoliceItems}
           onItemsChange={handleSaveApoliceItems}
+        />
+      ) : (
+        /* Tab 5: Transportador (Base Oficial de Transportadores) */
+        <TransportadorEscala
+          transportadoras={transportadoras}
+          onUpdateTransportadoras={handleUpdateTransportadoras}
         />
       )}
 
