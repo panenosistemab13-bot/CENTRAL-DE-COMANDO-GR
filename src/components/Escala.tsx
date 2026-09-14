@@ -743,6 +743,44 @@ export default function Escala({ onBack }: EscalaProps) {
     return plateStr.replace(/[^A-Z0-9]/gi, '').toUpperCase().trim();
   };
 
+  // Helper to parse pallets from PALETIZAÇÃO column (Handles 24/BAU duplication and values > 24 division)
+  const parsePalletsInfo = (rawPallets: string, isTwoBaus: boolean): { row1Pallets: string; row2Pallets: string } => {
+    if (!rawPallets || !rawPallets.trim()) {
+      return isTwoBaus ? { row1Pallets: '24', row2Pallets: '24' } : { row1Pallets: '48', row2Pallets: '' };
+    }
+
+    const cleanRaw = rawPallets.trim().toUpperCase();
+
+    // Pattern like "24/BAU", "24/BAÚ", "24/BÁU", "24 / BAU", "26/BAU", "24/CARRETA", "24/B"
+    const bauMatch = cleanRaw.match(/(\d+(?:[.,]\d+)?)\s*\/\s*(?:BA[UÚ]|BÁU|CARRETA|B|C)?/i);
+    if (bauMatch) {
+      const valPerBau = Math.round(parseFloat(bauMatch[1].replace(',', '.')));
+      const strVal = String(valPerBau);
+      return isTwoBaus ? { row1Pallets: strVal, row2Pallets: strVal } : { row1Pallets: strVal, row2Pallets: '' };
+    }
+
+    // Also check if text has any number
+    const numMatch = cleanRaw.match(/\d+(?:[.,]\d+)?/);
+    if (numMatch) {
+      const num = parseFloat(numMatch[0].replace(',', '.'));
+      if (isTwoBaus) {
+        if (num > 24) {
+          // Caso a paletização esteja acima de 24, divide o valor para as duas linhas
+          const half = String(Math.round(num / 2));
+          return { row1Pallets: half, row2Pallets: half };
+        } else {
+          // Se for 24 ou menor (ex: 24), duplica a informação para as duas linhas
+          const strVal = String(Math.round(num));
+          return { row1Pallets: strVal, row2Pallets: strVal };
+        }
+      } else {
+        return { row1Pallets: String(Math.round(num)), row2Pallets: '' };
+      }
+    }
+
+    return isTwoBaus ? { row1Pallets: cleanRaw, row2Pallets: cleanRaw } : { row1Pallets: cleanRaw, row2Pallets: '' };
+  };
+
   // Helper to get current date formatted dd/MM/yyyy
   const getTodayDateStr = (): string => {
     const now = new Date();
@@ -943,9 +981,8 @@ export default function Escala({ onBack }: EscalaProps) {
       const isTwoBaus = Boolean(bau1 && bau2);
 
       if (isTwoBaus) {
-        // Divide Pallets & Ton half-and-half between Baú 1 and Baú 2
-        const numP = parseFloat(rawPallets);
-        const palletsHalf = !isNaN(numP) ? String(Math.round(numP / 2)) : rawPallets;
+        // Divide Pallets & Ton half-and-half between Baú 1 and Baú 2 (ou duplica se 24/BAU ou <=24)
+        const { row1Pallets, row2Pallets } = parsePalletsInfo(rawPallets, true);
 
         const numT = parseFloat(rawTon);
         const tonHalf = !isNaN(numT) ? String(numT / 2) : rawTon;
@@ -977,7 +1014,7 @@ export default function Escala({ onBack }: EscalaProps) {
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: formatPlateWithHyphen(placaCavalo),
           carreta: formatPlateWithoutHyphen(bau1),
-          pallets: palletsHalf,
+          pallets: row1Pallets,
           ton: tonHalf,
           m3: '',
           categoria: defaults.categoria, // FROTA
@@ -1014,7 +1051,7 @@ export default function Escala({ onBack }: EscalaProps) {
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: formatPlateWithHyphen(placaCavalo),
           carreta: formatPlateWithoutHyphen(bau2),
-          pallets: palletsHalf,
+          pallets: row2Pallets,
           ton: tonHalf,
           m3: '',
           categoria: defaults.categoria, // FROTA
@@ -1039,6 +1076,7 @@ export default function Escala({ onBack }: EscalaProps) {
         // Single Baú
         const singleCarreta = bau1 || bau2;
         const chkDetails = getChecklistDetails(placaCavalo, singleCarreta);
+        const { row1Pallets } = parsePalletsInfo(rawPallets, false);
 
         const row: DispoRow = {
           id: `row-${index}-${Date.now()}`,
@@ -1056,7 +1094,7 @@ export default function Escala({ onBack }: EscalaProps) {
           transportador: defaults.transportador, // Always "3C" by default
           cavalo: formatPlateWithHyphen(placaCavalo),
           carreta: formatPlateWithoutHyphen(singleCarreta),
-          pallets: rawPallets,
+          pallets: row1Pallets,
           ton: rawTon,
           m3: '',
           categoria: defaults.categoria, // FROTA
