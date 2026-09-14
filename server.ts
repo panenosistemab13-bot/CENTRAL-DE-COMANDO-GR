@@ -73,7 +73,7 @@ Campos exigidos em cada objeto da lista JSON:
 Retorne estritamente o array JSON com as linhas encontradas.`;
 
           const response = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
+            model: "gemini-2.5-flash",
             contents: {
               parts: [
                 {
@@ -286,7 +286,7 @@ Retorne estritamente o objeto JSON correspondente.`;
           }
 
           const response = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
+            model: "gemini-2.5-flash",
             contents: { parts },
             config: {
               responseMimeType: "application/json",
@@ -374,28 +374,28 @@ Retorne estritamente o objeto JSON correspondente.`;
         if (rgMatch) rgVal = rgMatch[1].trim().toUpperCase();
 
         const fallbackData = {
-          transportador: transportador || 'TRANSMAGNA',
-          dataCarregamento: dateMatch ? dateMatch[1] : '24/07/2026',
-          previsaoHorario: timeMatch ? timeMatch[1] : '08:00',
-          filialOrigem: orig || 'SANTA LUZIA MG',
-          filialDestino: dest || 'GUARULHOS SP',
-          nomeMotorista: motorista || 'WISTOR FRANKLIN BELISARIO BRITO',
-          cpf: cpfMatch ? cpfMatch[1] : '71323870148',
-          vinculoMotorista: vinculo,
-          rgUf: rgVal || 'G465211T',
-          cnh: cnhMatch ? cnhMatch[1] : '07277322482',
-          celular: celMatch ? celMatch[1].trim() : '04 1 91094136',
-          perfilCavalo: perfilCav,
-          perfilCarreta: perfilCar,
-          capacidadePallets: pallets,
-          capacidadeToneladas: toneladas,
-          placaCavalo: plates[0] || 'SEV5A39',
-          ufCavalo: 'SC',
-          placaCarreta1: plates[1] || 'TPY3G57',
-          ufCarreta1: 'SC',
+          transportador: transportador || '',
+          dataCarregamento: dateMatch ? dateMatch[1] : '',
+          previsaoHorario: timeMatch ? timeMatch[1] : '',
+          filialOrigem: orig || '',
+          filialDestino: dest || '',
+          nomeMotorista: motorista || '',
+          cpf: cpfMatch ? cpfMatch[1] : '',
+          vinculoMotorista: vinculo || 'FROTA',
+          rgUf: rgVal || '',
+          cnh: cnhMatch ? cnhMatch[1] : '',
+          celular: celMatch ? celMatch[1].trim() : '',
+          perfilCavalo: perfilCav || 'TRUCADO',
+          perfilCarreta: perfilCar || 'BAÚ',
+          capacidadePallets: pallets || '',
+          capacidadeToneladas: toneladas || '',
+          placaCavalo: plates[0] || '',
+          ufCavalo: '',
+          placaCarreta1: plates[1] || '',
+          ufCarreta1: '',
           placaCarreta2: plates[2] || '',
           ufCarreta2: '',
-          rastreador: rastreador
+          rastreador: rastreador || ''
         };
 
         return res.status(200).json({ success: true, data: fallbackData });
@@ -505,7 +505,7 @@ Retorne estritamente o objeto JSON correspondente.`;
 
         // 2. Correção do modelo para a versão existente
         const genResponse = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
+            model: "gemini-2.5-flash",
             contents: { parts },
             config: config
         });

@@ -79,37 +79,36 @@ export const normalizeModeloCarreta = (perfil?: string): string => {
   return clean;
 };
 
-// Data from user's attached OS document (TRANSMAGNA / Wistor Franklin Belisario Brito - Imagem 1)
-const SAMPLE_OS_DATA = {
-  transportador: 'TRANSMAGNA',
-  dataCarregamento: '24/07/2026',
-  previsaoHorario: '08:00',
-  filialOrigem: 'SANTA LUZIA|MG',
-  filialDestino: 'GUARULHOS',
-  agendaDescarregamento: '',
-  nomeMotorista: 'WISTOR FRANKLIN BELISARIO BRITO',
-  cpf: '71323870148',
-  vinculoMotorista: 'FROTA',
-  rgUf: 'G465211T',
-  cnh: '07277322482',
-  idCargo: '',
-  celular: '04 1 91094136',
-  perfilCavalo: 'TRUCADO',
-  perfilCarreta: 'BAÚ',
-  capacidadePallets: '28',
-  capacidadeToneladas: '30',
-  placaCavalo: 'SEV5A39',
-  ufCavalo: 'SC',
-  placaCarreta1: 'TPY3G57',
-  ufCarreta1: 'SC',
-  placaCarreta2: '',
-  ufCarreta2: '',
-  rastreador: 'SIGHRA',
-  quantEixos: '',
-  comprimentoCarreta: '',
-  larguraCarreta: '',
-  alturaCarreta: ''
-};
+interface OSDataObject {
+  transportador?: string;
+  dataCarregamento?: string;
+  previsaoHorario?: string;
+  filialOrigem?: string;
+  filialDestino?: string;
+  agendaDescarregamento?: string;
+  nomeMotorista?: string;
+  cpf?: string;
+  vinculoMotorista?: string;
+  rgUf?: string;
+  cnh?: string;
+  idCargo?: string;
+  celular?: string;
+  perfilCavalo?: string;
+  perfilCarreta?: string;
+  capacidadePallets?: string;
+  capacidadeToneladas?: string;
+  placaCavalo?: string;
+  ufCavalo?: string;
+  placaCarreta1?: string;
+  ufCarreta1?: string;
+  placaCarreta2?: string;
+  ufCarreta2?: string;
+  rastreador?: string;
+  quantEixos?: string;
+  comprimentoCarreta?: string;
+  larguraCarreta?: string;
+  alturaCarreta?: string;
+}
 
 export default function TerceirosEscala({
   checklistItems = [],
@@ -256,44 +255,42 @@ export default function TerceirosEscala({
     return null;
   };
 
-  // Helper to build a DispoRow from raw OS object
-  const buildDispoRowsFromOS = (os: typeof SAMPLE_OS_DATA): DispoRow[] => {
+  // Helper to build DispoRow from raw OS object (extratado do arquivo real)
+  const buildDispoRowsFromOS = (os: OSDataObject): DispoRow[] => {
     const dataStr = os.dataCarregamento || new Date().toLocaleDateString('pt-BR');
-    // Regra fixa solicitada pelo usuário:
-    // coluna MÊS: mês atual (ex: SET|26, OUT|26, NOV|26, DEZ|26)
     const mes = getCurrentMonthAbbrev();
     const dia = getDayOfWeek(dataStr);
     const now = new Date();
     const hora = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-    const cavalo = formatPlateWithHyphen(os.placaCavalo);
-    const carreta1 = formatPlateWithHyphen(os.placaCarreta1);
-    const carreta2 = formatPlateWithHyphen(os.placaCarreta2);
+    const cavalo = os.placaCavalo ? formatPlateWithHyphen(os.placaCavalo) : '';
+    const carreta1 = os.placaCarreta1 ? formatPlateWithHyphen(os.placaCarreta1) : '';
+    const carreta2 = os.placaCarreta2 ? formatPlateWithHyphen(os.placaCarreta2) : '';
 
     let chkDetails1 = { checkList: '', pendencia: '' };
     let chkDetails2 = { checkList: '', pendencia: '' };
-    if (getChecklistDetails) {
+    if (getChecklistDetails && cavalo) {
       chkDetails1 = getChecklistDetails(cavalo, carreta1);
       if (carreta2) {
         chkDetails2 = getChecklistDetails(cavalo, carreta2);
       }
     }
 
-    const destinoNorm = normalizeDestino(os.filialDestino || 'GUARULHOS');
+    const destinoNorm = normalizeDestino(os.filialDestino || '');
 
-    // Calculate m3 if dimensions available: comp * larg * alt
+    // Calculate m3 if dimensions available
     let m3Val = '';
     if (os.comprimentoCarreta && os.larguraCarreta && os.alturaCarreta) {
-      const c = parseFloat(os.comprimentoCarreta.replace(',', '.'));
-      const l = parseFloat(os.larguraCarreta.replace(',', '.'));
-      const a = parseFloat(os.alturaCarreta.replace(',', '.'));
+      const c = parseFloat(String(os.comprimentoCarreta).replace(',', '.'));
+      const l = parseFloat(String(os.larguraCarreta).replace(',', '.'));
+      const a = parseFloat(String(os.alturaCarreta).replace(',', '.'));
       if (!isNaN(c) && !isNaN(l) && !isNaN(a)) {
         m3Val = `${Math.round(c * l * a)} m³`;
       }
     }
 
     // Driver UF state
-    let estadoMotorista = (os.ufCavalo || 'SC').toUpperCase();
+    let estadoMotorista = (os.ufCavalo || '').toUpperCase();
     if (os.rgUf) {
       const parts = os.rgUf.split(/[\/\-]/);
       if (parts.length > 1 && parts[parts.length - 1].trim().length === 2) {
@@ -301,7 +298,6 @@ export default function TerceirosEscala({
       }
     }
 
-    // Format horários: contatoWhats gets Previsão (e.g. 08:00:00)
     let contatoWhatsVal = '08:00:00';
     if (os.previsaoHorario) {
       const pClean = os.previsaoHorario.trim();
@@ -314,9 +310,6 @@ export default function TerceirosEscala({
 
     const vinculo = (os.vinculoMotorista || 'FROTA').toUpperCase();
 
-    // MATCH WITH APÓLICE:
-    // Se for identificado o mesmo conjunto: placa do cavalo e as mesmas carretas e o mesmo motorista,
-    // puxe para completar: VIGÊNCIA DO CADASTRO e CHECK LIST
     const trailerList = [os.placaCarreta1, os.placaCarreta2].filter(Boolean) as string[];
     const apoliceMatch = findMatchingApolice(
       os.placaCavalo || '',
@@ -329,19 +322,14 @@ export default function TerceirosEscala({
       defaultVigencia = apoliceMatch.vigenciaCadastro;
     }
 
-    // Check checklist from apolice match if available
     let apoliceChecklist = '';
     if (apoliceMatch && apoliceMatch.checkList && apoliceMatch.checkList !== 'N/A' && apoliceMatch.checkList !== '-') {
       apoliceChecklist = apoliceMatch.checkList;
     }
 
-    // Informações fixas solicitadas pelo usuário:
-    // 1. coluna status: REALIZAR IMPRESSÃO
-    // 2. coluna origem: SANTA LUZIA|MG
-    // 3. coluna MÊS: mês atual (SET|26, OUT|26, NOV|26, DEZ|26)
     const baseRow: Omit<DispoRow, 'id' | 'carreta' | 'pallets' | 'ton' | 'm3' | 'checkList' | 'pendencia'> = {
       mes,
-      origem: 'SANTA LUZIA|MG',
+      origem: os.filialOrigem || 'SANTA LUZIA|MG',
       dia,
       data: dataStr,
       contatoWhats: contatoWhatsVal,
@@ -350,12 +338,12 @@ export default function TerceirosEscala({
       modeloCarreta: normalizeModeloCarreta(os.perfilCarreta || 'BAÚ'),
       modeloCavalo: (os.perfilCavalo || 'TRUCADO').toUpperCase(),
       fezContato: 'SIM',
-      destino: (destinoNorm || os.filialDestino || 'GUARULHOS').toUpperCase(),
-      transportador: (os.transportador || (apoliceMatch ? apoliceMatch.transportador : 'TRANSMAGNA')).toUpperCase(),
+      destino: (destinoNorm || os.filialDestino || '').toUpperCase(),
+      transportador: (os.transportador || (apoliceMatch ? apoliceMatch.transportador : '')).toUpperCase(),
       cavalo,
       categoria: vinculo,
       tecnologia: (os.rastreador || 'SIGHRA').toUpperCase(),
-      conductor: (os.nomeMotorista || 'WISTOR FRANKLIN BELISARIO BRITO').toUpperCase(),
+      conductor: (os.nomeMotorista || '').toUpperCase(),
       cpf: os.cpf || '',
       rgSap: os.rgUf || '',
       cnh: os.cnh || '',
@@ -364,23 +352,22 @@ export default function TerceirosEscala({
       codigoTransportadora: '',
       idCarga: os.idCargo || '',
       estadoMotorista,
-      estadoCavalo: (os.ufCavalo || 'SC').toUpperCase(),
-      estadoCarreta: (os.ufCarreta1 || 'SC').toUpperCase()
+      estadoCavalo: (os.ufCavalo || '').toUpperCase(),
+      estadoCarreta: (os.ufCarreta1 || '').toUpperCase()
     };
 
     if (carreta1 && carreta2) {
-      // 2 carretas: divide pallets and ton
       const numP = parseFloat(os.capacidadePallets || '30');
       const numT = parseFloat(os.capacidadeToneladas || '30');
-      const halfP = !isNaN(numP) ? String(Math.round(numP / 2)) : os.capacidadePallets;
-      const halfT = !isNaN(numT) ? String(numT / 2) : os.capacidadeToneladas;
+      const halfP = !isNaN(numP) ? String(Math.round(numP / 2)) : (os.capacidadePallets || '');
+      const halfT = !isNaN(numT) ? String(numT / 2) : (os.capacidadeToneladas || '');
 
       const finalCheckList1 = chkDetails1.checkList || apoliceChecklist;
       const finalCheckList2 = chkDetails2.checkList || apoliceChecklist;
 
       const row1: DispoRow = {
         ...baseRow,
-        id: `os-row-${Date.now()}-1`,
+        id: `os-row-${Date.now()}-1-${Math.random().toString(36).substring(2, 6)}`,
         carreta: carreta1,
         pallets: halfP,
         ton: halfT,
@@ -391,9 +378,9 @@ export default function TerceirosEscala({
 
       const row2: DispoRow = {
         ...baseRow,
-        id: `os-row-${Date.now()}-2`,
+        id: `os-row-${Date.now()}-2-${Math.random().toString(36).substring(2, 6)}`,
         carreta: carreta2,
-        estadoCarreta: (os.ufCarreta2 || os.ufCarreta1 || 'SC').toUpperCase(),
+        estadoCarreta: (os.ufCarreta2 || os.ufCarreta1 || '').toUpperCase(),
         pallets: halfP,
         ton: halfT,
         m3: m3Val,
@@ -409,15 +396,225 @@ export default function TerceirosEscala({
     const singleRow: DispoRow = {
       ...baseRow,
       id: `os-row-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      carreta: carreta1 || carreta2 || 'SEM CARRETA',
-      pallets: os.capacidadePallets || '30',
-      ton: os.capacidadeToneladas || '30',
+      carreta: carreta1 || carreta2 || '',
+      pallets: os.capacidadePallets || '',
+      ton: os.capacidadeToneladas || '',
       m3: m3Val,
       checkList: finalCheckList,
       pendencia: chkDetails1.pendencia
     };
 
     return [singleRow];
+  };
+
+  // Process Excel spreadsheets (.xlsx, .xls, .csv) directly from uploaded file
+  const processExcelFile = async (file: File): Promise<DispoRow[]> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const workbook = XLSX.read(buffer, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+
+          const rowsAsArrays = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+          if (!rowsAsArrays || rowsAsArrays.length === 0) {
+            resolve([]);
+            return;
+          }
+
+          let headerRowIndex = -1;
+          for (let i = 0; i < Math.min(10, rowsAsArrays.length); i++) {
+            const rowStr = (rowsAsArrays[i] || []).map(c => String(c).toUpperCase()).join(' ');
+            if (
+              rowStr.includes('MOTORISTA') ||
+              rowStr.includes('CONDUCTOR') ||
+              rowStr.includes('CAVALO') ||
+              rowStr.includes('PLACA') ||
+              rowStr.includes('TRANSPORTADOR') ||
+              rowStr.includes('DESTINO')
+            ) {
+              headerRowIndex = i;
+              break;
+            }
+          }
+
+          const extractedDispoRows: DispoRow[] = [];
+
+          if (headerRowIndex !== -1) {
+            const headers = (rowsAsArrays[headerRowIndex] || []).map(c => String(c || '').trim().toUpperCase());
+            const findColIndex = (...names: string[]) => {
+              return headers.findIndex(h => names.some(n => h.includes(n)));
+            };
+
+            const colMes = findColIndex('MÊS', 'MES');
+            const colOrigem = findColIndex('ORIGEM', 'FILIAL ORIGEM');
+            const colDia = findColIndex('DIA');
+            const colData = findColIndex('DATA', 'DATA CARREGAMENTO');
+            const colContatoWhats = findColIndex('CONTATO WHATS', 'PREVISÃO', 'HORARIO', 'PREVISAO');
+            const colHora = findColIndex('HORA LIBERADO', 'HORA');
+            const colStatus = findColIndex('STATUS');
+            const colModCarreta = findColIndex('MODELO CARRETA', 'PERFIL CARRETA');
+            const colModCavalo = findColIndex('MODELO CAVALO', 'PERFIL CAVALO');
+            const colFezContato = findColIndex('FEZ CONTATO');
+            const colDestino = findColIndex('DESTINO', 'FILIAL DESTINO');
+            const colTransportador = findColIndex('TRANSPORTADOR', 'TRANSPORTADORA');
+            const colCavalo = findColIndex('CAVALO', 'PLACA CAVALO', 'PLACA');
+            const colCarreta = findColIndex('CARRETA', 'PLACA CARRETA');
+            const colPallets = findColIndex('PALLETS', 'PALLET', 'Nº PALLETS', 'CAPACIDADE PALLETS');
+            const colTon = findColIndex('TON', 'TONELADAS', 'CAPACIDADE TONELADAS');
+            const colM3 = findColIndex('M³', 'M3', 'VOLUME');
+            const colCategoria = findColIndex('CATEGORIA', 'VINCULO');
+            const colTecnologia = findColIndex('TECNOLOGIA', 'RASTREADOR');
+            const colConductor = findColIndex('CONDUCTOR', 'MOTORISTA', 'NOME');
+            const colCpf = findColIndex('CPF');
+            const colRg = findColIndex('RG');
+            const colCnh = findColIndex('CNH');
+            const colTelefone = findColIndex('TELEFONE', 'CELULAR');
+            const colVigencia = findColIndex('VIGÊNCIA', 'VIGENCIA');
+            const colCodTransp = findColIndex('CÓDIGO', 'CODIGO');
+            const colIdCarga = findColIndex('ID DA CARGA', 'CARGA', 'LACRE');
+            const colEstMot = findColIndex('ESTADO MOTORISTA', 'UF MOTORISTA');
+            const colEstCav = findColIndex('ESTADO CAVALO', 'UF CAVALO');
+            const colEstCar = findColIndex('ESTADO CARRETA', 'UF CARRETA');
+            const colPendencia = findColIndex('PENDENCIA', 'PENDÊNCIA');
+            const colChecklist = findColIndex('CHECK LIST', 'CHECKLIST');
+
+            for (let r = headerRowIndex + 1; r < rowsAsArrays.length; r++) {
+              const rowData = rowsAsArrays[r];
+              if (!rowData || rowData.length === 0) continue;
+
+              const getVal = (idx: number) => (idx !== -1 && rowData[idx] !== undefined ? String(rowData[idx]).trim() : '');
+
+              const cavaloRaw = getVal(colCavalo);
+              const conductorRaw = getVal(colConductor);
+              const transportadorRaw = getVal(colTransportador);
+
+              if (!cavaloRaw && !conductorRaw && !transportadorRaw) continue;
+
+              const dataStr = getVal(colData) || new Date().toLocaleDateString('pt-BR');
+              const cavalo = formatPlateWithHyphen(cavaloRaw);
+              const carreta = formatPlateWithHyphen(getVal(colCarreta));
+              const destinoRaw = getVal(colDestino);
+              const destinoNorm = normalizeDestino(destinoRaw);
+
+              let chk = { checkList: '', pendencia: '' };
+              if (getChecklistDetails && cavalo) {
+                chk = getChecklistDetails(cavalo, carreta);
+              }
+
+              const apoliceMatch = findMatchingApolice(
+                cavaloRaw,
+                carreta ? [carreta] : [],
+                conductorRaw
+              );
+
+              let vigencia = getVal(colVigencia);
+              if (!vigencia) {
+                const vinc = getVal(colCategoria).toUpperCase();
+                vigencia = apoliceMatch?.vigenciaCadastro && apoliceMatch.vigenciaCadastro !== '-'
+                  ? apoliceMatch.vigenciaCadastro
+                  : (vinc === 'FROTA' ? 'SEGURO PROPRIO' : 'TERCEIRO');
+              }
+
+              const dispoRow: DispoRow = {
+                id: `excel-row-${Date.now()}-${r}-${Math.random().toString(36).substring(2, 6)}`,
+                mes: getVal(colMes) || getCurrentMonthAbbrev(),
+                origem: getVal(colOrigem) || 'SANTA LUZIA|MG',
+                dia: getVal(colDia) || getDayOfWeek(dataStr),
+                data: dataStr,
+                contatoWhats: getVal(colContatoWhats) || '08:00:00',
+                horaLiberado: getVal(colHora) || new Date().toLocaleTimeString('pt-BR'),
+                status: normalizeStatus(getVal(colStatus) || 'REALIZAR IMPRESSÃO  '),
+                modeloCarreta: normalizeModeloCarreta(getVal(colModCarreta) || 'BAÚ'),
+                modeloCavalo: (getVal(colModCavalo) || 'TRUCADO').toUpperCase(),
+                fezContato: getVal(colFezContato) || 'SIM',
+                destino: (destinoNorm || destinoRaw).toUpperCase(),
+                transportador: (transportadorRaw || (apoliceMatch ? apoliceMatch.transportador : '')).toUpperCase(),
+                cavalo,
+                carreta,
+                pallets: getVal(colPallets),
+                ton: getVal(colTon),
+                m3: getVal(colM3),
+                categoria: getVal(colCategoria) || 'FROTA',
+                tecnologia: (getVal(colTecnologia) || 'SIGHRA').toUpperCase(),
+                conductor: conductorRaw.toUpperCase(),
+                cpf: getVal(colCpf),
+                rgSap: getVal(colRg),
+                cnh: getVal(colCnh),
+                telefone: getVal(colTelefone),
+                vigenciaCadastro: vigencia,
+                codigoTransportadora: getVal(colCodTransp),
+                idCarga: getVal(colIdCarga),
+                estadoMotorista: getVal(colEstMot).toUpperCase(),
+                estadoCavalo: getVal(colEstCav).toUpperCase(),
+                estadoCarreta: getVal(colEstCar).toUpperCase(),
+                pendencia: getVal(colPendencia) || chk.pendencia,
+                checkList: getVal(colChecklist) || chk.checkList || apoliceMatch?.checkList || ''
+              };
+
+              extractedDispoRows.push(dispoRow);
+            }
+          } else {
+            // Raw table format
+            for (let r = 0; r < rowsAsArrays.length; r++) {
+              const rowData = rowsAsArrays[r];
+              if (!rowData || rowData.length < 3) continue;
+
+              const rStr = rowData.map(c => String(c)).join('\t');
+              const plateRegex = /[A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4}/gi;
+              const plates = (rStr.match(plateRegex) || []).map(p => formatPlateWithHyphen(p));
+
+              if (plates.length > 0 || rowData.length >= 8) {
+                const dispoRow: DispoRow = {
+                  id: `excel-raw-${Date.now()}-${r}-${Math.random().toString(36).substring(2, 6)}`,
+                  mes: String(rowData[0] || getCurrentMonthAbbrev()),
+                  origem: String(rowData[1] || 'SANTA LUZIA|MG'),
+                  dia: String(rowData[2] || getDayOfWeek(new Date().toLocaleDateString('pt-BR'))),
+                  data: String(rowData[3] || new Date().toLocaleDateString('pt-BR')),
+                  contatoWhats: String(rowData[4] || '08:00:00'),
+                  horaLiberado: String(rowData[5] || '08:00:00'),
+                  status: normalizeStatus(String(rowData[6] || 'REALIZAR IMPRESSÃO  ')),
+                  modeloCarreta: normalizeModeloCarreta(String(rowData[7] || 'BAÚ')),
+                  modeloCavalo: String(rowData[8] || 'TRUCADO').toUpperCase(),
+                  fezContato: String(rowData[9] || 'SIM'),
+                  destino: normalizeDestino(String(rowData[10] || '')).toUpperCase(),
+                  transportador: String(rowData[11] || '').toUpperCase(),
+                  cavalo: plates[0] || String(rowData[12] || ''),
+                  carreta: plates[1] || String(rowData[13] || ''),
+                  pallets: String(rowData[14] || ''),
+                  ton: String(rowData[15] || ''),
+                  m3: String(rowData[16] || ''),
+                  categoria: String(rowData[17] || 'FROTA'),
+                  tecnologia: String(rowData[18] || 'SIGHRA').toUpperCase(),
+                  conductor: String(rowData[19] || '').toUpperCase(),
+                  cpf: String(rowData[20] || ''),
+                  rgSap: String(rowData[21] || ''),
+                  cnh: String(rowData[22] || ''),
+                  telefone: String(rowData[23] || ''),
+                  vigenciaCadastro: String(rowData[24] || ''),
+                  codigoTransportadora: String(rowData[25] || ''),
+                  idCarga: String(rowData[26] || ''),
+                  estadoMotorista: String(rowData[27] || '').toUpperCase(),
+                  estadoCavalo: String(rowData[28] || '').toUpperCase(),
+                  estadoCarreta: String(rowData[29] || '').toUpperCase(),
+                  pendencia: String(rowData[31] || ''),
+                  checkList: String(rowData[32] || '')
+                };
+                extractedDispoRows.push(dispoRow);
+              }
+            }
+          }
+
+          resolve(extractedDispoRows);
+        } catch (err) {
+          console.error('Erro ao ler planilha Excel:', err);
+          resolve([]);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   // Convert row into 33 exact TSV columns (A to AG) for Excel clipboard pasting
@@ -460,22 +657,29 @@ export default function TerceirosEscala({
     return cols.slice(0, 33).join('\t');
   };
 
-  // Process a single file (PDF, Word .docx, or Image)
-  const processFile = async (file: File) => {
+  // Process a single file (Excel, PDF, Word .docx, or Image)
+  const processFile = async (file: File): Promise<DispoRow[]> => {
+    const fileNameLower = file.name.toLowerCase();
+
+    if (fileNameLower.endsWith('.xlsx') || fileNameLower.endsWith('.xls') || fileNameLower.endsWith('.csv')) {
+      setProcessingStatus(`Lendo planilha ${file.name}...`);
+      return processExcelFile(file);
+    }
+
     return new Promise<DispoRow[]>((resolve) => {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
           const base64 = reader.result as string;
-          setProcessingStatus(`Lendo ${file.name}...`);
+          setProcessingStatus(`Lendo documento ${file.name}...`);
 
           let mimeType = file.type;
           if (!mimeType) {
-            if (file.name.toLowerCase().endsWith('.docx')) {
+            if (fileNameLower.endsWith('.docx')) {
               mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            } else if (file.name.toLowerCase().endsWith('.doc')) {
+            } else if (fileNameLower.endsWith('.doc')) {
               mimeType = 'application/msword';
-            } else if (file.name.toLowerCase().endsWith('.pdf')) {
+            } else if (fileNameLower.endsWith('.pdf')) {
               mimeType = 'application/pdf';
             }
           }
@@ -493,22 +697,29 @@ export default function TerceirosEscala({
           if (res.ok) {
             const json = await res.json();
             if (json.success && json.data) {
-              const newRows = buildDispoRowsFromOS(json.data);
-              resolve(newRows);
-              return;
+              if (Array.isArray(json.data)) {
+                const rows: DispoRow[] = [];
+                json.data.forEach((item: any) => {
+                  rows.push(...buildDispoRowsFromOS(item));
+                });
+                resolve(rows);
+                return;
+              } else {
+                const rows = buildDispoRowsFromOS(json.data);
+                resolve(rows);
+                return;
+              }
             }
           }
-          // Fallback if backend API failed or returned error
-          console.warn('API /api/parse-os-pdf não retornou sucesso, usando fallback estruturado.');
-          const fallbackRows = buildDispoRowsFromOS({
-            ...SAMPLE_OS_DATA,
-            transportador: file.name.toUpperCase().includes('TORNA') ? 'TORNADOLOG' : (file.name.toUpperCase().includes('TRANS') ? 'TRANSMAGNA' : SAMPLE_OS_DATA.transportador)
-          });
-          resolve(fallbackRows);
+
+          setToastMessage(`Aviso: Não foi possível extrair dados automaticamente do arquivo "${file.name}".`);
+          setTimeout(() => setToastMessage(null), 5000);
+          resolve([]);
         } catch (err) {
           console.error('Erro ao processar arquivo:', err);
-          const fallbackRows = buildDispoRowsFromOS(SAMPLE_OS_DATA);
-          resolve(fallbackRows);
+          setToastMessage(`Erro ao processar o arquivo "${file.name}".`);
+          setTimeout(() => setToastMessage(null), 5000);
+          resolve([]);
         }
       };
       reader.readAsDataURL(file);
@@ -533,32 +744,21 @@ export default function TerceirosEscala({
       allNewRows.push(...rowsFromFile);
     }
 
-    setRows(prev => [...allNewRows, ...prev]);
-    setUploadedFilesHistory(prev => [...fileNames, ...prev]);
+    if (allNewRows.length > 0) {
+      setRows(prev => [...allNewRows, ...prev]);
+      setUploadedFilesHistory(prev => [...fileNames, ...prev]);
+      setToastMessage(`Sucesso! ${allNewRows.length} linha(s) importada(s) de ${files.length} arquivo(s).`);
+    } else {
+      setToastMessage(`Nenhum dado válido foi encontrado nos arquivos selecionados.`);
+    }
+
     setIsProcessing(false);
     setProcessingStatus('');
-
-    setToastMessage(`Sucesso! ${allNewRows.length} linha(s) extraída(s) de ${files.length} documento(s) (PDF / Word).`);
-    setTimeout(() => setToastMessage(null), 4500);
+    setTimeout(() => setToastMessage(null), 5000);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  // Load sample OS from user's attached image (TRANSMAGNA - Imagem 1)
-  const handleLoadSampleOS = () => {
-    setIsProcessing(true);
-    setProcessingStatus('Carregando dados da Ordem de Serviço 3C (TRANSMAGNA - Imagem 1)...');
-    setTimeout(() => {
-      const sampleRows = buildDispoRowsFromOS(SAMPLE_OS_DATA);
-      setRows(prev => [...sampleRows, ...prev]);
-      setUploadedFilesHistory(prev => ['ORDEM_DE_SERVICO_3C_TRANSMAGNA.pdf', ...prev]);
-      setIsProcessing(false);
-      setProcessingStatus('');
-      setToastMessage('Ordem de Serviço 3C (TRANSMAGNA) carregada com sucesso! Pronto para colar no Excel ou baixar .xlsx.');
-      setTimeout(() => setToastMessage(null), 4500);
-    }, 400);
   };
 
   // Copy all rows as TSV for direct paste into Excel
@@ -774,18 +974,7 @@ export default function TerceirosEscala({
               title="Ver relação completa das colunas da Ficha PDF/Word vs Planilha de Escala"
             >
               <HelpCircle size={15} className="text-sky-700" />
-              <span>Mapeamento das Colunas (PDF/Word ➔ Planilha)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLoadSampleOS}
-              disabled={isProcessing}
-              className="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400/50 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:scale-102"
-              title="Carregar exemplo da Ordem de Serviço 3C (Transmagna) anexada"
-            >
-              <Sparkles size={16} className="text-[#B32025]" />
-              <span>Carregar Exemplo (OS Transmagna - Imagem 1)</span>
+              <span>Mapeamento das Colunas (PDF/Word/Excel ➔ Planilha)</span>
             </button>
 
             {rows.length > 0 && (
@@ -827,7 +1016,7 @@ export default function TerceirosEscala({
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,image/png,image/jpeg,image/jpg"
+            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,image/png,image/jpeg,image/jpg"
             className="hidden"
             onChange={(e) => handleFilesUpload(e.target.files)}
           />
@@ -842,16 +1031,16 @@ export default function TerceirosEscala({
 
           <div>
             <h4 className="text-base font-serif font-black uppercase text-[#2D1A10]">
-              {isProcessing ? processingStatus || "Processando Documento..." : "Clique ou Arraste os arquivos em PDF ou Word (.docx) aqui"}
+              {isProcessing ? processingStatus || "Processando Arquivo..." : "Clique ou Arraste os arquivos (PDF, Word ou Excel) aqui"}
             </h4>
             <p className="text-xs text-slate-600 mt-1 max-w-lg mx-auto">
-              Suporta documentos de <strong>Ordem de Serviço 3C (PDF, Word .docx ou Imagem)</strong>. O sistema extrai motorista, transportador, placas do cavalo e carreta, pallets, toneladas, eixos e dimensões.
+              Importa diretamente os dados dos seus arquivos reais <strong>(PDF, Word .docx, Excel .xlsx ou Imagem)</strong>. O sistema extrai motorista, transportador, placas do cavalo e carreta, pallets, toneladas, eixos e dimensões.
             </p>
           </div>
 
           <div className="flex items-center gap-2 mt-1">
             <span className="px-3 py-1 rounded-lg bg-[#3A2414]/5 text-[#3A2414] text-[11px] font-mono font-bold uppercase border border-[#3A2414]/10">
-              Formatos: .PDF, .DOCX, .DOC, .PNG, .JPG
+              Formatos: .PDF, .DOCX, .XLSX, .XLS, .CSV, .PNG, .JPG
             </span>
             <span className="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-mono font-bold uppercase border border-emerald-300">
               Saída: Microsoft Excel (.xlsx) + Ctrl+V
@@ -1583,24 +1772,13 @@ export default function TerceirosEscala({
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleLoadSampleOS();
-                    setShowColumnMappingModal(false);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-[#B32025] hover:bg-[#8F161A] text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-sm transition-all"
-                >
-                  <Sparkles size={16} />
-                  <span>Carregar Esta Linha na Tabela</span>
-                </button>
+              <div className="p-4 bg-slate-100 border-t border-slate-200 flex items-center justify-end">
                 <button
                   type="button"
                   onClick={() => setShowColumnMappingModal(false)}
                   className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold uppercase cursor-pointer transition-colors"
                 >
-                  Fechar
+                  Fechar Mapeamento
                 </button>
               </div>
             </motion.div>
