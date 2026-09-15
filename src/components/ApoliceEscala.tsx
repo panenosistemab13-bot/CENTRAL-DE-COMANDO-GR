@@ -1,10 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Truck,
-  Building2,
-  Calendar,
-  ClipboardList,
   ShieldCheck,
+  Truck,
   Search,
   Filter,
   Copy,
@@ -13,22 +10,36 @@ import {
   Trash2,
   Check,
   ChevronDown,
-  AlertCircle,
   FileText,
   Plus,
   Edit2,
   Cloud,
-  Database,
   Save,
   X,
   CheckCircle2,
-  User
+  User,
+  Coffee,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
-import highwayNightBg from '../assets/images/highway_night_bg_1789344097881.jpg';
 import { rtdb } from '../firebase';
 import { ref, set, onValue } from 'firebase/database';
+
+function Screw({ className }: { className?: string }) {
+  return (
+    <div 
+      className={cn(
+        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+        className
+      )}
+    >
+      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+    </div>
+  );
+}
 
 export interface ApoliceItem {
   id: string;
@@ -59,6 +70,7 @@ export default function ApoliceEscala({
   onItemsChange
 }: ApoliceEscalaProps = {}) {
   const [pasteInput, setPasteInput] = useState<string>('');
+  const [showPasteBox, setShowPasteBox] = useState<boolean>(false);
   const [internalItems, setInternalItems] = useState<ApoliceItem[]>(() => {
     try {
       const saved = localStorage.getItem('apolice_escala_items');
@@ -146,356 +158,159 @@ export default function ApoliceEscala({
   const [modalForm, setModalForm] = useState({
     cavalo: '',
     carretas: '',
-    transportador: '',
+    transportador: '3C',
     motorista: '',
-    vigenciaCadastro: '',
-    checkList: '',
+    vigenciaCadastro: 'SEGURO PRÓPRIO',
+    checkList: 'VALIDO',
     apolice: 'MACRO'
   });
 
-  // Clean plate format
-  const cleanPlate = (p: string): string => {
-    if (!p) return '';
-    return p.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
+  // Pagination for table ergonomics
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 25;
+
+  // Reset page on search or filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterApolice]);
+
+  // Clean and sanitize license plates
+  const cleanPlate = (plate?: string): string => {
+    if (!plate) return '';
+    return plate.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
   };
 
-  const isVehiclePlate = (str: string): boolean => {
-    const c = cleanPlate(str);
-    return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(c) || /^[A-Z]{3}[0-9]{4}$/.test(c);
+  // Helper to test if a string looks like a Brazilian plate
+  const isLicensePlate = (str?: string): boolean => {
+    if (!str) return false;
+    const clean = cleanPlate(str);
+    return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(clean) || /^[A-Z]{3}[0-9]{4}$/.test(clean);
   };
 
-  const isDateStr = (str: string): boolean => {
-    const t = str.trim();
-    return /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(t);
-  };
+  // Parse pasted sheet text
+  const handleParseSheet = (text: string) => {
+    if (!text || !text.trim()) return;
 
-  const isTimeStr = (str: string): boolean => {
-    const t = str.trim();
-    return /^\d{1,2}:\d{2}(:\d{2})?$/.test(t);
-  };
-
-  // Convert Brazilian date (DD/MM/YYYY) and optional time (HH:MM:SS) to comparable timestamp number
-  const parseDateTimeToTimestamp = (dateStr: string, timeStr?: string): number => {
-    if (!dateStr || !isDateStr(dateStr)) return 0;
-    const parts = dateStr.trim().split('/');
-    if (parts.length !== 3) return 0;
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
-
-    let hours = 0;
-    let minutes = 0;
-    let seconds = 0;
-
-    if (timeStr && isTimeStr(timeStr)) {
-      const timeParts = timeStr.trim().split(':');
-      hours = parseInt(timeParts[0] || '0', 10);
-      minutes = parseInt(timeParts[1] || '0', 10);
-      seconds = parseInt(timeParts[2] || '0', 10);
-    }
-
-    const dt = new Date(year, month, day, hours, minutes, seconds);
-    return isNaN(dt.getTime()) ? 0 : dt.getTime();
-  };
-
-  // Parse pasted raw text into structured ApoliceItem list
-  const handleParseSheet = (rawText: string) => {
-    if (!rawText || !rawText.trim()) return;
-
-    const lines = rawText
-      .split(/\r?\n/)
-      .map(l => l.trim())
-      .filter(Boolean);
-
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     if (lines.length === 0) return;
 
-    const firstLineCols = lines[0].split('\t').map(c => c.trim());
-    const normalizeHeader = (s: string) =>
-      s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const newParsedList: ApoliceItem[] = [];
 
-    let colTransportador = -1;
-    let colVigencia = -1;
-    let colChecklist = -1;
-    let colCavalo = -1;
-    let colCarreta = -1;
-    let colMotorista = -1;
-    let colDataViagem = -1;
-    let colHoraViagem = -1;
+    lines.forEach((line, lineIndex) => {
+      const parts = line.split('\t').map(p => p.trim());
+      if (parts.length < 5) return;
 
-    firstLineCols.forEach((col, idx) => {
-      const h = normalizeHeader(col);
-      if (h.includes('TRANSPORTADOR') || h === 'TRANS' || h === 'TRANSPORTADORA') {
-        colTransportador = idx;
-      } else if (h.includes('VIGENCIA') || h.includes('VIGENCIA DO CADASTRO')) {
-        colVigencia = idx;
-      } else if (h.includes('CHECK LIST') || h.includes('CHECKLIST') || h === 'CHECK') {
-        colChecklist = idx;
-      } else if (h.includes('CAVALO') || h === 'PLACA CAVALO') {
-        colCavalo = idx;
-      } else if (h.includes('CARRETA') || h === 'PLACA CARRETA' || h === 'CARRETAS') {
-        colCarreta = idx;
-      } else if (h.includes('MOTORISTA') || h === 'CONDUTOR' || h === 'NOME MOTORISTA') {
-        colMotorista = idx;
-      } else if (h.includes('DATA VIAGEM') || h === 'DATA' || h.includes('DATA/HORA')) {
-        colDataViagem = idx;
-      } else if (h.includes('HORA VIAGEM') || h === 'HORA' || h === 'HORARIO') {
-        colHoraViagem = idx;
-      }
-    });
-
-    let dataLines = lines;
-    const hasHeader =
-      colTransportador !== -1 ||
-      colVigencia !== -1 ||
-      colCavalo !== -1 ||
-      colCarreta !== -1 ||
-      firstLineCols.some(c => normalizeHeader(c).includes('STATUS') || normalizeHeader(c).includes('MES'));
-
-    if (hasHeader) {
-      dataLines = lines.slice(1);
-    }
-
-    const idxTrans = colTransportador !== -1 ? colTransportador : 11;
-    const idxCav = colCavalo !== -1 ? colCavalo : 12;
-    const idxCarr = colCarreta !== -1 ? colCarreta : 13;
-    const idxMotorista = colMotorista !== -1 ? colMotorista : 19;
-    const idxDataViagem = colDataViagem !== -1 ? colDataViagem : 3;
-    const idxHoraViagem = colHoraViagem !== -1 ? colHoraViagem : 5;
-    const idxVig = colVigencia !== -1 ? colVigencia : 23;
-    const idxCheck = colChecklist !== -1 ? colChecklist : 31;
-
-    // STEP 1: Aggregate rows by Cavalo + Motorista + Viagem / Line occurrence
-    // Because a set of trailers (rodotrem / bitrem) can span multiple lines (e.g. Cavalo QWK6A22 with OLN7307 on line 1 and OLN7457 on line 2),
-    // we first group rows that belong to the same trip/session (Cavalo + Motorista + DataViagem/HoraViagem).
-    interface TripRow {
-      cavalo: string;
-      carretasSet: Set<string>;
-      transportador: string;
-      motorista: string;
-      dataViagem: string;
-      horaViagem: string;
-      vigenciaCadastro: string;
-      checkList: string;
-      timestamp: number;
-      lineIndex: number;
-    }
-
-    const tripMap = new Map<string, TripRow>();
-
-    dataLines.forEach((line, lineIdx) => {
-      const cols = line.split('\t').map(c => c.trim());
-      if (cols.length < 3) return;
-
-      let cavalo = cols[idxCav] || '';
-      let carreta = cols[idxCarr] || '';
-      let transportador = cols[idxTrans] || '';
-      let motorista = cols[idxMotorista] || '';
-      let vigencia = cols[idxVig] || '';
-      let checklist = cols[idxCheck] || '';
-      let dataViagem = cols[idxDataViagem] || '';
-      let horaViagem = cols[idxHoraViagem] || '';
-
-      if (!isVehiclePlate(cavalo)) {
-        const plateCandidate = cols.find(c => isVehiclePlate(c));
-        if (plateCandidate) {
-          cavalo = plateCandidate;
+      const firstPartUpper = parts[0]?.toUpperCase() || '';
+      if (firstPartUpper.includes('PLACA') || firstPartUpper.includes('CAVALO') || firstPartUpper.includes('SET|') && parts[1]?.toUpperCase().includes('SANTA LUZIA') && lineIndex === 0 && isNaN(Number(parts[3]?.replace(/\D/g, '')))) {
+        // Potential header row, skip
+        if (parts.some(p => p.toUpperCase() === 'TRANSPORTADOR' || p.toUpperCase() === 'CARRETAS')) {
+          return;
         }
       }
 
-      if (!cavalo) return;
+      let cavalo = '';
+      let carretas = '';
+      let transportador = '';
+      let motorista = '';
+      let dataHoraViagem = '';
+      let vigenciaCadastro = '';
+      let checkList = '';
+      let apolice = 'MACRO';
 
-      const normCavalo = cleanPlate(cavalo);
-      if (!normCavalo) return;
+      // Pattern A: Standard 33-column export sheet
+      if (parts.length >= 25 && isLicensePlate(parts[12])) {
+        cavalo = parts[12]?.toUpperCase().trim();
+        carretas = parts[13]?.toUpperCase().trim() || '';
+        transportador = parts[11]?.toUpperCase().trim() || '3C';
+        dataHoraViagem = `${parts[3] || ''} ${parts[5] || ''}`.trim();
+        motorista = parts[19]?.toUpperCase().trim() || '';
+        vigenciaCadastro = parts[24]?.toUpperCase().trim() || '';
+        checkList = (parts[32] || parts[31] || '').toUpperCase().trim();
 
-      // Locate date / time if not in expected column
-      if (!isDateStr(dataViagem)) {
-        const dateCandidate = cols.slice(0, 10).find(c => isDateStr(c));
-        if (dateCandidate) dataViagem = dateCandidate;
-      }
-      if (!isTimeStr(horaViagem)) {
-        const timeCandidate = cols.slice(0, 10).find(c => isTimeStr(c));
-        if (timeCandidate) horaViagem = timeCandidate;
-      }
-
-      // Check checklist
-      if (!checklist || (!isDateStr(checklist) && checklist.toUpperCase() !== 'N/A')) {
-        if (cols[32] && isDateStr(cols[32])) {
-          checklist = cols[32];
-        } else if (cols[31] && isDateStr(cols[31])) {
-          checklist = cols[31];
+        if (vigenciaCadastro.includes('SEGURO PROPRIO') || vigenciaCadastro.includes('SEGURO PRÓPRIO')) {
+          apolice = 'SEGURO PRÓPRIO';
         } else {
-          const dateAfterVig = cols.slice(Math.max(idxVig + 1, 24)).find(c => isDateStr(c));
-          if (dateAfterVig) {
-            checklist = dateAfterVig;
-          }
+          apolice = 'MACRO';
         }
-      }
 
-      if (!vigencia) {
-        const segProprio = cols.find(c => c.toUpperCase().includes('SEGURO PROPRIO') || c.toUpperCase().includes('FROTA'));
-        if (segProprio) vigencia = segProprio;
-      }
-
-      // Motorista fallback
-      const normMotorista = motorista ? motorista.toUpperCase().trim() : '';
-
-      // Calculate timestamp from dataViagem & horaViagem
-      const rowTimestamp = parseDateTimeToTimestamp(dataViagem, horaViagem);
-
-      // Key for grouping rodotrem/bitrem lines of the same trip
-      // We group by: Cavalo + Motorista + DataViagem + HoraViagem (or line sequence if time missing)
-      const tripKey = `${normCavalo}_${normMotorista}_${dataViagem}_${horaViagem}`;
-
-      const existingTrip = tripMap.get(tripKey);
-      if (existingTrip) {
-        if (carreta && carreta !== '-') {
-          existingTrip.carretasSet.add(cleanPlate(carreta));
-        }
-        if (!existingTrip.transportador && transportador) {
-          existingTrip.transportador = transportador.toUpperCase();
-        }
-        if ((!existingTrip.vigenciaCadastro || existingTrip.vigenciaCadastro === '-') && vigencia) {
-          existingTrip.vigenciaCadastro = vigencia;
-        }
-        if ((!existingTrip.checkList || existingTrip.checkList === 'N/A') && checklist) {
-          existingTrip.checkList = checklist;
-        }
-        existingTrip.lineIndex = Math.max(existingTrip.lineIndex, lineIdx);
-        if (rowTimestamp > existingTrip.timestamp) {
-          existingTrip.timestamp = rowTimestamp;
+        if (!checkList || checkList === '-' || checkList === '') {
+          checkList = 'VALIDO';
         }
       } else {
-        const carretasSet = new Set<string>();
-        if (carreta && carreta !== '-') {
-          carretasSet.add(cleanPlate(carreta));
+        // Pattern B: Search dynamically across all column cells
+        let foundPlates: string[] = [];
+        parts.forEach(cell => {
+          const words = cell.split(/[\/\,\;\s]+/);
+          words.forEach(w => {
+            if (isLicensePlate(w) && !foundPlates.includes(cleanPlate(w))) {
+              foundPlates.push(cleanPlate(w));
+            }
+          });
+        });
+
+        if (foundPlates.length >= 1) {
+          cavalo = foundPlates[0];
+          carretas = foundPlates.slice(1).join(' ');
         }
-        tripMap.set(tripKey, {
-          cavalo: normCavalo,
-          carretasSet,
-          transportador: transportador ? transportador.toUpperCase() : '-',
-          motorista: normMotorista,
-          dataViagem,
-          horaViagem,
-          vigenciaCadastro: vigencia || '-',
-          checkList: checklist || '',
-          timestamp: rowTimestamp,
-          lineIndex: lineIdx
+
+        // Look for transportador
+        const knownTrans = ['3C', 'MOEDENSE', 'TRANSMAGNA', 'FROTA', 'ROB', 'STL', 'EXPRESSO', 'TRANSLIQUIDO', 'JAMEF'];
+        const foundTrans = parts.find(p => knownTrans.some(kt => p.toUpperCase().includes(kt)));
+        if (foundTrans) {
+          transportador = foundTrans.toUpperCase();
+        } else if (parts[11]) {
+          transportador = parts[11].toUpperCase();
+        } else {
+          transportador = '3C';
+        }
+
+        // Check for date of validity
+        const dateRegex = /\d{2}\/\d{2}\/\d{4}/;
+        const foundDates = parts.filter(p => dateRegex.test(p));
+        if (foundDates.length >= 2) {
+          vigenciaCadastro = foundDates[foundDates.length - 1];
+        } else if (foundDates.length === 1) {
+          vigenciaCadastro = foundDates[0];
+        }
+
+        if (line.toUpperCase().includes('SEGURO PROPRIO') || line.toUpperCase().includes('SEGURO PRÓPRIO')) {
+          apolice = 'SEGURO PRÓPRIO';
+          if (!vigenciaCadastro) vigenciaCadastro = 'SEGURO PRÓPRIO';
+        }
+
+        if (line.toUpperCase().includes('VENCIDO')) {
+          checkList = 'VENCIDO';
+        } else if (line.toUpperCase().includes('VALIDO') || line.toUpperCase().includes('VÁLIDO')) {
+          checkList = 'VALIDO';
+        }
+      }
+
+      if (cavalo) {
+        newParsedList.push({
+          id: `${cleanPlate(cavalo)}_${cleanPlate(carretas)}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          cavalo: cleanPlate(cavalo),
+          carretas: carretas ? carretas.split(/[\/\,\;\s]+/).map(cleanPlate).filter(Boolean).join(' ') : '',
+          transportador: transportador || '3C',
+          motorista: motorista || '',
+          dataHoraViagem: dataHoraViagem || '',
+          vigenciaCadastro: vigenciaCadastro || (apolice === 'SEGURO PRÓPRIO' ? 'SEGURO PRÓPRIO' : '13/05/2027'),
+          checkList: checkList || 'VALIDO',
+          apolice: apolice
         });
       }
     });
 
-    // STEP 2: Group by Conjunto Exacto: (Cavalo + Carretas Ordenadas + Motorista)
-    // "quando um conjunto: (placa do cavalo e as mesmas carretas e o mesmo motorista)
-    // pegue a informação mais recente e adicione ao app e ignore as outras"
-    interface ConjuntoEntry {
-      cavalo: string;
-      carretasStr: string;
-      transportador: string;
-      motorista: string;
-      vigenciaCadastro: string;
-      checkList: string;
-      dataViagem: string;
-      horaViagem: string;
-      timestamp: number;
-      lineIndex: number;
+    if (newParsedList.length === 0) {
+      alert('Nenhum conjunto válido foi identificado. Verifique se copiou as linhas com as colunas de placas no Excel.');
+      return;
     }
 
-    const conjuntoMap = new Map<string, ConjuntoEntry>();
-
-    tripMap.forEach((trip) => {
-      // Sort trailer plates alphabetically so that combinations in any order match the same conjunto
-      const sortedCarretas = Array.from(trip.carretasSet).filter(Boolean).sort();
-      const carretasNormalizedKey = sortedCarretas.join('|');
-      const carretasDisplayStr = sortedCarretas.length > 0 ? sortedCarretas.join(' / ') : '-';
-
-      // Deduplication key: Cavalo + Sorted Carretas + Motorista
-      const conjuntoKey = `${trip.cavalo}:::${carretasNormalizedKey}:::${trip.motorista}`;
-
-      const existing = conjuntoMap.get(conjuntoKey);
-      if (!existing) {
-        conjuntoMap.set(conjuntoKey, {
-          cavalo: trip.cavalo,
-          carretasStr: carretasDisplayStr,
-          transportador: trip.transportador,
-          motorista: trip.motorista,
-          vigenciaCadastro: trip.vigenciaCadastro,
-          checkList: trip.checkList,
-          dataViagem: trip.dataViagem,
-          horaViagem: trip.horaViagem,
-          timestamp: trip.timestamp,
-          lineIndex: trip.lineIndex
-        });
-      } else {
-        // Compare to keep the most recent entry:
-        // 1. By timestamp (data/hora da viagem)
-        // 2. If timestamps are equal or zero, the line that appeared lower down in the spreadsheet (lineIndex)
-        const isCurrentMoreRecent =
-          trip.timestamp > existing.timestamp ||
-          (trip.timestamp === existing.timestamp && trip.lineIndex > existing.lineIndex);
-
-        if (isCurrentMoreRecent) {
-          conjuntoMap.set(conjuntoKey, {
-            cavalo: trip.cavalo,
-            carretasStr: carretasDisplayStr,
-            transportador: trip.transportador || existing.transportador,
-            motorista: trip.motorista || existing.motorista,
-            vigenciaCadastro: trip.vigenciaCadastro || existing.vigenciaCadastro,
-            checkList: trip.checkList || existing.checkList,
-            dataViagem: trip.dataViagem || existing.dataViagem,
-            horaViagem: trip.horaViagem || existing.horaViagem,
-            timestamp: trip.timestamp,
-            lineIndex: trip.lineIndex
-          });
-        }
-      }
-    });
-
-    const resultItems: ApoliceItem[] = [];
-
-    conjuntoMap.forEach((data) => {
-      const normVig = data.vigenciaCadastro.toUpperCase().trim();
-      const normCheck = data.checkList.toUpperCase().trim();
-
-      let apoliceVal: 'MACRO' | 'SEGURO PRÓPRIO' = 'MACRO';
-
-      const isSeguroProprioText =
-        normVig.includes('SEGURO PROPRIO') ||
-        normVig.includes('SEGURO PRÓPRIO') ||
-        normVig.includes('FROTA 3C') ||
-        normVig.includes('FROTA');
-
-      const isChecklistEmpty = !normCheck || normCheck === '-' || normCheck === 'N/A' || normCheck === 'VAZIO';
-
-      if (isSeguroProprioText || (isSeguroProprioText && isChecklistEmpty)) {
-        apoliceVal = 'SEGURO PRÓPRIO';
-      } else {
-        apoliceVal = 'MACRO';
-      }
-
-      const displayChecklist = isChecklistEmpty ? 'N/A' : data.checkList;
-      const displayVigencia = isSeguroProprioText ? 'SEGURO PRÓPRIO' : data.vigenciaCadastro;
-
-      resultItems.push({
-        id: `apolice-${data.cavalo}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        cavalo: data.cavalo,
-        carretas: data.carretasStr,
-        transportador: data.transportador,
-        motorista: data.motorista,
-        dataHoraViagem: data.dataViagem ? `${data.dataViagem} ${data.horaViagem}`.trim() : undefined,
-        vigenciaCadastro: displayVigencia,
-        checkList: displayChecklist,
-        apolice: apoliceVal
-      });
-    });
-
-    // CRITICAL: Merge new parsed items into the database without erasing existing items!
-    // "toda informação adicionada na aba apolice da pagina escala preciam ficar salvas sempre! somente o usuario pode apagar"
-    setItems((prevItems) => {
-      const updatedList = [...prevItems];
+    setItems(prev => {
+      const updatedList = [...prev];
       let addedCount = 0;
       let updatedCount = 0;
 
-      for (const newItem of resultItems) {
+      for (const newItem of newParsedList) {
         const normCav = cleanPlate(newItem.cavalo);
         const normTrailers = (newItem.carretas || '')
           .split(/[\/\,\;\s]+/)
@@ -568,6 +383,7 @@ export default function ApoliceEscala({
     });
 
     setPasteInput('');
+    setShowPasteBox(false);
   };
 
   const handleLoadSample = () => {
@@ -648,84 +464,76 @@ export default function ApoliceEscala({
     setIsModalOpen(true);
   };
 
-  // Open modal to edit existing conjunto
   const handleOpenEditModal = (item: ApoliceItem) => {
     setEditingItem(item);
     setModalForm({
       cavalo: item.cavalo,
-      carretas: item.carretas === '-' ? '' : item.carretas,
-      transportador: item.transportador,
+      carretas: item.carretas || '',
+      transportador: item.transportador || '3C',
       motorista: item.motorista || '',
-      vigenciaCadastro: item.vigenciaCadastro,
-      checkList: item.checkList,
-      apolice: item.apolice
+      vigenciaCadastro: item.vigenciaCadastro || '',
+      checkList: item.checkList || 'VALIDO',
+      apolice: item.apolice || 'MACRO'
     });
     setIsModalOpen(true);
   };
 
-  // Save Add/Edit modal
   const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!modalForm.cavalo.trim()) {
-      alert('Por favor, informe ao menos a placa do cavalo.');
+      alert('Por favor informe a placa do Cavalo.');
       return;
     }
 
-    const cavaloClean = modalForm.cavalo.toUpperCase().trim();
-    const carretasClean = modalForm.carretas.toUpperCase().trim() || '-';
-    const transportadorClean = modalForm.transportador.toUpperCase().trim() || '3C';
-    const motoristaClean = modalForm.motorista.toUpperCase().trim();
-    const vigenciaClean = modalForm.vigenciaCadastro.toUpperCase().trim() || 'SEGURO PRÓPRIO';
-    const checkListClean = modalForm.checkList.toUpperCase().trim() || 'VALIDO';
+    const cleanCav = cleanPlate(modalForm.cavalo);
+    const cleanCar = modalForm.carretas.split(/[\/\,\;\s]+/).map(cleanPlate).filter(Boolean).join(' ');
 
     if (editingItem) {
       setItems(prev =>
-        prev.map(it =>
-          it.id === editingItem.id
+        prev.map(i =>
+          i.id === editingItem.id
             ? {
-                ...it,
-                cavalo: cavaloClean,
-                carretas: carretasClean,
-                transportador: transportadorClean,
-                motorista: motoristaClean,
-                vigenciaCadastro: vigenciaClean,
-                checkList: checkListClean,
+                ...i,
+                cavalo: cleanCav,
+                carretas: cleanCar,
+                transportador: modalForm.transportador.trim().toUpperCase() || '3C',
+                motorista: modalForm.motorista.trim().toUpperCase(),
+                vigenciaCadastro: modalForm.vigenciaCadastro.trim().toUpperCase(),
+                checkList: modalForm.checkList.trim().toUpperCase(),
                 apolice: modalForm.apolice
               }
-            : it
+            : i
         )
       );
       setSyncNotification({
         show: true,
-        message: `Conjunto ${cavaloClean} atualizado e salvo permanentemente!`,
+        message: `Conjunto ${cleanCav} atualizado com sucesso!`,
         type: 'success'
       });
     } else {
       const newItem: ApoliceItem = {
-        id: `apolice-${cavaloClean}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        cavalo: cavaloClean,
-        carretas: carretasClean,
-        transportador: transportadorClean,
-        motorista: motoristaClean,
-        vigenciaCadastro: vigenciaClean,
-        checkList: checkListClean,
-        apolice: modalForm.apolice,
-        dataHoraViagem: new Date().toLocaleDateString('pt-BR')
+        id: `${cleanCav}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        cavalo: cleanCav,
+        carretas: cleanCar,
+        transportador: modalForm.transportador.trim().toUpperCase() || '3C',
+        motorista: modalForm.motorista.trim().toUpperCase(),
+        vigenciaCadastro: modalForm.vigenciaCadastro.trim().toUpperCase(),
+        checkList: modalForm.checkList.trim().toUpperCase(),
+        apolice: modalForm.apolice
       };
       setItems(prev => [newItem, ...prev]);
       setSyncNotification({
         show: true,
-        message: `Novo conjunto ${cavaloClean} adicionado e salvo permanentemente!`,
+        message: `Novo conjunto ${cleanCav} cadastrado com sucesso!`,
         type: 'success'
       });
     }
 
+    setTimeout(() => setSyncNotification({ show: false, message: '' }), 3500);
     setIsModalOpen(false);
     setEditingItem(null);
-    setTimeout(() => setSyncNotification({ show: false, message: '' }), 3500);
   };
 
-  // Checkbox selection
   const handleToggleSelectRow = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -783,6 +591,12 @@ export default function ApoliceEscala({
     [items]
   );
 
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(start, start + itemsPerPage);
+  }, [filteredItems, currentPage]);
+
   const handleCopyTable = () => {
     if (filteredItems.length === 0) return;
 
@@ -825,34 +639,27 @@ export default function ApoliceEscala({
   };
 
   return (
-    <div className="relative rounded-3xl overflow-hidden p-3 sm:p-6 space-y-6">
-      {/* Background with night highway atmosphere exactly matching image.png */}
-      <div
-        className="absolute inset-0 bg-cover bg-center -z-10 brightness-[0.75] contrast-[1.15]"
-        style={{ backgroundImage: `url(${highwayNightBg})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-slate-950/80 to-black/90 -z-10 backdrop-blur-[2px]" />
-
-      {/* Copy Notification Toast */}
+    <div className="w-full relative z-10 max-w-[96rem] mx-auto flex flex-col font-sans">
+      
+      {/* Toast Notifications */}
       {copiedNotification && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold uppercase tracking-wider animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#2e7d32] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider animate-bounce border border-white/20">
           <Check size={18} />
           <span>Tabela copiada para a área de transferência!</span>
         </div>
       )}
 
-      {/* Persistence & Sync Notification Toast */}
       {syncNotification.show && (
         <div
           className={cn(
-            "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold tracking-wide border transition-all animate-in fade-in slide-in-from-bottom-4",
+            "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-black tracking-wide border transition-all animate-in fade-in slide-in-from-bottom-4",
             syncNotification.type === 'delete'
-              ? "bg-rose-950/95 border-rose-500/50 text-rose-200 shadow-[0_0_20px_rgba(225,29,72,0.4)]"
-              : "bg-emerald-950/95 border-emerald-500/50 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+              ? "bg-[#4a1215] border-red-500/50 text-red-100 shadow-[0_0_25px_rgba(179,32,37,0.5)]"
+              : "bg-[#18331e] border-emerald-500/50 text-emerald-100 shadow-[0_0_25px_rgba(46,125,50,0.5)]"
           )}
         >
           {syncNotification.type === 'delete' ? (
-            <Trash2 size={18} className="text-rose-400 shrink-0" />
+            <Trash2 size={18} className="text-red-400 shrink-0" />
           ) : (
             <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
           )}
@@ -860,498 +667,604 @@ export default function ApoliceEscala({
         </div>
       )}
 
-      {/* TOP STATUS BAR: Cloud Persistence Indicator */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#091322]/90 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] text-xs text-slate-300">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-bold text-[11px]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <Cloud size={13} className="text-emerald-400" />
-            <span>SALVO PERMANENTEMENTE NA NUVEM</span>
-          </div>
+      {/* Main Parchment Panel identical to Lista de Presença */}
+      <div 
+        className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+        }}
+      >
+        {/* Inner border trim */}
+        <div className="absolute inset-1.5 rounded-[1.35rem] border border-[#a6866b]/40 pointer-events-none z-0" />
 
-          <span className="text-slate-400 font-medium">
-            <strong className="text-white font-black">{items.length}</strong> {items.length === 1 ? 'conjunto cadastrado' : 'conjuntos cadastrados'} na base
-          </span>
-        </div>
+        {/* Decorative corner screws */}
+        <Screw className="absolute top-3 left-3 z-20" />
+        <Screw className="absolute top-3 right-3 z-20" />
+        <Screw className="absolute bottom-3 left-3 z-20" />
+        <Screw className="absolute bottom-3 right-3 z-20" />
 
-        <div className="flex items-center gap-2 text-[11px] text-amber-300/90 font-medium">
-          <ShieldCheck size={14} className="text-amber-400 shrink-0" />
-          <span>Informações mantidas permanentemente: somente o usuário pode apagar</span>
-        </div>
-      </div>
+        {/* Main Padding Container */}
+        <div className="p-4 sm:p-6 md:p-8 relative z-10 flex flex-col h-full gap-5">
 
-      {/* TOP CARD: COLAR INFORMAÇÕES DA PLANILHA DE ESCALA */}
-      <div className="relative rounded-2xl md:rounded-3xl border border-cyan-500/25 bg-[#070e1b]/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_35px_rgba(0,0,0,0.6)] space-y-4">
-        {/* Header line inside card */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            {/* Amber glowing rounded square icon */}
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f8be31] to-[#df920f] p-2.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center justify-center text-slate-950 shrink-0">
-              <FileText size={24} className="stroke-[2.5]" />
-            </div>
+          {/* Top Area: Splitted into Left (Shield/Avatar Emblem) and Right (Banner + Header + Black Tag) */}
+          <div className="flex flex-col md:flex-row gap-5 items-stretch">
+            
+            {/* Left Col: Shield Emblem Card matching Profile Image in PresenceList */}
+            <div className="w-28 h-28 md:w-[26%] md:min-w-[210px] md:max-w-[240px] md:h-auto rounded-2xl mx-auto md:mx-0 relative group border-2 border-[#5c3e29] overflow-hidden shrink-0 shadow-md bg-gradient-to-b from-[#2a170d] to-[#150a04] flex flex-col items-center justify-center p-4 text-center">
+              {/* Gold border accent inside */}
+              <div className="absolute inset-1.5 rounded-xl border border-[#D4AF37]/30 pointer-events-none" />
+              
+              {/* Logo Emblem */}
+              <div className="w-16 h-16 rounded-full bg-[#B32025] border-2 border-[#D4AF37] flex items-center justify-center relative shadow-lg mb-2 group-hover:scale-105 transition-transform">
+                <ShieldCheck size={26} className="text-[#D4AF37]" />
+                <div className="absolute inset-1 border border-dashed border-[#D4AF37]/50 rounded-full" />
+              </div>
 
-            <div>
-              <h2 className="text-base sm:text-lg font-black uppercase tracking-wide text-white flex items-center gap-2">
-                <span>COLAR INFORMAÇÕES DA PLANILHA DE ESCALA</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300/90 font-medium">
-                Copie as linhas no Excel e cole abaixo (identifica automaticamente: Transportador, Vigência, Check List, Cavalo, Carreta)
-              </p>
-            </div>
-          </div>
+              <span className="text-[#e2cfb9] font-serif font-black text-xs uppercase tracking-widest leading-tight">
+                Apólices & Seguro
+              </span>
+              <span className="text-[10px] text-[#D4AF37] font-mono font-bold mt-0.5 tracking-wider uppercase">
+                Classificação 3C
+              </span>
 
-          {/* Top Right Action Buttons */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <button
-              type="button"
-              onClick={handleOpenAddModal}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 border border-blue-400/40 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-950/60 hover:scale-102"
-              title="Adicionar conjunto manualmente à base de dados"
-            >
-              <Plus size={16} />
-              <span>+ NOVO CONJUNTO</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLoadSample}
-              className="px-4 py-2 rounded-xl border border-[#d49929] bg-black/40 hover:bg-[#2b1f09] text-[#fcd34d] text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:scale-102"
-              title="Carregar exemplo baseado na captura de tela da planilha"
-            >
-              <Sparkles size={16} className="text-[#fcd34d]" />
-              <span>CARREGAR EXEMPLO DA PLANILHA</span>
-            </button>
-
-            {items.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearAll}
-                className="px-4 py-2 rounded-xl bg-[#520f1e] hover:bg-[#6e1529] border border-rose-500/40 text-rose-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:scale-102"
-                title="Limpar todos os registros da lista"
-              >
-                <Trash2 size={16} />
-                <span>LIMPAR LISTA</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Textarea Box with glowing cyan border matching image.png */}
-        <div className="relative">
-          <textarea
-            value={pasteInput}
-            onChange={(e) => setPasteInput(e.target.value)}
-            placeholder="Cole aqui as linhas da sua planilha (exemplo: selecione as colunas na planilha do Excel, aperte Ctrl+C e cole aqui com Ctrl+V)..."
-            rows={4}
-            className="w-full bg-[#050b14]/90 border border-cyan-500/50 focus:border-cyan-400 rounded-xl p-4 text-xs font-mono text-cyan-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all resize-y shadow-[0_0_15px_rgba(6,182,212,0.12)]"
-          />
-        </div>
-
-        {/* Bottom bar of top box: Info text & Process button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-          <div className="flex items-center gap-2 text-xs text-slate-300">
-            <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-serif font-black text-[10px] shrink-0">
-              i
-            </span>
-            <span>
-              Ao processar, novos conjuntos são adicionados à base permanente e conjuntos existentes são atualizados automaticamente sem perda de dados.
-            </span>
-          </div>
-
-          <button
-            type="button"
-            disabled={!pasteInput.trim()}
-            onClick={() => handleParseSheet(pasteInput)}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#8a0e27] via-[#a81434] to-[#bd183c] hover:from-[#a01230] hover:to-[#d61d46] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-rose-400/40 shadow-lg shadow-rose-950/60 transition-all cursor-pointer hover:scale-102"
-          >
-            <Check size={16} className="stroke-[3]" />
-            <span>PROCESSAR LINHAS COLADAS</span>
-          </button>
-        </div>
-      </div>
-
-      {/* BOTTOM CARD: TABLE */}
-      <div className="relative rounded-2xl md:rounded-3xl border border-cyan-500/25 bg-[#070e1b]/85 backdrop-blur-md overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.7)] space-y-0">
-        {/* Table Top Controls Bar */}
-        <div className="p-3.5 sm:p-4 bg-[#091122]/90 border-b border-cyan-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-wrap flex-1">
-            {/* Search Input with cyan border */}
-            <div className="relative flex-1 sm:max-w-xs">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar placa, carreta, transportador..."
-                className="w-full pl-10 pr-3 py-2 bg-[#050a14]/90 border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-xs font-bold text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400/40 shadow-inner"
-              />
-            </div>
-
-            {/* Filter Dropdown */}
-            <div className="flex items-center gap-2">
-              <Filter size={16} className="text-slate-400" />
-              <div className="relative">
-                <select
-                  value={filterApolice}
-                  onChange={(e) => setFilterApolice(e.target.value)}
-                  className="appearance-none bg-[#050a14]/90 border border-cyan-500/40 focus:border-cyan-400 rounded-xl pl-3.5 pr-8 py-2 text-xs font-bold text-white focus:outline-none cursor-pointer"
-                >
-                  <option value="TODAS">Todas as Apólices</option>
-                  <option value="MACRO">Apenas MACRO</option>
-                  <option value="SEGURO PRÓPRIO">Apenas SEGURO PRÓPRIO</option>
-                </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <div className="mt-3 bg-[#D4AF37]/15 border border-[#D4AF37]/40 rounded-lg px-2.5 py-1 text-[9px] font-bold text-[#f5ebd7] uppercase tracking-wider">
+                Macro • Próprio
               </div>
             </div>
 
-            {/* Bulk Delete Button when items selected */}
-            {selectedIds.size > 0 && (
+            {/* Right Col: Banner Image + Motivational Quote + Title + Black Tag */}
+            <div className="flex-1 flex flex-col justify-between pt-0.5 gap-3">
+              
+              {/* 4K Aesthetic Banner matching PresenceList */}
+              <div className="w-full h-24 md:h-28 rounded-xl overflow-hidden border-2 border-[#5c3e29]/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative group hidden sm:block">
+                <img 
+                  src="/images/banner_coffee.jpg"
+                  alt="Aesthetic Banner"
+                  className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 filter sepia-[20%] contrast-[1.1] brightness-90 relative z-0"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 shadow-[inset_0_0_25px_rgba(0,0,0,0.5)] pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none z-10" />
+                <div className="absolute bottom-2 left-4 z-20 flex items-center gap-2">
+                  <span className="bg-[#B32025] text-white text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded shadow">
+                    LOGÍSTICA & DISTRIBUIÇÃO
+                  </span>
+                  <span className="text-white text-[10px] font-semibold drop-shadow-md">
+                    Santa Luzia / MG — Brasil
+                  </span>
+                </div>
+              </div>
+
+              {/* Inspirational Quote */}
+              <p className="w-full text-[#3d2415] font-serif italic text-xs sm:text-sm text-center leading-snug px-2">
+                "Seja inquieto, curioso e criativo. Transforme necessidades em oportunidades. Empreenda a fim de gerar valor para o negócio. Seja um agente de transformação!"
+              </p>
+
+              {/* Bottom Row: Titles & Signature Black Passion Tag */}
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                {/* Title and category */}
+                <div className="pb-1">
+                  <span className="text-[#5c3e29] font-bold text-[11px] tracking-widest uppercase block mb-1">
+                    Classificação de Apólices & Vigências (Conjuntos Homologados)
+                  </span>
+                  <h1 className="text-2xl sm:text-3xl font-black text-[#3A2414] font-serif uppercase tracking-tight">
+                    APÓLICES: <span className="text-[#B32025]">{items.length} CONJUNTOS CADASTRADOS</span>
+                  </h1>
+                </div>
+
+                {/* Signature Black Tag: Feito com paixão */}
+                <div className="hidden lg:flex bg-[#18110b] border-[3px] border-[#5c3e29] rounded-2xl p-3.5 px-5 items-center justify-center gap-4 shadow-[0_4px_10px_rgba(0,0,0,0.4)] relative shrink-0">
+                  <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  
+                  <div className="w-9 h-9 rounded-xl bg-transparent border border-[#cfab84]/50 flex items-center justify-center">
+                    <Coffee className="text-[#cfab84]" size={18} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-handwritten text-[#e5d5c1] text-lg font-bold leading-none mb-1">Feito com paixão.</span>
+                    <span className="font-handwritten text-[#e5d5c1]/70 text-xs font-medium leading-none">Para quem entrega.</span>
+                    <div className="flex gap-1 mt-1.5">
+                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Status Ribbon & Counters (Matching PresenceList Ribbon Style) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#B32025]" />
+                <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">
+                  Total: <strong className="text-[#3A2414] font-black">{items.length}</strong>
+                </span>
+              </div>
+
+              <div className="h-4 w-[1px] bg-[#d6be9c]" />
+
+              <div className="flex items-center gap-1.5 bg-[#B32025]/10 border border-[#B32025]/30 px-2.5 py-0.5 rounded-lg">
+                <span className="text-[10px] font-bold text-[#B32025] uppercase tracking-wider">MACRO:</span>
+                <span className="text-xs font-black text-[#B32025] font-mono">{totalMacro}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-[#3a200a]/10 border border-[#5c3e29]/30 px-2.5 py-0.5 rounded-lg">
+                <span className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">SEGURO PRÓPRIO:</span>
+                <span className="text-xs font-black text-[#3A2414] font-mono">{totalSeguroProprio}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-emerald-800 bg-emerald-100/70 border border-emerald-300/60 px-3 py-1 rounded-lg text-[10px] font-bold font-mono">
+              <Cloud size={12} className="text-emerald-700" />
+              <span>SINCRONIZAÇÃO NUVEM ATIVA</span>
+            </div>
+          </div>
+
+          {/* Action Buttons Toolbar in PresenceList Aesthetic */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Novo Conjunto */}
               <button
                 type="button"
-                onClick={handleDeleteSelected}
-                className="px-3 py-1.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm animate-in fade-in"
+                onClick={handleOpenAddModal}
+                className="bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e52229] hover:to-[#a9080d] text-white text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20"
               >
-                <Trash2 size={14} />
-                <span>EXCLUIR SELECIONADOS ({selectedIds.size})</span>
+                <Plus size={15} className="stroke-[3]" />
+                <span>+ Novo Conjunto</span>
               </button>
-            )}
+
+              {/* Colar da Planilha (Toggle Box) */}
+              <button
+                type="button"
+                onClick={() => setShowPasteBox(!showPasteBox)}
+                className={cn(
+                  "text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border",
+                  showPasteBox
+                    ? "bg-[#3A2414] text-white border-[#3A2414]"
+                    : "bg-[#5c3e29] hover:bg-[#4a3222] text-[#e8dbcc] border-[#7a5b44]"
+                )}
+              >
+                <ClipboardList size={15} />
+                <span>{showPasteBox ? 'Ocultar Colagem' : 'Colar da Planilha'}</span>
+              </button>
+
+              {/* Carregar Exemplo */}
+              <button
+                type="button"
+                onClick={handleLoadSample}
+                className="bg-[#e4d0b6] hover:bg-[#d8c2a5] text-[#3A2414] border border-[#a6866b] text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
+                title="Carregar exemplo da planilha de escala oficial"
+              >
+                <Sparkles size={14} className="text-[#8c5a2b]" />
+                <span>Carregar Exemplo</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Copiar Tabela */}
+              <button
+                type="button"
+                onClick={handleCopyTable}
+                disabled={filteredItems.length === 0}
+                className="bg-[#FAF6ED] hover:bg-white text-[#3A2414] border border-[#d6be9c] text-xs font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 disabled:opacity-40"
+                title="Copiar registros formatados para o Excel"
+              >
+                <Copy size={14} />
+                <span>Copiar Tabela</span>
+              </button>
+
+              {/* Exportar Excel */}
+              <button
+                type="button"
+                onClick={handleExportXLSX}
+                disabled={filteredItems.length === 0}
+                className="bg-[#2e7d32] hover:bg-[#256628] text-white text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20 disabled:opacity-40"
+              >
+                <FileSpreadsheet size={15} />
+                <span>Exportar Excel</span>
+              </button>
+
+              {/* Limpar Tudo */}
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="bg-[#FAF6ED] hover:bg-rose-50 text-rose-800 border border-rose-300 text-xs font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
+                  title="Limpar todos os registros"
+                >
+                  <Trash2 size={14} />
+                  <span>Limpar</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Action Buttons: Copiar Tabela & Exportar Excel */}
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={handleCopyTable}
-              disabled={filteredItems.length === 0}
-              className="px-4 py-2 rounded-xl bg-[#0b1526] hover:bg-[#12223d] border border-slate-600/80 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-sm transition-all hover:scale-102 disabled:opacity-40"
-              title="Copiar dados para colar no Excel"
-            >
-              <Copy size={16} />
-              <span>COPIAR TABELA</span>
-            </button>
+          {/* Collapsible Parchment Box: Colar Informações da Planilha */}
+          {showPasteBox && (
+            <div className="rounded-2xl bg-[#FAF6ED] border-2 border-[#d6be9c] p-4 sm:p-5 shadow-md flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e1ccb0] pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#3A2414] text-[#e8dbcc] flex items-center justify-center shrink-0">
+                    <FileText size={16} />
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black text-[#3A2414] uppercase tracking-wide">
+                      Colar Linhas do Excel
+                    </h3>
+                    <p className="text-[11px] text-[#7a5b44]">
+                      Identifica automaticamente Cavalo, Carreta, Transportador, Motorista, Vigência e Check List.
+                    </p>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              onClick={handleExportXLSX}
-              disabled={filteredItems.length === 0}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#006e40] to-[#008a50] hover:from-[#007d49] hover:to-[#009e5c] border border-emerald-400/50 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-950/60 transition-all hover:scale-102 disabled:opacity-40"
-              title="Exportar como arquivo XLSX"
-            >
-              <FileSpreadsheet size={16} />
-              <span>EXPORTAR EXCEL</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPasteBox(false)}
+                  className="text-stone-400 hover:text-stone-600 p-1 self-end sm:self-auto cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <textarea
+                value={pasteInput}
+                onChange={(e) => setPasteInput(e.target.value)}
+                placeholder="Copie as linhas no Excel e cole aqui (Ctrl+V)..."
+                rows={3}
+                className="w-full bg-white border border-[#d6be9c] rounded-xl p-3 text-xs font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] shadow-inner resize-y"
+              />
+
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <span className="text-[11px] text-[#7a5b44] italic">
+                  * Registros repetidos são atualizados automaticamente sem duplicar.
+                </span>
+
+                <button
+                  type="button"
+                  disabled={!pasteInput.trim()}
+                  onClick={() => handleParseSheet(pasteInput)}
+                  className="bg-gradient-to-b from-[#B32025] to-[#780d11] hover:from-[#c9252a] hover:to-[#8c0e13] disabled:opacity-40 text-white text-xs font-black uppercase tracking-wider py-2 px-5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer border border-white/20"
+                >
+                  <Check size={14} className="stroke-[3]" />
+                  <span>Processar Linhas Coladas</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Search, Filter & Bulk Actions Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#FAF6ED] p-3 rounded-2xl border border-[#d6be9c] shadow-sm">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto flex-1">
+              {/* Search */}
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Filtrar por placa, transportador, motorista..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white border border-[#d6be9c] rounded-xl py-2 pl-9 pr-3 text-xs text-[#3A2414] placeholder-stone-400 outline-none focus:border-[#B32025] shadow-inner font-medium"
+                />
+              </div>
+
+              {/* Filter by Apolice */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Filter size={15} className="text-[#7a5b44] shrink-0" />
+                <div className="relative flex-1 sm:flex-initial">
+                  <select
+                    value={filterApolice}
+                    onChange={(e) => setFilterApolice(e.target.value)}
+                    className="appearance-none bg-white border border-[#d6be9c] rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-[#3A2414] outline-none focus:border-[#B32025] shadow-inner cursor-pointer w-full"
+                  >
+                    <option value="TODAS">Todas as Apólices ({items.length})</option>
+                    <option value="MACRO">Apenas MACRO ({totalMacro})</option>
+                    <option value="SEGURO PRÓPRIO">Apenas SEGURO PRÓPRIO ({totalSeguroProprio})</option>
+                  </select>
+                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bulk Selection and Counter */}
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+              {selectedIds.size > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDeleteSelected}
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold uppercase tracking-wider py-2 px-3 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 size={13} />
+                  <span>Excluir Selecionados ({selectedIds.size})</span>
+                </button>
+              )}
+
+              <span className="text-xs font-bold text-[#7a5b44]">
+                Exibindo <strong className="text-[#3A2414]">{filteredItems.length}</strong> de {items.length}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Table in Dark Wine/Burgundy Header Style */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              {/* Deep wine / burgundy header matching image.png */}
-              <tr className="bg-[#380712] border-b border-rose-900/60 text-white font-serif font-black uppercase tracking-wider text-center text-[11px] sm:text-[12px]">
-                {/* Checkbox column */}
-                <th className="py-3 px-3 w-10 border-r border-rose-900/50 text-center">
-                  <input
-                    type="checkbox"
-                    checked={filteredItems.length > 0 && selectedIds.size === filteredItems.length}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-slate-600 bg-transparent text-blue-600 focus:ring-0 cursor-pointer"
-                  />
-                </th>
+          {/* Parchment Ledger Table */}
+          <div className="rounded-2xl border border-[#d6be9c] overflow-hidden bg-white shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                {/* Header in deep espresso with gold lettering */}
+                <thead>
+                  <tr className="bg-[#1c1008] text-[#e8dbcc] border-b-2 border-[#5c3e29]">
+                    <th className="py-3 px-3.5 text-center w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
+                        onChange={handleSelectAll}
+                        className="rounded border-[#a6866b] text-[#B32025] focus:ring-0 cursor-pointer"
+                      />
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                      Cavalo
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                      Carretas
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                      Transportador
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                      Motorista
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                      Vigência
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-center">
+                      Check List
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-center">
+                      Apólice (Clique p/ Alternar)
+                    </th>
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-right pr-4">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
 
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[130px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <Truck size={15} />
-                    <span>CAVALO</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[180px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <Truck size={15} className="scale-x-[-1]" />
-                    <span>CARRETAS</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[160px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <Building2 size={15} />
-                    <span>TRANSPORTADOR</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[180px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <User size={15} />
-                    <span>MOTORISTA</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[180px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <Calendar size={15} />
-                    <span>VIGÊNCIA DO CADASTRO</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[140px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <ClipboardList size={15} />
-                    <span>CHECK LIST</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-4 border-r border-rose-900/50 whitespace-nowrap min-w-[170px]">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <ShieldCheck size={15} />
-                    <span>APÓLICE</span>
-                  </div>
-                </th>
-
-                <th className="py-3 px-3 whitespace-nowrap text-center w-24">
-                  <span>AÇÕES</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {filteredItems.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-14 text-center text-slate-400 font-sans">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Truck size={36} className="text-slate-600" />
-                      <p className="font-bold text-slate-300 text-sm">
-                        Nenhum conjunto na lista de apólices
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Cole as linhas da planilha acima ou adicione manualmente no botão "+ Novo Conjunto"
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredItems.map((item) => {
-                  const isSeguroProprio =
-                    item.vigenciaCadastro.toUpperCase().includes('SEGURO PROPRIO') ||
-                    item.vigenciaCadastro.toUpperCase().includes('SEGURO PRÓPRIO');
-
-                  const isApoliceMacro = item.apolice.toUpperCase().includes('MACRO');
-                  const isSelected = selectedIds.has(item.id);
-
-                  return (
-                    <tr
-                      key={item.id}
-                      className={cn(
-                        "transition-colors text-center text-xs font-bold text-white border-b border-slate-800/70",
-                        isSelected
-                          ? "bg-blue-950/40 hover:bg-blue-950/60"
-                          : "hover:bg-white/[0.04]"
-                      )}
-                    >
-                      {/* Checkbox */}
-                      <td className="py-3.5 px-3 w-10 border-r border-slate-800/60 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleSelectRow(item.id)}
-                          className="w-4 h-4 rounded border-slate-600 bg-transparent text-blue-600 focus:ring-0 cursor-pointer"
-                        />
-                      </td>
-
-                      {/* CAVALO */}
-                      <td className="py-3.5 px-4 font-mono font-black text-white border-r border-slate-800/60 tracking-wider">
-                        {item.cavalo}
-                      </td>
-
-                      {/* CARRETAS */}
-                      <td className="py-3.5 px-4 font-mono font-black text-white border-r border-slate-800/60 tracking-wider">
-                        {item.carretas}
-                      </td>
-
-                      {/* TRANSPORTADOR */}
-                      <td className="py-3.5 px-4 font-black uppercase text-white border-r border-slate-800/60">
-                        {item.transportador}
-                      </td>
-
-                      {/* MOTORISTA */}
-                      <td className="py-3.5 px-4 font-bold text-white border-r border-slate-800/60 whitespace-nowrap text-left">
-                        {item.motorista ? (
-                          <div className="flex items-center gap-1.5">
-                            <User size={14} className="text-cyan-400 shrink-0" />
-                            <span className="text-slate-100 uppercase">{item.motorista}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-500 font-normal">-</span>
-                        )}
-                      </td>
-
-                      {/* VIGÊNCIA DO CADASTRO (Green badge block when SEGURO PRÓPRIO as in image.png) */}
-                      <td className="py-2.5 px-3 border-r border-slate-800/60">
-                        {isSeguroProprio ? (
-                          <div className="bg-gradient-to-r from-[#028a39] to-[#0ba849] border border-emerald-400/40 text-white font-black text-xs uppercase px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 shadow-[0_0_12px_rgba(11,168,73,0.4)]">
-                            <ShieldCheck size={16} />
-                            <span>SEGURO PRÓPRIO</span>
-                          </div>
-                        ) : (
-                          <span className="font-bold text-white tracking-wide">
-                            {item.vigenciaCadastro}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* CHECK LIST */}
-                      <td className="py-3.5 px-4 font-bold text-white border-r border-slate-800/60">
-                        {item.checkList}
-                      </td>
-
-                      {/* APÓLICE (Pill button dropdown matching image.png) */}
-                      <td className="py-2.5 px-4 relative border-r border-slate-800/60">
-                        <div className="inline-block relative">
-                          <button
-                            type="button"
-                            onClick={() => setActiveDropdownId(activeDropdownId === item.id ? null : item.id)}
-                            className={cn(
-                              "py-1.5 rounded-full text-white text-xs font-black uppercase tracking-wider flex items-center justify-between gap-3 shadow-md hover:brightness-110 transition-all cursor-pointer",
-                              isApoliceMacro
-                                ? "bg-gradient-to-r from-[#0051b8] to-[#0066e0] border border-blue-400/40 min-w-[135px] px-5 shadow-[0_0_12px_rgba(0,102,224,0.35)]"
-                                : "bg-gradient-to-r from-[#800c1f] to-[#991026] border border-rose-400/40 min-w-[155px] px-4 shadow-[0_0_12px_rgba(153,16,38,0.4)]"
-                            )}
-                            title="Clique para alternar a apólice"
-                          >
-                            <span className="flex-1 text-center">{item.apolice}</span>
-                            <ChevronDown size={14} className="shrink-0 opacity-90" />
-                          </button>
-
-                          {/* Dropdown Menu */}
-                          {activeDropdownId === item.id && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-20"
-                                onClick={() => setActiveDropdownId(null)}
-                              />
-                              <div className="absolute right-0 mt-1.5 z-30 w-44 bg-[#0a1222] rounded-2xl shadow-2xl border-2 border-cyan-500/40 py-2 text-xs text-left animate-in fade-in zoom-in-95">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleApolice(item.id, 'MACRO')}
-                                  className="w-full px-3 py-2 hover:bg-blue-600/20 text-blue-300 font-bold flex items-center gap-2 cursor-pointer transition-colors"
-                                >
-                                  <span className="w-2.5 h-2.5 rounded-full bg-[#0066e0]" />
-                                  <span>MACRO</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleApolice(item.id, 'SEGURO PRÓPRIO')}
-                                  className="w-full px-3 py-2 hover:bg-rose-600/20 text-rose-300 font-bold flex items-center gap-2 cursor-pointer transition-colors"
-                                >
-                                  <span className="w-2.5 h-2.5 rounded-full bg-[#991026]" />
-                                  <span>SEGURO PRÓPRIO</span>
-                                </button>
-                                <div className="border-t border-slate-700 my-1" />
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenEditModal(item)}
-                                  className="w-full px-3 py-2 hover:bg-blue-950/60 text-blue-400 font-bold flex items-center gap-2 cursor-pointer transition-colors"
-                                >
-                                  <Edit2 size={13} />
-                                  <span>Editar Linha</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteRow(item.id, item.cavalo)}
-                                  className="w-full px-3 py-2 hover:bg-rose-950/60 text-rose-400 font-bold flex items-center gap-2 cursor-pointer transition-colors"
-                                >
-                                  <Trash2 size={13} />
-                                  <span>Remover Linha</span>
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* AÇÕES (Edit and Delete buttons) */}
-                      <td className="py-2.5 px-3 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditModal(item)}
-                            className="p-1.5 rounded-lg bg-blue-950/60 hover:bg-blue-800/70 border border-blue-500/30 text-blue-300 transition-all cursor-pointer hover:scale-105"
-                            title="Editar conjunto"
-                          >
-                            <Edit2 size={13} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRow(item.id, item.cavalo)}
-                            className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-800/70 border border-rose-500/30 text-rose-300 transition-all cursor-pointer hover:scale-105"
-                            title="Excluir conjunto (somente você pode apagar)"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                {/* Table Body */}
+                <tbody className="divide-y divide-[#ebd9c1]">
+                  {paginatedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-12 text-center text-stone-400 font-medium">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <ShieldCheck size={32} className="text-[#d6be9c]" />
+                          <span>Nenhum conjunto encontrado com os filtros aplicados.</span>
                         </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ) : (
+                    paginatedItems.map((item, index) => {
+                      const isSelected = selectedIds.has(item.id);
+                      const isMacro = item.apolice.toUpperCase().includes('MACRO');
+                      const isCheckListValido = item.checkList.toUpperCase().includes('VALIDO') || item.checkList.toUpperCase().includes('VÁLIDO');
+
+                      return (
+                        <tr
+                          key={item.id || index}
+                          className={cn(
+                            "transition-colors group",
+                            isSelected
+                              ? "bg-[#f5e6d0]"
+                              : index % 2 === 0
+                                ? "bg-white hover:bg-[#FAF6ED]"
+                                : "bg-[#FAF6ED]/60 hover:bg-[#FAF6ED]"
+                          )}
+                        >
+                          {/* Selection Checkbox */}
+                          <td className="py-2.5 px-3.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectRow(item.id)}
+                              className="rounded border-[#a6866b] text-[#B32025] focus:ring-0 cursor-pointer"
+                            />
+                          </td>
+
+                          {/* Cavalo License Plate */}
+                          <td className="py-2.5 px-3 font-mono font-black text-[#3A2414] text-xs">
+                            <span className="bg-[#FAF6ED] border border-[#d6be9c] px-2 py-0.5 rounded shadow-sm">
+                              {item.cavalo}
+                            </span>
+                          </td>
+
+                          {/* Carretas */}
+                          <td className="py-2.5 px-3 font-mono font-bold text-[#5c3e29]">
+                            {item.carretas ? (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {item.carretas.split(' ').map((c, i) => (
+                                  <span key={i} className="bg-[#f0e2cf] text-[#4a301e] px-1.5 py-0.5 rounded text-[11px]">
+                                    {c}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-stone-300 italic">-</span>
+                            )}
+                          </td>
+
+                          {/* Transportador */}
+                          <td className="py-2.5 px-3 font-bold text-[#3A2414]">
+                            <div className="flex items-center gap-1.5">
+                              <Truck size={13} className="text-[#8c5a2b]" />
+                              <span>{item.transportador || '3C'}</span>
+                            </div>
+                          </td>
+
+                          {/* Motorista */}
+                          <td className="py-2.5 px-3 font-medium text-[#4a301e] max-w-[200px] truncate" title={item.motorista}>
+                            {item.motorista ? (
+                              <div className="flex items-center gap-1.5">
+                                <User size={13} className="text-[#a6866b] shrink-0" />
+                                <span className="truncate">{item.motorista}</span>
+                              </div>
+                            ) : (
+                              <span className="text-stone-300 italic">-</span>
+                            )}
+                          </td>
+
+                          {/* Vigência */}
+                          <td className="py-2.5 px-3 font-mono text-xs font-semibold text-[#5c3e29]">
+                            {item.vigenciaCadastro}
+                          </td>
+
+                          {/* Check List */}
+                          <td className="py-2.5 px-3 text-center">
+                            <span
+                              className={cn(
+                                "text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border inline-block shadow-sm",
+                                isCheckListValido
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                                  : "bg-rose-50 text-rose-800 border-rose-300"
+                              )}
+                            >
+                              {item.checkList || 'VALIDO'}
+                            </span>
+                          </td>
+
+                          {/* Apólice (Clickable Pill) */}
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="relative inline-block">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleApolice(item.id, isMacro ? 'SEGURO PRÓPRIO' : 'MACRO')}
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl transition-all cursor-pointer shadow-sm border flex items-center gap-1.5 mx-auto active:scale-95",
+                                  isMacro
+                                    ? "bg-[#B32025] hover:bg-[#8c060a] text-white border-white/20"
+                                    : "bg-[#3A2414] hover:bg-[#25150a] text-[#efdfc6] border-[#7a5b44]"
+                                )}
+                                title="Clique para alternar entre MACRO e SEGURO PRÓPRIO"
+                              >
+                                <span>{item.apolice}</span>
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-2.5 px-3 text-right pr-4">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(item)}
+                                className="p-1.5 rounded-lg text-[#5c3e29] hover:bg-[#f0e2cf] transition-colors cursor-pointer"
+                                title="Editar registro"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteRow(item.id, item.cavalo)}
+                                className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                                title="Excluir conjunto"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="p-3 bg-[#FAF6ED] border-t border-[#d6be9c] flex items-center justify-between text-xs text-[#5c3e29]">
+                <span className="font-semibold">
+                  Página <strong className="text-[#3A2414]">{currentPage}</strong> de {totalPages}
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className="p-1.5 rounded-lg border border-[#d6be9c] bg-white hover:bg-[#FAF6ED] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+
+                  <span className="px-2 font-mono font-bold text-[#3A2414]">
+                    {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className="p-1.5 rounded-lg border border-[#d6be9c] bg-white hover:bg-[#FAF6ED] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
 
-        {/* Table Footer with metrics */}
-        <div className="p-3.5 sm:p-4 bg-[#070e1b]/95 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400 font-medium">
-          <div>
-            Exibindo <strong>{filteredItems.length}</strong> de <strong>{items.length}</strong> {items.length === 1 ? 'conjunto' : 'conjuntos'}
-          </div>
-          <div className="flex items-center gap-5">
-            <span className="flex items-center gap-2 font-bold text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0070f3] shadow-[0_0_8px_#0070f3]" />
-              <span>MACRO: {totalMacro}</span>
-            </span>
-            <span className="flex items-center gap-2 font-bold text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#b31536] shadow-[0_0_8px_#b31536]" />
-              <span>SEGURO PRÓPRIO: {totalSeguroProprio}</span>
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* MODAL: ADICIONAR OU EDITAR CONJUNTO NA APÓLICE */}
+      {/* Modal: Novo / Editar Conjunto */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg bg-[#08111e] border-2 border-cyan-500/40 rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] space-y-5">
-            <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div 
+            className="w-full max-w-lg rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative p-6 flex flex-col gap-4 text-[#3A2414]"
+            style={{
+              backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+            }}
+          >
+            <Screw className="absolute top-3 left-3" />
+            <Screw className="absolute top-3 right-3" />
+            <Screw className="absolute bottom-3 left-3" />
+            <Screw className="absolute bottom-3 right-3" />
+
+            <div className="flex items-center justify-between border-b border-[#d6be9c] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#B32025] text-white flex items-center justify-center shadow-md">
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-black uppercase text-white tracking-wide">
-                    {editingItem ? 'Editar Conjunto na Apólice' : 'Novo Conjunto na Apólice'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    O registro ficará salvo permanentemente na base de dados
+                  <h2 className="text-base font-black text-[#3A2414] font-serif uppercase tracking-tight">
+                    {editingItem ? 'Editar Conjunto' : 'Novo Conjunto'}
+                  </h2>
+                  <p className="text-[11px] text-[#7a5b44]">
+                    Cadastro de Apólice na base oficial 3 Corações
                   </p>
                 </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditingItem(null);
                 }}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                className="text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveModal} className="space-y-4 text-xs font-bold text-slate-200">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSaveModal} className="space-y-3.5 text-xs font-bold text-[#3A2414]">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Placa Cavalo *
                   </label>
                   <input
@@ -1360,27 +1273,40 @@ export default function ApoliceEscala({
                     value={modalForm.cavalo}
                     onChange={(e) => setModalForm({ ...modalForm, cavalo: e.target.value })}
                     placeholder="Ex: QWK6A22"
-                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl font-mono text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Carretas
                   </label>
                   <input
                     type="text"
                     value={modalForm.carretas}
                     onChange={(e) => setModalForm({ ...modalForm, carretas: e.target.value })}
-                    placeholder="Ex: OLN7307 ou OLN7307 OLN7457"
-                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl font-mono text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                    placeholder="Ex: OLN7307 OLN7457"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                    Transportador
+                  </label>
+                  <input
+                    type="text"
+                    value={modalForm.transportador}
+                    onChange={(e) => setModalForm({ ...modalForm, transportador: e.target.value })}
+                    placeholder="Ex: 3C, MOEDENSE"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Motorista
                   </label>
                   <input
@@ -1388,54 +1314,41 @@ export default function ApoliceEscala({
                     value={modalForm.motorista}
                     onChange={(e) => setModalForm({ ...modalForm, motorista: e.target.value })}
                     placeholder="Nome do motorista"
-                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
-                    Transportador
-                  </label>
-                  <input
-                    type="text"
-                    value={modalForm.transportador}
-                    onChange={(e) => setModalForm({ ...modalForm, transportador: e.target.value })}
-                    placeholder="Ex: 3C, MOEDENSE, TRANSMAGNA"
-                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Vigência do Cadastro
                   </label>
                   <input
                     type="text"
                     value={modalForm.vigenciaCadastro}
                     onChange={(e) => setModalForm({ ...modalForm, vigenciaCadastro: e.target.value })}
-                    placeholder="Ex: SEGURO PRÓPRIO ou 13/05/2027"
-                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                    placeholder="Ex: 13/05/2027 ou SEGURO PRÓPRIO"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Check List
                   </label>
                   <input
                     type="text"
                     value={modalForm.checkList}
                     onChange={(e) => setModalForm({ ...modalForm, checkList: e.target.value })}
-                    placeholder="Ex: VALIDO, VENCIDO ou 10/11/2026"
-                    className="w-full px-3.5 py-2.5 bg-[#050b14] border border-cyan-500/40 focus:border-cyan-400 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 uppercase"
+                    placeholder="Ex: VALIDO ou VENCIDO"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block mb-1 text-[11px] text-cyan-300 uppercase tracking-wider">
+                <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                   Classificação da Apólice
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -1443,10 +1356,10 @@ export default function ApoliceEscala({
                     type="button"
                     onClick={() => setModalForm({ ...modalForm, apolice: 'MACRO' })}
                     className={cn(
-                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer",
+                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer shadow-sm",
                       modalForm.apolice === 'MACRO'
-                        ? "bg-gradient-to-r from-[#0051b8] to-[#0066e0] border-blue-400 text-white shadow-[0_0_12px_rgba(0,102,224,0.4)]"
-                        : "bg-[#050a14] border-slate-700 text-slate-400 hover:text-white"
+                        ? "bg-[#B32025] text-white border-[#B32025]"
+                        : "bg-white border-[#d6be9c] text-stone-500 hover:text-stone-800"
                     )}
                   >
                     MACRO
@@ -1456,10 +1369,10 @@ export default function ApoliceEscala({
                     type="button"
                     onClick={() => setModalForm({ ...modalForm, apolice: 'SEGURO PRÓPRIO' })}
                     className={cn(
-                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer",
+                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer shadow-sm",
                       modalForm.apolice === 'SEGURO PRÓPRIO'
-                        ? "bg-gradient-to-r from-[#800c1f] to-[#991026] border-rose-400 text-white shadow-[0_0_12px_rgba(153,16,38,0.4)]"
-                        : "bg-[#050a14] border-slate-700 text-slate-400 hover:text-white"
+                        ? "bg-[#3A2414] text-[#efdfc6] border-[#3A2414]"
+                        : "bg-white border-[#d6be9c] text-stone-500 hover:text-stone-800"
                     )}
                   >
                     SEGURO PRÓPRIO
@@ -1467,22 +1380,22 @@ export default function ApoliceEscala({
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#d6be9c]">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     setEditingItem(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white border border-[#d6be9c] hover:bg-[#FAF6ED] text-[#5c3e29] text-xs font-bold transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-emerald-950/60 transition-all cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-b from-[#B32025] to-[#780d11] hover:from-[#c9252a] hover:to-[#8c0e13] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer border border-white/20"
                 >
-                  <Save size={15} />
+                  <Save size={14} />
                   <span>Salvar Registro</span>
                 </button>
               </div>
@@ -1490,6 +1403,7 @@ export default function ApoliceEscala({
           </div>
         </div>
       )}
+
     </div>
   );
 }

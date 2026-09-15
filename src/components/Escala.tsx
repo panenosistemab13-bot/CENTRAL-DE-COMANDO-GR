@@ -1645,7 +1645,7 @@ export default function Escala({ onBack }: EscalaProps) {
             <ShieldCheck size={16} className="text-blue-400" />
             <span>4. Apólice</span>
             <span className="ml-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-mono font-bold">
-              Lista
+              {apoliceItems.length}
             </span>
           </button>
 
