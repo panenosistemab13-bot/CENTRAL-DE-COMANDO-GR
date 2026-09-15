@@ -41,6 +41,52 @@ function Screw({ className }: { className?: string }) {
   );
 }
 
+// Placa no formato oficial Mercosul (Brasil)
+function MercosulPlate({ plate, className }: { plate: string; className?: string }) {
+  if (!plate || plate === '-') {
+    return <span className="text-stone-400 font-mono font-bold text-[10px]">-</span>;
+  }
+  const clean = plate.trim().toUpperCase();
+
+  return (
+    <div
+      className={cn(
+        "inline-flex flex-col items-center justify-center overflow-hidden select-none font-mono tracking-wider w-[108px] h-[34px] shrink-0 rounded-[5px] shadow-[0_2px_5px_rgba(0,0,0,0.28)] border-2 border-[#1c1c1c] bg-white transition-transform hover:scale-105 cursor-default",
+        className
+      )}
+      title={`Placa Mercosul Cavalo: ${clean}`}
+    >
+      {/* Faixa Azul Superior do Mercosul */}
+      <div className="w-full bg-[#003399] h-[10px] flex items-center justify-between px-1.5 leading-none relative">
+        <span className="text-[5.5px] text-white font-sans font-bold tracking-tight scale-95">BR</span>
+        <span className="text-[6.5px] text-white font-sans font-black tracking-widest uppercase absolute left-1/2 -translate-x-1/2">
+          BRASIL
+        </span>
+        {/* Bandeira do Brasil */}
+        <div className="w-[8px] h-[5.5px] bg-[#009b3a] border border-white/30 flex items-center justify-center relative rounded-[1px] overflow-hidden shrink-0">
+          <div className="w-[4.5px] h-[3px] bg-[#ffdf00] rotate-45 transform flex items-center justify-center">
+            <div className="w-[1.6px] h-[1.6px] bg-[#002776] rounded-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Caracteres em Alto Relevo Mercosul */}
+      <div className="w-full flex-1 flex items-center justify-center bg-gradient-to-b from-[#ffffff] via-[#fafafa] to-[#ece8df] px-1">
+        <span
+          className="text-[#151515] font-black text-[13.5px] tracking-wider leading-none select-all"
+          style={{
+            fontFamily: "'FE-Font', 'Courier New', monospace, sans-serif",
+            letterSpacing: '0.08em',
+            textShadow: '0.5px 0.5px 0px rgba(255, 255, 255, 0.9)'
+          }}
+        >
+          {clean}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export interface ApoliceItem {
   id: string;
   cavalo: string;
@@ -1073,58 +1119,59 @@ export default function ApoliceEscala({
                             />
                           </td>
 
-                          {/* Cavalo License Plate */}
-                          <td className="py-2.5 px-3 font-mono font-black text-[#3A2414] text-xs">
-                            <span className="bg-[#FAF6ED] border border-[#d6be9c] px-2 py-0.5 rounded shadow-sm">
-                              {item.cavalo}
-                            </span>
+                          {/* Cavalo License Plate in Mercosul Format */}
+                          <td className="py-2 px-3 align-middle">
+                            <MercosulPlate plate={item.cavalo} />
                           </td>
 
                           {/* Carretas */}
-                          <td className="py-2.5 px-3 font-mono font-bold text-[#5c3e29]">
+                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] align-middle">
                             {item.carretas ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {item.carretas.split(' ').map((c, i) => (
-                                  <span key={i} className="bg-[#f0e2cf] text-[#4a301e] px-1.5 py-0.5 rounded text-[11px]">
+                                  <span
+                                    key={i}
+                                    className="bg-[#f0e2cf] text-[#4a301e] px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#d6be9c]/60 shadow-xs"
+                                  >
                                     {c}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-stone-300 italic">-</span>
+                              <span className="text-stone-300 italic text-[10px] font-bold uppercase tracking-wider">-</span>
                             )}
                           </td>
 
                           {/* Transportador */}
-                          <td className="py-2.5 px-3 font-bold text-[#3A2414]">
+                          <td className="py-2 px-3 font-bold text-[#3A2414] text-[10px] uppercase tracking-wider align-middle">
                             <div className="flex items-center gap-1.5">
-                              <Truck size={13} className="text-[#8c5a2b]" />
-                              <span>{item.transportador || '3C'}</span>
+                              <Truck size={14} className="text-[#8c5a2b] shrink-0" />
+                              <span className="font-bold tracking-wider">{item.transportador || '3C'}</span>
                             </div>
                           </td>
 
                           {/* Motorista */}
-                          <td className="py-2.5 px-3 font-medium text-[#4a301e] max-w-[200px] truncate" title={item.motorista}>
+                          <td className="py-2 px-3 font-bold text-[#4a301e] text-[10px] uppercase tracking-wider max-w-[200px] truncate align-middle" title={item.motorista}>
                             {item.motorista ? (
                               <div className="flex items-center gap-1.5">
-                                <User size={13} className="text-[#a6866b] shrink-0" />
+                                <User size={14} className="text-[#a6866b] shrink-0" />
                                 <span className="truncate">{item.motorista}</span>
                               </div>
                             ) : (
-                              <span className="text-stone-300 italic">-</span>
+                              <span className="text-stone-300 italic text-[10px] font-bold uppercase tracking-wider">-</span>
                             )}
                           </td>
 
                           {/* Vigência */}
-                          <td className="py-2.5 px-3 font-mono text-xs font-semibold text-[#5c3e29]">
+                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] text-[10px] uppercase tracking-wider align-middle">
                             {item.vigenciaCadastro}
                           </td>
 
                           {/* Check List */}
-                          <td className="py-2.5 px-3 text-center">
+                          <td className="py-2 px-3 text-center align-middle">
                             <span
                               className={cn(
-                                "text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border inline-block shadow-sm",
+                                "text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl border inline-block shadow-xs",
                                 isCheckListValido
                                   ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                                   : "bg-rose-50 text-rose-800 border-rose-300"
@@ -1135,7 +1182,7 @@ export default function ApoliceEscala({
                           </td>
 
                           {/* Apólice (Clickable Pill) */}
-                          <td className="py-2.5 px-3 text-center">
+                          <td className="py-2 px-3 text-center align-middle">
                             <div className="relative inline-block">
                               <button
                                 type="button"
@@ -1264,17 +1311,29 @@ export default function ApoliceEscala({
             <form onSubmit={handleSaveModal} className="space-y-3.5 text-xs font-bold text-[#3A2414]">
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
-                    Placa Cavalo *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={modalForm.cavalo}
-                    onChange={(e) => setModalForm({ ...modalForm, cavalo: e.target.value })}
-                    placeholder="Ex: QWK6A22"
-                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                      Placa Cavalo *
+                    </label>
+                    {modalForm.cavalo.trim() && (
+                      <span className="text-[9px] text-[#003399] font-black uppercase tracking-wider">
+                        Padrão Mercosul
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={modalForm.cavalo}
+                      onChange={(e) => setModalForm({ ...modalForm, cavalo: e.target.value })}
+                      placeholder="Ex: QWK6A22"
+                      className="flex-1 px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner text-xs font-bold"
+                    />
+                    {modalForm.cavalo.trim() && (
+                      <MercosulPlate plate={modalForm.cavalo} className="scale-90 origin-right" />
+                    )}
+                  </div>
                 </div>
 
                 <div>
