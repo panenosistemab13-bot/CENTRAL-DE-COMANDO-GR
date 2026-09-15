@@ -35,6 +35,25 @@ export const formatPlateWithHyphen = (plateStr?: string): string => {
   return clean.replace(/\b([A-Z]{3})([0-9][A-Z0-9]{3})\b/g, '$1-$2');
 };
 
+/**
+ * Higieniza recursivamente objetos removendo propriedades com valor 'undefined',
+ * que causam erros fatais no Firebase Realtime Database.
+ */
+export const sanitizeForFirebase = <T extends Record<string, any>>(obj: T): T => {
+  const clean: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) {
+      continue;
+    }
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      clean[key] = sanitizeForFirebase(value);
+    } else {
+      clean[key] = value;
+    }
+  }
+  return clean as T;
+};
+
 interface PdfFile {
   id: string;
   name: string;
@@ -124,21 +143,94 @@ export default function Checklist() {
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
 
   const handleImportData = async () => {
+    if (!pasteData.trim()) {
+      alert('Por favor, cole as informações da planilha antes de clicar em Atualizar.');
+      return;
+    }
+
     const lines = pasteData.trim().split('\n');
     const updates: Record<string, any> = {};
+
+    const parseDate = (d: string): string => {
+      if (!d || d === 'REPROVADO' || d === 'VENCIDO' || d === '#VALUE!') {
+        return format(new Date(), 'yyyy-MM-dd');
+      }
+      const cleanD = d.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(cleanD)) return cleanD;
+      if (cleanD.includes('/')) {
+        const parts = cleanD.split('/');
+        if (parts.length === 3) {
+          const [p1, p2, p3] = parts;
+          if (p3.length === 4) return `${p3}-${p2.padStart(2, '0')}-${p1.padStart(2, '0')}`;
+          if (p1.length === 4) return `${p1}-${p2.padStart(2, '0')}-${p3.padStart(2, '0')}`;
+        }
+      }
+      if (cleanD.includes('-')) {
+        const parts = cleanD.split('-');
+        if (parts.length === 3) {
+          const [p1, p2, p3] = parts;
+          if (p3.length === 4) return `${p3}-${p2.padStart(2, '0')}-${p1.padStart(2, '0')}`;
+          if (p1.length === 4) return `${p1}-${p2.padStart(2, '0')}-${p3.padStart(2, '0')}`;
+        }
+      }
+      return format(new Date(), 'yyyy-MM-dd');
+    };
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
       if (!line) continue;
 
-      const parts = line.split('\t').map(p => p.trim()).filter(Boolean);
+      let parts: string[] = [];
+      if (line.includes('\t')) {
+        parts = line.split('\t').map(p => p.trim()).filter(Boolean);
+      } else if (line.includes(';')) {
+        parts = line.split(';').map(p => p.trim()).filter(Boolean);
+      } else if (line.includes(',') && !line.includes('/')) {
+        parts = line.split(',').map(p => p.trim()).filter(Boolean);
+      } else {
+        parts = line.split(/\s+/).map(p => p.trim()).filter(Boolean);
+      }
+
       let cavalo = '';
       let carretas = '';
       let statusStr = 'APROVADO';
       let dataTesteStr = '';
       let dataVencStr = '';
 
-      if (parts.length >= 5) {
+      // Check for dates in parts
+      const dateIndices = parts.reduce((acc, t, idx) => {
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(t) || /^\d{4}-\d{2}-\d{2}$/.test(t)) {
+          acc.push(idx);
+        }
+        return acc;
+      }, [] as number[]);
+
+      if (dateIndices.length >= 2) {
+        const tIdx1 = dateIndices[0];
+        const tIdx2 = dateIndices[1];
+        cavalo = parts[0];
+        dataTesteStr = parts[tIdx1];
+        dataVencStr = parts[tIdx2];
+
+        if (tIdx1 === 1) {
+          carretas = '';
+        } else if (tIdx1 === 2) {
+          const mid = parts[1].toUpperCase();
+          if (mid.includes('APROVADO') || mid.includes('VENCIDO') || mid.includes('REPROVADO') || mid.includes('NEGATIVADO')) {
+            statusStr = mid;
+          } else {
+            carretas = parts[1];
+          }
+        } else if (tIdx1 >= 3) {
+          const candidateStatus = parts[tIdx1 - 1].toUpperCase();
+          if (candidateStatus.includes('APROVADO') || candidateStatus.includes('VENCIDO') || candidateStatus.includes('REPROVADO') || candidateStatus.includes('NEGATIVADO')) {
+            statusStr = candidateStatus;
+            carretas = parts.slice(1, tIdx1 - 1).join(' ');
+          } else {
+            carretas = parts.slice(1, tIdx1).join(' ');
+          }
+        }
+      } else if (parts.length >= 5) {
         cavalo = parts[0];
         carretas = parts[1];
         statusStr = parts[2].toUpperCase();
@@ -150,86 +242,85 @@ export default function Checklist() {
         statusStr = parts[1].toUpperCase();
         dataTesteStr = parts[2];
         dataVencStr = parts[3];
-      } else {
-        const tokens = line.split(/\s+/);
-        if (tokens.length >= 5) {
-          cavalo = tokens[0];
-          const dateIndices = tokens.reduce((acc, t, idx) => {
-            if (/^\d{2}\/\d{2}\/\d{4}$/.test(t)) acc.push(idx);
-            return acc;
-          }, [] as number[]);
-
-          if (dateIndices.length >= 2) {
-            const tIdx1 = dateIndices[0];
-            const tIdx2 = dateIndices[1];
-            dataTesteStr = tokens[tIdx1];
-            dataVencStr = tokens[tIdx2];
-            statusStr = tokens.slice(tIdx1 - 2, tIdx1).join(' ').toUpperCase();
-            carretas = tokens.slice(1, tIdx1 - 2).join(' ');
-          }
-        }
+      } else if (parts.length === 3) {
+        cavalo = parts[0];
+        dataTesteStr = parts[1];
+        dataVencStr = parts[2];
+      } else if (parts.length === 2) {
+        cavalo = parts[0];
+        carretas = parts[1];
+      } else if (parts.length === 1) {
+        cavalo = parts[0];
       }
 
-      if (cavalo) {
-        cavalo = formatPlateWithHyphen(cavalo);
-        carretas = formatPlateWithHyphen(carretas);
+      if (!cavalo) continue;
 
-        const parseDate = (d: string) => {
-          if (!d || d === 'REPROVADO' || d === 'VENCIDO' || d === '#VALUE!') return format(new Date(), 'yyyy-MM-dd');
-          const [dd, mm, yyyy] = d.split('/');
-          if (yyyy && mm && dd) return `${yyyy}-${mm}-${dd}`;
-          return format(new Date(), 'yyyy-MM-dd');
-        };
-
-        const parsedTeste = parseDate(dataTesteStr);
-        const parsedVenc = (dataVencStr === 'REPROVADO' || dataVencStr === 'VENCIDO' || dataVencStr === '#VALUE!') 
-          ? format(addDays(new Date(), -1), 'yyyy-MM-dd') 
-          : parseDate(dataVencStr);
-
-        const isNegated = statusStr.includes('NEGATIVADO') || statusStr.includes('REPROVADO') || dataVencStr === 'REPROVADO';
-        const resolvedStatus = isNegated ? (statusStr.includes('REPROVADO') ? 'REPROVADO' : 'NEGATIVADO') : undefined;
-
-        const cleanCavalo = cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-        const existing = items.find(item => item.cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase() === cleanCavalo);
-
-        if (existing) {
-          updates[`checklist_veiculos/${existing.id}`] = {
-            ...existing,
-            cavalo,
-            carretas: carretas || existing.carretas,
-            statusOverride: resolvedStatus as ChecklistItem['statusOverride'],
-            dataTeste: parsedTeste,
-            dataVencimento: parsedVenc
-          };
-        } else {
-          const newId = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-          updates[`checklist_veiculos/${newId}`] = {
-            cavalo,
-            carretas: carretas || '',
-            statusOverride: resolvedStatus as ChecklistItem['statusOverride'],
-            dataTeste: parsedTeste,
-            dataVencimento: parsedVenc,
-            manutencaoOs: '',
-            periferico: '',
-            observacao: ''
-          };
-        }
+      const cleanCavaloCheck = cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      // Skip header lines from spreadsheets
+      if (['CAVALO', 'PLACA', 'PLACACAVALO', 'VEICULO', 'STATUS'].includes(cleanCavaloCheck)) {
+        continue;
       }
+
+      cavalo = formatPlateWithHyphen(cavalo);
+      carretas = formatPlateWithHyphen(carretas);
+
+      const parsedTeste = parseDate(dataTesteStr);
+      const parsedVenc = (dataVencStr === 'REPROVADO' || dataVencStr === 'VENCIDO' || dataVencStr === '#VALUE!') 
+        ? format(addDays(new Date(), -1), 'yyyy-MM-dd') 
+        : parseDate(dataVencStr);
+
+      const isNegated = statusStr.includes('NEGATIVADO') || statusStr.includes('REPROVADO') || dataVencStr === 'REPROVADO';
+      const resolvedStatus = isNegated ? (statusStr.includes('REPROVADO') ? 'REPROVADO' : 'NEGATIVADO') : null;
+
+      const cleanCavalo = cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      const existing = items.find(item => item.cavalo && item.cavalo.replace(/[^A-Z0-9]/gi, '').toUpperCase() === cleanCavalo);
+
+      const targetId = existing?.id || (Date.now().toString() + Math.random().toString(36).substring(2, 6));
+
+      const itemRecord: Record<string, any> = {
+        id: targetId,
+        cavalo,
+        carretas: carretas || existing?.carretas || '',
+        dataTeste: parsedTeste,
+        dataVencimento: parsedVenc,
+        manutencaoOs: existing?.manutencaoOs || '',
+        periferico: existing?.periferico || '',
+        observacao: existing?.observacao || '',
+        dataAgendamento: existing?.dataAgendamento || '',
+        osStatus: existing?.osStatus || 'PENDENTE',
+        checklistRealizado: existing?.checklistRealizado || 'não'
+      };
+
+      if (existing?.pdfs && Array.isArray(existing.pdfs) && existing.pdfs.length > 0) {
+        itemRecord.pdfs = existing.pdfs;
+      }
+
+      if (resolvedStatus) {
+        itemRecord.statusOverride = resolvedStatus;
+      } else if (existing && existing.statusOverride) {
+        // Clearing statusOverride in RTDB safely by passing null
+        itemRecord.statusOverride = null;
+      }
+
+      updates[`checklist_veiculos/${targetId}`] = sanitizeForFirebase(itemRecord);
     }
 
-    if (Object.keys(updates).length > 0) {
+    const updatesCount = Object.keys(updates).length;
+
+    if (updatesCount > 0) {
       try {
         localStorage.removeItem('checklist_cleared_permanently');
-        await update(ref(rtdb), updates);
-        alert('Checklist atualizado com sucesso via colagem!');
+        const sanitizedUpdates = sanitizeForFirebase(updates);
+        await update(ref(rtdb), sanitizedUpdates);
+        setPasteData('');
+        alert(`Checklist atualizado com sucesso! ${updatesCount} veículo(s) salvo(s).`);
       } catch (error) {
         console.error('Erro ao atualizar:', error);
-        alert('Erro ao atualizar checklist.');
+        alert('Erro ao atualizar checklist. Verifique o console para mais detalhes.');
       }
     } else {
-      alert('Nenhum dado válido encontrado para importação.');
+      alert('Nenhum dado válido encontrado para importação. Verifique se as linhas contêm placas válidas.');
     }
-    setPasteData('');
   };
 
   const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>, itemId: string) => {
@@ -358,18 +449,30 @@ export default function Checklist() {
   }, []);
 
   const handleAdd = async () => {
-    if (!newItem.cavalo) return;
+    if (!newItem.cavalo) {
+      alert('Por favor, informe a placa do cavalo.');
+      return;
+    }
     const id = Date.now().toString();
     const formattedCavalo = formatPlateWithHyphen(newItem.cavalo);
     const formattedCarretas = formatPlateWithHyphen(newItem.carretas);
     try {
       localStorage.removeItem('checklist_cleared_permanently');
-      await set(ref(rtdb, `checklist_veiculos/${id}`), {
-        ...newItem,
+      const payload = sanitizeForFirebase({
+        id,
         cavalo: formattedCavalo,
-        carretas: formattedCarretas,
-        id
+        carretas: formattedCarretas || '',
+        dataTeste: newItem.dataTeste || format(new Date(), 'yyyy-MM-dd'),
+        dataVencimento: newItem.dataVencimento || format(addDays(new Date(), 60), 'yyyy-MM-dd'),
+        manutencaoOs: newItem.manutencaoOs || '',
+        periferico: newItem.periferico || '',
+        observacao: newItem.observacao || '',
+        dataAgendamento: newItem.dataAgendamento || '',
+        osStatus: newItem.osStatus || 'PENDENTE',
+        checklistRealizado: newItem.checklistRealizado || 'não',
+        statusOverride: newItem.statusOverride || null
       });
+      await set(ref(rtdb, `checklist_veiculos/${id}`), payload);
       setIsAdding(false);
       setNewItem({
         cavalo: '',
@@ -386,6 +489,7 @@ export default function Checklist() {
       });
     } catch (error) {
       console.error("Erro ao adicionar checklist:", error);
+      alert("Erro ao adicionar veículo ao checklist.");
     }
   };
 
@@ -393,15 +497,23 @@ export default function Checklist() {
     if (!editingItem || !editingItem.cavalo) return;
     try {
       const { id, ...data } = editingItem;
-      const updatedData = {
+      const updatedData = sanitizeForFirebase({
         ...data,
         cavalo: formatPlateWithHyphen(data.cavalo),
-        carretas: formatPlateWithHyphen(data.carretas)
-      };
+        carretas: formatPlateWithHyphen(data.carretas || ''),
+        manutencaoOs: data.manutencaoOs || '',
+        periferico: data.periferico || '',
+        observacao: data.observacao || '',
+        dataAgendamento: data.dataAgendamento || '',
+        osStatus: data.osStatus || 'PENDENTE',
+        checklistRealizado: data.checklistRealizado || 'não',
+        statusOverride: data.statusOverride || null
+      });
       await update(ref(rtdb, `checklist_veiculos/${id}`), updatedData);
       setEditingItem(null);
     } catch (error) {
       console.error("Erro ao atualizar checklist:", error);
+      alert("Erro ao salvar alterações do veículo.");
     }
   };
 
@@ -1624,7 +1736,7 @@ export default function Checklist() {
                 <label className="text-[10px] font-extrabold text-blue-950 uppercase mb-0.5 block">Status Manual</label>
                 <select
                   value={editingItem.statusOverride || ''}
-                  onChange={(e) => setEditingItem({ ...editingItem, statusOverride: e.target.value as any || undefined })}
+                  onChange={(e) => setEditingItem({ ...editingItem, statusOverride: (e.target.value as any) || null })}
                   className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium text-xs cursor-pointer"
                 >
                   <option value="">Automático (Calculado pela Data)</option>

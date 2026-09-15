@@ -170,22 +170,22 @@ export default function MobileChecklist({ onBack }: { onBack?: () => void }) {
       if (editingItem) {
         await update(ref(rtdb, `checklist_veiculos/${editingItem.id}`), {
           cavalo: formatPlateMobile(formCavalo),
-          carretas: formatPlateMobile(formCarretas),
-          dataTeste: formDataTeste,
-          dataVencimento: formDataVencimento,
-          periferico: formPeriferico.toUpperCase(),
-          observacao: formObservacao
+          carretas: formatPlateMobile(formCarretas || ''),
+          dataTeste: formDataTeste || format(new Date(), 'yyyy-MM-dd'),
+          dataVencimento: formDataVencimento || '',
+          periferico: (formPeriferico || '').toUpperCase(),
+          observacao: formObservacao || ''
         });
         showToast('Checklist atualizado com sucesso!');
       } else {
         const newRef = push(ref(rtdb, 'checklist_veiculos'));
         await set(newRef, {
           cavalo: formatPlateMobile(formCavalo),
-          carretas: formatPlateMobile(formCarretas),
+          carretas: formatPlateMobile(formCarretas || ''),
           dataTeste: formDataTeste || format(new Date(), 'yyyy-MM-dd'),
-          dataVencimento: formDataVencimento,
-          periferico: formPeriferico.toUpperCase(),
-          observacao: formObservacao,
+          dataVencimento: formDataVencimento || '',
+          periferico: (formPeriferico || '').toUpperCase(),
+          observacao: formObservacao || '',
           manutencaoOs: '',
           statusOverride: 'APROVADO'
         });
