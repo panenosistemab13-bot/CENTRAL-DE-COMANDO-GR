@@ -55,6 +55,7 @@ import Escala from './components/Escala';
 import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
+import UpdateTopBanner from './components/UpdateTopBanner';
 import MobileApp from './components/mobile/MobileApp';
 import { MobileBottomDock, MobileTopBar } from './components/MobileDock';
 import { 
@@ -217,7 +218,9 @@ export default function App() {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const isMobileWidth = window.innerWidth < 768;
+      const isTouch = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isMobileWidth || (window.innerWidth < 1024 && isTouch));
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -426,98 +429,30 @@ export default function App() {
     }
   };
 
-  // 100% NATIVE SMARTPHONE MOBILE APP EXPERIENCE
+  // 100% EXCLUSIVE SMARTPHONE MOBILE VIEW - ONLY LISTA DE PRESENÇA
   if (isMobile) {
     return (
-      <div className="w-full min-h-screen bg-[#0d0603] text-[#f5ebd6] select-none font-sans overflow-x-hidden">
-        <MobileApp
-          activeTab={activeTab}
-          setActiveTab={(tab) => setActiveTab(tab)}
-          pageVisibility={pageVisibility}
-          availablePages={availablePages}
-          onOpenPageSelector={handleOpenPageSelector}
-          urgentAppointment={maxUrgencyApp}
-        />
+      <div 
+        className="w-full min-h-screen bg-[#140b06] text-[#f5ebd6] font-sans overflow-x-hidden flex flex-col"
+        style={{
+          backgroundImage: 'radial-gradient(circle at top, #281308 0%, #0d0603 100%)',
+        }}
+      >
+        {/* Top Banner: Última Atualização + Data */}
+        <UpdateTopBanner />
 
-        {/* Mobile-adapted Admin Password Modal */}
-        {showPasswordModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-[#1e0e06] border-2 border-amber-500/40 rounded-3xl p-6 w-full max-w-xs shadow-2xl text-[#f5ebd6]"
-            >
-              <div className="flex justify-center mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#B32025]/20 border border-[#B32025]/40 flex items-center justify-center text-[#B32025]">
-                  <Lock size={22} />
-                </div>
-              </div>
-              <h3 className="text-center font-sans font-black uppercase text-sm text-white mb-1">
-                Acesso Restrito
-              </h3>
-              <p className="text-center text-xs text-[#c2a67e] mb-4">
-                Digite a senha de administrador:
-              </p>
-              <form onSubmit={handlePasswordSubmit}>
-                <input
-                  type="password"
-                  value={passwordInput}
-                  onChange={(e) => {
-                    setPasswordInput(e.target.value);
-                    setPasswordError(false);
-                  }}
-                  placeholder="••••••••"
-                  className={cn(
-                    "w-full bg-black/50 text-white placeholder-[#c2a67e]/40 border rounded-xl px-4 py-2.5 text-center font-mono tracking-widest text-sm focus:outline-none",
-                    passwordError ? "border-red-500" : "border-white/20 focus:border-amber-500"
-                  )}
-                  autoFocus
-                />
-                {passwordError && (
-                  <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider text-center mt-1.5">
-                    Senha incorreta!
-                  </p>
-                )}
-                <div className="flex gap-2 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPasswordModal(false);
-                      setPasswordInput('');
-                      setPasswordError(false);
-                    }}
-                    className="flex-1 py-2.5 rounded-xl bg-white/10 text-white font-sans font-bold text-xs"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-[#B32025] hover:bg-[#c02428] text-white font-sans font-black text-xs uppercase tracking-wider shadow"
-                  >
-                    Confirmar
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Global Restricted Pages Suggestion & Configuration Modal */}
-        <RestrictedPagesModal
-          isOpen={showRestrictedPagesModal}
-          onClose={() => setShowRestrictedPagesModal(false)}
-          currentVisibility={pageVisibility}
-          onSave={(newVisibility, updatedPages) => {
-            setPageVisibility(newVisibility);
-            setAvailablePages(updatedPages);
-          }}
-        />
+        {/* Exclusively the Lista de Presença Page on Mobile */}
+        <main className="flex-1 w-full p-2 sm:p-4 max-w-7xl mx-auto flex flex-col">
+          <PresenceList />
+        </main>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
+      {/* Top Banner: Última Atualização + Data */}
+      <UpdateTopBanner />
       
       {/* Immersive Background Image / Radial glow */}
       {(activeTab === 'menu' || activeTab === 'checklist') ? (

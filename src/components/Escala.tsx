@@ -1007,8 +1007,8 @@ export default function Escala({ onBack }: EscalaProps) {
         rgSap = matricula;
       }
 
-      // Preserve matricula / viagem as idCarga
-      const idCarga = matricula ? matricula.trim() : '';
+      // A coluna (AB) ID DA CARGA / LACRE EXPORTAÇÃO deve permanecer SEMPRE VAZIA ao colar informações
+      const idCarga = '';
 
       const currentTime = getCurrentTimeString();
       const isTwoBaus = Boolean(bau1 && bau2);

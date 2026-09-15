@@ -1,0 +1,64 @@
+import React from 'react';
+import { Sparkles, RefreshCw, CheckCircle2, Radio } from 'lucide-react';
+import { useAppVersion } from '../utils/version';
+import { cn } from '../lib/utils';
+
+interface UpdateTopBannerProps {
+  className?: string;
+}
+
+export default function UpdateTopBanner({ className }: UpdateTopBannerProps) {
+  const { lastUpdateDate, isNewVersionAvailable, reloadApp } = useAppVersion();
+
+  return (
+    <div
+      id="top-update-banner"
+      className={cn(
+        "w-full z-50 sticky top-0 bg-gradient-to-r from-[#140a04] via-[#241309] to-[#140a04] text-[#f5ebd7] border-b border-[#8c6039]/40 shadow-md backdrop-blur-md select-none transition-all duration-300",
+        className
+      )}
+    >
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-xs">
+        
+        {/* Left Side: Status Dot + Última Atualização + Data */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Pulsing indicator */}
+          <div className="relative flex items-center justify-center shrink-0">
+            <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 truncate">
+            <span className="font-sans font-black uppercase text-[10px] sm:text-xs tracking-wider text-[#d4af37] shrink-0">
+              Última atualização:
+            </span>
+            <span className="font-mono font-bold text-[11px] sm:text-xs text-white bg-black/40 px-2 py-0.5 rounded-md border border-white/10 tracking-wide truncate">
+              {lastUpdateDate}
+            </span>
+          </div>
+        </div>
+
+        {/* Right Side: Vercel Deploy Badge / Reload Notice */}
+        <div className="flex items-center gap-2 shrink-0">
+          {isNewVersionAvailable ? (
+            <button
+              onClick={reloadApp}
+              className="bg-[#B32025] hover:bg-[#c9252a] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-md border border-white/20 animate-pulse cursor-pointer"
+              title="Clique para atualizar para a versão mais recente"
+            >
+              <RefreshCw size={11} className="animate-spin" />
+              <span>Novo Deploy Vercel (Atualizar)</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+              <span className="hidden xs:inline">VERCEL PRODUÇÃO</span>
+              <span className="xs:hidden">VERCEL</span>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
