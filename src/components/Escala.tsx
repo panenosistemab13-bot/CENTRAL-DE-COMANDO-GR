@@ -247,6 +247,11 @@ export const normalizeDestino = (raw: string): string => {
     if (t === 'CAM') return 'SUMARÉ';
     if (t === 'PINH') return 'PINHAIS';
     if (t === 'VESP') return 'VESPASIANO';
+    if (!['RODOTREM', 'BITREM', 'CARRETA', 'LS', 'VANDERLEIA', 'TRUCK', 'BAU', 'BAUS', 'STL', 'MG', 'SP', 'RJ'].includes(t)) {
+      for (const dest of DESTINOS_PADRAO) {
+        if (clean(dest) === t) return dest;
+      }
+    }
   }
 
   // Exact match after accent/punctuation stripping
@@ -317,10 +322,9 @@ interface ChecklistItem {
 }
 
 // Sample data with 3C drivers
-const SAMPLE_INPUT_TEXT = `10/09/2026\tADILSON DOS REIS SILVA\tUUF-3F25\tUUG-4I45\tUUG-4B95\tSANTA LUZIA X NATAL\t32503\t1001203515\t48\t34
-10/09/2026\tADRIANO DA SILVA DE SOUZA\tUUO-8D35\tUVA-5F15\tUVA-4E95\tSANTA LUZIA X RECIFE\t32512\t1001215981\t48\t45
-10/09/2026\tPAULO EDER DE OLIVEIRA MENDES\tUUO-9D95\tUVA-6C45\tUVA-6F45\tSANTA LUZIA X JOÃO PESSOA\t32471\t1000425673\t48\t45
-10/09/2026\tDIEGO RODRIGO DE OLIVEIRA TORRES\tUUU-8F75\tUUH-3A45\tUUF-9H85\tSANTA LUZIA X MACEIO\t32514\t1001216423\t48\t34`;
+const SAMPLE_INPUT_TEXT = `15/09/2026\tALAN HENRIQUE ALVES MACIEL DOS SANTOS\tTYQ-6F51\tPNE7353\tPNE7433\tSTL X BRA RODOTREM\t22754\t1000428659\t24/Baú\t34
+15/09/2026\tWENDEL POLOZZI REIS MAIA\tTHX-5I51\tPOG0685\tPOG0545\tSTL X RJO RODOTREM\t22748\t1000428656\t24/Baú\t42
+15/09/2026\tADRIANO DA SILVA DE SOUZA\tSAR-8D82\tSBF9G98\tTIC0F85\tSTL X RJO RODOTREM\t85286\t1000430194\t24/Baú\t42`;
 
 interface EscalaProps {
   onBack?: () => void;
@@ -832,6 +836,28 @@ export default function Escala({ onBack }: EscalaProps) {
     return 'SET|26';
   };
 
+  // Helper to normalize date string to dd/MM/yyyy
+  const normalizeDateStr = (raw: string): string => {
+    if (!raw || !raw.trim()) return getTodayDateStr();
+    const trimmed = raw.trim();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+      return trimmed;
+    }
+    if (/^\d{2}\/\d{2}\/\d{2}$/.test(trimmed)) {
+      const [d, m, y] = trimmed.split('/');
+      return `${d}/${m}/20${y}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
+      const [d, m, y] = trimmed.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    return trimmed;
+  };
+
   // Find 3C Driver matching name
   const findDriver3C = (driverName: string): Motorista3C | null => {
     if (!driverName || !driverName.trim()) return null;
@@ -848,31 +874,29 @@ export default function Escala({ onBack }: EscalaProps) {
   const parsedRows = useMemo<DispoRow[]>(() => {
     if (!inputText.trim()) return [];
 
-    const todayDateStr = getTodayDateStr();
-    const todayDayOfWeek = getTodayDayOfWeek();
-    const todayMonth = getMonthAbbrev(todayDateStr);
-
     const lines = inputText
       .split('\n')
       .map(l => l.trim())
       .filter(l => l.length > 0);
 
-    // Intelligent header detection
+    // Intelligent header detection - ONLY if first line is truly a header row
     let headerColMap: { [key: string]: number } = {};
     let dataLines = lines;
 
     if (lines.length > 0) {
       const firstLine = lines[0];
       const firstLineUpper = firstLine.toUpperCase();
-      if (
-        firstLineUpper.includes('DATA') ||
-        firstLineUpper.includes('MOTORISTA') ||
-        firstLineUpper.includes('PLACA') ||
-        firstLineUpper.includes('SAP') ||
-        firstLineUpper.includes('BAU') ||
-        firstLineUpper.includes('BAÚ') ||
-        firstLineUpper.includes('TRECHO')
-      ) {
+      const isDateFirstLine = /^\s*\d{1,2}[\/\-\.]\d{1,2}/.test(firstLine);
+
+      const isTrueHeader = !isDateFirstLine && (
+        firstLineUpper.includes('DATA DA SAÍDA') ||
+        firstLineUpper.includes('DATA SAIDA') ||
+        firstLineUpper.includes('PALETIZAÇÃO') ||
+        ((firstLineUpper.includes('MOTORISTA') || firstLineUpper.includes('CONDUTOR')) &&
+         (firstLineUpper.includes('PLACA') || firstLineUpper.includes('CAVALO') || firstLineUpper.includes('TRECHO') || firstLineUpper.includes('SAP')))
+      );
+
+      if (isTrueHeader) {
         let headerCols = firstLine.split('\t').map(c => c.trim().toUpperCase());
         if (headerCols.length < 3) headerCols = firstLine.split(';').map(c => c.trim().toUpperCase());
         if (headerCols.length < 3) headerCols = firstLine.split(/\s{2,}/).map(c => c.trim().toUpperCase());
@@ -880,14 +904,14 @@ export default function Escala({ onBack }: EscalaProps) {
         headerCols.forEach((col, idx) => {
           if (col.includes('DATA')) headerColMap['data'] = idx;
           else if (col.includes('MOTORISTA') || col.includes('CONDUTOR')) headerColMap['motorista'] = idx;
-          else if (col.includes('PLACA') || col.includes('CAVALO')) headerColMap['cavalo'] = idx;
+          else if (col.includes('CAVALO') || (col.includes('PLACA') && !col.includes('CARRETA') && !col.includes('BAU') && !col.includes('BAÚ'))) headerColMap['cavalo'] = idx;
           else if (col.includes('BAÚ 1') || col.includes('BAU 1') || col.includes('CARRETA 1')) headerColMap['bau1'] = idx;
           else if (col.includes('BAÚ 2') || col.includes('BAU 2') || col.includes('CARRETA 2')) headerColMap['bau2'] = idx;
-          else if (col.includes('TRECHO') || col.includes('DESTINO')) headerColMap['trecho'] = idx;
-          else if (col.includes('MATRICULA') || col.includes('MATRÍCULA')) headerColMap['matricula'] = idx;
+          else if (col.includes('TRECHO') || col.includes('DESTINO') || col.includes('ROTA') || col.includes('LINHA')) headerColMap['trecho'] = idx;
+          else if (col.includes('MATRICULA') || col.includes('MATRÍCULA') || col.includes('VIAGEM') || col.includes('CARGA')) headerColMap['matricula'] = idx;
           else if (col.includes('SAP') || col.includes('COD. SAP') || col.includes('CÓD. SAP') || col.includes('CODIGO SAP') || col.includes('CÓDIGO SAP') || col.includes('CODIGO.SAP') || col.includes('CÓDIGO.SAP') || col.includes('COD.SAP')) headerColMap['codSap'] = idx;
           else if (col.includes('PALET') || col.includes('PALLET')) headerColMap['pallets'] = idx;
-          else if (col.includes('TON')) headerColMap['ton'] = idx;
+          else if (col.includes('TON') || col.includes('PESO')) headerColMap['ton'] = idx;
         });
         dataLines = lines.slice(1);
       }
@@ -898,7 +922,8 @@ export default function Escala({ onBack }: EscalaProps) {
     dataLines.forEach((line, index) => {
       // Ignore header if pasted again
       const upper = line.toUpperCase();
-      if (upper.includes('DATA DA SAÍDA') || upper.includes('MOTORISTA') || upper.includes('PALETIZAÇÃO')) {
+      const isDateLine = /^\s*\d{1,2}[\/\-\.]\d{1,2}/.test(line);
+      if (!isDateLine && (upper.includes('DATA DA SAÍDA') || upper.includes('PALETIZAÇÃO') || (upper.includes('MOTORISTA') && upper.includes('PLACA')))) {
         return;
       }
 
@@ -927,10 +952,11 @@ export default function Escala({ onBack }: EscalaProps) {
       // 3: BAÚ 1
       // 4: BAÚ 2
       // 5: TRECHO
-      // 6: MATRICULA
+      // 6: MATRICULA (ou Viagem / ID da Carga)
       // 7: COD. SAP (código.sap)
       // 8: Paletização
       // 9: TON
+      const rawData = getCol('data', 0);
       const motorista = getCol('motorista', 1);
       const rawPlacaCavalo = getCol('cavalo', 2);
       const rawBau1 = getCol('bau1', 3);
@@ -940,6 +966,10 @@ export default function Escala({ onBack }: EscalaProps) {
       const codSap = getCol('codSap', 7);
       const rawPallets = getCol('pallets', 8) || '48';
       const rawTon = getCol('ton', 9) || '34';
+
+      const rowDate = normalizeDateStr(rawData);
+      const rowDia = getDayOfWeek(rowDate);
+      const rowMes = getMonthAbbrev(rowDate);
 
       const placaCavalo = formatPlateWithHyphen(rawPlacaCavalo);
       const bau1 = formatPlateWithoutHyphen(rawBau1);
@@ -977,6 +1007,9 @@ export default function Escala({ onBack }: EscalaProps) {
         rgSap = matricula;
       }
 
+      // Preserve matricula / viagem as idCarga
+      const idCarga = matricula ? matricula.trim() : '';
+
       const currentTime = getCurrentTimeString();
       const isTwoBaus = Boolean(bau1 && bau2);
 
@@ -1000,10 +1033,10 @@ export default function Escala({ onBack }: EscalaProps) {
         // Row 1 for Baú 1
         const row1: DispoRow = {
           id: `row-${index}-bau1-${Date.now()}`,
-          mes: todayMonth,
+          mes: rowMes,
           origem: origem.toUpperCase(),
-          dia: todayDayOfWeek,
-          data: todayDateStr,
+          dia: rowDia,
+          data: rowDate,
           contatoWhats: 'X',
           horaLiberado: currentTime,
           status: defaults.status,
@@ -1026,7 +1059,7 @@ export default function Escala({ onBack }: EscalaProps) {
           telefone: '',
           vigenciaCadastro: defaults.vigenciaCadastro,
           codigoTransportadora: defaults.codigoTransportadora,
-          idCarga: '',
+          idCarga: idCarga,
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
@@ -1037,10 +1070,10 @@ export default function Escala({ onBack }: EscalaProps) {
         // Row 2 for Baú 2
         const row2: DispoRow = {
           id: `row-${index}-bau2-${Date.now()}`,
-          mes: todayMonth,
+          mes: rowMes,
           origem: origem.toUpperCase(),
-          dia: todayDayOfWeek,
-          data: todayDateStr,
+          dia: rowDia,
+          data: rowDate,
           contatoWhats: 'X',
           horaLiberado: currentTime,
           status: defaults.status,
@@ -1063,7 +1096,7 @@ export default function Escala({ onBack }: EscalaProps) {
           telefone: '',
           vigenciaCadastro: defaults.vigenciaCadastro,
           codigoTransportadora: defaults.codigoTransportadora,
-          idCarga: '',
+          idCarga: idCarga,
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
@@ -1080,10 +1113,10 @@ export default function Escala({ onBack }: EscalaProps) {
 
         const row: DispoRow = {
           id: `row-${index}-${Date.now()}`,
-          mes: todayMonth,
+          mes: rowMes,
           origem: origem.toUpperCase(),
-          dia: todayDayOfWeek,
-          data: todayDateStr,
+          dia: rowDia,
+          data: rowDate,
           contatoWhats: 'X',
           horaLiberado: currentTime,
           status: defaults.status,
@@ -1106,7 +1139,7 @@ export default function Escala({ onBack }: EscalaProps) {
           telefone: '',
           vigenciaCadastro: defaults.vigenciaCadastro,
           codigoTransportadora: defaults.codigoTransportadora,
-          idCarga: '',
+          idCarga: idCarga,
           estadoMotorista: 'FROTA 3C',
           estadoCavalo: 'FROTA 3C',
           estadoCarreta: 'FROTA 3C',
