@@ -35,6 +35,7 @@ import {
   ExternalLink,
   ArrowUpDown,
   DollarSign,
+  Radio,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -1055,6 +1056,56 @@ export default function Controle({ onBack }: ControleProps) {
   const [copiedIscaAll, setCopiedIscaAll] = useState(false);
   const [copiedIscaDataOnly, setCopiedIscaDataOnly] = useState(false);
   const [copiedIscasSpace, setCopiedIscasSpace] = useState(false);
+  const [copiedFraseEmbarque, setCopiedFraseEmbarque] = useState(false);
+
+  const getDayMonthFromDate = (dateStr: string) => {
+    if (!dateStr) {
+      const now = new Date();
+      return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}`;
+    }
+    const clean = dateStr.trim().toLowerCase();
+    // match DD/MM or DD/MM/YYYY
+    const slashMatch = clean.match(/^(\d{1,2})\/(\d{1,2})/);
+    if (slashMatch) {
+      return `${slashMatch[1].padStart(2, "0")}/${slashMatch[2].padStart(2, "0")}`;
+    }
+    // match YYYY-MM-DD
+    const isoMatch = clean.match(/^\d{4}-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      return `${isoMatch[2]}/${isoMatch[1]}`;
+    }
+    // match DD-mon or DD.mon (e.g. 15-set. or 15.set or 15-setembro)
+    const monthMap: Record<string, string> = {
+      jan: "01", fev: "02", mar: "03", abr: "04", mai: "05", jun: "06",
+      jul: "07", ago: "08", set: "09", out: "10", nov: "11", dez: "12"
+    };
+    const monMatch = clean.match(/^(\d{1,2})[-. ]+([a-z]{3})/);
+    if (monMatch) {
+      const day = monMatch[1].padStart(2, "0");
+      const monStr = monMatch[2];
+      const monthNum = monthMap[monStr] || String(new Date().getMonth() + 1).padStart(2, "0");
+      return `${day}/${monthNum}`;
+    }
+    const now = new Date();
+    return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}`;
+  };
+
+  const getFraseEmbarqueIsca = () => {
+    const dayMonth = getDayMonthFromDate(dataEnviada);
+    const destClean = cleanDestinoForPlanilha(destino) || (destino ? destino.toUpperCase().replace(/\/[A-Z]{2}$/, '').trim() : "GUARULHOS");
+    return `${dayMonth} ISCA EMBARCADA PARA ${destClean}`;
+  };
+
+  const handleCopyFraseEmbarque = async () => {
+    const frase = getFraseEmbarqueIsca();
+    try {
+      await navigator.clipboard.writeText(frase);
+      setCopiedFraseEmbarque(true);
+      setTimeout(() => setCopiedFraseEmbarque(false), 3000);
+    } catch (err) {
+      console.error("Erro ao copiar frase de embarque:", err);
+    }
+  };
 
   const getIscasSpaceSeparated = () => {
     const iscasList: string[] = [];
@@ -4570,14 +4621,42 @@ Embarque: ${
                 <FileSpreadsheet size={18} className="text-[#0F172A]" /> Copiar Linhas de Iscas para Planilha Google
               </h3>
               <p className="text-xs text-[#64748B] font-semibold mt-0.5">
-                Copie cada linha individualmente ou a tabela completa para colar no Google Sheets (Ctrl+V)
+                Copie a frase de embarque das iscas, linhas individuais ou a tabela completa para colar no Google Sheets (Ctrl+V)
               </p>
             </div>
           </div>
 
           {/* Batch Copy Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0">
-            
+            <button
+              type="button"
+              onClick={handleCopyFraseEmbarque}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border flex items-center gap-2 transition-all cursor-pointer active:scale-95",
+                copiedFraseEmbarque
+                  ? "bg-emerald-600 text-white border-emerald-500"
+                  : "bg-blue-600 hover:bg-blue-700 text-white border-blue-500"
+              )}
+              title="Copiar frase de embarque com dia/mês e destino do pré-alerta"
+            >
+              {copiedFraseEmbarque ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} />}
+              <span>{copiedFraseEmbarque ? "Frase Copiada!" : "Copiar Frase"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => copyAllIscaRowsToClipboard(false)}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border flex items-center gap-2 transition-all cursor-pointer active:scale-95",
+                copiedIscaDataOnly
+                  ? "bg-emerald-600 text-white border-emerald-500"
+                  : "bg-[#0F172A] hover:bg-slate-800 text-white border-slate-700"
+              )}
+              title="Copiar todas as linhas de iscas da tabela (Ctrl+V)"
+            >
+              {copiedIscaDataOnly ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} />}
+              <span>{copiedIscaDataOnly ? "Linhas Copiadas!" : "Copiar Todas as Linhas"}</span>
+            </button>
           </div>
         </div>
 
@@ -4856,6 +4935,55 @@ Embarque: ${
               )}
             </div>
           </div>
+        </div>
+
+        {/* Card Dedicado com a Frase de Embarque das Iscas (POR ÚLTIMO NA PÁGINA) */}
+        <div className="mt-5 bg-gradient-to-r from-blue-50/80 via-white to-blue-50/50 border-2 border-blue-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-blue-600 text-white shadow-xs flex items-center justify-center shrink-0">
+              <Radio size={22} className="animate-pulse" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-800 bg-blue-100/90 px-2.5 py-0.5 rounded-md border border-blue-200">
+                  Frase de Embarque das Iscas
+                </span>
+                <span className="text-[10px] text-slate-500 font-bold">
+                  (Dia/Mês da Criação do Pré-Alerta + Destino)
+                </span>
+              </div>
+              <div 
+                onClick={handleCopyFraseEmbarque}
+                title="Clique para copiar a frase"
+                className="text-xs sm:text-sm md:text-base font-mono font-black text-slate-950 tracking-tight select-all bg-white border border-blue-200 hover:border-blue-400 rounded-xl px-3.5 py-2 inline-flex items-center gap-2 cursor-pointer shadow-xs transition-all hover:bg-blue-50/40 max-w-full"
+              >
+                <span className="text-blue-600 font-extrabold text-[11px] uppercase tracking-wider shrink-0 font-sans">FRASE:</span>
+                <span className="truncate">"{getFraseEmbarqueIsca()}"</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopyFraseEmbarque}
+            className={cn(
+              "w-full md:w-auto px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shrink-0 select-none",
+              copiedFraseEmbarque
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500"
+                : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:shadow-md"
+            )}
+            title="Copiar texto da frase de embarque"
+          >
+            {copiedFraseEmbarque ? (
+              <>
+                <Check size={16} className="stroke-[3]" /> COPIADO!
+              </>
+            ) : (
+              <>
+                <Copy size={16} className="stroke-[2.5]" /> COPIAR FRASE
+              </>
+            )}
+          </button>
         </div>
       </div>
       </div>
