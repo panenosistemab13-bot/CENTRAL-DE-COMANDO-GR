@@ -23,7 +23,12 @@ import {
   AlertCircle,
   X,
   FileText,
-  UserCheck
+  UserCheck,
+  Lock,
+  Unlock,
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { rtdb } from '../../firebase';
@@ -89,6 +94,34 @@ export const formatPlateMobile = (plateStr: string): string => {
 
 export default function MobileEscala({ onBack }: { onBack?: () => void }) {
   const [mobileSubTab, setMobileSubTab] = useState<'disponibilidade' | 'terceiros' | 'motoristas'>('disponibilidade');
+
+  // Password Protection (#trescafe2029)
+  const ESCALA_PROTECTED_PASSWORD = '#trescafe2029';
+  const [isProtectedUnlocked, setIsProtectedUnlocked] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('escala_protected_unlocked') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const handleUnlockProtected = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (passwordInput.trim() === ESCALA_PROTECTED_PASSWORD) {
+      setIsProtectedUnlocked(true);
+      setPasswordError(null);
+      setPasswordInput('');
+      try {
+        sessionStorage.setItem('escala_protected_unlocked', 'true');
+      } catch {}
+    } else {
+      setPasswordError('Senha incorreta! Digite a senha correta.');
+    }
+  };
+
   const [rows, setRows] = useState<DispoMobileRow[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -413,7 +446,7 @@ export default function MobileEscala({ onBack }: { onBack?: () => void }) {
           <button
             onClick={() => setMobileSubTab('disponibilidade')}
             className={cn(
-              "flex-1 py-2 rounded-xl text-[11px] font-sans font-black uppercase tracking-wider transition-all",
+              "flex-1 py-2 rounded-xl text-[10px] font-sans font-black uppercase tracking-wider transition-all",
               mobileSubTab === 'disponibilidade'
                 ? "bg-[#B32025] text-white shadow-md"
                 : "text-[#c2a67e] hover:text-white"
@@ -424,13 +457,13 @@ export default function MobileEscala({ onBack }: { onBack?: () => void }) {
           <button
             onClick={() => setMobileSubTab('terceiros')}
             className={cn(
-              "flex-1 py-2 rounded-xl text-[11px] font-sans font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1",
+              "flex-1 py-2 rounded-xl text-[10px] font-sans font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1",
               mobileSubTab === 'terceiros'
                 ? "bg-emerald-600 text-white shadow-md"
                 : "text-[#c2a67e] hover:text-white"
             )}
           >
-            2. Terceiros
+            2. Conv. Terceiros
             <span className="text-[8px] px-1.5 py-0.2 rounded-full bg-black/40 text-emerald-300 font-mono">
               PDF
             </span>
@@ -438,13 +471,18 @@ export default function MobileEscala({ onBack }: { onBack?: () => void }) {
           <button
             onClick={() => setMobileSubTab('motoristas')}
             className={cn(
-              "flex-1 py-2 rounded-xl text-[11px] font-sans font-black uppercase tracking-wider transition-all",
+              "flex-1 py-2 rounded-xl text-[10px] font-sans font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1",
               mobileSubTab === 'motoristas'
                 ? "bg-amber-600 text-white shadow-md"
                 : "text-[#c2a67e] hover:text-white"
             )}
           >
             3. Motoristas
+            {isProtectedUnlocked ? (
+              <Unlock size={10} className="text-emerald-300" />
+            ) : (
+              <Lock size={10} className="text-amber-400" />
+            )}
           </button>
         </div>
       </div>
@@ -776,6 +814,72 @@ export default function MobileEscala({ onBack }: { onBack?: () => void }) {
             getMonthAbbrev={() => 'SET|26'}
             getDayOfWeek={() => 'sábado'}
           />
+        </div>
+      ) : !isProtectedUnlocked ? (
+        /* Password Lock Screen for Tab 3 (Motoristas 3C) */
+        <div className="px-4 pt-6 max-w-full">
+          <div className="bg-[#1c0d05] border border-amber-500/30 rounded-3xl p-6 text-center space-y-4 shadow-xl">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+              <Lock size={24} />
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[9px] font-mono font-bold tracking-widest text-amber-400 uppercase bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                Acesso Restrito
+              </span>
+              <h3 className="text-base font-sans font-black uppercase text-[#fdefd1]">
+                Aba Protegida por Senha
+              </h3>
+              <p className="text-[11px] text-[#dac0a3]/80 leading-normal">
+                A base de <span className="font-bold text-amber-300">Motoristas 3C</span> requer senha de acesso.
+              </p>
+            </div>
+
+            <form onSubmit={handleUnlockProtected} className="space-y-3 pt-1">
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
+                  placeholder="Digite a senha..."
+                  className="w-full px-3.5 py-3 bg-black/60 border border-[#8c6039]/50 focus:border-amber-400 rounded-xl text-[#fdefd1] placeholder:text-stone-500 text-xs font-mono tracking-wider outline-none text-center"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-200 p-1"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+
+              {passwordError && (
+                <p className="text-[11px] font-bold text-rose-400 bg-rose-950/60 border border-rose-500/40 rounded-lg py-1.5 px-2 flex items-center justify-center gap-1">
+                  <AlertCircle size={12} />
+                  <span>{passwordError}</span>
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-700 active:from-amber-500 active:to-amber-600 text-[#1a0c05] font-black uppercase text-[11px] tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-1.5"
+              >
+                <Key size={14} />
+                <span>Desbloquear</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileSubTab('disponibilidade')}
+                className="w-full py-1.5 text-[#dac0a3] text-[10px] font-bold uppercase tracking-wider"
+              >
+                Voltar para Escala
+              </button>
+            </form>
+          </div>
         </div>
       ) : (
         /* Tab 3: Motoristas 3C */

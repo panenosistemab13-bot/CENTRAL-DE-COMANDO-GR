@@ -920,7 +920,7 @@ export default function TerceirosEscala({
   }, [searchTerm, filterTransportador]);
 
   return (
-    <div className="w-full relative z-10 max-w-[96rem] mx-auto flex flex-col font-sans">
+    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans">
       
       {/* Toast Notifications */}
       {copiedStatus && (
@@ -1060,35 +1060,6 @@ export default function TerceirosEscala({
 
           </div>
 
-          {/* Status Ribbon & Counters (Matching PresenceList Ribbon Style) */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl px-4 py-2.5 shadow-sm">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#B32025]" />
-                <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">
-                  Total Terceiros: <strong className="text-[#3A2414] font-black">{rows.length}</strong>
-                </span>
-              </div>
-
-              <div className="h-4 w-[1px] bg-[#d6be9c]" />
-
-              <div className="flex items-center gap-1.5 bg-[#2e7d32]/10 border border-[#2e7d32]/30 px-2.5 py-0.5 rounded-lg">
-                <span className="text-[10px] font-bold text-[#2e7d32] uppercase tracking-wider">Status Rigoroso:</span>
-                <span className="text-[10px] font-black text-[#1e5221] font-mono">REALIZAR IMPRESSÃO</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 bg-[#3a200a]/10 border border-[#5c3e29]/30 px-2.5 py-0.5 rounded-lg">
-                <span className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">Formato:</span>
-                <span className="text-xs font-black text-[#3A2414] font-mono">PDF & DOCX</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-emerald-800 bg-emerald-100/70 border border-emerald-300/60 px-3 py-1 rounded-lg text-[10px] font-bold font-mono">
-              <ShieldCheck size={13} className="text-emerald-700" />
-              <span>100% LOCAL NO NAVEGADOR • DADOS SEGUROS</span>
-            </div>
-          </div>
-
           {/* Action Buttons Toolbar in PresenceList Aesthetic */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex flex-wrap items-center gap-2.5">
@@ -1112,42 +1083,6 @@ export default function TerceirosEscala({
                 <Upload size={15} className="stroke-[2.5]" />
                 <span>{isProcessing ? 'Processando Arquivo...' : 'Importar PDF / DOCX'}</span>
               </button>
-
-              {/* Botão Novo Registro Manual */}
-              <button
-                type="button"
-                onClick={handleOpenAddModal}
-                className="bg-[#5c3e29] hover:bg-[#4a3222] text-[#e8dbcc] border border-[#7a5b44] text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
-              >
-                <Plus size={15} className="stroke-[3]" />
-                <span>+ Novo Registro</span>
-              </button>
-
-              {/* Toggle Dropzone Area */}
-              <button
-                type="button"
-                onClick={() => setShowUploadArea(!showUploadArea)}
-                className={cn(
-                  "text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 border",
-                  showUploadArea
-                    ? "bg-[#3A2414] text-white border-[#3A2414]"
-                    : "bg-[#e4d0b6] hover:bg-[#d8c2a5] text-[#3A2414] border-[#a6866b]"
-                )}
-              >
-                <FolderUp size={15} />
-                <span>{showUploadArea ? 'Fechar Área de Envio' : 'Área de Envio'}</span>
-              </button>
-
-              {/* Carregar Exemplo */}
-              <button
-                type="button"
-                onClick={handleLoadSample}
-                className="bg-[#FAF6ED] hover:bg-white text-[#3A2414] border border-[#d6be9c] text-xs font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
-                title="Carregar exemplo de OS de Terceiros"
-              >
-                <Sparkles size={14} className="text-[#8c5a2b]" />
-                <span>Carregar Exemplo</span>
-              </button>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
@@ -1166,17 +1101,6 @@ export default function TerceirosEscala({
               >
                 {copiedStatus ? <Check size={15} className="stroke-[3]" /> : <Copy size={15} />}
                 <span>{copiedStatus ? 'Copiado c/ Sucesso!' : 'Copiar p/ Planilha'}</span>
-              </button>
-
-              {/* Exportar Excel */}
-              <button
-                type="button"
-                onClick={handleDownloadXLSX}
-                disabled={filteredRows.length === 0}
-                className="bg-[#2e7d32] hover:bg-[#256628] text-white text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20 disabled:opacity-40"
-              >
-                <FileSpreadsheet size={15} />
-                <span>Exportar Excel</span>
               </button>
 
               {/* Limpar Tudo */}
@@ -1250,59 +1174,6 @@ export default function TerceirosEscala({
               </span>
             </div>
           )}
-
-          {/* Search, Filter & Bulk Actions Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#FAF6ED] p-3 rounded-2xl border border-[#d6be9c] shadow-sm">
-            <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto flex-1">
-              {/* Search */}
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Filtrar por placa, motorista, destino..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white border border-[#d6be9c] rounded-xl py-2 pl-9 pr-3 text-xs text-[#3A2414] placeholder-stone-400 outline-none focus:border-[#B32025] shadow-inner font-medium"
-                />
-              </div>
-
-              {/* Filter by Transportador */}
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Filter size={15} className="text-[#7a5b44] shrink-0" />
-                <div className="relative flex-1 sm:flex-initial">
-                  <select
-                    value={filterTransportador}
-                    onChange={(e) => setFilterTransportador(e.target.value)}
-                    className="appearance-none bg-white border border-[#d6be9c] rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-[#3A2414] outline-none focus:border-[#B32025] shadow-inner cursor-pointer w-full"
-                  >
-                    <option value="TODOS">Todos os Transportadores ({rows.length})</option>
-                    {availableTransportadores.map(t => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            {/* Bulk Selection and Counter */}
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              {selectedIds.size > 0 && (
-                <button
-                  type="button"
-                  onClick={handleDeleteSelected}
-                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold uppercase tracking-wider py-2 px-3 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Trash2 size={13} />
-                  <span>Excluir Selecionados ({selectedIds.size})</span>
-                </button>
-              )}
-
-              <span className="text-xs font-bold text-[#7a5b44]">
-                Exibindo <strong className="text-[#3A2414]">{filteredRows.length}</strong> de {rows.length}
-              </span>
-            </div>
-          </div>
 
           {/* Parchment Ledger Table */}
           <div className="rounded-2xl border border-[#d6be9c] overflow-hidden bg-white shadow-md">

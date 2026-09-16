@@ -108,11 +108,38 @@ function Screw({ className }: { className?: string }) {
   return (
     <div 
       className={cn(
-        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+        "w-3.5 h-3.5 bg-gradient-to-br from-[#e8cfb3] via-[#a37243] to-[#381f0b] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.8),inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)] border border-[#c49a6c]/40 relative flex items-center justify-center select-none shrink-0",
         className
       )}
     >
-      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+      <div className="w-2 h-[1.5px] bg-[#241306]/90 rotate-[38deg] rounded-sm shadow-inner" />
+    </div>
+  );
+}
+
+function NavCornerScrew({ position }: { position: 'tl' | 'bl' | 'tr' | 'br' }) {
+  const posClasses = {
+    tl: "top-1.5 left-2",
+    bl: "bottom-1.5 left-2",
+    tr: "top-1.5 right-2",
+    br: "bottom-1.5 right-2"
+  }[position];
+
+  const slotRotation = {
+    tl: "rotate-[35deg]",
+    bl: "rotate-[55deg]",
+    tr: "rotate-[-40deg]",
+    br: "rotate-[25deg]"
+  }[position];
+
+  return (
+    <div 
+      className={cn(
+        "absolute w-3 h-3 bg-gradient-to-br from-[#ebcca8] via-[#9e6d3c] to-[#361d09] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.9),inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)] border border-[#c49a6c]/40 flex items-center justify-center select-none pointer-events-none transition-all z-20",
+        posClasses
+      )}
+    >
+      <div className={cn("w-1.5 h-[1.2px] bg-[#241306]/90 rounded-sm shadow-inner", slotRotation)} />
     </div>
   );
 }
@@ -451,8 +478,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
-      {/* Top Banner: Última Atualização + Data */}
-      <UpdateTopBanner />
+      {/* Top Banner: Última Atualização + Data (Aparece exclusivamente no Menu Inicial) */}
+      {activeTab === 'menu' && <UpdateTopBanner />}
       
       {/* Immersive Background Image / Radial glow */}
       {(activeTab === 'menu' || activeTab === 'checklist') ? (
@@ -510,61 +537,33 @@ export default function App() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
                   className={cn(
-                    "flex items-center gap-2 px-3.5 py-2 border-2 rounded-full relative select-none transition-all duration-300",
+                    "flex items-center gap-1.5 sm:gap-2 px-5 py-2.5 rounded-full relative select-none transition-all duration-300",
                     activeTab === 'slides'
-                      ? "bg-[#020617]/95 border-cyan-500/50 shadow-[0_0_35px_rgba(0,240,255,0.25)] backdrop-blur-2xl"
-                      : "bg-[#24160E] border-[#543b28] shadow-[0_12px_32px_rgba(0,0,0,0.85)]"
+                      ? "bg-[#020617]/95 border-2 border-cyan-500/50 shadow-[0_0_35px_rgba(0,240,255,0.25)] backdrop-blur-2xl"
+                      : "bg-gradient-to-r from-[#1a0e07] via-[#26150d] to-[#1a0e07] border-[2.5px] border-[#4a2e1b] shadow-[0_16px_36px_rgba(0,0,0,0.92),inset_0_1px_1.5px_rgba(255,255,255,0.12)]"
                   )}
                 >
-                  {/* Decorative corner metallic rivets */}
-                  <div className={cn(
-                    "absolute top-1 left-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
-                    activeTab === 'slides'
-                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
-                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
-                  )}>
-                    <div className={cn("w-1.5 h-[1px] rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
-                  </div>
-                  <div className={cn(
-                    "absolute bottom-1 left-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
-                    activeTab === 'slides'
-                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
-                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
-                  )}>
-                    <div className={cn("w-1.5 h-[1px] rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
-                  </div>
-                  <div className={cn(
-                    "absolute top-1 right-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
-                    activeTab === 'slides'
-                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
-                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
-                  )}>
-                    <div className={cn("w-1.5 h-[1px] -rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
-                  </div>
-                  <div className={cn(
-                    "absolute bottom-1 right-2.5 w-2.5 h-2.5 rounded-full flex items-center justify-center transition-all",
-                    activeTab === 'slides'
-                      ? "bg-gradient-to-br from-cyan-300 via-cyan-600 to-cyan-950 shadow-[0_0_8px_#00f0ff] border border-cyan-400/60"
-                      : "bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] shadow-[1px_1px_2px_rgba(0,0,0,0.8)] border border-[#c7a26a]/40"
-                  )}>
-                    <div className={cn("w-1.5 h-[1px] -rotate-45", activeTab === 'slides' ? "bg-cyan-950" : "bg-[#221004]")} />
-                  </div>
+                  {/* Decorative corner authentic brass slotted screws */}
+                  <NavCornerScrew position="tl" />
+                  <NavCornerScrew position="bl" />
+                  <NavCornerScrew position="tr" />
+                  <NavCornerScrew position="br" />
 
-                  {/* First button: LayoutGrid inside rounded square pill container */}
+                  {/* First button: Início (Home) inside distinctive squircle container */}
                   <motion.button
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.94 }}
                     onClick={() => setActiveTab('menu')}
                     className={cn(
                       "p-3 rounded-2xl transition-all duration-200 relative group flex items-center justify-center cursor-pointer",
                       (activeTab as string) === 'menu'
-                        ? "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30"
+                        ? "bg-gradient-to-b from-[#d62329] to-[#9c1419] text-white shadow-[0_0_24px_rgba(214,35,41,0.9),0_4px_12px_rgba(0,0,0,0.5)] border border-[#ff6b6b]/40 font-black"
                         : activeTab === 'slides'
                           ? "bg-slate-900/80 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 border border-cyan-500/30"
-                          : "bg-[#3d2719] text-[#e0ba85] hover:bg-[#4d3220] hover:text-[#f5d5aa]"
+                          : "bg-[#331e12] text-[#dfba87] hover:bg-[#432918] hover:text-[#fae5c7] border border-[#4e301c] shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_2px_6px_rgba(0,0,0,0.4)]"
                     )}
                   >
-                    <LayoutGrid size={21} strokeWidth={(activeTab as string) === 'menu' ? 2.5 : 2} />
+                    <LayoutGrid size={22} strokeWidth={(activeTab as string) === 'menu' ? 2.5 : 2.2} />
                     {/* Tooltip */}
                     <div className={cn(
                       "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
@@ -576,10 +575,10 @@ export default function App() {
                     </div>
                   </motion.button>
                   
-                  {/* Vertical Divider */}
+                  {/* Vertical Divider in brass/bronze */}
                   <div className={cn(
-                    "w-[1px] h-7 mx-1 shrink-0 transition-all",
-                    activeTab === 'slides' ? "bg-cyan-500/40" : "bg-[#543b29]/90"
+                    "w-[1px] h-7 mx-1.5 shrink-0 transition-all",
+                    activeTab === 'slides' ? "bg-cyan-500/40" : "bg-gradient-to-b from-transparent via-[#5a3a24] to-transparent"
                   )} />
 
                   {/* Module Icons */}
@@ -589,20 +588,20 @@ export default function App() {
                       <motion.button
                         key={tab.id}
                         whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={cn(
                           "relative p-3 rounded-2xl transition-all duration-200 group flex items-center justify-center cursor-pointer",
                           isActive
                             ? activeTab === 'slides'
                               ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_#00f0ff] border border-cyan-300 font-black"
-                              : "bg-[#c02428] text-white shadow-[0_0_16px_rgba(192,36,40,0.6)] border border-[#ff4d4d]/30" 
+                              : "bg-gradient-to-b from-[#d62329] to-[#9c1419] text-white shadow-[0_0_24px_rgba(214,35,41,0.9),0_4px_12px_rgba(0,0,0,0.5)] border border-[#ff6b6b]/40 font-black" 
                             : activeTab === 'slides'
                               ? "bg-transparent text-cyan-400/70 hover:bg-cyan-500/10 hover:text-cyan-200"
-                              : "bg-transparent text-[#e0ba85] hover:bg-[#3d2719] hover:text-[#f5d5aa]"
+                              : "bg-transparent text-[#dfba87] hover:bg-[#331e12]/60 hover:text-[#fae5c7]"
                         )}
                       >
-                        <tab.icon size={21} strokeWidth={isActive ? 2.5 : 2} />
+                        <tab.icon size={22} strokeWidth={isActive ? 2.6 : 2} className={isActive ? "text-white" : "text-[#dfba87] group-hover:text-[#fae5c7]"} />
                         
                         {/* Tooltip */}
                         <div className={cn(
@@ -620,45 +619,7 @@ export default function App() {
               </AnimatePresence>
             </div>
 
-            {/* Right side widgets pinned absolute right */}
-            <div className="absolute right-8 hidden xl:flex items-center gap-4 pointer-events-auto">
-               {/* Dynamic Breadcrumb */}
-               <AnimatePresence>
-                 <motion.div 
-                   initial={{ opacity: 0, x: 20 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   exit={{ opacity: 0, x: 20 }}
-                   className={cn(
-                     "hidden sm:flex items-center gap-3 px-6 py-2 border-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] transition-all",
-                     activeTab === 'slides'
-                       ? "bg-[#020617]/90 border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
-                       : "bg-[#E8D4B0] border-[#3A2414] text-[#3a1d0f] shadow-sm"
-                   )}
-                 >
-                    <span>PGR</span> 
-                    <ChevronRight size={12} className={activeTab === 'slides' ? "text-cyan-500/50" : "text-[#3A2414]/40"} /> 
-                    <motion.span 
-                      key={activeTab}
-                      initial={{ opacity: 0, x: -5 }} 
-                      animate={{ opacity: 1, x: 0 }}
-                      className={activeTab === 'slides' ? "text-cyan-400 font-extrabold" : "text-[#B32025]"}
-                    >
-                      {activeTabInfo?.label}
-                    </motion.span>
-                 </motion.div>
-               </AnimatePresence>
-
-               {/* Clock Box */}
-               <div className={cn(
-                 "hidden sm:flex items-center gap-3 px-5 py-2.5 border-2 rounded-full text-[10px] leading-[14px] font-mono transition-all",
-                 activeTab === 'slides'
-                   ? "bg-[#020617]/90 border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
-                   : "bg-[#E8D4B0] border-[#3A2414] text-[#2D1A10] shadow-md"
-               )}>
-                 <Clock size={14} className={activeTab === 'slides' ? "text-cyan-400" : "text-[#B32025]"} />
-                 {formatDate(currentDateTime)}
-               </div>
-            </div>
+            {/* Right side widgets hidden per user request */}
           </header>
         )}
 
@@ -841,8 +802,8 @@ export default function App() {
           activeTab === 'menu' ? "overflow-hidden" : "overflow-y-visible md:overflow-y-auto pb-4 md:pb-8"
         )}>
           <div className={cn(
-            "w-full max-w-[102rem] mx-auto relative z-10 flex flex-col transition-all duration-500",
-            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-2.5 sm:p-6 md:p-8 pb-28 md:pb-8"
+            "w-full max-w-full mx-auto relative z-10 flex flex-col transition-all duration-500",
+            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-2.5 sm:p-5 md:p-6 pb-28 md:pb-8"
           )}>
 
 

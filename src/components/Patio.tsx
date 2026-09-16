@@ -2416,7 +2416,7 @@ export default function Patio({ onBack }: PatioProps) {
     <div className="w-full min-h-full text-[#2b180d] relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden select-none">
       
        {/* ================= HEADER AREA ================= */}
-      <div className="hidden md:flex w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[94rem] mx-auto mt-2 mb-6 shrink-0">
+      <div className="hidden md:flex w-full flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-full mx-auto mt-2 mb-6 shrink-0">
         
         {/* Left title and logo stack */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 text-left w-full md:w-auto">
@@ -2467,7 +2467,7 @@ export default function Patio({ onBack }: PatioProps) {
       </div>
 
       {/* ================= NAVIGATION TABS ================= */}
-      <div className="flex w-full relative z-10 max-w-[94rem] mx-auto mb-6 flex-col md:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
+      <div className="flex w-full relative z-10 max-w-full mx-auto mb-6 flex-col md:flex-row gap-4 justify-between items-center bg-[#ebd9c3]/50 p-2.5 border-2 border-[#5c3c24]/20 rounded-2xl shadow-sm">
         <div className="flex flex-wrap items-center gap-2 bg-[#e8d5bc]/80 p-1 border-2 border-[#5c3c24]/25 rounded-xl shadow-inner w-full md:w-auto shrink-0">
           <button
             onClick={() => setActiveSubTab('patio')}
@@ -2516,7 +2516,7 @@ export default function Patio({ onBack }: PatioProps) {
       {activeSubTab === 'patio' ? (
         <>
           {/* ================= HERO OPERATIONAL MONITORS PLAQUE ================= */}
-      <div className="hidden md:block w-full relative z-10 max-w-[94rem] mx-auto mt-6 shrink-0">
+      <div className="hidden md:block w-full relative z-10 max-w-full mx-auto mt-6 shrink-0">
         <WoodenPlaque className="py-4 px-6 md:px-8 flex flex-col md:flex-row items-center justify-center gap-6" screwSize="w-2.5 h-2.5">
           {/* Core Metrics Widgets */}
           <div className="grid grid-cols-2 md:flex md:flex-wrap items-center justify-center gap-3 sm:gap-4 w-full md:w-auto">
@@ -2599,7 +2599,7 @@ export default function Patio({ onBack }: PatioProps) {
       </div>
 
       {/* ================= CONTROLLER CODES & DATA GRID PANEL ================= */}
-      <div className="w-full relative z-10 max-w-[94rem] mx-auto mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
+      <div className="w-full relative z-10 max-w-full mx-auto mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
         
         {/* LEFT COLUMN: INGESTION CONSOLE PLAQUE */}
         <div className={cn("lg:col-span-4 h-full flex flex-col", mobileTab === 'importar' ? "flex" : "hidden lg:flex")}>
@@ -2955,7 +2955,7 @@ export default function Patio({ onBack }: PatioProps) {
         </>
       ) : activeSubTab === 'disponibilidade' ? (
         /* ================= DISPONIBILIDADE CONSOLE ================= */
-        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
+        <div className="w-full relative z-10 max-w-full mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0">
           
           {/* LEFT COLUMN: CONTROL & INPUT */}
           <div className="lg:col-span-5 h-full flex flex-col">
@@ -3266,7 +3266,7 @@ export default function Patio({ onBack }: PatioProps) {
         </div>
       ) : activeSubTab === 'iscas' ? (
         /* ================= ISCAS CONSOLE ================= */
-        <div className="w-full relative z-10 max-w-[94rem] mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0 animate-fade-in">
+        <div className="w-full relative z-10 max-w-full mx-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 min-h-0 animate-fade-in">
           
           {/* LEFT COLUMN: CONTROL & INPUT */}
           <div className="lg:col-span-5 h-full flex flex-col">
@@ -3489,7 +3489,7 @@ export default function Patio({ onBack }: PatioProps) {
       ) : null}
 
       {/* ================= PORTABLE FOOTER METAL PLATE BAR ================= */}
-      <div className="w-full relative z-10 max-w-[94rem] mx-auto mt-6 shrink-0">
+      <div className="w-full relative z-10 max-w-full mx-auto mt-6 shrink-0">
         <div 
           className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-[#442e1d]/95 via-[#26150b]/98 to-[#442e1d]/95 border-2 border-[#bfa27a]/50 shadow-[0_12px_25px_rgba(0,0,0,0.7),inset_0_1px_4px_rgba(255,255,255,0.15)] flex flex-col md:flex-row justify-between items-center gap-3 relative text-[9px] font-bold text-[#cfa588] select-none text-center md:text-left"
         >

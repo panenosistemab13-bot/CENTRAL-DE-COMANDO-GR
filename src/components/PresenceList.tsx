@@ -463,7 +463,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
     });
 
   return (
-    <div className="w-full relative z-10 max-w-[96rem] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch font-sans">
+    <div className="w-full relative z-10 max-w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch font-sans">
       
       {/* Left Column (Card) */}
       <div className="hidden">

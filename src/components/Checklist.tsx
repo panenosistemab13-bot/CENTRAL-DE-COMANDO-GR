@@ -873,7 +873,7 @@ export default function Checklist() {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 p-6 max-w-[1600px] w-full mx-auto space-y-6">
+      <main className="flex-1 p-4 sm:p-6 w-full max-w-full mx-auto space-y-6">
         
         {/* ================= VIEW: GERADOR / CHECKPOINT ================= */}
         {activeView === 'generator' ? (

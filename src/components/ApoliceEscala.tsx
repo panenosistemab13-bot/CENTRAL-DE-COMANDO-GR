@@ -685,7 +685,7 @@ export default function ApoliceEscala({
   };
 
   return (
-    <div className="w-full relative z-10 max-w-[96rem] mx-auto flex flex-col font-sans">
+    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans">
       
       {/* Toast Notifications */}
       {copiedNotification && (

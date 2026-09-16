@@ -186,7 +186,7 @@ export default function TransportadorEscala({
   };
 
   return (
-    <div className="w-full relative z-10 max-w-[96rem] mx-auto flex flex-col font-sans">
+    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans">
       {/* Main Parchment Panel identical to Lista de Presença */}
       <div 
         className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col"

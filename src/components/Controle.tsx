@@ -2402,7 +2402,7 @@ Embarque: ${
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-canvas">
         {/* TAB CONTENT: Placas */}
         {activeTab === "placas" && (
-          <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
+          <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
             {/* Main Card */}
             <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-md p-6 sm:p-8 flex flex-col gap-6">
               {/* Header info */}
@@ -2643,7 +2643,7 @@ Embarque: ${
 
         {/* TAB CONTENT: Unidades */}
         {activeTab === "unidades" && (
-          <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
+          <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
             <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-md p-6 sm:p-8 flex flex-col gap-6">
               {/* Header info */}
               <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-[#E2E8F0] gap-4">
@@ -2843,7 +2843,7 @@ Embarque: ${
 
         {/* TAB CONTENT: Gerador PGR Workspace */}
         {activeTab === "gerador" && (
-          <div className="flex flex-col gap-6 max-w-[100rem] mx-auto w-full animate-fade-in">
+          <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px_310px] gap-6 items-start">
         {/* LEFT AREA: Template Generator */}
         <div className="col-span-1 xl:col-span-1 flex flex-col">

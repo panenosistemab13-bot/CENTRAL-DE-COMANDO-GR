@@ -504,7 +504,7 @@ export default function InitialMenu({
     <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">
       
       {/* ================= HEADER AREA ================= */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-[84rem] mx-auto mt-2">
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-full mx-auto mt-2 px-2 sm:px-4">
         
         {/* TOP LEFT HEADER: MÓDULO ATIVO RED BRAND SEAL AND LABEL */}
         <div className="hidden flex items-center gap-2.5 bg-black/10 backdrop-blur-md rounded-full py-1 pl-1 pr-4.5 border border-white/5 shadow-2xl backdrop-saturate-150 relative transition-transform duration-300 hover:scale-[1.02]">
@@ -600,7 +600,7 @@ export default function InitialMenu({
       </div>
 
       {/* ================= CENTRAL CAROUSEL CONTAINER ================= */}
-      <div className="flex-1 flex items-center justify-between gap-4 w-full max-w-[84rem] mx-auto px-2 relative z-10 select-none py-4 md:py-0">
+      <div className="flex-1 flex items-center justify-between gap-4 w-full max-w-full mx-auto px-2 sm:px-4 relative z-10 select-none py-4 md:py-0">
         
         {/* LEFT CAROUSEL CHEVRON BUTTON */}
         <motion.button 
@@ -684,7 +684,7 @@ export default function InitialMenu({
       </div>
 
       {/* ================= HIGH-FIDELITY FOOTER BAR ================= */}
-      <div className="w-full relative z-10 max-w-[84rem] mx-auto mt-auto">
+      <div className="w-full relative z-10 max-w-full mx-auto mt-auto px-2 sm:px-4">
         <div 
           className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-[#442e1d]/90 via-[#26150b]/95 to-[#442e1d]/90 border-2 border-[#bfa27a]/50 shadow-[0_12px_25px_rgba(0,0,0,0.7),inset_0_1px_4px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row justify-between items-center gap-3 relative text-[10px] font-medium text-[#cfa588]"
         >

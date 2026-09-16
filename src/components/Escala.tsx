@@ -30,7 +30,10 @@ import {
   X,
   UserPlus,
   Eye,
-  EyeOff
+  EyeOff,
+  Lock,
+  Unlock,
+  Key
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import FileSaver from 'file-saver';
@@ -331,7 +334,41 @@ interface EscalaProps {
 }
 
 export default function Escala({ onBack }: EscalaProps) {
-  const [activeTab, setActiveTab] = useState<'escala' | 'motoristas' | 'terceiros' | 'apolice' | 'transportador'>('escala');
+  const [activeTab, setActiveTab] = useState<'escala' | 'terceiros' | 'motoristas' | 'apolice' | 'transportador'>('escala');
+
+  // Password Protection for tabs: Motoristas 3C, Apólice, Transportador
+  const ESCALA_PROTECTED_PASSWORD = '#trescafe2029';
+  const [isProtectedUnlocked, setIsProtectedUnlocked] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('escala_protected_unlocked') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const handleUnlockProtected = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (passwordInput.trim() === ESCALA_PROTECTED_PASSWORD) {
+      setIsProtectedUnlocked(true);
+      setPasswordError(null);
+      setPasswordInput('');
+      try {
+        sessionStorage.setItem('escala_protected_unlocked', 'true');
+      } catch {}
+    } else {
+      setPasswordError('Senha incorreta! Digite a senha de acesso correta.');
+    }
+  };
+
+  const handleLockProtected = () => {
+    setIsProtectedUnlocked(false);
+    try {
+      sessionStorage.removeItem('escala_protected_unlocked');
+    } catch {}
+  };
 
   // Ensure '1. Conversor de Escala' is always selected when entering Escala
   useEffect(() => {
@@ -1509,7 +1546,7 @@ export default function Escala({ onBack }: EscalaProps) {
   const uniqueDestinations = Array.from(new Set(editableRows.map(r => r.destino).filter(Boolean)));
 
   return (
-    <div className="w-full max-w-[102rem] mx-auto p-4 sm:p-6 space-y-6 text-[#2D1A10]">
+    <div className="w-full max-w-full mx-auto p-2 sm:p-4 md:p-6 space-y-6 text-[#2D1A10]">
       
       {/* Top Header Card */}
       <div className="bg-gradient-to-br from-[#2D1A10] via-[#3d2417] to-[#1c100a] text-[#fdefd1] rounded-3xl p-6 sm:p-8 border-[3px] border-[#8c6039]/40 shadow-2xl relative overflow-hidden">
@@ -1546,9 +1583,6 @@ export default function Escala({ onBack }: EscalaProps) {
               <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white uppercase">
                 Escala 3C
               </h1>
-              <p className="text-xs sm:text-sm text-[#dac0a3] mt-1 font-sans">
-                Desmembramento automático de baús, Origem fixa (<strong className="text-[#fdefd1]">SANTA LUZIA|MG</strong>), preenchimento de CPF/RG dos motoristas 3C e cópia de 33 colunas (preservando a Coluna <strong className="text-amber-300">AJ - DIAS</strong> intacta).
-              </p>
             </div>
           </div>
 
@@ -1584,11 +1618,12 @@ export default function Escala({ onBack }: EscalaProps) {
         </div>
 
         {/* Tab Navigation Navigation Bar */}
-        <div className="flex items-center gap-2 mt-6 pt-4 border-t border-[#8c6039]/30">
+        <div className="flex flex-wrap items-center gap-2 mt-6 pt-4 border-t border-[#8c6039]/30">
+          {/* 1. Conversor de Escala */}
           <button
             onClick={() => setActiveTab('escala')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
               activeTab === 'escala'
                 ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
                 : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
@@ -1601,78 +1636,114 @@ export default function Escala({ onBack }: EscalaProps) {
             </span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('motoristas')}
-            className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
-              activeTab === 'motoristas'
-                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
-                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
-            )}
-          >
-            <Users size={16} />
-            <span>2. Motoristas 3C</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[10px] font-mono font-bold">
-              {motoristas3C.length}
-            </span>
-          </button>
-
+          {/* 2. Conversor de Terceiros */}
           <button
             onClick={() => setActiveTab('terceiros')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
               activeTab === 'terceiros'
                 ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
                 : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
             )}
           >
             <Truck size={16} />
-            <span>3. Terceiros</span>
+            <span>2. Conversor de Terceiros</span>
             <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-mono font-bold">
               PDF OS
             </span>
           </button>
 
+          {/* 3. Motoristas 3C (Senha) */}
+          <button
+            onClick={() => setActiveTab('motoristas')}
+            className={cn(
+              "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              activeTab === 'motoristas'
+                ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
+                : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
+            )}
+            title={isProtectedUnlocked ? "Acesso desbloqueado" : "Aba protegida por senha"}
+          >
+            <Users size={16} />
+            <span>3. Motoristas 3C</span>
+            {isProtectedUnlocked ? (
+              <Unlock size={12} className="text-emerald-500" />
+            ) : (
+              <Lock size={12} className="text-amber-400" />
+            )}
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[10px] font-mono font-bold">
+              {motoristas3C.length}
+            </span>
+          </button>
+
+          {/* 4. Apólice (Senha) */}
           <button
             onClick={() => setActiveTab('apolice')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
               activeTab === 'apolice'
                 ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
                 : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
             )}
+            title={isProtectedUnlocked ? "Acesso desbloqueado" : "Aba protegida por senha"}
           >
             <ShieldCheck size={16} className="text-blue-400" />
             <span>4. Apólice</span>
+            {isProtectedUnlocked ? (
+              <Unlock size={12} className="text-emerald-500" />
+            ) : (
+              <Lock size={12} className="text-amber-400" />
+            )}
             <span className="ml-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-mono font-bold">
               {apoliceItems.length}
             </span>
           </button>
 
+          {/* 5. Transportador (Senha) */}
           <button
             onClick={() => setActiveTab('transportador')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+              "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
               activeTab === 'transportador'
                 ? "bg-[#fdefd1] text-[#2D1A10] shadow-md scale-102"
                 : "bg-[#1c100a]/60 text-[#dac0a3] hover:bg-[#3d2417] hover:text-white"
             )}
+            title={isProtectedUnlocked ? "Acesso desbloqueado" : "Aba protegida por senha"}
           >
             <Truck size={16} className="text-amber-400" />
             <span>5. Transportador</span>
+            {isProtectedUnlocked ? (
+              <Unlock size={12} className="text-emerald-500" />
+            ) : (
+              <Lock size={12} className="text-amber-400" />
+            )}
             <span className="ml-1 px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-mono font-bold">
               {transportadoras.length}
             </span>
           </button>
 
-          <button
-            onClick={() => setIsDestinosModalOpen(true)}
-            className="ml-auto px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer bg-blue-950/80 hover:bg-blue-900 text-blue-100 border border-blue-400/30 hover:border-blue-300 shadow-md"
-            title="Visualizar a lista completa de 58 destinos padronizados"
-          >
-            <MapPin size={16} className="text-blue-300" />
-            <span>Destinos Padrão (58)</span>
-          </button>
+          {/* Right actions: Lock toggle if unlocked + Destinos */}
+          <div className="ml-auto flex items-center gap-2">
+            {isProtectedUnlocked && (
+              <button
+                onClick={handleLockProtected}
+                className="px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/30"
+                title="Bloquear abas com senha novamente"
+              >
+                <Lock size={13} />
+                <span>Bloquear Abas</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => setIsDestinosModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer bg-blue-950/80 hover:bg-blue-900 text-blue-100 border border-blue-400/30 hover:border-blue-300 shadow-md"
+              title="Visualizar a lista completa de 58 destinos padronizados"
+            >
+              <MapPin size={16} className="text-blue-300" />
+              <span>Destinos Padrão (58)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2092,509 +2163,93 @@ export default function Escala({ onBack }: EscalaProps) {
             </div>
           )}
 
-          {/* Main Table Preview Section */}
-          <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-4">
-            
-            {/* Table Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-              <div>
-                <h3 className="text-lg font-serif font-black uppercase tracking-tight text-[#2D1A10] flex items-center gap-2">
-                  <FileSpreadsheet className="text-[#B32025]" size={20} />
-                  Pré-visualização da Tabela de Disponibilidade (33 Colunas)
-                </h3>
-                <p className="text-xs text-slate-600">
-                  * Ao clicar em <strong className="text-[#B32025]">Copiar</strong>, apenas o conteúdo dos dados é copiado (sem cores e sem cabeçalho por padrão).
-                </p>
-              </div>
+          {/* Tabela de Disponibilidade ocultada */}
+        </>
+      ) : activeTab === 'terceiros' ? (
+        /* Tab 2: Conversor de Terceiros (Importar PDF OS) */
+        <TerceirosEscala
+          checklistItems={checklistItems}
+          apoliceItems={apoliceItems}
+          transportadoras={transportadoras}
+          getChecklistDetails={getChecklistDetails}
+          formatPlateWithHyphen={formatPlateWithHyphen}
+          getMonthAbbrev={getMonthAbbrev}
+          getDayOfWeek={getDayOfWeek}
+        />
+      ) : !isProtectedUnlocked ? (
+        /* Password Lock Screen for Tabs 3 (Motoristas 3C), 4 (Apólice), 5 (Transportador) */
+        <div className="bg-[#1c0d05] border-2 border-amber-500/30 rounded-3xl p-8 sm:p-12 shadow-2xl text-center max-w-xl mx-auto my-8 space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 shadow-inner">
+            <Lock size={32} />
+          </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => setShowTablePreview(prev => !prev)}
-                  className="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                >
-                  {showTablePreview ? <EyeOff size={15} /> : <Eye size={15} />}
-                  <span>{showTablePreview ? 'Ocultar Tabela' : 'Mostrar Tabela (33 Colunas)'}</span>
-                </button>
+          <div className="space-y-2">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase bg-amber-950/80 px-3 py-1 rounded-full border border-amber-500/30">
+              Acesso Restrito
+            </span>
+            <h3 className="text-2xl font-serif font-black uppercase text-[#fdefd1] tracking-tight">
+              Aba Protegida por Senha
+            </h3>
+            <p className="text-xs text-[#dac0a3]/80 max-w-md mx-auto leading-relaxed">
+              A aba <span className="font-bold text-amber-300 uppercase">{activeTab === 'motoristas' ? '3. Motoristas 3C' : activeTab === 'apolice' ? '4. Apólice' : '5. Transportador'}</span> requer senha de segurança para visualização e edição dos cadastros.
+            </p>
+          </div>
 
-                <button
-                  onClick={handleAddRow}
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <Plus size={15} />
-                  <span>Adicionar Linha</span>
-                </button>
-
-                <button
-                  onClick={handleExportXLSX}
-                  disabled={editableRows.length === 0}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                  title="Baixar planilha em formato .xlsx para Microsoft Excel"
-                >
-                  <FileSpreadsheet size={15} />
-                  <span>Baixar Excel (.xlsx)</span>
-                </button>
-
-                <button
-                  onClick={handleExportCSV}
-                  disabled={editableRows.length === 0}
-                  className="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                >
-                  <Download size={15} />
-                  <span>Baixar CSV</span>
-                </button>
-
-                <button
-                  onClick={handleCopyToClipboard}
-                  disabled={editableRows.length === 0}
-                  className="px-5 py-2.5 rounded-xl bg-[#B32025] hover:bg-[#8c060a] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
-                >
-                  <Clipboard size={15} />
-                  <span>Copiar Dados ({editableRows.length} linhas)</span>
-                </button>
-              </div>
+          <form onSubmit={handleUnlockProtected} className="space-y-4 max-w-sm mx-auto pt-2">
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value);
+                  if (passwordError) setPasswordError(null);
+                }}
+                placeholder="Digite a senha..."
+                autoFocus
+                className="w-full px-4 py-3.5 bg-black/60 border-2 border-[#8c6039]/50 focus:border-amber-400 rounded-2xl text-[#fdefd1] placeholder:text-stone-500 text-sm font-mono tracking-wider outline-none transition-all pr-11 text-center"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-200 cursor-pointer p-1"
+                title={showPassword ? 'Ocultar senha' : 'Ver senha'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
-            {/* Scrollable Spreadsheet Table */}
-            {showTablePreview && (
-              editableRows.length === 0 ? (
-                <div className="py-16 text-center text-slate-400 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
-                  <FileSpreadsheet size={40} className="mx-auto text-slate-300" />
-                  <p className="text-sm font-bold text-slate-600">Nenhuma linha processada.</p>
-                  <p className="text-xs text-slate-400">Cole os dados da escala no campo acima para gerar a tabela.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto no-scrollbar border border-slate-200 rounded-2xl shadow-inner max-h-[580px]">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-[#2D1A10] text-[#fdefd1] sticky top-0 z-20 font-mono text-[10px] uppercase tracking-wider">
-                    <tr>
-                      <th className="p-3 border-b border-[#8c6039]/40 text-center w-10">#</th>
-                      {DISPO_COLUMNS.map((col, idx) => (
-                        <th key={idx} className="p-3 border-b border-r border-[#8c6039]/40 whitespace-nowrap">
-                          {col}
-                        </th>
-                      ))}
-                      <th className="p-3 border-b border-[#8c6039]/40 text-center whitespace-nowrap min-w-[110px]">Ação / Copiar</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white font-sans">
-                    {editableRows.map((row, idx) => {
-                      const chkStatus = getPlateChecklistStatus(row.cavalo);
-                      const isCopied = copiedRowId === row.id;
+            {passwordError && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xs font-bold text-rose-400 bg-rose-950/60 border border-rose-500/40 rounded-xl py-2 px-3 flex items-center justify-center gap-1.5"
+              >
+                <AlertCircle size={14} />
+                <span>{passwordError}</span>
+              </motion.p>
+            )}
 
-                      return (
-                        <tr key={row.id} className="hover:bg-amber-50/60 transition-colors group">
-                          <td className="p-2.5 text-center font-mono font-bold text-slate-400 bg-slate-50">
-                            {idx + 1}
-                          </td>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-[#1a0c05] font-black uppercase text-xs tracking-wider rounded-2xl shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 border border-amber-300"
+              >
+                <Key size={16} />
+                <span>Desbloquear Acesso</span>
+              </button>
 
-                          {/* 1. MÊS */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-[#2D1A10]">
-                            <input
-                              type="text"
-                              value={row.mes}
-                              onChange={(e) => handleCellEdit(row.id, 'mes', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 2. ORIGEM */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
-                            <input
-                              type="text"
-                              value={row.origem}
-                              onChange={(e) => handleCellEdit(row.id, 'origem', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 3. DIA */}
-                          <td className="p-1.5 border-r border-slate-200 text-slate-700">
-                            <input
-                              type="text"
-                              value={row.dia}
-                              onChange={(e) => handleCellEdit(row.id, 'dia', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-xs"
-                            />
-                          </td>
-
-                          {/* 4. DATA */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-900">
-                            <input
-                              type="text"
-                              value={row.data}
-                              onChange={(e) => handleCellEdit(row.id, 'data', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                            />
-                          </td>
-
-                          {/* 5. CONTATO WHATS */}
-                          <td className="p-1.5 border-r border-slate-200 text-center font-bold text-emerald-700">
-                            <input
-                              type="text"
-                              value={row.contatoWhats}
-                              onChange={(e) => handleCellEdit(row.id, 'contatoWhats', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center text-xs"
-                            />
-                          </td>
-
-                          {/* 6. HORA LIBERADO */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-800">
-                            <input
-                              type="text"
-                              value={row.horaLiberado}
-                              onChange={(e) => handleCellEdit(row.id, 'horaLiberado', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                            />
-                          </td>
-
-                          {/* 7. STATUS */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-emerald-800">
-                            <input
-                              type="text"
-                              value={row.status}
-                              onChange={(e) => handleCellEdit(row.id, 'status', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 8. MODELO CARRETA */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
-                            <input
-                              type="text"
-                              value={row.modeloCarreta}
-                              onChange={(e) => handleCellEdit(row.id, 'modeloCarreta', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 9. MODELO CAVALO */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-slate-800">
-                            <input
-                              type="text"
-                              value={row.modeloCavalo}
-                              onChange={(e) => handleCellEdit(row.id, 'modeloCavalo', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 10. FEZ CONTATO? */}
-                          <td className="p-1.5 border-r border-slate-200 text-center font-bold text-emerald-700">
-                            <input
-                              type="text"
-                              value={row.fezContato}
-                              onChange={(e) => handleCellEdit(row.id, 'fezContato', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center text-xs"
-                            />
-                          </td>
-
-                          {/* 11. DESTINO */}
-                          <td className="p-1.5 border-r border-slate-200 font-black text-blue-900 bg-blue-50/40">
-                            <input
-                              type="text"
-                              list="destinos-padrao-list"
-                              value={row.destino}
-                              onChange={(e) => handleCellEdit(row.id, 'destino', e.target.value)}
-                              onBlur={(e) => {
-                                const norm = normalizeDestino(e.target.value);
-                                if (norm && norm !== e.target.value) {
-                                  handleCellEdit(row.id, 'destino', norm);
-                                }
-                              }}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-black text-xs text-blue-900"
-                              placeholder="DESTINO"
-                            />
-                          </td>
-
-                          {/* 12. TRANSPORTADOR */}
-                          <td className="p-1.5 border-r border-slate-200 font-black text-amber-950 bg-amber-100/40">
-                            <input
-                              type="text"
-                              value={row.transportador}
-                              onChange={(e) => handleCellEdit(row.id, 'transportador', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-200 focus:outline-none rounded font-black text-xs text-amber-950"
-                            />
-                          </td>
-
-                          {/* 13. CAVALO (Highlighted based on Checklist validity) */}
-                          <td className={cn(
-                            "p-1.5 border-r border-slate-200 transition-colors relative",
-                            chkStatus.borderCell
-                          )}>
-                            <div className="flex items-center justify-between gap-1">
-                              <input
-                                type="text"
-                                value={row.cavalo}
-                                onChange={(e) => handleCellEdit(row.id, 'cavalo', e.target.value)}
-                                className={cn(
-                                  "w-full bg-transparent px-2 py-1 focus:bg-amber-200 focus:outline-none rounded font-mono font-black text-xs uppercase tracking-wider",
-                                  chkStatus.status === 'vencido' && "text-rose-900 font-black",
-                                  chkStatus.status === 'a_vencer' && "text-amber-950 font-black",
-                                  chkStatus.status === 'ok' && "text-emerald-900 font-black"
-                                )}
-                              />
-                              {chkStatus.status !== 'none' && (
-                                <span 
-                                  title={chkStatus.label}
-                                  className={cn(
-                                    "px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest shrink-0 uppercase border shadow-2xs cursor-help select-none",
-                                    chkStatus.badgeClass
-                                  )}
-                                >
-                                  {chkStatus.status === 'vencido' ? 'VENCIDO' : chkStatus.status === 'a_vencer' ? '2 DIAS' : 'OK'}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* 14. CARRETA */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-slate-800">
-                            <input
-                              type="text"
-                              value={row.carreta}
-                              onChange={(e) => handleCellEdit(row.id, 'carreta', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs uppercase"
-                            />
-                          </td>
-
-                          {/* 15. Nº PALLETS */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-center text-amber-900 bg-amber-50/40">
-                            <input
-                              type="text"
-                              value={row.pallets}
-                              onChange={(e) => handleCellEdit(row.id, 'pallets', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-center text-xs"
-                            />
-                          </td>
-
-                          {/* 16. TON */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-center text-slate-900">
-                            <input
-                              type="text"
-                              value={row.ton}
-                              onChange={(e) => handleCellEdit(row.id, 'ton', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-center text-xs"
-                            />
-                          </td>
-
-                          {/* 17. M³ */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono text-center text-slate-700">
-                            <input
-                              type="text"
-                              value={row.m3}
-                              onChange={(e) => handleCellEdit(row.id, 'm3', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-center text-xs"
-                            />
-                          </td>
-
-                          {/* 18. CATEGORIA (FROTA) */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-purple-900 bg-purple-50/30">
-                            <input
-                              type="text"
-                              value={row.categoria}
-                              onChange={(e) => handleCellEdit(row.id, 'categoria', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs text-purple-900"
-                            />
-                          </td>
-
-                          {/* 19. TECNOLOGIA (SASCAR) */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-cyan-900 bg-cyan-50/30">
-                            <input
-                              type="text"
-                              value={row.tecnologia}
-                              onChange={(e) => handleCellEdit(row.id, 'tecnologia', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs text-cyan-900"
-                            />
-                          </td>
-
-                          {/* 20. CONDUCTOR */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-[#2D1A10]">
-                            <input
-                              type="text"
-                              value={row.conductor}
-                              onChange={(e) => handleCellEdit(row.id, 'conductor', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-bold text-xs uppercase"
-                            />
-                          </td>
-
-                          {/* 21. CPF */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-blue-900 bg-blue-50/30">
-                            <input
-                              type="text"
-                              value={row.cpf}
-                              onChange={(e) => handleCellEdit(row.id, 'cpf', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 22. RG / SAP */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono font-bold text-blue-900 bg-blue-50/30">
-                            <input
-                              type="text"
-                              value={row.rgSap}
-                              onChange={(e) => handleCellEdit(row.id, 'rgSap', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs"
-                            />
-                          </td>
-
-                          {/* 23. CNH */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                            <input
-                              type="text"
-                              value={row.cnh}
-                              onChange={(e) => handleCellEdit(row.id, 'cnh', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                            />
-                          </td>
-
-                          {/* 24. TELEFONE */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                            <input
-                              type="text"
-                              value={row.telefone}
-                              onChange={(e) => handleCellEdit(row.id, 'telefone', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                            />
-                          </td>
-
-                          {/* 25. VIGÊNCIA DO CADASTRO */}
-                          <td className="p-1.5 border-r border-slate-200 text-slate-800">
-                            <input
-                              type="text"
-                              value={row.vigenciaCadastro}
-                              onChange={(e) => handleCellEdit(row.id, 'vigenciaCadastro', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-xs"
-                            />
-                          </td>
-
-                          {/* 26. CÓDIGO DA TRANSPORTADORA */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-800">
-                            <input
-                              type="text"
-                              value={row.codigoTransportadora}
-                              onChange={(e) => handleCellEdit(row.id, 'codigoTransportadora', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                            />
-                          </td>
-
-                          {/* 27. ID DA CARGA */}
-                          <td className="p-1.5 border-r border-slate-200 font-mono text-slate-700">
-                            <input
-                              type="text"
-                              value={row.idCarga}
-                              onChange={(e) => handleCellEdit(row.id, 'idCarga', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono text-xs"
-                            />
-                          </td>
-
-                          {/* 28. ESTADO MOTORISTA */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
-                            <input
-                              type="text"
-                              value={row.estadoMotorista}
-                              onChange={(e) => handleCellEdit(row.id, 'estadoMotorista', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
-                            />
-                          </td>
-
-                          {/* 29. ESTADO CAVALO */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
-                            <input
-                              type="text"
-                              value={row.estadoCavalo}
-                              onChange={(e) => handleCellEdit(row.id, 'estadoCavalo', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
-                            />
-                          </td>
-
-                          {/* 30. ESTADO CARRETA (AD) */}
-                          <td className="p-1.5 border-r border-slate-200 font-bold text-center text-slate-700">
-                            <input
-                              type="text"
-                              value={row.estadoCarreta}
-                              onChange={(e) => handleCellEdit(row.id, 'estadoCarreta', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded text-center font-bold text-xs uppercase"
-                            />
-                          </td>
-
-                          {/* 31. COLUNA AE (Vazia) */}
-                          <td className="p-1.5 border-r border-slate-200 bg-slate-50/30">
-                            <input
-                              type="text"
-                              value=""
-                              readOnly
-                              className="w-full bg-transparent px-2 py-1 text-center font-mono text-xs text-slate-300 select-none cursor-not-allowed"
-                            />
-                          </td>
-
-                          {/* 32. PENDENCIA (AF - Coluna Pendência: CHECKLIST se vencido) */}
-                          <td className={cn(
-                            "p-1.5 border-r border-slate-200 transition-colors text-center font-mono font-bold",
-                            row.pendencia === 'CHECKLIST' ? "bg-amber-100/90 text-amber-950 font-black" : "bg-slate-50/50 text-slate-400"
-                          )}>
-                            <input
-                              type="text"
-                              value={row.pendencia || ''}
-                              onChange={(e) => handleCellEdit(row.id, 'pendencia', e.target.value)}
-                              placeholder="—"
-                              className={cn(
-                                "w-full bg-transparent px-2 py-1 text-center font-mono font-black text-xs focus:bg-amber-200 focus:outline-none rounded uppercase",
-                                row.pendencia === 'CHECKLIST' ? "text-amber-950 font-black" : "text-slate-400"
-                              )}
-                              title="Coluna AF (Pendência) - preenchida com 'CHECKLIST' se o checklist estiver vencido"
-                            />
-                          </td>
-
-                          {/* 33. CHECK LIST (AG - Validade do Checklist/Veículos) */}
-                          <td className={cn(
-                            "p-1.5 border-r border-slate-200 font-mono font-bold transition-colors",
-                            row.pendencia === 'CHECKLIST' ? "bg-rose-50 text-rose-900 font-black" : "bg-emerald-50/50 text-emerald-900"
-                          )}>
-                            <input
-                              type="text"
-                              value={row.checkList}
-                              onChange={(e) => handleCellEdit(row.id, 'checkList', e.target.value)}
-                              className="w-full bg-transparent px-2 py-1 focus:bg-amber-100 focus:outline-none rounded font-mono font-bold text-xs text-slate-900"
-                              title="Coluna AG (Check List) - Validade dos veículos puxada da página Checklist"
-                            />
-                          </td>
-
-                          {/* Action & Individual Copy */}
-                          <td className="p-2 text-center whitespace-nowrap">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => handleCopySingleRow(row)}
-                                className={cn(
-                                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 border cursor-pointer shadow-2xs",
-                                  isCopied
-                                    ? "bg-emerald-600 text-white border-emerald-700"
-                                    : "bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-950 border-slate-300 hover:border-amber-400"
-                                )}
-                                title="Copiar individualmente apenas esta linha (33 colunas)"
-                              >
-                                {isCopied ? <Check size={12} className="stroke-[3]" /> : <Copy size={12} />}
-                                <span>{isCopied ? 'Copiado' : 'Copiar'}</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleRemoveRow(row.id)}
-                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer rounded-lg border border-transparent hover:border-rose-200"
-                                title="Remover linha"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
-        </>
+              <button
+                type="button"
+                onClick={() => setActiveTab('escala')}
+                className="w-full py-2.5 bg-transparent hover:bg-white/5 text-[#dac0a3] text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Voltar para Conversor de Escala
+              </button>
+            </div>
+          </form>
+        </div>
       ) : activeTab === 'motoristas' ? (
-        /* Tab 2: Motoristas 3C Database Management */
+        /* Tab 3: Motoristas 3C Database Management */
         <div className="bg-white border-2 border-[#3A2414]/20 rounded-3xl p-6 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
             <div>
@@ -2692,17 +2347,6 @@ export default function Escala({ onBack }: EscalaProps) {
             </table>
           </div>
         </div>
-      ) : activeTab === 'terceiros' ? (
-        /* Tab 3: Terceiros (Importar PDF OS) */
-        <TerceirosEscala
-          checklistItems={checklistItems}
-          apoliceItems={apoliceItems}
-          transportadoras={transportadoras}
-          getChecklistDetails={getChecklistDetails}
-          formatPlateWithHyphen={formatPlateWithHyphen}
-          getMonthAbbrev={getMonthAbbrev}
-          getDayOfWeek={getDayOfWeek}
-        />
       ) : activeTab === 'apolice' ? (
         /* Tab 4: Apólice (Classificação de Apólices & Conjuntos) */
         <ApoliceEscala

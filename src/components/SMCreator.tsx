@@ -1194,7 +1194,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   return (
     <>
       {/* ================= HEADER AREA ================= */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-end gap-6 max-w-[94rem] mx-auto mt-2 mb-6 px-6 font-sans">
+      <div className="w-full flex flex-col md:flex-row items-center justify-end gap-6 max-w-full mx-auto mt-2 mb-6 px-4 sm:px-6 font-sans">
         
         {/* Global actions */}
         <div className="flex items-center gap-3 ml-auto">
