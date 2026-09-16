@@ -584,7 +584,7 @@ export default function RestrictedPagesModal({
         <div className="mt-2.5 px-3 py-2 rounded-xl bg-[#24160E]/20 border border-[#311f14]/20 flex flex-wrap items-center justify-between gap-2 text-xs text-[#5c3e29] font-bold shrink-0">
           <span className="flex items-center gap-1.5 text-[11px]">
             <ArrowUpDown size={14} className="text-[#800609] shrink-0" />
-            <span><strong>Sequência das Páginas:</strong> Altere a ordem usando as setas (▲/▼) ou o seletor de posição em cada item.</span>
+            <span><strong>Sequência das Páginas & Atalhos:</strong> A ordem numérica define a navegação rápida por teclado (<kbd className="px-1.5 py-0.5 rounded bg-[#311f14] text-[#fdefd1] font-mono text-[10px]">Ctrl + 1</kbd> até <kbd className="px-1.5 py-0.5 rounded bg-[#311f14] text-[#fdefd1] font-mono text-[10px]">Ctrl + 9</kbd>). Use as setas (▲/▼) para reordenar.</span>
           </span>
           <button
             type="button"
@@ -670,9 +670,16 @@ export default function RestrictedPagesModal({
 
                   {/* Middle / Reorder Sequence Controls */}
                   <div className="flex items-center gap-1.5 bg-[#311f14]/10 p-1.5 rounded-xl border border-[#311f14]/20 shrink-0 self-start sm:self-center">
-                    <span className="px-2 py-1 rounded-lg bg-[#311f14] text-[#e5c687] font-mono text-[10px] font-black border border-[#5c3e29] shrink-0" title="Posição atual na sequência">
-                      #{globalIndex + 1}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className="px-2 py-0.5 rounded-lg bg-[#311f14] text-[#e5c687] font-mono text-[10px] font-black border border-[#5c3e29] shrink-0" title={`Posição #${globalIndex + 1} na sequência`}>
+                        #{globalIndex + 1}
+                      </span>
+                      {globalIndex < 9 && (
+                        <span className="text-[8.5px] font-mono font-bold text-[#800609] leading-tight mt-0.5">
+                          Ctrl+{globalIndex + 1}
+                        </span>
+                      )}
+                    </div>
 
                     <select
                       value={globalIndex}

@@ -256,16 +256,33 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Global shortcuts (Ctrl + Number)
-      if (e.ctrlKey) {
-        switch (e.key) {
-          case '1': e.preventDefault(); setActiveTab('patio'); return;
-          case '2': e.preventDefault(); if (pageVisibility.presence) setActiveTab('presence'); return;
-          case '3': e.preventDefault(); setActiveTab('averbacao'); return;
-          case '4': e.preventDefault(); setActiveTab('sm_creator'); return;
-          case '5': e.preventDefault(); if (pageVisibility.rotas) setActiveTab('rotas'); return;
-          case '6': e.preventDefault(); setActiveTab('checklist'); return;
-          case '7': e.preventDefault(); setActiveTab('controle'); return;
+      // Global shortcuts (Ctrl + Number / Cmd + Number) mapped dynamically to the numerical order in "Sugestão de Páginas Restritas"
+      if (e.ctrlKey || e.metaKey) {
+        let pressedNumber: number | null = null;
+        if (e.key >= '1' && e.key <= '9') {
+          pressedNumber = parseInt(e.key, 10);
+        } else if (e.code && /^Digit[1-9]$/.test(e.code)) {
+          pressedNumber = parseInt(e.code.replace('Digit', ''), 10);
+        } else if (e.code && /^Numpad[1-9]$/.test(e.code)) {
+          pressedNumber = parseInt(e.code.replace('Numpad', ''), 10);
+        }
+
+        if (pressedNumber !== null) {
+          const targetIndex = pressedNumber - 1; // 1-indexed to 0-indexed position
+          if (targetIndex >= 0 && targetIndex < availablePages.length) {
+            e.preventDefault();
+            const targetPage = availablePages[targetIndex];
+            setActiveTab(targetPage.id as Tab);
+            return;
+          }
+        } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
+          e.preventDefault();
+          if (availablePages.length >= 10) {
+            setActiveTab(availablePages[9].id as Tab);
+          } else {
+            setActiveTab('menu');
+          }
+          return;
         }
       }
 
@@ -319,7 +336,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, pageVisibility, visibleTabs]);
+  }, [activeTab, pageVisibility, visibleTabs, availablePages]);
 
   useEffect(() => {
     const timer = setInterval(() => {
