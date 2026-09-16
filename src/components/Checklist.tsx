@@ -19,7 +19,10 @@ import {
   ShieldCheck,
   Activity,
   FileSpreadsheet,
-  RefreshCw
+  RefreshCw,
+  Phone,
+  Code,
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
@@ -133,13 +136,15 @@ export default function Checklist() {
   });
 
   const [genData, setGenData] = useState({
-    greeting: 'Boa noite',
+    greeting: 'Boa noite,',
+    requestText: 'Solicito o checklist para os conjuntos abaixo:',
     cavalo: 'SAS2D02',
     carretas: 'POG2095 / POR5E42',
     contato: '(31) 98481-7047',
-    templateStyle: 'card' as 'card' | 'simple'
+    signature: 'Att,'
   });
-  const [genCopied, setGenCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedHtml, setCopiedHtml] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
 
   const handleImportData = async () => {
@@ -611,97 +616,76 @@ export default function Checklist() {
 
   const sortedCavalos = [...items].sort((a, b) => a.cavalo.localeCompare(b.cavalo));
 
-  const handleCopyGenerator = () => {
-    let htmlContent = '';
-    let textContent = '';
-
-    if (genData.templateStyle === 'card') {
-      htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 550px; background-color: #ffffff; border: 2px solid #23120a; border-radius: 16px; overflow: hidden; color: #23120a; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
-          <div style="background-color: #23120a; color: #e5c687; text-align: center; padding: 8px 14px; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">
-            EMPRESA TRÊS CORAÇÕES - COMUNICAÇÃO INTERNA
-          </div>
-          <div style="background: linear-gradient(135deg, #680a0d 0%, #a3181c 45%, #c89753 100%); padding: 18px 20px; text-align: center; border-bottom: 2px solid #c89753;">
-            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 12px;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background-color: #a3181c; border: 2px solid rgba(255,255,255,0.4); display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <div style="display: inline-block; text-align: left; vertical-align: middle; margin-left: 8px;">
-                <span style="font-size: 10px; font-weight: bold; color: #fff2d6; letter-spacing: 2px; display: block; text-transform: uppercase;">CAFÉ</span>
-                <span style="font-size: 22px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Times New Roman', Georgia, serif;">TRÊS CORAÇÕES</span>
-              </div>
-            </div>
-          </div>
-          <div style="padding: 32px 36px; background-color: #ffffff;">
-            <p style="margin: 0 0 18px 0; font-size: 15pt; font-weight: bold; color: #23120a;">${genData.greeting},</p>
-            <p style="margin: 0 0 22px 0; font-size: 11pt; color: #23120a; font-weight: 500;">Solicito o checklist para os conjuntos abaixo:</p>
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 2px solid #23120a; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
-              <thead>
-                <tr style="background-color: #23120a; color: #ffffff;">
-                  <th style="padding: 12px 16px; text-align: center; font-size: 11pt; font-weight: bold; border-right: 1px solid #4a2c1c; width: 50%; letter-spacing: 1px;">CAVALO</th>
-                  <th style="padding: 12px 16px; text-align: center; font-size: 11pt; font-weight: bold; width: 50%; letter-spacing: 1px;">CARRETAS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="background-color: #faf4eb; color: #23120a;">
-                  <td style="padding: 14px 16px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border-right: 1px solid #d6c3aa;">${genData.cavalo || "—"}</td>
-                  <td style="padding: 14px 16px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace;">${genData.carretas || "—"}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p style="margin: 0; font-size: 12pt; text-align: center; color: #23120a;">
-              <strong>Contatos:</strong> ${genData.contato}
-            </p>
-          </div>
-          <div style="border-top: 2px solid #c89753; background-color: #23120a; height: 12px;"></div>
-        </div>
-      `;
-      textContent = `${genData.greeting},\n\nSolicito o checklist para os conjuntos abaixo:\n\n*CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS*: ${genData.carretas || "—"}\n\n*Contatos*: ${genData.contato}`;
-    } else {
-      htmlContent = `
-        <div style="font-family: Arial, sans-serif; color: #000000; max-width: 500px;">
-          <p style="font-family: Georgia, serif; font-size: 14pt; margin: 0 0 16px 0; font-weight: bold;">${genData.greeting},</p>
-          <p style="font-size: 11pt; margin: 0 0 20px 0;">Solicito o <span style="color: #a3181c; font-weight: bold;">checklist</span> para os conjuntos abaixo:</p>
-          <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; margin-bottom: 20px;">
-            <thead>
-              <tr style="background-color: #0b3b60; color: #ffffff;">
-                <th style="padding: 8px 14px; text-align: center; font-size: 11pt; font-weight: bold; border: 1.5px solid #000000; width: 50%;">CAVALO</th>
-                <th style="padding: 8px 14px; text-align: center; font-size: 11pt; font-weight: bold; border: 1.5px solid #000000; width: 50%;">CARRETAS</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="background-color: #ffffff; color: #000000;">
-                <td style="padding: 10px 14px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border: 1.5px solid #000000;">${genData.cavalo || "—"}</td>
-                <td style="padding: 10px 14px; text-align: center; font-size: 12pt; font-weight: bold; font-family: monospace; border: 1.5px solid #000000;">${genData.carretas || "—"}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style="font-size: 11pt; margin: 0 0 20px 0;">
-            <strong>Contatos:</strong> ${genData.contato}
-          </p>
-          <p style="font-family: Georgia, serif; font-size: 11pt; margin: 0;">Att,</p>
-        </div>
-      `;
-      textContent = `${genData.greeting},\n\nSolicito o checklist para os conjuntos abaixo:\n\n*CAVALO*: ${genData.cavalo || "—"}\n*CARRETAS*: ${genData.carretas || "—"}\n\n*Contatos*: ${genData.contato}\n\nAtt,`;
+  const getChecklistEmailHtml = (data: typeof genData) => {
+    let requestFormatted = data.requestText;
+    if (/checklist/i.test(requestFormatted)) {
+      requestFormatted = requestFormatted.replace(/checklist/gi, '<span style="color: #D93030; font-weight: bold;">checklist</span>');
     }
+
+    return `<div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.4; background-color: #ffffff; text-align: left; margin: 0; padding: 0;">
+  <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; color: #333333; margin: 0 0 16px 0; padding: 0;">${data.greeting}</p>
+  <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; margin: 0 0 12px 0; padding: 0;">${requestFormatted}</p>
+  <table style="width: 250px; border-collapse: collapse; border: 1px solid #000000; margin: 0 0 20px 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px;" border="1" cellpadding="4" cellspacing="0">
+    <thead>
+      <tr style="background-color: #123B5D; color: #ffffff;">
+        <th style="width: 103px; background-color: #123B5D; color: #ffffff; font-weight: bold; text-align: center; padding: 4px 6px; font-size: 12px; border: 1px solid #000000; font-family: Arial, Helvetica, sans-serif;">CAVALO</th>
+        <th style="width: 147px; background-color: #123B5D; color: #ffffff; font-weight: bold; text-align: center; padding: 4px 6px; font-size: 12px; border: 1px solid #000000; font-family: Arial, Helvetica, sans-serif;">CARRETAS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #ffffff; color: #000000;">
+        <td style="width: 103px; text-align: center; padding: 5px 6px; font-weight: bold; font-size: 12px; border: 1px solid #000000; font-family: Arial, Helvetica, sans-serif; color: #000000;">${data.cavalo || '&nbsp;'}</td>
+        <td style="width: 147px; text-align: center; padding: 5px 6px; font-weight: bold; font-size: 12px; border: 1px solid #000000; font-family: Arial, Helvetica, sans-serif; color: #000000;">${data.carretas || '&nbsp;'}</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; margin: 0 0 16px 0; padding: 0;">Contatos: <span style="color: #D93030;">${data.contato}</span></p>
+  <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; margin: 0; padding: 0;">${data.signature}</p>
+</div>`;
+  };
+
+  const getChecklistEmailText = (data: typeof genData) => {
+    return `${data.greeting}\n\n${data.requestText}\n\nCAVALO: ${data.cavalo || "—"}\nCARRETAS: ${data.carretas || "—"}\n\nContatos: ${data.contato}\n\n${data.signature}`;
+  };
+
+  const handleCopyFormattedEmail = () => {
+    const htmlContent = getChecklistEmailHtml(genData);
+    const textContent = getChecklistEmailText(genData);
 
     try {
       const typeHtml = "text/html";
       const typeText = "text/plain";
       const blobHtml = new Blob([htmlContent], { type: typeHtml });
       const blobText = new Blob([textContent], { type: typeText });
-      const data = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
-      navigator.clipboard.write(data).then(() => {
-        setGenCopied(true);
-        setTimeout(() => setGenCopied(false), 2000);
+      const clipboardData = [new ClipboardItem({ [typeHtml]: blobHtml, [typeText]: blobText })];
+      navigator.clipboard.write(clipboardData).then(() => {
+        setCopiedEmail(true);
+        setTimeout(() => setCopiedEmail(false), 2000);
       });
     } catch (err) {
       navigator.clipboard.writeText(textContent);
-      setGenCopied(true);
-      setTimeout(() => setGenCopied(false), 2000);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
     }
+  };
+
+  const handleCopyRawHtml = () => {
+    const htmlContent = getChecklistEmailHtml(genData);
+    navigator.clipboard.writeText(htmlContent).then(() => {
+      setCopiedHtml(true);
+      setTimeout(() => setCopiedHtml(false), 2000);
+    });
+  };
+
+  const handleResetDefaultData = () => {
+    setGenData({
+      greeting: 'Boa noite,',
+      requestText: 'Solicito o checklist para os conjuntos abaixo:',
+      cavalo: 'SAS2D02',
+      carretas: 'POG2095 / POR5E42',
+      contato: '(31) 98481-7047',
+      signature: 'Att,'
+    });
   };
 
   const totalVeiculos = items.length;
@@ -875,62 +859,35 @@ export default function Checklist() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-4 sm:p-6 w-full max-w-full mx-auto space-y-6">
         
-        {/* ================= VIEW: GERADOR / CHECKPOINT ================= */}
+        {/* ================= VIEW: GERADOR / SOLICITAÇÃO DE CHECKLIST ================= */}
         {activeView === 'generator' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-            {/* Form Configuration Card */}
-            <div className="lg:col-span-1 space-y-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
-              <h3 className="text-sm font-black uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center gap-2 text-[#2B180D] font-heading">
-                <Sparkles size={18} className="text-[#B32025]" />
-                Configurar Solicitação de Checklist
-              </h3>
+          <div className="w-full max-w-6xl mx-auto space-y-6 animate-fade-in text-left">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Modelo de Layout</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setGenData(prev => ({ ...prev, templateStyle: 'card' }))}
-                      className={cn(
-                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider border text-center transition-all cursor-pointer font-sans",
-                        genData.templateStyle === 'card'
-                          ? "bg-[#23120A] text-[#E5C687] border-[#23120A] shadow-xs"
-                          : "bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
-                      )}
-                    >
-                      Card (Imagem 1)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setGenData(prev => ({ ...prev, templateStyle: 'simple' }))}
-                      className={cn(
-                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider border text-center transition-all cursor-pointer font-sans",
-                        genData.templateStyle === 'simple'
-                          ? "bg-[#0B3B60] text-white border-[#0B3B60] shadow-xs"
-                          : "bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
-                      )}
-                    >
-                      E-mail (Imagem 2)
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Saudação</label>
-                  <select
-                    value={genData.greeting}
-                    onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none cursor-pointer font-medium"
+              {/* LEFT COLUMN: CONTROLES E EDIÇÃO DOS DADOS */}
+              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                    <Edit2 size={16} className="text-[#0B57D0]" />
+                    <span>Edição dos Dados</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleResetDefaultData}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 cursor-pointer"
+                    title="Restaurar valores padrão"
                   >
-                    <option value="Bom dia">Bom dia</option>
-                    <option value="Boa tarde">Boa tarde</option>
-                    <option value="Boa noite">Boa noite</option>
-                  </select>
+                    <RotateCcw size={12} />
+                    <span>Restaurar</span>
+                  </button>
                 </div>
 
-                <div>
-                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Veículo (Cavalo)</label>
+                {/* Preenchimento Rápido por Veículo da Frota */}
+                <div className="space-y-1.5 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <Truck size={14} className="text-[#0B57D0]" />
+                    <span>Preenchimento Rápido pela Frota:</span>
+                  </label>
                   <select
                     value={genData.cavalo}
                     onChange={(e) => {
@@ -942,155 +899,128 @@ export default function Checklist() {
                         carretas: relatedItem ? relatedItem.carretas : prev.carretas 
                       }));
                     }}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-mono font-bold focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none cursor-pointer uppercase"
+                    className="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-xs text-slate-900 font-mono font-bold uppercase focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none cursor-pointer"
                   >
-                    <option value="">Selecione veículo...</option>
+                    <option value="">Selecione cavalo...</option>
                     {sortedCavalos.map(item => (
                       <option key={item.id} value={item.cavalo}>
-                        {item.cavalo} {getStatus(item).label === 'VENCIDO' ? `(⚠️ VENCIDO)` : ''}
+                        {item.cavalo} — {item.carretas || 'Sem carreta'} {getStatus(item).label === 'VENCIDO' ? `(⚠️ VENCIDO)` : ''}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div>
-                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Carretas Relacionadas</label>
-                  <input
-                    type="text"
-                    value={genData.carretas}
-                    onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
-                    placeholder="EX: PNE7353 / PNE7433"
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none uppercase font-mono placeholder-slate-400 font-bold"
-                  />
+                {/* Form fields */}
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      1. Saudação:
+                    </label>
+                    <input
+                      type="text"
+                      value={genData.greeting}
+                      onChange={(e) => setGenData(prev => ({ ...prev, greeting: e.target.value }))}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-900 font-medium focus:bg-white focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none"
+                      placeholder="Boa noite,"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      2. Frase de Solicitação:
+                    </label>
+                    <input
+                      type="text"
+                      value={genData.requestText}
+                      onChange={(e) => setGenData(prev => ({ ...prev, requestText: e.target.value }))}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-900 font-medium focus:bg-white focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none"
+                      placeholder="Solicito o checklist para os conjuntos abaixo:"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        3. CAVALO:
+                      </label>
+                      <input
+                        type="text"
+                        value={genData.cavalo}
+                        onChange={(e) => setGenData(prev => ({ ...prev, cavalo: e.target.value.toUpperCase() }))}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-900 font-mono font-bold uppercase focus:bg-white focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none"
+                        placeholder="SAS2D02"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        4. CARRETAS:
+                      </label>
+                      <input
+                        type="text"
+                        value={genData.carretas}
+                        onChange={(e) => setGenData(prev => ({ ...prev, carretas: e.target.value.toUpperCase() }))}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-900 font-mono font-bold uppercase focus:bg-white focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none"
+                        placeholder="POG2095 / POR5E42"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      5. Telefone / Contato:
+                    </label>
+                    <input
+                      type="text"
+                      value={genData.contato}
+                      onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-900 font-medium focus:bg-white focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none"
+                      placeholder="(31) 98481-7047"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      6. Assinatura:
+                    </label>
+                    <input
+                      type="text"
+                      value={genData.signature}
+                      onChange={(e) => setGenData(prev => ({ ...prev, signature: e.target.value }))}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-900 font-medium focus:bg-white focus:border-[#0B57D0] focus:ring-1 focus:ring-[#0B57D0] outline-none"
+                      placeholder="Att,"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-extrabold uppercase mb-1.5 block tracking-wider text-[#2B180D] font-sans">Celular Contato</label>
-                  <input
-                    type="text"
-                    value={genData.contato}
-                    onChange={(e) => setGenData(prev => ({ ...prev, contato: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#B32025] focus:ring-2 focus:ring-[#B32025]/15 outline-none font-mono font-bold"
+                {/* Copy Buttons Action Area */}
+                <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyFormattedEmail}
+                    className="w-full bg-[#123B5D] hover:bg-[#0d2b45] text-white px-4 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
+                  >
+                    {copiedEmail ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}
+                    <span>{copiedEmail ? 'E-mail Copiado!' : 'Copiar e-mail'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: PRÉVIA DO E-MAIL (RENDERIZA O MESMO HTML EXATO) */}
+              <div className="lg:col-span-7 space-y-2">
+                <div className="flex items-center justify-between px-1 text-xs text-slate-600 font-bold">
+                  <span>Prévia do E-mail (Template Rígido Oficial):</span>
+                  <span className="text-[11px] font-normal text-slate-500">100% idêntico ao conteúdo copiado</span>
+                </div>
+
+                {/* Email Preview Canvas Container */}
+                <div className="w-full bg-white border border-slate-300 p-8 shadow-xs min-h-[380px] text-left font-sans">
+                  <div 
+                    dangerouslySetInnerHTML={{ __html: getChecklistEmailHtml(genData) }} 
                   />
                 </div>
               </div>
 
-              <button 
-                onClick={handleCopyGenerator}
-                className={cn(
-                  "w-full mt-6 py-3 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer font-sans",
-                  genCopied 
-                    ? "bg-emerald-600 text-white" 
-                    : "bg-[#B32025] text-white hover:bg-[#8c060a]"
-                )}
-              >
-                {genCopied ? <Check size={16} /> : <Copy size={16} />}
-                <span>{genCopied ? 'Solicitação Copiada!' : 'Copiar Solicitação'}</span>
-              </button>
-            </div>
-
-            {/* Preview Document Card */}
-            <div className="lg:col-span-2 flex items-center justify-center bg-slate-100 border border-slate-200 p-4 sm:p-8 rounded-2xl shadow-inner min-h-[480px]">
-              {genData.templateStyle === 'card' ? (
-                /* CARD TRÊS CORAÇÕES (IMAGEM 1) */
-                <div className="w-full max-w-xl bg-white rounded-2xl border-2 border-[#23120A] shadow-2xl overflow-hidden text-[#23120A] font-sans">
-                  
-                  {/* Top header bar */}
-                  <div className="bg-[#23120A] text-[#E5C687] text-center py-2 px-4 text-[10px] sm:text-[11px] font-extrabold tracking-widest uppercase">
-                    EMPRESA TRÊS CORAÇÕES - COMUNICAÇÃO INTERNA
-                  </div>
-
-                  {/* Banner Header with Logo */}
-                  <div className="relative bg-gradient-to-r from-[#680A0D] via-[#A3181C] to-[#C89753] p-5 text-center border-b-2 border-[#C89753] flex items-center justify-center gap-3">
-                    {/* Coffee Beans / Heart Emblem SVG */}
-                    <div className="w-11 h-11 rounded-full bg-[#A3181C] border-2 border-white/40 flex items-center justify-center shadow-inner shrink-0 text-white">
-                      <svg className="w-6 h-6 fill-white text-white" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <span className="block text-[11px] font-bold tracking-widest text-[#FFF2D6] uppercase">CAFÉ</span>
-                      <span className="block text-2xl sm:text-3xl font-black tracking-tight text-white font-serif uppercase drop-shadow-xs">
-                        TRÊS CORAÇÕES
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Document Body */}
-                  <div className="p-7 sm:p-10 space-y-6 bg-white">
-                    {/* Greeting */}
-                    <p className="text-lg sm:text-xl font-bold text-[#23120A]">
-                      {genData.greeting},
-                    </p>
-
-                    {/* Body Paragraph */}
-                    <p className="text-base text-[#23120A] font-medium leading-relaxed">
-                      Solicito o checklist para os conjuntos abaixo:
-                    </p>
-                    
-                    {/* Styled Table matching attached Image 1 */}
-                    <div className="border-2 border-[#23120A] rounded-xl overflow-hidden shadow-xs">
-                      <table className="w-full text-center border-collapse">
-                        <thead>
-                          <tr className="bg-[#23120A] text-white text-xs sm:text-sm font-bold uppercase tracking-wider">
-                            <th className="py-3 px-4 border-r border-[#4A2C1C] w-1/2">CAVALO</th>
-                            <th className="py-3 px-4 w-1/2">CARRETAS</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="bg-[#FAF4EB] text-[#23120A] font-mono font-bold text-sm sm:text-base border-t border-[#23120A]">
-                            <td className="py-3.5 px-4 border-r border-[#D6C3AA] uppercase">{genData.cavalo || "—"}</td>
-                            <td className="py-3.5 px-4 uppercase">{genData.carretas || "—"}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Contact Line */}
-                    <div className="text-center pt-2 pb-1">
-                      <p className="text-base text-[#23120A]">
-                        <strong className="font-extrabold">Contatos:</strong> {genData.contato}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Bottom Footer Accent */}
-                  <div className="border-t-2 border-[#C89753] bg-[#23120A] h-3.5 w-full"></div>
-
-                </div>
-              ) : (
-                /* E-MAIL SIMPLES (IMAGEM 2) */
-                <div className="w-full max-w-lg bg-white rounded-xl border border-slate-300 shadow-md p-8 text-slate-900 font-sans space-y-5">
-                  <p className="text-lg font-serif font-bold text-slate-900">
-                    {genData.greeting},
-                  </p>
-                  <p className="text-base text-slate-800 font-medium">
-                    Solicito o <span className="text-[#A3181C] font-bold">checklist</span> para os conjuntos abaixo:
-                  </p>
-                  <div className="overflow-hidden border-2 border-slate-900">
-                    <table className="w-full text-center border-collapse">
-                      <thead>
-                        <tr className="bg-[#0B3B60] text-white text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 border-slate-900">
-                          <th className="py-2.5 px-4 border-r-2 border-slate-900 w-1/2">CAVALO</th>
-                          <th className="py-2.5 px-4 w-1/2">CARRETAS</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="bg-white text-slate-900 font-mono font-bold text-sm sm:text-base">
-                          <td className="py-3 px-4 border-r-2 border-slate-900 uppercase">{genData.cavalo || "—"}</td>
-                          <td className="py-3 px-4 uppercase">{genData.carretas || "—"}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="text-base text-slate-900 pt-1">
-                    <strong className="font-bold">Contatos:</strong> {genData.contato}
-                  </p>
-                  <p className="text-base font-serif text-slate-900 pt-2">
-                    Att,
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         ) : activeView === 'os' ? (
