@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sparkles, RefreshCw, CheckCircle2, Radio } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, RefreshCw, CheckCircle2, Radio, Clock } from 'lucide-react';
 import { useAppVersion } from '../utils/version';
 import { cn } from '../lib/utils';
 
@@ -8,7 +8,23 @@ interface UpdateTopBannerProps {
 }
 
 export default function UpdateTopBanner({ className }: UpdateTopBannerProps) {
-  const { lastUpdateDate, isNewVersionAvailable, reloadApp } = useAppVersion();
+  const { lastUpdateDate, isNewVersionAvailable, reloadApp, isAIStudio, updateDateToNow } = useAppVersion();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleManualDateUpdate = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    try {
+      await updateDateToNow();
+      setIsSuccess(true);
+      setTimeout(() => setIsSuccess(false), 2500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div
@@ -38,7 +54,7 @@ export default function UpdateTopBanner({ className }: UpdateTopBannerProps) {
           </div>
         </div>
 
-        {/* Right Side: Vercel Deploy Badge / Reload Notice */}
+        {/* Right Side: Action Button (AI Studio Interactive Update / Reload Notice) */}
         <div className="flex items-center gap-2 shrink-0">
           {isNewVersionAvailable ? (
             <button
@@ -47,15 +63,31 @@ export default function UpdateTopBanner({ className }: UpdateTopBannerProps) {
               title="Clique para atualizar para a versão mais recente"
             >
               <RefreshCw size={11} className="animate-spin" />
-              <span>Novo Deploy Vercel (Atualizar)</span>
+              <span>Nova Atualização (Atualizar)</span>
             </button>
-          ) : (
-            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="hidden xs:inline">VERCEL PRODUÇÃO</span>
-              <span className="xs:hidden">VERCEL</span>
-            </div>
-          )}
+          ) : isAIStudio ? (
+            <button
+              type="button"
+              onClick={handleManualDateUpdate}
+              disabled={isUpdating}
+              className={cn(
+                "flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border transition-all cursor-pointer select-none active:scale-95 shadow-xs",
+                isSuccess
+                  ? "bg-emerald-600 text-white border-emerald-400 shadow-emerald-900/50"
+                  : "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/40 hover:border-emerald-400"
+              )}
+              title="Atualizar data e hora da última modificação para agora (exclusivo AI Studio)"
+            >
+              {isSuccess ? (
+                <CheckCircle2 size={11} className="stroke-[3] text-white shrink-0" />
+              ) : (
+                <RefreshCw size={11} className={cn("shrink-0 text-emerald-400", isUpdating && "animate-spin")} />
+              )}
+              <span>
+                {isUpdating ? "ATUALIZANDO..." : isSuccess ? "DATA ATUALIZADA!" : "ATUALIZAR DATA"}
+              </span>
+            </button>
+          ) : null}
         </div>
 
       </div>

@@ -762,7 +762,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                     Exportar Rotas Atuais
                   </h4>
                   <p className="text-xs text-[#3A2414]/80 font-medium">
-                    Copie o código abaixo no seu computador com internet ou Vercel para carregar e transferir suas rotas editadas para outro dispositivo ou navegador.
+                    Copie o código abaixo no seu computador com internet para carregar e transferir suas rotas editadas para outro dispositivo ou navegador.
                   </p>
                   
                   <div className="relative">
@@ -853,7 +853,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
               <div className="mt-8 pt-4 border-t-2 border-[#3A2414]/10 bg-[#3A2414]/5 p-4 rounded-2xl flex items-start gap-3">
                 <span className="text-xs">💡</span>
                 <p className="text-[10px] text-stone-600 font-medium leading-normal">
-                  Ao atualizar e sincronizar do site Vercel, o banco de dados Realtime Database unificado é alimentado na nuvem. Suas alterações estarão seguras e prontas para uso em celulares, tablets ou qualquer outro dispositivo instantaneamente.
+                  Ao atualizar e sincronizar com o sistema, o banco de dados Realtime Database unificado é alimentado na nuvem. Suas alterações estarão seguras e prontas para uso em celulares, tablets ou qualquer outro dispositivo instantaneamente.
                 </p>
               </div>
 

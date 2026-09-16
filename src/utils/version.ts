@@ -30,6 +30,28 @@ export interface DeploymentInfo {
   source?: string;
 }
 
+export function getCurrentFormattedDateTime(): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date()).replace(',', ' às');
+}
+
+export function isRunningInAIStudio(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return (
+    hostname.includes('run.app') ||
+    hostname.includes('ai.studio') ||
+    hostname.includes('localhost') ||
+    hostname.includes('127.0.0.1')
+  );
+}
+
 /**
  * Hook to get the latest update date and listen to new deployments
  */
@@ -37,6 +59,30 @@ export function useAppVersion() {
   const [lastUpdateDate, setLastUpdateDate] = useState<string>(LOCAL_BUILD_DATE);
   const [remoteTimestamp, setRemoteTimestamp] = useState<string>(LOCAL_BUILD_TIMESTAMP);
   const [isNewVersionAvailable, setIsNewVersionAvailable] = useState<boolean>(false);
+  const [isAIStudio, setIsAIStudio] = useState<boolean>(true);
+
+  useEffect(() => {
+    setIsAIStudio(isRunningInAIStudio());
+  }, []);
+
+  const updateDateToNow = async () => {
+    const formattedNow = getCurrentFormattedDateTime();
+    const nowIso = new Date().toISOString();
+    setLastUpdateDate(formattedNow);
+    setRemoteTimestamp(nowIso);
+    try {
+      const deployRef = ref(rtdb, 'system/lastDeployment');
+      await set(deployRef, {
+        updatedAt: formattedNow,
+        timestamp: nowIso,
+        source: 'AI Studio Manual Update'
+      });
+      return true;
+    } catch (err) {
+      console.error('Erro ao atualizar data no Firebase:', err);
+      return false;
+    }
+  };
 
   useEffect(() => {
     try {
@@ -59,7 +105,7 @@ export function useAppVersion() {
           set(deployRef, {
             updatedAt: LOCAL_BUILD_DATE,
             timestamp: LOCAL_BUILD_TIMESTAMP,
-            source: 'Vercel Deployment'
+            source: 'Production Build'
           }).catch(() => {});
         }
       });
@@ -73,7 +119,7 @@ export function useAppVersion() {
             await set(deployRef, {
               updatedAt: LOCAL_BUILD_DATE,
               timestamp: LOCAL_BUILD_TIMESTAMP,
-              source: 'Vercel Deployment'
+              source: 'Production Build'
             });
           }
         } catch {
@@ -99,6 +145,8 @@ export function useAppVersion() {
     lastUpdateDate,
     isNewVersionAvailable,
     reloadApp,
+    isAIStudio,
+    updateDateToNow,
     isVercel: typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('run.app'))
   };
 }
