@@ -1087,6 +1087,37 @@ export default function Controle({ onBack }: ControleProps) {
   const [iscaSuffix1, setIscaSuffix1] = useState("2195");
   const [iscaSuffix2, setIscaSuffix2] = useState("3797");
 
+  // Alerta descartável when device prefix starts with "30d1"
+  const is30d1Device = (prefix: string, iscaVal?: string) => {
+    const p = (prefix || "").trim().toLowerCase();
+    const v = (iscaVal || "").trim().toLowerCase();
+    return p.startsWith("30d1") || v.startsWith("30d1");
+  };
+  const has30d1Isca =
+    is30d1Device(iscaPrefix1, isca1) ||
+    (numCarretas === 2 && isca2 !== "SEM ISCA" && is30d1Device(iscaPrefix2, isca2));
+
+  // Automatically update alertaResgate when prefix starts with 30d1
+  useEffect(() => {
+    const descartavelMsg =
+      "Esse pré-alerta é apenas para controle e acompanhamento, pois a isca é descartável e não necessita de devolução!";
+    if (has30d1Isca) {
+      setAlertaResgate(descartavelMsg);
+    } else {
+      setAlertaResgate((prev) => {
+        const p = (prev || "").trim().toLowerCase();
+        if (
+          p.includes("isca é descartável") ||
+          p.includes("descartavel") ||
+          p === descartavelMsg.toLowerCase()
+        ) {
+          return "FAVOR SE ATENTAR AO RESGATE!";
+        }
+        return prev;
+      });
+    }
+  }, [has30d1Isca]);
+
   const [copied, setCopied] = useState(false);
   const [copiedAssunto, setCopiedAssunto] = useState(false);
   const [ocultarNotas, setOcultarNotas] = useState(false);
@@ -1339,33 +1370,31 @@ export default function Controle({ onBack }: ControleProps) {
 
   const handleIsca1Change = (val: string) => {
     setIsca1(val);
-    if (val.startsWith(iscaPrefix1)) {
+    const upperVal = val.toUpperCase();
+    const prefixes = ["30D10000", "30D1", "R100000", "R10000"];
+    const matched = prefixes.find((p) => upperVal.startsWith(p));
+    if (matched) {
+      setIscaPrefix1(matched);
+      setIscaSuffix1(upperVal.substring(matched.length));
+    } else if (val.startsWith(iscaPrefix1)) {
       setIscaSuffix1(val.substring(iscaPrefix1.length));
     } else {
-      const prefixes = ["R100000", "R10000", "30D10000"];
-      const matched = prefixes.find((p) => val.startsWith(p));
-      if (matched) {
-        setIscaPrefix1(matched);
-        setIscaSuffix1(val.substring(matched.length));
-      } else {
-        setIscaSuffix1(val);
-      }
+      setIscaSuffix1(val);
     }
   };
 
   const handleIsca2Change = (val: string) => {
     setIsca2(val);
-    if (val.startsWith(iscaPrefix2)) {
+    const upperVal = val.toUpperCase();
+    const prefixes = ["30D10000", "30D1", "R100000", "R10000"];
+    const matched = prefixes.find((p) => upperVal.startsWith(p));
+    if (matched) {
+      setIscaPrefix2(matched);
+      setIscaSuffix2(upperVal.substring(matched.length));
+    } else if (val.startsWith(iscaPrefix2)) {
       setIscaSuffix2(val.substring(iscaPrefix2.length));
     } else {
-      const prefixes = ["R100000", "R10000", "30D10000"];
-      const matched = prefixes.find((p) => val.startsWith(p));
-      if (matched) {
-        setIscaPrefix2(matched);
-        setIscaSuffix2(val.substring(matched.length));
-      } else {
-        setIscaSuffix2(val);
-      }
+      setIscaSuffix2(val);
     }
   };
 
@@ -3400,7 +3429,7 @@ Embarque: ${
 
                 {/* 2. Executive Alert Banner */}
                 <div className={cn(
-                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 transition-all max-w-max ml-0",
+                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 transition-all max-w-full ml-0",
                   isGreenOrigem
                     ? "bg-emerald-600 text-white border-emerald-700/40"
                     : isPurpleOrigem
@@ -3413,8 +3442,9 @@ Embarque: ${
                     type="text"
                     value={alertaResgate}
                     onChange={(e) => setAlertaResgate(e.target.value)}
+                    style={{ width: `${Math.max(26, (alertaResgate || "").length + 2)}ch` }}
                     className={cn(
-                      "bg-transparent border-none w-full outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all min-w-[280px]",
+                      "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all max-w-full",
                       isCuiabaOrigem
                         ? "text-slate-950 focus:ring-1 focus:ring-slate-950/40 hover:bg-black/10 placeholder:text-slate-800"
                         : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
@@ -4595,6 +4625,10 @@ Embarque: ${
                         <option value="R100000">R100000</option>
                         <option value="R10000">R10000</option>
                         <option value="30D10000">30D10000</option>
+                        <option value="30D1">30D1</option>
+                        {!["R100000", "R10000", "30D10000", "30D1"].includes(iscaPrefix1) && (
+                          <option value={iscaPrefix1}>{iscaPrefix1}</option>
+                        )}
                       </select>
                     </div>
                     <div>
@@ -4607,8 +4641,10 @@ Embarque: ${
                         onChange={(e) => {
                           const val = e.target.value.toUpperCase();
                           let newPrefix = iscaPrefix1;
-                          if (val.length === 3) newPrefix = "R100000";
-                          else if (val.length === 4) newPrefix = "R10000";
+                          if (!iscaPrefix1.toLowerCase().startsWith("30d1")) {
+                            if (val.length === 3) newPrefix = "R100000";
+                            else if (val.length === 4) newPrefix = "R10000";
+                          }
                           
                           setIscaSuffix1(val);
                           setIscaPrefix1(newPrefix);
@@ -4644,6 +4680,10 @@ Embarque: ${
                           <option value="R100000">R100000</option>
                           <option value="R10000">R10000</option>
                           <option value="30D10000">30D10000</option>
+                          <option value="30D1">30D1</option>
+                          {!["R100000", "R10000", "30D10000", "30D1"].includes(iscaPrefix2) && (
+                            <option value={iscaPrefix2}>{iscaPrefix2}</option>
+                          )}
                         </select>
                       </div>
                       <div>
@@ -4656,8 +4696,10 @@ Embarque: ${
                           onChange={(e) => {
                             const val = e.target.value.toUpperCase();
                             let newPrefix = iscaPrefix2;
-                            if (val.length === 3) newPrefix = "R100000";
-                            else if (val.length === 4) newPrefix = "R10000";
+                            if (!iscaPrefix2.toLowerCase().startsWith("30d1")) {
+                              if (val.length === 3) newPrefix = "R100000";
+                              else if (val.length === 4) newPrefix = "R10000";
+                            }
                             
                             setIscaSuffix2(val);
                             setIscaPrefix2(newPrefix);
@@ -4673,6 +4715,13 @@ Embarque: ${
                 )}
 
                 {/* VISUAL PREVIEW & QUICK COPY BAR */}
+                {has30d1Isca && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-[9px] font-extrabold text-amber-800">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span>Isca descartável: alerta sem necessidade de devolução ativado!</span>
+                  </div>
+                )}
+
                 {getIscasSpaceSeparated() ? (
                   <div
                     onClick={handleCopyIscasWithSpace}
