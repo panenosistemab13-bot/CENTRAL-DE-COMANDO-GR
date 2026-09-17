@@ -36,6 +36,8 @@ import {
   ArrowUpDown,
   DollarSign,
   Radio,
+  Minimize2,
+  Maximize2,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -816,6 +818,9 @@ export default function Controle({ onBack }: ControleProps) {
   // Navigation Tabs: 'gerador', 'unidades' or 'placas'
   const [activeTab, setActiveTab] = useState<"gerador" | "placas" | "unidades">("gerador");
 
+  // PRE ALERTA GR Column View Mode: 'normal' (padrão), 'minimized' (recolhido), 'maximized' (largura total)
+  const [preAlertaMode, setPreAlertaMode] = useState<"normal" | "minimized" | "maximized">("normal");
+
   // --- UNIDADES TAB STATE ---
   const [unidadesPastedText, setUnidadesPastedText] = useState("");
   const parsedUnidades = useMemo(() => {
@@ -907,45 +912,6 @@ export default function Controle({ onBack }: ControleProps) {
   const [uma2, setUma2] = useState("");
 
   const [destino, setDestino] = useState("");
-
-  // Zoom and layout state for the Controle sidebars (Formulário de Controle & Veículo e Carga)
-  const [sidebarZoom, setSidebarZoom] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem("controle_sidebar_zoom");
-      return saved ? parseFloat(saved) : 1.15;
-    } catch {
-      return 1.15;
-    }
-  });
-
-  const [layoutMode, setLayoutMode] = useState<"auto" | "3col" | "2col">(() => {
-    try {
-      const saved = localStorage.getItem("controle_layout_mode");
-      return (saved as "auto" | "3col" | "2col") || "auto";
-    } catch {
-      return "auto";
-    }
-  });
-
-  const handleSetSidebarZoom = (newZoom: number) => {
-    const clamped = Math.max(0.85, Math.min(1.4, Math.round(newZoom * 100) / 100));
-    setSidebarZoom(clamped);
-    try {
-      localStorage.setItem("controle_sidebar_zoom", String(clamped));
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleSetLayoutMode = (mode: "auto" | "3col" | "2col") => {
-    setLayoutMode(mode);
-    try {
-      localStorage.setItem("controle_layout_mode", mode);
-    } catch {
-      // ignore
-    }
-  };
-
   const getFormattedDate = () => {
     const now = new Date();
     const day = String(now.getDate()).padStart(2, "0");
@@ -2366,183 +2332,79 @@ Embarque: ${
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F4F8FA] text-[#1E293B] font-sans w-full max-w-full overflow-x-auto">
+    <div className="flex flex-col min-h-screen bg-[#F4F8FA] text-[#1E293B] overflow-hidden font-sans" style={{ zoom: 0.85 }}>
       {/* Top Header / Quick Tabs Bar */}
-      <header className="bg-white border-b border-[#D1E1EB] px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs z-20 sticky top-0">
+      <header className="bg-white border-b border-[#D1E1EB] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm z-20">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#B32025] animate-pulse inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#1E293B] animate-pulse inline-block"></span>
             <h1 className="text-sm font-black tracking-wider text-[#1E293B] uppercase font-sans flex items-center gap-2">
-              <Sliders size={16} className="text-[#B32025]" />
+              <Sliders size={16} className="text-[#64748B]" />
               CENTRAL DE CONTROLE PGR
             </h1>
           </div>
-          {destino && (
-            <span className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-red-50 border border-red-200 text-[#B32025] text-[11px] font-black uppercase tracking-wider">
-              <MapPin size={11} />
-              <span>{origem || "SANTA LUZIA"} ➔ {destino}</span>
-            </span>
-          )}
         </div>
 
-        {/* Center / Right controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Zoom and Layout Toolbar (when activeTab === 'gerador') */}
-          {activeTab === "gerador" && (
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Zoom for Formulário de Controle & Veículo & Carga */}
-              <div className="flex items-center bg-[#F1F5F9] border border-[#CBD5E1] p-1 rounded-xl shadow-2xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 px-2 flex items-center gap-1">
-                  <Sliders size={12} className="text-[#B32025]" /> Zoom Colunas:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSetSidebarZoom(sidebarZoom - 0.05)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center bg-white hover:bg-slate-200 text-slate-800 font-black text-xs transition-all shadow-2xs cursor-pointer active:scale-95 border border-slate-200"
-                  title="Diminuir zoom das colunas laterais"
-                >
-                  <Minus size={13} />
-                </button>
-                <span className="text-xs font-black font-mono text-slate-900 px-2 min-w-[44px] text-center">
-                  {Math.round(sidebarZoom * 100)}%
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSetSidebarZoom(sidebarZoom + 0.05)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center bg-white hover:bg-slate-200 text-slate-800 font-black text-xs transition-all shadow-2xs cursor-pointer active:scale-95 border border-slate-200"
-                  title="Aumentar zoom das colunas laterais"
-                >
-                  <Plus size={13} />
-                </button>
+        {/* Navigation Tabs */}
+        <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl border border-[#CBD5E1]">
+          <button
+            type="button"
+            onClick={() => setActiveTab("gerador")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
+              activeTab === "gerador"
+                ? "bg-[#1E293B] text-white shadow-md"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
+            )}
+          >
+            <Sliders size={14} />
+            <span>PRE ALERTA GR</span>
+          </button>
 
-                <div className="flex items-center gap-1 pl-1 border-l border-slate-300">
-                  {[1.0, 1.15, 1.25].map((z) => (
-                    <button
-                      key={z}
-                      type="button"
-                      onClick={() => handleSetSidebarZoom(z)}
-                      className={cn(
-                        "px-2 py-1 rounded text-[10px] font-black transition-all cursor-pointer",
-                        Math.round(sidebarZoom * 100) === Math.round(z * 100)
-                          ? "bg-[#1E293B] text-white shadow-2xs"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80"
-                      )}
-                    >
-                      {Math.round(z * 100)}%
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("unidades")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "unidades"
+                ? "bg-blue-600 text-white shadow-md"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
+            )}
+          >
+            <Package size={14} />
+            <span>Cuiaba</span>
+          </button>
 
-              {/* Layout Mode Toggle */}
-              <div className="flex items-center bg-[#F1F5F9] border border-[#CBD5E1] p-1 rounded-xl shadow-2xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 px-2 hidden sm:inline-block">
-                  Layout:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSetLayoutMode("auto")}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                    layoutMode === "auto"
-                      ? "bg-[#1E293B] text-white shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80"
-                  )}
-                  title="Ajuste automático para não cortar informações na tela"
-                >
-                  Auto
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSetLayoutMode("3col")}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                    layoutMode === "3col"
-                      ? "bg-[#1E293B] text-white shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80"
-                  )}
-                  title="3 colunas lado a lado"
-                >
-                  3 Colunas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSetLayoutMode("2col")}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                    layoutMode === "2col"
-                      ? "bg-[#1E293B] text-white shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80"
-                  )}
-                  title="Sidebars ampliadas abaixo do gerador (telas menores)"
-                >
-                  Expandido
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Tabs */}
-          <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl border border-[#CBD5E1]">
-            <button
-              type="button"
-              onClick={() => setActiveTab("gerador")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
-                activeTab === "gerador"
-                  ? "bg-[#1E293B] text-white shadow-md"
-                  : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
-              )}
-            >
-              <Sliders size={14} />
-              <span>PRE ALERTA GR</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("unidades")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
-                activeTab === "unidades"
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
-              )}
-            >
-              <Package size={14} />
-              <span>Cuiaba</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("placas")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
-                activeTab === "placas"
-                  ? "bg-[#B32025] text-white shadow-md"
-                  : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
-              )}
-            >
-              <Truck size={14} />
-              <span> SANTA LUZIA</span>
-              {parsedPlacas.length > 0 && (
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-black",
-                    activeTab === "placas"
-                      ? "bg-white text-[#B32025]"
-                      : "bg-[#B32025] text-white"
-                  )}
-                >
-                  {parsedPlacas.length}
-                </span>
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("placas")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "placas"
+                ? "bg-[#B32025] text-white shadow-md"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
+            )}
+          >
+            <Truck size={14} />
+            <span> SANTA LUZIA</span>
+            {parsedPlacas.length > 0 && (
+              <span
+                className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                  activeTab === "placas"
+                    ? "bg-white text-[#B32025]"
+                    : "bg-[#B32025] text-white"
+                )}
+              >
+                {parsedPlacas.length}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 lg:p-6 bg-[#F4F8FA] w-full max-w-full">
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-canvas">
         {/* TAB CONTENT: Placas */}
         {activeTab === "placas" && (
           <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
@@ -2988,21 +2850,27 @@ Embarque: ${
         {activeTab === "gerador" && (
           <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
             <div className={cn(
-              "grid gap-6 items-start w-full max-w-full",
-              layoutMode === "3col" && "grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(350px,1fr)_minmax(350px,1fr)]",
-              layoutMode === "2col" && "grid-cols-1 xl:grid-cols-2",
-              layoutMode === "auto" && "grid-cols-1 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.3fr)_minmax(350px,1fr)_minmax(350px,1fr)]"
+              "grid gap-6 items-start",
+              preAlertaMode === "minimized"
+                ? "grid-cols-1 xl:grid-cols-2"
+                : preAlertaMode === "maximized"
+                  ? "grid-cols-1 xl:grid-cols-2"
+                  : "grid-cols-1 xl:grid-cols-[1fr_310px_310px]"
             )}>
-              {/* LEFT AREA: Template Generator */}
-              <div className={cn(
-                "flex flex-col min-w-0 max-w-full",
-                (layoutMode === "2col" || layoutMode === "auto") && "xl:col-span-2 2xl:col-span-1",
-                layoutMode === "3col" && "col-span-1"
-              )}>
-                <div className="flex-1 rounded-[2rem] bg-white border-2 border-[#3A2414]/20 shadow-2xl relative overflow-hidden flex flex-col p-6 sm:p-8">
+        {/* LEFT AREA: Template Generator */}
+        <div className={cn(
+          "flex flex-col",
+          preAlertaMode === "minimized" || preAlertaMode === "maximized"
+            ? "col-span-1 xl:col-span-2"
+            : "col-span-1 xl:col-span-1"
+        )}>
+          <div className="flex-1 rounded-[2rem] bg-white border-2 border-[#3A2414]/20 shadow-2xl relative overflow-hidden flex flex-col p-6 sm:p-8">
 
           {/* Module Title */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#3A2414]/10 pb-5 mb-6 gap-4">
+          <div className={cn(
+            "flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#3A2414]/10 pb-5 gap-4",
+            preAlertaMode === "minimized" ? "mb-0" : "mb-6"
+          )}>
             <div className="flex items-center gap-3">
               <div className={cn(
                 "p-3 rounded-2xl shadow-md border transition-colors",
@@ -3015,18 +2883,121 @@ Embarque: ${
                 <Sliders size={22} className="stroke-[2.5]" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-black text-[#3A2414] uppercase tracking-tight">
-                  PRE ALERTA GR
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-serif font-black text-[#3A2414] uppercase tracking-tight">
+                    PRE ALERTA GR
+                  </h2>
+                  {preAlertaMode === "minimized" && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                      Minimizado
+                    </span>
+                  )}
+                  {preAlertaMode === "maximized" && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
+                      100% Largura
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-[#3A2414]/70 font-black uppercase tracking-widest mt-0.5">
                   Gerador corporativo de pré-alerta e iscas
                 </p>
               </div>
             </div>
+
+            {/* A Opção de Minimizar e Maximizar (Tudo numa única opção) */}
+            <div className="flex items-center gap-3">
+              {preAlertaMode === "minimized" && (
+                <div className="hidden lg:flex items-center gap-2 bg-[#F4F8FA] border border-[#D1E1EB] px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#1E293B]">
+                  <span className="text-[9px] font-black uppercase text-[#64748B]">Assunto:</span>
+                  <span className="font-mono text-[11px] font-black text-[#1E293B] max-w-[280px] truncate">
+                    PRÉ-ALERTA DE ISCA - {destino || "BRASÍLIA"} - {cavalo.replace(/-/g, "") || "TYQ6F51"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopySubject}
+                    title="Copiar Assunto do E-mail"
+                    className="p-1 hover:bg-slate-200 rounded-lg text-slate-700 transition-colors cursor-pointer"
+                  >
+                    {copiedAssunto ? <Check size={13} className="text-emerald-600 stroke-[3]" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              )}
+
+              {/* Segmented Option Group: Minimizar e Maximizar tudo numa única opção */}
+              <div className="flex items-center bg-[#FAF6F0] p-1 rounded-2xl border-2 border-[#3A2414]/15 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setPreAlertaMode(preAlertaMode === "minimized" ? "normal" : "minimized")}
+                  title={preAlertaMode === "minimized" ? "Restaurar coluna" : "Minimizar coluna PRE ALERTA GR"}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95",
+                    preAlertaMode === "minimized"
+                      ? "bg-[#B32025] text-white shadow-md"
+                      : "text-[#3A2414] hover:bg-[#ebdcc7]/60"
+                  )}
+                >
+                  <Minimize2 size={14} className="stroke-[2.5]" />
+                  <span>{preAlertaMode === "minimized" ? "Minimizado" : "Minimizar"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreAlertaMode(preAlertaMode === "maximized" ? "normal" : "maximized")}
+                  title={preAlertaMode === "maximized" ? "Restaurar tamanho normal" : "Maximizar coluna (100% largura)"}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95",
+                    preAlertaMode === "maximized"
+                      ? "bg-[#1E293B] text-white shadow-md"
+                      : "text-[#3A2414] hover:bg-[#ebdcc7]/60"
+                  )}
+                >
+                  <Maximize2 size={14} className="stroke-[2.5]" />
+                  <span>{preAlertaMode === "maximized" ? "Restaurar" : "Maximizar"}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
+          {/* Informational Callout when Minimized */}
+          {preAlertaMode === "minimized" && (
+            <div className="mt-4 pt-4 border-t border-[#3A2414]/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#FAF6F0] p-4 rounded-2xl border border-[#3A2414]/15">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center shrink-0">
+                  <Info size={16} />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-[#3A2414] uppercase">
+                    Coluna PRE ALERTA GR Minimizada
+                  </p>
+                  <p className="text-[11px] text-[#3A2414]/70">
+                    O <strong>Gerador corporativo de pré-alerta e iscas</strong> e o <strong>Assunto do E-mail (Copiar separadamente)</strong> estão recolhidos para priorizar os formulários de preenchimento.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={handleCopySubject}
+                  className="px-3.5 py-2 bg-white border border-[#D1E1EB] hover:bg-slate-50 text-[#1E293B] rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+                >
+                  {copiedAssunto ? <Check size={13} className="text-emerald-600 stroke-[3]" /> : <Copy size={13} />}
+                  <span>Copiar Assunto</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreAlertaMode("normal")}
+                  className="px-4 py-2 bg-[#3A2414] hover:bg-[#25160c] text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+                >
+                  <Maximize2 size={13} />
+                  <span>Maximizar Coluna</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Generator Workspace Form */}
-          <div className="flex flex-col gap-6">
+          {preAlertaMode !== "minimized" && (
+            <div className="flex flex-col gap-6">
             {/* GREETING SELECTION (Menu Suspenso para Saudação) */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-[#FAF6F0] border-2 border-[#3A2414]/15 rounded-2xl p-4 shadow-inner">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#3A2414] shrink-0">
@@ -3970,53 +3941,27 @@ Embarque: ${
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
 
-      {/* MIDDLE SIDEBAR: Formulário de Controle */}
-      <div
-        className="col-span-1 flex flex-col min-w-0 transition-all origin-top"
-        style={{ zoom: sidebarZoom }}
-      >
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-md relative flex flex-col p-5 sm:p-6">
+      {/* MIDDLE SIDEBAR: Fast Fill Column (fixed width) */}
+      <div className="col-span-1 xl:col-span-1 flex flex-col">
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden flex flex-col p-5 sm:p-6">
           {/* Form Header */}
           <div className="border-b border-slate-200 pb-4 mb-5">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                Painel Lateral • Preenchimento Rápido
-              </span>
-              {/* Zoom buttons in column header */}
-              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => handleSetSidebarZoom(sidebarZoom - 0.05)}
-                  className="w-5 h-5 rounded flex items-center justify-center bg-white hover:bg-slate-200 text-slate-700 font-black text-xs shadow-2xs cursor-pointer active:scale-95"
-                  title="Diminuir zoom da coluna"
-                >
-                  <Minus size={10} />
-                </button>
-                <span className="text-[10px] font-black font-mono text-slate-800 px-1 min-w-[32px] text-center">
-                  {Math.round(sidebarZoom * 100)}%
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSetSidebarZoom(sidebarZoom + 0.05)}
-                  className="w-5 h-5 rounded flex items-center justify-center bg-white hover:bg-slate-200 text-slate-700 font-black text-xs shadow-2xs cursor-pointer active:scale-95"
-                  title="Aumentar zoom da coluna"
-                >
-                  <Plus size={10} />
-                </button>
-              </div>
-            </div>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block">
+              Painel Lateral
+            </span>
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-sans font-black text-slate-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
+              <h3 className="text-base font-sans font-extrabold text-slate-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
                 <Sliders size={18} className={isGreenOrigem ? "text-emerald-600" : isPurpleOrigem ? "text-purple-700" : isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Formulário de Controle
               </h3>
               <button
                 type="button"
                 onClick={handleClear}
                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                title="Limpar formulário de controle"
+                title="Limpar formulário"
               >
                 <Trash2 size={16} />
               </button>
@@ -4027,8 +3972,8 @@ Embarque: ${
           <div className="flex flex-col gap-4">
             {/* ORIGEM (MENU SUSPENSO) */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <MapPin size={13} className="text-slate-500" /> ORIGEM
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <MapPin size={12} className="text-slate-500" /> ORIGEM
               </label>
               <select
                 value={origem}
@@ -4046,7 +3991,7 @@ Embarque: ${
                     }
                   }
                 }}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-black uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 {ORIGEM_OPCOES.map((opt) => (
                   <option
@@ -4062,27 +4007,27 @@ Embarque: ${
 
             {/* SELECIONAR ROTA (MENU SUSPENSO) */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <MapPin size={13} className="text-slate-500" /> SELECIONAR ROTA (DESTINO)
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <MapPin size={12} className="text-slate-500" /> SELECIONAR ROTA (DESTINO)
               </label>
 
               {/* Search input for filtering */}
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search size={13} className="text-slate-400" />
+                  <Search size={12} className="text-slate-400" />
                 </span>
                 <input
                   type="text"
                   value={searchRota}
                   onChange={(e) => setSearchRota(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-xs font-bold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs placeholder:text-slate-400"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs font-bold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs placeholder:text-slate-400"
                   placeholder="PESQUISAR ROTA..."
                 />
                 {searchRota && (
                   <button
                     type="button"
                     onClick={() => setSearchRota("")}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-[10px] font-black text-red-600 hover:text-red-700 uppercase cursor-pointer"
+                    className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-[10px] font-black text-red-600 hover:text-red-700 uppercase cursor-pointer"
                   >
                     Limpar
                   </button>
@@ -4105,7 +4050,7 @@ Embarque: ${
                     setDestino("");
                   }
                 }}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-black uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 <option value="">
                   {searchRota
@@ -4144,13 +4089,13 @@ Embarque: ${
 
             {/* TRANSPORTADORA input */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Truck size={13} className="text-slate-500" /> TRANSPORTADORA
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <Truck size={12} className="text-slate-500" /> TRANSPORTADORA
               </label>
               <select
                 value={sidebarTransportadora}
                 onChange={(e) => handleSidebarTranspChange(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-black uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
               >
                 <option value="">SELECIONE...</option>
                 {allTransportadoras.map((t) => (
@@ -4168,18 +4113,18 @@ Embarque: ${
                 <button
                   type="button"
                   onClick={() => setIsAddingTransp(true)}
-                  className="self-start text-[10px] font-black text-red-600 hover:text-red-700 flex items-center gap-1 mt-0.5 transition-colors uppercase tracking-wider cursor-pointer"
+                  className="self-start text-[10px] font-extrabold text-red-600 hover:text-red-700 flex items-center gap-1 mt-0.5 transition-colors uppercase tracking-wider cursor-pointer"
                 >
                   <Plus size={12} /> Adicionar Transportadora
                 </button>
               ) : (
-                <div className="flex flex-col gap-1.5 p-2 bg-slate-100 rounded-xl border border-slate-200 mt-0.5 shadow-2xs">
+                <div className="flex flex-col gap-1.5 p-2 bg-slate-100 rounded-lg border border-slate-200 mt-0.5 shadow-2xs">
                   <input
                     type="text"
                     placeholder="NOME DA TRANSPORTADORA"
                     value={newTranspName}
                     onChange={(e) => setNewTranspName(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-1 focus:ring-red-600/20 outline-none transition-all"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-1 focus:ring-red-600/20 outline-none transition-all"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -4194,14 +4139,14 @@ Embarque: ${
                         setIsAddingTransp(false);
                         setNewTranspName("");
                       }}
-                      className="px-2 py-1 text-[10px] font-extrabold text-slate-600 hover:bg-slate-200 rounded uppercase transition-colors cursor-pointer"
+                      className="px-2 py-0.5 text-[10px] font-extrabold text-slate-600 hover:bg-slate-200 rounded uppercase transition-colors cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       type="button"
                       onClick={handleAddCustomTransp}
-                      className="px-2.5 py-1 text-[10px] font-black text-white bg-red-600 hover:bg-red-700 rounded uppercase shadow-2xs transition-colors cursor-pointer"
+                      className="px-2.5 py-0.5 text-[10px] font-extrabold text-white bg-red-600 hover:bg-red-700 rounded uppercase shadow-2xs transition-colors cursor-pointer"
                     >
                       Salvar
                     </button>
@@ -4212,44 +4157,44 @@ Embarque: ${
 
             {/* COLAR DA PLANILHA (PARAMETRIZAÇÃO) textarea */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <FileText size={13} className="text-slate-500" /> COLAR DA PLANILHA (PARAMETRIZAÇÃO)
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <FileText size={12} className="text-slate-500" /> COLAR DA PLANILHA (PARAMETRIZAÇÃO)
               </label>
               <textarea
                 value={pastePlanilha}
                 onChange={(e) => handlePastePlanilhaChange(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs resize-none placeholder:text-slate-400"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs resize-none placeholder:text-slate-400"
                 placeholder="Cole as linhas da planilha de iscas aqui..."
               />
             </div>
 
             {/* NOME MOTORISTA input */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <User size={13} className="text-slate-500" /> NOME MOTORISTA
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <User size={12} className="text-slate-500" /> NOME MOTORISTA
               </label>
               <input
                 type="text"
                 value={sidebarMotorista}
                 onChange={(e) => handleSidebarMotoristaChange(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-black uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs"
                 placeholder="NOME COMPLETO"
               />
             </div>
 
             {/* PREFIXOS & BATERIA ISCAS */}
-            <div className="flex flex-col gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
+            <div className="flex flex-col gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
               <div className="flex items-center justify-between gap-2">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                  <Sliders size={13} className="text-slate-500" /> N° ISCAS (PREFIXOS & BATERIA)
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1">
+                  <Sliders size={12} className="text-slate-500" /> N° ISCAS (PREFIXOS & BATERIA)
                 </label>
                 <button
                   type="button"
                   onClick={handleCopyIscasWithSpace}
                   title="Copiar números das iscas com espaço (ex: R100002466 R100000876)"
                   className={cn(
-                    "flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg transition-all cursor-pointer select-none shadow-2xs",
+                    "flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md transition-all cursor-pointer select-none shadow-2xs",
                     copiedIscasSpace
                       ? "bg-emerald-600 text-white shadow-xs"
                       : "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white hover:shadow-xs active:scale-95"
@@ -4257,12 +4202,12 @@ Embarque: ${
                 >
                   {copiedIscasSpace ? (
                     <>
-                      <Check size={12} className="stroke-[3]" />
+                      <Check size={11} className="stroke-[3]" />
                       <span>Copiado!</span>
                     </>
                   ) : (
                     <>
-                      <Copy size={12} />
+                      <Copy size={11} />
                       <span>Copiar Iscas</span>
                     </>
                   )}
@@ -4271,13 +4216,13 @@ Embarque: ${
 
               <div className="flex flex-col gap-3">
                 {/* ISCA 1 SECTION */}
-                <div className="border-b border-slate-200 pb-3">
-                  <span className="text-[10px] font-black uppercase text-red-600 block mb-1">
+                <div className="border-b border-slate-200 pb-2.5">
+                  <span className="text-[9px] font-extrabold uppercase text-red-600 block mb-1">
                     DISPOSITIVO ISCA 1:
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-[9px] font-black uppercase text-slate-500 block mb-0.5">
+                      <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
                         PREFIXO:
                       </span>
                       <select
@@ -4287,7 +4232,7 @@ Embarque: ${
                           setIscaPrefix1(newPrefix);
                           setIsca1(newPrefix + iscaSuffix1);
                         }}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] font-black text-slate-900 focus:border-red-600 outline-none cursor-pointer transition-all"
+                        className="w-full bg-white border border-slate-300 rounded-md px-1 py-1 text-[10px] font-extrabold text-slate-900 focus:border-red-600 outline-none cursor-pointer transition-all"
                       >
                         <option value="R100000">R100000</option>
                         <option value="R10000">R10000</option>
@@ -4295,7 +4240,7 @@ Embarque: ${
                       </select>
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase text-slate-500 block mb-0.5">
+                      <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
                         RESTO:
                       </span>
                       <input
@@ -4311,7 +4256,7 @@ Embarque: ${
                           setIscaPrefix1(newPrefix);
                           setIsca1(newPrefix + val);
                         }}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
+                        className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
                         placeholder="RESTO..."
                       />
                     </div>
@@ -4321,12 +4266,12 @@ Embarque: ${
                 {/* ISCA 2 SECTION */}
                 {numCarretas === 2 && (
                   <div>
-                    <span className="text-[10px] font-black uppercase text-red-600 block mb-1">
+                    <span className="text-[9px] font-extrabold uppercase text-red-600 block mb-1">
                       DISPOSITIVO ISCA 2:
                     </span>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <span className="text-[9px] font-black uppercase text-slate-500 block mb-0.5">
+                        <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
                           PREFIXO:
                         </span>
                         <select
@@ -4336,7 +4281,7 @@ Embarque: ${
                             setIscaPrefix2(newPrefix);
                             setIsca2(newPrefix + iscaSuffix2);
                           }}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] font-black text-slate-900 focus:border-red-600 outline-none cursor-pointer transition-all"
+                          className="w-full bg-white border border-slate-300 rounded-md px-1 py-1 text-[10px] font-extrabold text-slate-900 focus:border-red-600 outline-none cursor-pointer transition-all"
                         >
                           <option value="R100000">R100000</option>
                           <option value="R10000">R10000</option>
@@ -4344,7 +4289,7 @@ Embarque: ${
                         </select>
                       </div>
                       <div>
-                        <span className="text-[9px] font-black uppercase text-slate-500 block mb-0.5">
+                        <span className="text-[8px] font-extrabold uppercase text-slate-500 block mb-0.5">
                           RESTO:
                         </span>
                         <input
@@ -4360,11 +4305,12 @@ Embarque: ${
                             setIscaPrefix2(newPrefix);
                             setIsca2(newPrefix + val);
                           }}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
+                          className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
                           placeholder="RESTO..."
                         />
                       </div>
                     </div>
+
                   </div>
                 )}
 
@@ -4373,22 +4319,22 @@ Embarque: ${
                   <div
                     onClick={handleCopyIscasWithSpace}
                     title="Clique para copiar com espaço"
-                    className="flex items-center justify-between bg-white border border-slate-300 hover:border-red-400 rounded-xl px-3 py-2 cursor-pointer transition-all group shadow-2xs"
+                    className="flex items-center justify-between bg-white border border-slate-300 hover:border-red-400 rounded-lg px-2.5 py-1.5 cursor-pointer transition-all group shadow-2xs"
                   >
                     <div className="flex items-center gap-1.5 overflow-hidden">
-                      <span className="text-[9px] font-black uppercase text-slate-400 shrink-0">ISCAS:</span>
-                      <span className="text-xs font-mono font-black text-red-600 group-hover:text-red-700 tracking-wider truncate">
+                      <span className="text-[8px] font-extrabold uppercase text-slate-400 shrink-0">ISCAS:</span>
+                      <span className="text-[11px] font-mono font-black text-red-600 group-hover:text-red-700 tracking-wider truncate">
                         {getIscasSpaceSeparated()}
                       </span>
                     </div>
-                    <div className="shrink-0 ml-1.5 flex items-center gap-1 text-[9px] font-black uppercase text-slate-400 group-hover:text-red-600 transition-colors">
+                    <div className="shrink-0 ml-1.5 flex items-center gap-1 text-[8px] font-black uppercase text-slate-400 group-hover:text-red-600 transition-colors">
                       {copiedIscasSpace ? (
                         <span className="text-emerald-600 font-black flex items-center gap-0.5">
-                          <Check size={12} className="stroke-[3]" /> Copiado
+                          <Check size={11} className="stroke-[3]" /> Copiado
                         </span>
                       ) : (
                         <span className="flex items-center gap-0.5">
-                          <Copy size={12} /> Copiar
+                          <Copy size={11} /> Copiar
                         </span>
                       )}
                     </div>
@@ -4397,11 +4343,13 @@ Embarque: ${
               </div>
             </div>
 
+
+
             {/* EMBARQUE (CARRETA 1) */}
             <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center justify-between">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center justify-between">
                 <span>Embarque (carreta 1)</span>
-                {carreta1 && <span className="text-[10px] font-mono text-red-600 font-black">{carreta1}</span>}
+                {carreta1 && <span className="text-[9px] font-mono text-red-600 font-black">{carreta1}</span>}
               </label>
 
               <div className="grid grid-cols-2 gap-1.5">
@@ -4420,7 +4368,7 @@ Embarque: ${
                       type="button"
                       onClick={() => setSidebarEmbarque1(img.value)}
                       className={cn(
-                        "px-2 py-2 rounded-xl text-[10px] font-black uppercase text-center transition-all cursor-pointer border leading-tight flex items-center justify-center min-h-[38px]",
+                        "px-1.5 py-2 rounded-lg text-[9px] font-black uppercase text-center transition-all cursor-pointer border leading-tight flex items-center justify-center min-h-[36px]",
                         isSelected
                           ? "bg-red-600 text-white border-red-600 shadow-xs"
                           : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
@@ -4433,13 +4381,13 @@ Embarque: ${
               </div>
 
               {/* Preview Box Carreta 1 */}
-              <div className="mt-1 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center min-h-[105px]">
+              <div className="mt-1 bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-col items-center justify-center min-h-[95px]">
                 {sidebarEmbarque1 && sidebarEmbarque1 !== "none" ? (
                   <div className="flex flex-col items-center w-full">
                     <img
                       src={sidebarEmbarque1}
                       alt="Esquema Carreta 1"
-                      className="max-h-[85px] max-w-full object-contain rounded"
+                      className="max-h-[80px] max-w-full object-contain rounded"
                       onError={(e) => {
                         const fallback = getLocalFallbackImg(sidebarEmbarque1);
                         if (fallback && e.currentTarget.src !== fallback) {
@@ -4447,17 +4395,17 @@ Embarque: ${
                         }
                       }}
                     />
-                    <span className="text-[10px] font-black text-slate-700 uppercase mt-1.5 text-center">
+                    <span className="text-[9px] font-black text-slate-700 uppercase mt-1 text-center">
                       CARRETA 1: {carreta1 || "S/ PLACA"}
                     </span>
                   </div>
                 ) : sidebarEmbarque1 === "" ? (
                   <div className="text-center">
-                    <span className="text-xs font-black text-slate-800 uppercase block">Grade Interativa Ativa</span>
-                    <span className="text-[10px] text-slate-500">Clique nas células no gerador.</span>
+                    <span className="text-[10px] font-extrabold text-slate-800 uppercase block">Grade Interativa Ativa</span>
+                    <span className="text-[9px] text-slate-500">Clique nas células no gerador.</span>
                   </div>
                 ) : (
-                  <span className="text-[10px] font-black text-slate-400 uppercase">SEM ISCA NA CARRETA 1</span>
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase">SEM ISCA NA CARRETA 1</span>
                 )}
               </div>
             </div>
@@ -4465,9 +4413,9 @@ Embarque: ${
             {/* EMBARQUE (CARRETA 2) */}
             {numCarretas === 2 && (
               <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center justify-between">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center justify-between">
                   <span>Embarque (carreta 2)</span>
-                  {carreta2 && <span className="text-[10px] font-mono text-blue-600 font-black">{carreta2}</span>}
+                  {carreta2 && <span className="text-[9px] font-mono text-blue-600 font-black">{carreta2}</span>}
                 </label>
 
                 <div className="grid grid-cols-2 gap-1.5">
@@ -4486,7 +4434,7 @@ Embarque: ${
                         type="button"
                         onClick={() => setSidebarEmbarque2(img.value)}
                         className={cn(
-                          "px-2 py-2 rounded-xl text-[10px] font-black uppercase text-center transition-all cursor-pointer border leading-tight flex items-center justify-center min-h-[38px]",
+                          "px-1.5 py-2 rounded-lg text-[9px] font-black uppercase text-center transition-all cursor-pointer border leading-tight flex items-center justify-center min-h-[36px]",
                           isSelected
                             ? "bg-red-600 text-white border-red-600 shadow-xs"
                             : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
@@ -4499,13 +4447,13 @@ Embarque: ${
                 </div>
 
                 {/* Preview Box Carreta 2 */}
-                <div className="mt-1 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center min-h-[105px]">
+                <div className="mt-1 bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-col items-center justify-center min-h-[95px]">
                   {sidebarEmbarque2 && sidebarEmbarque2 !== "none" ? (
                     <div className="flex flex-col items-center w-full">
                       <img
                         src={sidebarEmbarque2}
                         alt="Esquema Carreta 2"
-                        className="max-h-[85px] max-w-full object-contain rounded"
+                        className="max-h-[80px] max-w-full object-contain rounded"
                         onError={(e) => {
                           const fallback = getLocalFallbackImg(sidebarEmbarque2);
                           if (fallback && e.currentTarget.src !== fallback) {
@@ -4513,17 +4461,17 @@ Embarque: ${
                           }
                         }}
                       />
-                      <span className="text-[10px] font-black text-slate-700 uppercase mt-1.5 text-center">
+                      <span className="text-[9px] font-black text-slate-700 uppercase mt-1 text-center">
                         CARRETA 2: {carreta2 || "S/ PLACA"}
                       </span>
                     </div>
                   ) : sidebarEmbarque2 === "" ? (
                     <div className="text-center">
-                      <span className="text-xs font-black text-slate-800 uppercase block">Grade Interativa Ativa</span>
-                      <span className="text-[10px] text-slate-500">Clique nas células no gerador.</span>
+                      <span className="text-[10px] font-extrabold text-slate-800 uppercase block">Grade Interativa Ativa</span>
+                      <span className="text-[9px] text-slate-500">Clique nas células no gerador.</span>
                     </div>
                   ) : (
-                    <span className="text-[10px] font-black text-slate-400 uppercase">SEM ISCA NA CARRETA 2</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase">SEM ISCA NA CARRETA 2</span>
                   )}
                 </div>
               </div>
@@ -4533,48 +4481,46 @@ Embarque: ${
             <div className="flex flex-col gap-3 mt-2">
               {/* COPIAR PARA EMAIL BUTTON */}
               <button
-                type="button"
                 onClick={handleCopyToEmail}
                 className={cn(
-                  "w-full text-xs font-black uppercase tracking-wider py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer border border-transparent",
+                  "w-full text-[11px] font-extrabold uppercase tracking-widest py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98 cursor-pointer border border-transparent",
                   copied
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
                     : isGreenOrigem
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20 font-black"
                       : isPurpleOrigem
-                        ? "bg-purple-700 hover:bg-purple-800 text-white shadow-purple-700/20"
+                        ? "bg-purple-700 hover:bg-purple-800 text-white shadow-purple-700/20 font-black"
                         : isCuiabaOrigem
-                          ? "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-amber-500/20"
+                          ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-amber-500/20"
                           : "bg-red-600 hover:bg-red-700 text-white shadow-red-600/20",
                 )}
               >
                 {copied ? (
                   <>
-                    <Check size={16} className="stroke-[3]" /> COPIADO COM SUCESSO!
+                    <Check size={14} className="stroke-[3]" /> COPIADO COM SUCESSO!
                   </>
                 ) : (
                   <>
-                    <Mail size={16} className="stroke-[2.5]" /> COPIAR PARA EMAIL
+                    <Mail size={14} className="stroke-[2.5]" /> COPIAR PARA EMAIL
                   </>
                 )}
               </button>
 
               {/* LIMPAR INFORMAÇÕES BUTTON */}
               <button
-                type="button"
                 onClick={handleClear}
-                className="w-full bg-slate-800 hover:bg-slate-900 text-slate-200 text-xs font-black uppercase tracking-wider py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition-all active:scale-98 cursor-pointer"
+                className="w-full bg-slate-800 hover:bg-slate-900 text-slate-200 text-[11px] font-extrabold uppercase tracking-widest py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition-all active:scale-98 cursor-pointer"
               >
-                <Trash2 size={15} className="stroke-[2.5]" /> LIMPAR INFORMAÇÕES
+                <Trash2 size={14} className="stroke-[2.5]" /> LIMPAR INFORMAÇÕES
               </button>
             </div>
 
             {/* DICA DE GESTÃO CARD */}
-            <div className="bg-slate-900 text-white rounded-2xl p-4 border border-slate-800 shadow-sm mt-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-sky-400 block mb-1">
+            <div className="bg-slate-900 text-white rounded-xl p-3.5 border border-slate-800 shadow-sm mt-2">
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-sky-400 block mb-1">
                 Dica de Gestão PGR
               </span>
-              <p className="text-[11px] font-medium text-slate-300 leading-relaxed">
+              <p className="text-[10px] font-medium text-slate-300 leading-relaxed">
                 Verifique os dados cuidadosamente antes de enviar. O pré-alerta
                 gerado deve estar 100% de acordo com a nota fiscal e a ordem de
                 coleta de iscas do pátio para mitigar sinistros.
@@ -4584,122 +4530,95 @@ Embarque: ${
         </div>
       </div>
 
-      {/* RIGHT SIDEBAR: Veículo & Carga */}
-      <div
-        className="col-span-1 flex flex-col min-w-0 transition-all origin-top"
-        style={{ zoom: sidebarZoom }}
-      >
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-md relative flex flex-col p-5 sm:p-6">
+      {/* RIGHT SIDEBAR: Vehicle & Cargo Column (fixed width) */}
+      <div className="col-span-1 xl:col-span-1 flex flex-col">
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden flex flex-col p-5 sm:p-6">
           {/* Form Header */}
-          <div className="border-b border-slate-200 pb-4 mb-5">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                Painel de Viagem • Frota & NF
+          <div className="border-b border-slate-200 pb-4 mb-5 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block">
+                Painel de Viagem
               </span>
-              {/* Zoom buttons in column header */}
-              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => handleSetSidebarZoom(sidebarZoom - 0.05)}
-                  className="w-5 h-5 rounded flex items-center justify-center bg-white hover:bg-slate-200 text-slate-700 font-black text-xs shadow-2xs cursor-pointer active:scale-95"
-                  title="Diminuir zoom da coluna"
-                >
-                  <Minus size={10} />
-                </button>
-                <span className="text-[10px] font-black font-mono text-slate-800 px-1 min-w-[32px] text-center">
-                  {Math.round(sidebarZoom * 100)}%
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSetSidebarZoom(sidebarZoom + 0.05)}
-                  className="w-5 h-5 rounded flex items-center justify-center bg-white hover:bg-slate-200 text-slate-700 font-black text-xs shadow-2xs cursor-pointer active:scale-95"
-                  title="Aumentar zoom da coluna"
-                >
-                  <Plus size={10} />
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-sans font-black text-slate-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
+              <h3 className="text-base font-sans font-extrabold text-slate-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
                 <Truck size={18} className="text-red-600" /> Veículo & Carga
               </h3>
-              <button
-                type="button"
-                onClick={handleClearVeiculo}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                title="Limpar formulário de Veículo & Carga"
-              >
-                <Trash2 size={16} />
-              </button>
             </div>
+            <button
+              type="button"
+              onClick={handleClearVeiculo}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+              title="Limpar formulário de Veículo & Carga"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
 
           {/* Form inputs */}
           <div className="flex flex-col gap-4">
             {/* CAVALO */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Truck size={13} className="text-slate-500" /> Placa do Cavalo
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <Truck size={12} className="text-slate-500" /> Placa do Cavalo
               </label>
               <input
                 type="text"
                 value={cavalo}
                 onChange={(e) => setCavalo(e.target.value.replace(/-/g, "").toUpperCase())}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs"
                 placeholder="PLACA DO CAVALO"
               />
             </div>
 
             {/* CARRETA 1 GROUP */}
-            <div className="flex flex-col gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs">
-              <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-2xs">
+              <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                    <Truck size={11} className="text-slate-500" /> Carreta 1
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <Truck size={10} className="text-slate-500" /> Carreta 1
                   </label>
                   <input
                     type="text"
                     value={carreta1}
                     onChange={(e) => setCarreta1(e.target.value.toUpperCase())}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                     placeholder="CARRETA 1"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                    <Package size={11} className="text-slate-500" /> Produto 1
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <Package size={10} className="text-slate-500" /> Produto 1
                   </label>
                   <input
                     type="text"
                     value={produto1}
                     onChange={(e) => setProduto1(e.target.value.toUpperCase())}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                     placeholder="PRODUTO 1"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                    <Hash size={11} className="text-slate-500" /> U.M.A. 1
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <Hash size={10} className="text-slate-500" /> U.M.A. 1
                   </label>
                   <input
                     type="text"
                     value={uma1}
                     onChange={(e) => setUma1(formatUMA(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                     placeholder="0XX.XXX.XXX.XXX"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                    <FileText size={11} className="text-slate-500" /> NF Início
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <FileText size={10} className="text-slate-500" /> NF Início
                   </label>
                   <input
                     type="text"
                     value={nfInicio}
                     onChange={(e) => setNfInicio(e.target.value.replace(/-/g, "").toUpperCase())}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                     placeholder="INÍCIO"
                   />
                 </div>
@@ -4708,56 +4627,56 @@ Embarque: ${
 
             {/* CARRETA 2 GROUP */}
             {numCarretas === 2 && (
-              <div className="flex flex-col gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs">
-                <div className="grid grid-cols-2 gap-2.5">
+              <div className="flex flex-col gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-2xs">
+                <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                      <Truck size={11} className="text-slate-500" /> Carreta 2
+                    <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                      <Truck size={10} className="text-slate-500" /> Carreta 2
                     </label>
                     <input
                       type="text"
                       value={carreta2}
                       onChange={(e) => setCarreta2(e.target.value.toUpperCase())}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                       placeholder="CARRETA 2"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                      <Package size={11} className="text-slate-500" /> Produto 2
+                    <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                      <Package size={10} className="text-slate-500" /> Produto 2
                     </label>
                     <input
                       type="text"
                       value={produto2}
                       onChange={(e) => setProduto2(e.target.value.toUpperCase())}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                       placeholder="PRODUTO 2"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <div className={isca2 === "SEM ISCA" ? "col-span-2 flex flex-col gap-1" : "flex flex-col gap-1"}>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                      <Hash size={11} className="text-slate-500" /> U.M.A. 2
+                    <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                      <Hash size={10} className="text-slate-500" /> U.M.A. 2
                     </label>
                     <input
                       type="text"
                       value={uma2}
                       onChange={(e) => setUma2(formatUMA(e.target.value))}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs font-mono"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                       placeholder="0XX.XXX.XXX.XXX"
                     />
                   </div>
                   {isca2 !== "SEM ISCA" && (
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                        <FileText size={11} className="text-slate-500" /> NF Fim
+                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                        <FileText size={10} className="text-slate-500" /> NF Fim
                       </label>
                       <input
                         type="text"
                         value={nfFim}
                         onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                         placeholder="FIM"
                       />
                     </div>
@@ -4767,29 +4686,29 @@ Embarque: ${
             )}
 
             {/* QUICK ACTIONS BAR (SWAP CARRETAS) */}
-            <div className="bg-slate-100 border border-slate-200 rounded-2xl p-3 flex flex-col gap-2 shadow-2xs">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                <Sliders size={12} className={isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Trocar Placas:
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-2.5 flex flex-col gap-2 shadow-2xs">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <Sliders size={11} className={isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Trocar Placas:
               </span>
               <button
                 type="button"
                 onClick={handleSwapCarretas}
                 title="Inverter as placas das colunas Carreta 1 e Carreta 2"
-                className="w-full flex items-center justify-center gap-1.5 bg-white hover:bg-slate-200/90 text-slate-800 border border-slate-300 font-black uppercase text-xs py-2 px-3 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
+                className="w-full flex items-center justify-center gap-1 bg-white hover:bg-slate-200/80 text-slate-800 border border-slate-300 font-extrabold uppercase text-[9px] py-1.5 px-2 rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
               >
-                <ArrowUpDown size={13} className="text-blue-600 stroke-[2.5]" />
-                <span>Carreta 1 ⇄ Carreta 2</span>
+                <ArrowUpDown size={11} className="text-blue-600 stroke-[2.5]" />
+                <span>Carreta 1 ⇄ 2</span>
               </button>
             </div>
 
             {/* VALOR DA CARGA (SANTA LUZIA) */}
-            <div className="flex flex-col gap-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center justify-between">
+            <div className="flex flex-col gap-1 p-2.5 bg-slate-50 rounded-xl border border-slate-200 shadow-2xs">
+              <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <DollarSign size={12} className="text-amber-600" /> Valor da Carga (NF)
+                  <DollarSign size={10} className="text-amber-600" /> Valor da Carga (NF)
                 </span>
                 {valorCarga && (
-                  <span className="text-[9px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-black border border-amber-300/60">
+                  <span className="text-[8px] bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black border border-amber-300/60">
                     SANTA LUZIA
                   </span>
                 )}
@@ -4798,7 +4717,7 @@ Embarque: ${
                 type="text"
                 value={valorCarga}
                 onChange={(e) => setValorCarga(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-black uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-slate-900 focus:border-red-600 outline-none transition-all shadow-2xs"
                 placeholder="R$ 0,00"
                 title="Importado da coluna VALOR NF na aba SANTA LUZIA"
               />
