@@ -909,10 +909,43 @@ export default function Controle({ onBack }: ControleProps) {
   };
   // -------------------------
 
+  const FRASE_RESGATE_PADRAO = "FAVOR SE ATENTAR AO RESGATE!";
+  const FRASE_RESGATE_DESCARTAVEL =
+    "ESSE PRÉ-ALERTA É APENAS PARA CONTROLE E ACOMPANHAMENTO, POIS A ISCA É DESCARTÁVEL E NÃO NECESSITA DE DEVOLUÇÃO!";
+
+  const isPrefix30D1 = (prefix: string, fullNumber: string) => {
+    const p = (prefix || "").trim().toLowerCase();
+    const f = (fullNumber || "").trim().toLowerCase();
+    return p.startsWith("30d1") || f.startsWith("30d1");
+  };
+
+  const isDispositivoDescartavel = (
+    p1: string,
+    p2: string,
+    f1: string,
+    f2: string,
+    totalCarretas: number
+  ) => {
+    const d1 = isPrefix30D1(p1, f1);
+    if (totalCarretas === 1) return d1;
+    const d2 = f2 !== "SEM ISCA" && isPrefix30D1(p2, f2);
+    return d1 || d2;
+  };
+
+  const isStandardAlertaResgate = (currentAlert: string) => {
+    if (!currentAlert || !currentAlert.trim()) return true;
+    const norm = currentAlert.trim().toLowerCase().replace(/!+$/, "");
+    const unaccented = norm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return (
+      unaccented === "favor se atentar ao resgate" ||
+      unaccented.includes("apenas para controle e acompanhamento, pois a isca e descartavel")
+    );
+  };
+
   // State for all form fields
   const [numCarretas, setNumCarretas] = useState<1 | 2>(2);
   const [alertaResgate, setAlertaResgate] = useState(
-    "FAVOR SE ATENTAR AO RESGATE!",
+    FRASE_RESGATE_PADRAO,
   );
   const [infoAbaixo, setInfoAbaixo] = useState(
     "Atentar às informações abaixo:",
@@ -1086,37 +1119,6 @@ export default function Controle({ onBack }: ControleProps) {
   const [iscaPrefix2, setIscaPrefix2] = useState("R10000");
   const [iscaSuffix1, setIscaSuffix1] = useState("2195");
   const [iscaSuffix2, setIscaSuffix2] = useState("3797");
-
-  // Alerta descartável when device prefix starts with "30d1"
-  const is30d1Device = (prefix: string, iscaVal?: string) => {
-    const p = (prefix || "").trim().toLowerCase();
-    const v = (iscaVal || "").trim().toLowerCase();
-    return p.startsWith("30d1") || v.startsWith("30d1");
-  };
-  const has30d1Isca =
-    is30d1Device(iscaPrefix1, isca1) ||
-    (numCarretas === 2 && isca2 !== "SEM ISCA" && is30d1Device(iscaPrefix2, isca2));
-
-  // Automatically update alertaResgate when prefix starts with 30d1
-  useEffect(() => {
-    const descartavelMsg =
-      "Esse pré-alerta é apenas para controle e acompanhamento, pois a isca é descartável e não necessita de devolução!";
-    if (has30d1Isca) {
-      setAlertaResgate(descartavelMsg);
-    } else {
-      setAlertaResgate((prev) => {
-        const p = (prev || "").trim().toLowerCase();
-        if (
-          p.includes("isca é descartável") ||
-          p.includes("descartavel") ||
-          p === descartavelMsg.toLowerCase()
-        ) {
-          return "FAVOR SE ATENTAR AO RESGATE!";
-        }
-        return prev;
-      });
-    }
-  }, [has30d1Isca]);
 
   const [copied, setCopied] = useState(false);
   const [copiedAssunto, setCopiedAssunto] = useState(false);
@@ -1370,31 +1372,33 @@ export default function Controle({ onBack }: ControleProps) {
 
   const handleIsca1Change = (val: string) => {
     setIsca1(val);
-    const upperVal = val.toUpperCase();
-    const prefixes = ["30D10000", "30D1", "R100000", "R10000"];
-    const matched = prefixes.find((p) => upperVal.startsWith(p));
-    if (matched) {
-      setIscaPrefix1(matched);
-      setIscaSuffix1(upperVal.substring(matched.length));
-    } else if (val.startsWith(iscaPrefix1)) {
+    if (val.startsWith(iscaPrefix1)) {
       setIscaSuffix1(val.substring(iscaPrefix1.length));
     } else {
-      setIscaSuffix1(val);
+      const prefixes = ["R100000", "R10000", "30D10000", "30D1"];
+      const matched = prefixes.find((p) => val.startsWith(p));
+      if (matched) {
+        setIscaPrefix1(matched);
+        setIscaSuffix1(val.substring(matched.length));
+      } else {
+        setIscaSuffix1(val);
+      }
     }
   };
 
   const handleIsca2Change = (val: string) => {
     setIsca2(val);
-    const upperVal = val.toUpperCase();
-    const prefixes = ["30D10000", "30D1", "R100000", "R10000"];
-    const matched = prefixes.find((p) => upperVal.startsWith(p));
-    if (matched) {
-      setIscaPrefix2(matched);
-      setIscaSuffix2(upperVal.substring(matched.length));
-    } else if (val.startsWith(iscaPrefix2)) {
+    if (val.startsWith(iscaPrefix2)) {
       setIscaSuffix2(val.substring(iscaPrefix2.length));
     } else {
-      setIscaSuffix2(val);
+      const prefixes = ["R100000", "R10000", "30D10000", "30D1"];
+      const matched = prefixes.find((p) => val.startsWith(p));
+      if (matched) {
+        setIscaPrefix2(matched);
+        setIscaSuffix2(val.substring(matched.length));
+      } else {
+        setIscaSuffix2(val);
+      }
     }
   };
 
@@ -1722,6 +1726,38 @@ export default function Controle({ onBack }: ControleProps) {
     customTransportadoras,
   ]);
 
+  // Monitora e atualiza alertaResgate automaticamente para iscas descartáveis (iniciadas com 30d1)
+  useEffect(() => {
+    const descartavel = isDispositivoDescartavel(
+      iscaPrefix1,
+      iscaPrefix2,
+      isca1,
+      isca2,
+      numCarretas
+    );
+    if (descartavel) {
+      if (
+        isStandardAlertaResgate(alertaResgate) &&
+        alertaResgate !== FRASE_RESGATE_DESCARTAVEL
+      ) {
+        setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+      }
+    } else {
+      const norm = (alertaResgate || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      if (
+        norm.includes(
+          "apenas para controle e acompanhamento, pois a isca e descartavel"
+        )
+      ) {
+        setAlertaResgate(FRASE_RESGATE_PADRAO);
+      }
+    }
+  }, [iscaPrefix1, iscaPrefix2, isca1, isca2, numCarretas, alertaResgate]);
+
   const handleClearVeiculo = () => {
     setCavalo("");
     setCarreta1("");
@@ -1743,7 +1779,7 @@ export default function Controle({ onBack }: ControleProps) {
     ) {
       setNumCarretas(2);
       setSaudacao(getInitialGreeting());
-      setAlertaResgate("Favor se atentar ao resgate!");
+      setAlertaResgate(FRASE_RESGATE_PADRAO);
       setInfoAbaixo("Atentar às informações abaixo:");
       setOrigem("SANTA LUZIA/MG");
       setRota1("");
@@ -3429,7 +3465,7 @@ Embarque: ${
 
                 {/* 2. Executive Alert Banner */}
                 <div className={cn(
-                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 transition-all max-w-full ml-0",
+                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 transition-all max-w-max ml-0",
                   isGreenOrigem
                     ? "bg-emerald-600 text-white border-emerald-700/40"
                     : isPurpleOrigem
@@ -3442,9 +3478,9 @@ Embarque: ${
                     type="text"
                     value={alertaResgate}
                     onChange={(e) => setAlertaResgate(e.target.value)}
-                    style={{ width: `${Math.max(26, (alertaResgate || "").length + 2)}ch` }}
+                    size={Math.max(28, alertaResgate.length + 1)}
                     className={cn(
-                      "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all max-w-full",
+                      "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all min-w-[280px] max-w-full",
                       isCuiabaOrigem
                         ? "text-slate-950 focus:ring-1 focus:ring-slate-950/40 hover:bg-black/10 placeholder:text-slate-800"
                         : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
@@ -4618,7 +4654,13 @@ Embarque: ${
                         onChange={(e) => {
                           const newPrefix = e.target.value;
                           setIscaPrefix1(newPrefix);
-                          setIsca1(newPrefix + iscaSuffix1);
+                          const newIsca1 = newPrefix + iscaSuffix1;
+                          setIsca1(newIsca1);
+                          if (isPrefix30D1(newPrefix, newIsca1)) {
+                            setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                          } else if (!isDispositivoDescartavel(newPrefix, iscaPrefix2, newIsca1, isca2, numCarretas)) {
+                            setAlertaResgate(FRASE_RESGATE_PADRAO);
+                          }
                         }}
                         className="w-full bg-white border border-slate-300 rounded-md px-1 py-1 text-[10px] font-extrabold text-slate-900 focus:border-red-600 outline-none cursor-pointer transition-all"
                       >
@@ -4626,9 +4668,6 @@ Embarque: ${
                         <option value="R10000">R10000</option>
                         <option value="30D10000">30D10000</option>
                         <option value="30D1">30D1</option>
-                        {!["R100000", "R10000", "30D10000", "30D1"].includes(iscaPrefix1) && (
-                          <option value={iscaPrefix1}>{iscaPrefix1}</option>
-                        )}
                       </select>
                     </div>
                     <div>
@@ -4648,7 +4687,13 @@ Embarque: ${
                           
                           setIscaSuffix1(val);
                           setIscaPrefix1(newPrefix);
-                          setIsca1(newPrefix + val);
+                          const newIsca1 = newPrefix + val;
+                          setIsca1(newIsca1);
+                          if (isPrefix30D1(newPrefix, newIsca1)) {
+                            setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                          } else if (!isDispositivoDescartavel(newPrefix, iscaPrefix2, newIsca1, isca2, numCarretas)) {
+                            setAlertaResgate(FRASE_RESGATE_PADRAO);
+                          }
                         }}
                         className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
                         placeholder="RESTO..."
@@ -4673,7 +4718,13 @@ Embarque: ${
                           onChange={(e) => {
                             const newPrefix = e.target.value;
                             setIscaPrefix2(newPrefix);
-                            setIsca2(newPrefix + iscaSuffix2);
+                            const newIsca2 = newPrefix + iscaSuffix2;
+                            setIsca2(newIsca2);
+                            if (isPrefix30D1(newPrefix, newIsca2)) {
+                              setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                            } else if (!isDispositivoDescartavel(iscaPrefix1, newPrefix, isca1, newIsca2, numCarretas)) {
+                              setAlertaResgate(FRASE_RESGATE_PADRAO);
+                            }
                           }}
                           className="w-full bg-white border border-slate-300 rounded-md px-1 py-1 text-[10px] font-extrabold text-slate-900 focus:border-red-600 outline-none cursor-pointer transition-all"
                         >
@@ -4681,9 +4732,6 @@ Embarque: ${
                           <option value="R10000">R10000</option>
                           <option value="30D10000">30D10000</option>
                           <option value="30D1">30D1</option>
-                          {!["R100000", "R10000", "30D10000", "30D1"].includes(iscaPrefix2) && (
-                            <option value={iscaPrefix2}>{iscaPrefix2}</option>
-                          )}
                         </select>
                       </div>
                       <div>
@@ -4703,7 +4751,13 @@ Embarque: ${
                             
                             setIscaSuffix2(val);
                             setIscaPrefix2(newPrefix);
-                            setIsca2(newPrefix + val);
+                            const newIsca2 = newPrefix + val;
+                            setIsca2(newIsca2);
+                            if (isPrefix30D1(newPrefix, newIsca2)) {
+                              setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                            } else if (!isDispositivoDescartavel(iscaPrefix1, newPrefix, isca1, newIsca2, numCarretas)) {
+                              setAlertaResgate(FRASE_RESGATE_PADRAO);
+                            }
                           }}
                           className="w-full bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[10px] font-black text-slate-900 uppercase focus:border-red-600 outline-none transition-all"
                           placeholder="RESTO..."
@@ -4715,13 +4769,6 @@ Embarque: ${
                 )}
 
                 {/* VISUAL PREVIEW & QUICK COPY BAR */}
-                {has30d1Isca && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-[9px] font-extrabold text-amber-800">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                    <span>Isca descartável: alerta sem necessidade de devolução ativado!</span>
-                  </div>
-                )}
-
                 {getIscasSpaceSeparated() ? (
                   <div
                     onClick={handleCopyIscasWithSpace}
