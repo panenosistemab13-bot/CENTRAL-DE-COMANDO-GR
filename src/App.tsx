@@ -6,7 +6,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import InitialMenu from './components/InitialMenu';
-import MobileMenu from './components/MobileMenu';
 import {
   Users2,
   ShieldAlert,
@@ -56,8 +55,6 @@ import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
 import UpdateTopBanner from './components/UpdateTopBanner';
-import MobileApp from './components/mobile/MobileApp';
-import { MobileBottomDock, MobileTopBar } from './components/MobileDock';
 import { 
   PageDefinition, 
   getAllAvailablePages, 
@@ -161,8 +158,6 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<boolean>(false);
 
-  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
-
   // Dynamic visible tabs calculation
   const visibleTabs = [
     { id: 'menu', label: 'Início', icon: LayoutGrid },
@@ -242,17 +237,6 @@ export default function App() {
     const [h, m] = timeStr.split(':').map(Number);
     return (h || 0) * 60 + (m || 0);
   };
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const isMobileWidth = window.innerWidth < 768;
-      const isTouch = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setIsMobile(isMobileWidth || (window.innerWidth < 1024 && isTouch));
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -361,17 +345,6 @@ export default function App() {
   };
 
   const renderContent = () => {
-    if (isMobile && activeTab === 'menu') {
-      return (
-        <MobileMenu 
-          onSelect={(id) => setActiveTab(id as Tab)} 
-          pageVisibility={pageVisibility}
-          availablePages={availablePages}
-          onUnlockPresenceList={handleOpenPageSelector}
-        />
-      );
-    }
-
     switch (activeTab) {
       case 'menu':
         return (
@@ -473,26 +446,6 @@ export default function App() {
     }
   };
 
-  // 100% EXCLUSIVE SMARTPHONE MOBILE VIEW - ONLY LISTA DE PRESENÇA
-  if (isMobile) {
-    return (
-      <div 
-        className="w-full min-h-screen bg-[#140b06] text-[#f5ebd6] font-sans overflow-x-hidden flex flex-col"
-        style={{
-          backgroundImage: 'radial-gradient(circle at top, #281308 0%, #0d0603 100%)',
-        }}
-      >
-        {/* Top Banner: Última Atualização + Data */}
-        <UpdateTopBanner />
-
-        {/* Exclusively the Lista de Presença Page on Mobile */}
-        <main className="flex-1 w-full p-2 sm:p-4 max-w-7xl mx-auto flex flex-col">
-          <PresenceList />
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
       {/* Top Banner: Última Atualização + Data (Aparece exclusivamente no Menu Inicial) */}
@@ -532,20 +485,11 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <div className={cn("flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full", isMobile ? "pb-24" : "")}>
+      <div className="flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full">
         
-        {/* Mobile Top Header (When in subpage on mobile) */}
-        {isMobile && activeTab !== 'menu' && (
-          <MobileTopBar 
-            activeTab={activeTab} 
-            onBack={() => setActiveTab('menu')} 
-            onSelectTab={(tabId) => setActiveTab(tabId as Tab)} 
-          />
-        )}
-
-        {/* Desktop Top Header (Only on active modules) */}
-        {!isMobile && activeTab !== 'menu' && (
-          <header className="hidden md:flex py-3 shrink-0 items-center justify-center px-4 sm:px-8 z-50 relative pointer-events-none w-full">
+        {/* Desktop Top Header (Always on active modules) */}
+        {activeTab !== 'menu' && (
+          <header className="flex py-3 shrink-0 items-center justify-center px-2 sm:px-8 z-50 relative pointer-events-none w-full">
             {/* Centered Navigation Dock */}
             <div className="flex items-center justify-center pointer-events-auto max-w-full overflow-x-auto no-scrollbar py-1">
               <AnimatePresence>
@@ -893,15 +837,6 @@ export default function App() {
               <span className="hidden sm:inline">Criado por </span><span className="text-[#e2c19e] font-black">Jefferson</span>
             </span>
           </footer>
-        )}
-
-        {/* Mobile Bottom Navigation Dock */}
-        {isMobile && (
-          <MobileBottomDock
-            activeTab={activeTab}
-            onSelectTab={(tabId) => setActiveTab(tabId as Tab)}
-            appointmentsCount={activeTodayApps.length}
-          />
         )}
 
       </div>
