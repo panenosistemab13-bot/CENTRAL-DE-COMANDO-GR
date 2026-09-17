@@ -2479,10 +2479,10 @@ Embarque: ${
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#B32025] via-red-600 to-amber-500" />
 
               {/* Station Header */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#E2E8F0]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
                 <div className="flex items-start sm:items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#7f1317] text-white p-3.5 shadow-md shadow-red-900/30 flex items-center justify-center shrink-0 border border-red-800">
-                    <Truck size={28} className="stroke-[2.5]" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#7f1317] text-white p-3 shadow-md shadow-red-900/30 flex items-center justify-center shrink-0 border border-red-800">
+                    <Truck size={24} className="stroke-[2.5]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -2493,159 +2493,30 @@ Embarque: ${
                         SANTA LUZIA / MG
                       </span>
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E293B] uppercase tracking-tight mt-1 flex items-center gap-2">
+                    <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight mt-1 flex items-center gap-2">
                       Gestão & Importação de Viagens
                     </h2>
-                    <p className="text-xs text-[#64748B] font-medium mt-0.5 max-w-2xl">
-                      Cole as linhas da planilha operacional (Google Sheets / Excel) para extração instantânea de frotas, motoristas, carretas, valores de NF e despacho automático para o Gerador PGR.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Integrated Columns Tags */}
-                <div className="flex flex-col gap-2 lg:items-end">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                    <CheckSquare size={13} className="text-[#B32025]" /> Colunas Mapeadas Automaticamente:
-                  </span>
-                  <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                    <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                      TRANSPORTADOR
-                    </span>
-                    <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                      CONDUTOR
-                    </span>
-                    <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                      CAVALO
-                    </span>
-                    <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                      CARRETAS
-                    </span>
-                    <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                      DESTINO
-                    </span>
-                    <span className="bg-emerald-700 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                      VALOR NF
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* KPI Metrics Ribbon */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                <div className="bg-[#FAF6F0] border border-[#3A2414]/15 rounded-2xl p-3.5 flex flex-col justify-between">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#3A2414]/70">
-                    Total de Viagens
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black font-mono text-[#3A2414]">
-                      {santaLuziaStats.total}
-                    </span>
-                    <span className="text-[11px] font-bold text-[#3A2414]/60">veículos</span>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                    Transportadoras
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black font-mono text-slate-900">
-                      {santaLuziaStats.transps.length}
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-400">empresas</span>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                    Destinos Ativos
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black font-mono text-slate-900">
-                      {santaLuziaStats.destinos.length}
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-400">rotas</span>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                    Bitrem / Rodotrem
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black font-mono text-amber-600">
-                      {santaLuziaStats.biTrems}
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-400">composições</span>
-                  </div>
-                </div>
-
-                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 flex flex-col justify-between">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800">
-                    Com Valor Declarado
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black font-mono text-emerald-700">
-                      {santaLuziaStats.comValor}
-                    </span>
-                    <span className="text-[11px] font-bold text-emerald-600">cargas NF</span>
                   </div>
                 </div>
               </div>
 
               {/* Data Ingestion Deck */}
               <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-300 text-[#B32025] flex items-center justify-center shadow-xs">
-                      <FileSpreadsheet size={18} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                        Área de Colagem da Planilha Operacional
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        Copie diretamente as células no Excel ou Sheets e cole aqui (com ou sem cabeçalho).
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
+                {placasPastedData && (
+                  <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={handlePasteClipboardPlacas}
-                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
-                      title="Lê a área de transferência do computador e cola aqui"
+                      onClick={() => {
+                        setPlacasPastedData("");
+                        setPlacasFilter("");
+                      }}
+                      className="px-3 py-1 bg-white hover:bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-xs"
                     >
-                      <ClipboardPaste size={14} className="text-blue-600" />
-                      <span>Colar da Área de Transferência</span>
+                      <Trash2 size={13} />
+                      <span>Limpar</span>
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPlacasPastedData(SAMPLE_PLACAS_SHEET_DATA)}
-                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-[#B32025] border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
-                      title="Carrega a planilha modelo de exemplo"
-                    >
-                      <Sparkles size={14} className="text-[#B32025]" />
-                      <span>Carregar Planilha Real (Exemplo)</span>
-                    </button>
-
-                    {placasPastedData && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPlacasPastedData("");
-                          setPlacasFilter("");
-                        }}
-                        className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Trash2 size={14} />
-                        <span>Limpar</span>
-                      </button>
-                    )}
                   </div>
-                </div>
+                )}
 
                 <textarea
                   value={placasPastedData}
@@ -3000,46 +2871,6 @@ Embarque: ${
                       <span>Limpar</span>
                     </button>
                   )}
-                </div>
-              </div>
-
-              {/* 5-Column Pipeline Architecture Banner */}
-              <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-inner flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-600/30 border border-blue-500/40 rounded-xl text-blue-300 shrink-0">
-                    <Layers size={20} />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 block">
-                      Pipeline Operacional Obrigatório
-                    </span>
-                    <h4 className="text-sm font-extrabold text-white">
-                      Protocolo das 5 Colunas de Iscas & Carga
-                    </h4>
-                  </div>
-                </div>
-
-                {/* Steps sequence */}
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
-                  <span className="bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-200">
-                    1. Placa Carreta
-                  </span>
-                  <span className="text-blue-400 font-bold">➔</span>
-                  <span className="bg-red-950/80 border border-red-800/80 text-red-300 px-2.5 py-1 rounded-lg">
-                    2. Número Isca
-                  </span>
-                  <span className="text-blue-400 font-bold">➔</span>
-                  <span className="bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-200">
-                    3. Produto & Esquema
-                  </span>
-                  <span className="text-blue-400 font-bold">➔</span>
-                  <span className="bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-200">
-                    4. U.M.A
-                  </span>
-                  <span className="text-blue-400 font-bold">➔</span>
-                  <span className="bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2.5 py-1 rounded-lg">
-                    5. Nota Fiscal
-                  </span>
                 </div>
               </div>
 
