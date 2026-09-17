@@ -38,6 +38,14 @@ import {
   Radio,
   Minimize2,
   Maximize2,
+  LayoutGrid,
+  List,
+  ClipboardPaste,
+  Building2,
+  ShieldCheck,
+  Navigation,
+  Compass,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -829,9 +837,11 @@ export default function Controle({ onBack }: ControleProps) {
     return parseUnidadesText(unidadesPastedText);
   }, [unidadesPastedText]);
 
-  // --- PLACAS TAB STATE ---
+  // --- PLACAS (SANTA LUZIA) TAB STATE ---
   const [placasPastedData, setPlacasPastedData] = useState("");
   const [placasFilter, setPlacasFilter] = useState("");
+  const [placasViewMode, setPlacasViewMode] = useState<"cards" | "table">("cards");
+  const [placasSelectedTransp, setPlacasSelectedTransp] = useState<string>("TODAS");
   const [importSuccessBanner, setImportSuccessBanner] = useState<{
     cavalo: string;
     motorista: string;
@@ -843,19 +853,60 @@ export default function Controle({ onBack }: ControleProps) {
     return parsePlacasData(placasPastedData);
   }, [placasPastedData]);
 
+  const santaLuziaStats = useMemo(() => {
+    const total = parsedPlacas.length;
+    const transps = Array.from(new Set(parsedPlacas.map((p) => p.transportador).filter(Boolean)));
+    const destinos = Array.from(new Set(parsedPlacas.map((p) => p.destino).filter(Boolean)));
+    const comValor = parsedPlacas.filter((p) => !!p.valorNf).length;
+    const biTrems = parsedPlacas.filter((p) => !!p.carreta2).length;
+    return { total, transps, destinos, comValor, biTrems };
+  }, [parsedPlacas]);
+
   const filteredPlacas = useMemo(() => {
-    if (!placasFilter.trim()) return parsedPlacas;
+    let list = parsedPlacas;
+    if (placasSelectedTransp && placasSelectedTransp !== "TODAS") {
+      list = list.filter((p) => p.transportador.toLowerCase() === placasSelectedTransp.toLowerCase());
+    }
+    if (!placasFilter.trim()) return list;
     const q = placasFilter.toLowerCase();
-    return parsedPlacas.filter(
+    return list.filter(
       (p) =>
         p.cavalo.toLowerCase().includes(q) ||
         p.carreta1.toLowerCase().includes(q) ||
         p.carreta2.toLowerCase().includes(q) ||
         p.condutor.toLowerCase().includes(q) ||
         p.transportador.toLowerCase().includes(q) ||
-        p.destino.toLowerCase().includes(q)
+        p.destino.toLowerCase().includes(q) ||
+        (p.nf && p.nf.toLowerCase().includes(q)) ||
+        (p.origem && p.origem.toLowerCase().includes(q))
     );
-  }, [parsedPlacas, placasFilter]);
+  }, [parsedPlacas, placasFilter, placasSelectedTransp]);
+
+  const handlePasteClipboardPlacas = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) setPlacasPastedData(text);
+    } catch (err) {
+      console.warn("Clipboard access denied or unavailable", err);
+    }
+  };
+
+  const handlePasteClipboardUnidades = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) setUnidadesPastedText(text);
+    } catch (err) {
+      console.warn("Clipboard access denied or unavailable", err);
+    }
+  };
+
+  const [copiedIscaKey, setCopiedIscaKey] = useState<string | null>(null);
+  const handleCopySingleIsca = (key: string, isca: string) => {
+    if (!isca) return;
+    navigator.clipboard.writeText(isca);
+    setCopiedIscaKey(key);
+    setTimeout(() => setCopiedIscaKey(null), 2000);
+  };
   // -------------------------
 
   // State for all form fields
@@ -2348,12 +2399,12 @@ Embarque: ${
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl border border-[#CBD5E1]">
+        <div className="flex items-center bg-[#F1F5F9] p-1.5 rounded-2xl border border-[#CBD5E1] shadow-inner gap-1">
           <button
             type="button"
             onClick={() => setActiveTab("gerador")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
               activeTab === "gerador"
                 ? "bg-[#1E293B] text-white shadow-md"
                 : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
@@ -2365,34 +2416,20 @@ Embarque: ${
 
           <button
             type="button"
-            onClick={() => setActiveTab("unidades")}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
-              activeTab === "unidades"
-                ? "bg-blue-600 text-white shadow-md"
-                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
-            )}
-          >
-            <Package size={14} />
-            <span>Cuiaba</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab("placas")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
               activeTab === "placas"
-                ? "bg-[#B32025] text-white shadow-md"
+                ? "bg-gradient-to-r from-[#B32025] to-[#8c1418] text-white shadow-md shadow-red-900/20"
                 : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
             )}
           >
             <Truck size={14} />
-            <span> SANTA LUZIA</span>
+            <span>SANTA LUZIA / MG</span>
             {parsedPlacas.length > 0 && (
               <span
                 className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                  "px-2 py-0.5 rounded-full text-[10px] font-black font-mono shadow-xs",
                   activeTab === "placas"
                     ? "bg-white text-[#B32025]"
                     : "bg-[#B32025] text-white"
@@ -2402,80 +2439,209 @@ Embarque: ${
               </span>
             )}
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("unidades")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "unidades"
+                ? "bg-gradient-to-r from-blue-700 to-indigo-800 text-white shadow-md shadow-blue-900/20"
+                : "text-[#475569] hover:text-[#0F172A] hover:bg-slate-200/60"
+            )}
+          >
+            <Compass size={14} />
+            <span>CUIABÁ / MT</span>
+            {parsedUnidades.carretas.length > 0 && (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-black font-mono shadow-xs",
+                  activeTab === "unidades"
+                    ? "bg-white text-blue-800"
+                    : "bg-blue-600 text-white"
+                )}
+              >
+                {parsedUnidades.carretas.length}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
       {/* Main Workspace Layout */}
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-canvas">
-        {/* TAB CONTENT: Placas */}
+        {/* TAB CONTENT: Placas (SANTA LUZIA / MG) */}
         {activeTab === "placas" && (
           <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
-            {/* Main Card */}
-            <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-md p-6 sm:p-8 flex flex-col gap-6">
-              {/* Header info */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-[#E2E8F0] gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="bg-[#B32025] text-white p-3 rounded-2xl shadow-md border border-red-800">
-                    <Truck size={24} className="stroke-[2.5]" />
+            {/* Main Station Cockpit */}
+            <div className="bg-white rounded-3xl border border-[#D1E1EB] shadow-lg p-6 sm:p-8 flex flex-col gap-6 relative overflow-hidden">
+              {/* Decorative top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#B32025] via-red-600 to-amber-500" />
+
+              {/* Station Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#E2E8F0]">
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#7f1317] text-white p-3.5 shadow-md shadow-red-900/30 flex items-center justify-center shrink-0 border border-red-800">
+                    <Truck size={28} className="stroke-[2.5]" />
                   </div>
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight flex items-center gap-2">
-                      Importação de Placas & Viagens
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-[#B32025] border border-red-300">
+                        Hub Logístico
+                      </span>
+                      <span className="text-xs font-mono font-bold text-slate-400">
+                        SANTA LUZIA / MG
+                      </span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E293B] uppercase tracking-tight mt-1 flex items-center gap-2">
+                      Gestão & Importação de Viagens
                     </h2>
-                    <p className="text-xs text-[#64748B] font-medium mt-0.5">
-                      Cole as informações da planilha (Google Sheets / Excel) para extrair automaticamente e enviar aos formulários de controle.
+                    <p className="text-xs text-[#64748B] font-medium mt-0.5 max-w-2xl">
+                      Cole as linhas da planilha operacional (Google Sheets / Excel) para extração instantânea de frotas, motoristas, carretas, valores de NF e despacho automático para o Gerador PGR.
                     </p>
                   </div>
                 </div>
 
-                {/* Target Columns Badges */}
-                <div className="flex flex-wrap items-center gap-1.5 bg-[#F8FAFC] border border-[#E2E8F0] p-2 rounded-xl">
-                  <span className="text-[10px] font-black uppercase text-[#64748B] mr-1">
-                    Colunas Integradas:
+                {/* Integrated Columns Tags */}
+                <div className="flex flex-col gap-2 lg:items-end">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <CheckSquare size={13} className="text-[#B32025]" /> Colunas Mapeadas Automaticamente:
                   </span>
-                  <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                    TRANSPORTADOR
-                  </span>
-                  <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                    CONDUTOR
-                  </span>
-                  <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                    CAVALO
-                  </span>
-                  <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                    CARRETA
-                  </span>
-                  <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
-                    DESTINO
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                    <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                      TRANSPORTADOR
+                    </span>
+                    <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                      CONDUTOR
+                    </span>
+                    <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                      CAVALO
+                    </span>
+                    <span className="bg-[#B32025] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                      CARRETAS
+                    </span>
+                    <span className="bg-[#1E293B] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                      DESTINO
+                    </span>
+                    <span className="bg-emerald-700 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                      VALOR NF
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Paste Area & Controls */}
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <label className="text-xs font-black uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
-                    <FileSpreadsheet size={16} className="text-[#B32025]" />
-                    Cole aqui os dados da tabela (Ctrl + V):
-                  </label>
+              {/* KPI Metrics Ribbon */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="bg-[#FAF6F0] border border-[#3A2414]/15 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#3A2414]/70">
+                    Total de Viagens
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-black font-mono text-[#3A2414]">
+                      {santaLuziaStats.total}
+                    </span>
+                    <span className="text-[11px] font-bold text-[#3A2414]/60">veículos</span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                    Transportadoras
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-black font-mono text-slate-900">
+                      {santaLuziaStats.transps.length}
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">empresas</span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                    Destinos Ativos
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-black font-mono text-slate-900">
+                      {santaLuziaStats.destinos.length}
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">rotas</span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                    Bitrem / Rodotrem
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-black font-mono text-amber-600">
+                      {santaLuziaStats.biTrems}
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">composições</span>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800">
+                    Com Valor Declarado
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-black font-mono text-emerald-700">
+                      {santaLuziaStats.comValor}
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-600">cargas NF</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Ingestion Deck */}
+              <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-300 text-[#B32025] flex items-center justify-center shadow-xs">
+                      <FileSpreadsheet size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                        Área de Colagem da Planilha Operacional
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        Copie diretamente as células no Excel ou Sheets e cole aqui (com ou sem cabeçalho).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handlePasteClipboardPlacas}
+                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      title="Lê a área de transferência do computador e cola aqui"
+                    >
+                      <ClipboardPaste size={14} className="text-blue-600" />
+                      <span>Colar da Área de Transferência</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setPlacasPastedData(SAMPLE_PLACAS_SHEET_DATA)}
-                      className="px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] border border-[#CBD5E1] rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
-                      title="Carrega os dados de exemplo da planilha anexa"
+                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-[#B32025] border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      title="Carrega a planilha modelo de exemplo"
                     >
-                      <Sparkles size={13} className="text-[#B32025]" />
-                      Carregar Exemplo
+                      <Sparkles size={14} className="text-[#B32025]" />
+                      <span>Carregar Planilha Real (Exemplo)</span>
                     </button>
+
                     {placasPastedData && (
                       <button
                         type="button"
-                        onClick={() => setPlacasPastedData("")}
-                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setPlacasPastedData("");
+                          setPlacasFilter("");
+                        }}
+                        className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
                       >
-                        <Trash2 size={13} />
-                        Limpar
+                        <Trash2 size={14} />
+                        <span>Limpar</span>
                       </button>
                     )}
                   </div>
@@ -2484,186 +2650,332 @@ Embarque: ${
                 <textarea
                   value={placasPastedData}
                   onChange={(e) => setPlacasPastedData(e.target.value)}
-                  placeholder="Cole aqui as linhas copiadas da planilha Google Sheets ou Excel (com ou sem cabeçalho)..."
-                  className="w-full h-36 bg-[#F8FAFC] border-2 border-[#CBD5E1] focus:border-[#B32025] rounded-xl p-3.5 text-xs font-mono text-[#0F172A] outline-none transition-all placeholder:text-slate-400 focus:bg-white shadow-inner resize-y"
+                  placeholder={`Cole aqui as linhas da planilha de Santa Luzia...\nExemplo de colunas suportadas:\nTRANSPORTADOR | CONDUTOR | CAVALO | CARRETA | CARRETA 2 | ORIGEM | DESTINO | VALOR NF | TECNOLOGIA`}
+                  className="w-full h-32 bg-white border-2 border-slate-300 focus:border-[#B32025] rounded-xl p-3.5 text-xs font-mono text-slate-900 outline-none transition-all placeholder:text-slate-400 shadow-inner resize-y leading-relaxed"
                 />
               </div>
 
-              {/* Results Grid & Filter */}
+              {/* Parsed Results Section */}
               {parsedPlacas.length > 0 ? (
                 <div className="flex flex-col gap-4 pt-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black uppercase text-[#1E293B] tracking-wider">
-                        Veículos Identificados:
-                      </span>
-                      <span className="bg-[#B32025] text-white text-xs font-black px-2.5 py-0.5 rounded-full">
-                        {filteredPlacas.length} de {parsedPlacas.length}
-                      </span>
+                  {/* Control Toolbar: Search, Filters, and View Switcher */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-900 text-white p-4 rounded-2xl shadow-md">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-300">
+                          Veículos Identificados:
+                        </span>
+                        <span className="bg-[#B32025] text-white text-xs font-mono font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                          {filteredPlacas.length} de {parsedPlacas.length}
+                        </span>
+                      </div>
+
+                      {/* Quick Transporter Filter */}
+                      {santaLuziaStats.transps.length > 1 && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">
+                            Transportadora:
+                          </span>
+                          <select
+                            value={placasSelectedTransp}
+                            onChange={(e) => setPlacasSelectedTransp(e.target.value)}
+                            className="bg-slate-800 border border-slate-700 text-white rounded-lg text-xs font-bold px-2.5 py-1 outline-none cursor-pointer"
+                          >
+                            <option value="TODAS">Todas ({santaLuziaStats.transps.length})</option>
+                            {santaLuziaStats.transps.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Search Filter */}
-                    <div className="relative w-full sm:w-72">
-                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
-                      <input
-                        type="text"
-                        value={placasFilter}
-                        onChange={(e) => setPlacasFilter(e.target.value)}
-                        placeholder="Buscar por placa, condutor, destino..."
-                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#CBD5E1] rounded-lg text-xs font-semibold text-[#1E293B] placeholder:text-[#94A3B8] outline-none focus:border-[#B32025]"
-                      />
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Search Bar */}
+                      <div className="relative w-full sm:w-64">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={placasFilter}
+                          onChange={(e) => setPlacasFilter(e.target.value)}
+                          placeholder="Buscar placa, condutor, destino..."
+                          className="w-full pl-9 pr-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-white placeholder:text-slate-400 outline-none focus:border-red-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* View Switcher: Cards vs Table */}
+                      <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
+                        <button
+                          type="button"
+                          onClick={() => setPlacasViewMode("cards")}
+                          className={cn(
+                            "px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                            placasViewMode === "cards"
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-400 hover:text-white"
+                          )}
+                          title="Visualização em Cards Bento"
+                        >
+                          <LayoutGrid size={13} />
+                          <span>Cards</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPlacasViewMode("table")}
+                          className={cn(
+                            "px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                            placasViewMode === "table"
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-400 hover:text-white"
+                          )}
+                          title="Visualização em Planilha Corporativa"
+                        >
+                          <List size={13} />
+                          <span>Tabela</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {filteredPlacas.map((item) => (
-                      <div
-                        key={item.id}
-                        className="bg-white border-2 border-[#E2E8F0] hover:border-[#B32025] rounded-2xl p-4.5 flex flex-col justify-between gap-4 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
-                      >
-                        {/* Top plate badges */}
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="bg-[#0F172A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm">
-                                <Truck size={13} className="text-red-400" />
-                                {item.cavalo || "S/ CAVALO"}
-                              </span>
-                              {item.carreta1 && (
-                                <span className="bg-slate-100 text-slate-800 border border-slate-300 text-[11px] font-black uppercase px-2 py-1 rounded-lg">
-                                  CR 1: {item.carreta1}
-                                </span>
-                              )}
-                              {item.carreta2 && (
-                                <span className="bg-slate-100 text-slate-800 border border-slate-300 text-[11px] font-black uppercase px-2 py-1 rounded-lg">
-                                  CR 2: {item.carreta2}
-                                </span>
-                              )}
-                            </div>
-                            {item.rawRowsCount > 1 && (
-                              <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
-                                {item.rawRowsCount} Linhas
-                              </span>
-                            )}
-                          </div>
+                  {/* VIEW 1: BENTO CARDS */}
+                  {placasViewMode === "cards" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {filteredPlacas.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-white border-2 border-slate-200 hover:border-[#B32025] rounded-3xl p-5 flex flex-col justify-between gap-4 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
+                        >
+                          {/* Top Accent Header */}
+                          <div className="flex flex-col gap-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              {/* Mercosul Placa Style */}
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <div className="border border-slate-400 rounded-lg overflow-hidden shadow-xs">
+                                  <div className="bg-[#003399] text-white text-[7px] font-black uppercase px-2 py-0.2 tracking-widest text-center">
+                                    BRASIL
+                                  </div>
+                                  <div className="bg-white text-slate-900 font-mono font-black text-xs px-2 py-0.5 tracking-wider flex items-center gap-1">
+                                    <Truck size={12} className="text-[#B32025]" />
+                                    {item.cavalo || "S/ CAVALO"}
+                                  </div>
+                                </div>
 
-                          {/* Details */}
-                          <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 flex flex-col gap-1.5 text-xs text-[#334155]">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
-                                Condutor:
-                              </span>
-                              <span className="font-bold text-[#0F172A] text-right truncate">
-                                {item.condutor || "NÃO INFORMADO"}
-                              </span>
+                                {item.carreta1 && (
+                                  <span className="bg-slate-100 text-slate-800 border border-slate-300 text-[10px] font-black font-mono uppercase px-2 py-1 rounded-lg">
+                                    CR 1: {item.carreta1}
+                                  </span>
+                                )}
+                                {item.carreta2 && (
+                                  <span className="bg-slate-100 text-slate-800 border border-slate-300 text-[10px] font-black font-mono uppercase px-2 py-1 rounded-lg">
+                                    CR 2: {item.carreta2}
+                                  </span>
+                                )}
+                              </div>
+
+                              {item.rawRowsCount > 1 && (
+                                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase shrink-0">
+                                  {item.rawRowsCount} Linhas
+                                </span>
+                              )}
                             </div>
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
-                                Transportador:
+
+                            {/* Destination Route Banner */}
+                            <div className="bg-gradient-to-r from-red-50 to-slate-50 border border-red-200/80 p-2.5 rounded-xl flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[#B32025] flex items-center gap-1">
+                                <MapPin size={12} className="shrink-0" /> Destino:
                               </span>
-                              <span className="font-bold text-[#0F172A] text-right truncate">
-                                {item.transportador || "NÃO INFORMADO"}
-                              </span>
-                            </div>
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
-                                Destino:
-                              </span>
-                              <span className="font-black text-red-600 text-right truncate flex items-center justify-end gap-1">
-                                <MapPin size={11} className="shrink-0" />
+                              <span className="text-xs font-black text-slate-900 uppercase truncate text-right">
                                 {item.destino || "NÃO INFORMADO"}
                               </span>
                             </div>
-                            {item.origem && (
-                              <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-200">
-                                <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
-                                  Origem:
-                                </span>
-                                <span className="font-semibold text-slate-600 text-right truncate">
-                                  {item.origem}
-                                </span>
-                              </div>
-                            )}
-                            {item.tecnologia && (
-                              <div className="flex items-start justify-between gap-2">
-                                <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
-                                  Tecnologia:
-                                </span>
-                                <span className="font-semibold text-slate-600 text-right truncate">
-                                  {item.tecnologia}
-                                </span>
-                              </div>
-                            )}
-                            {item.nf && (
-                              <div className="flex items-start justify-between gap-2">
-                                <span className="text-[10px] font-black uppercase text-[#94A3B8] shrink-0 w-24">
-                                  NF:
-                                </span>
-                                <span className="font-semibold text-slate-600 text-right truncate">
-                                  {item.nf}
-                                </span>
-                              </div>
-                            )}
-                            {item.valorNf && (
-                              <div className="flex items-start justify-between gap-2 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200">
-                                <span className="text-[10px] font-black uppercase text-emerald-800 shrink-0 w-24">
-                                  VALOR NF:
-                                </span>
-                                <span className="font-black text-emerald-700 text-right truncate text-xs">
-                                  {item.valorNf}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
 
-                        {/* Action button */}
-                        <button
-                          type="button"
-                          onClick={() => handleImportPlacaItem(item)}
-                          className="w-full py-2.5 bg-white border-2 border-[#CBD5E1] hover:border-[#B32025] text-[#1E293B] hover:text-white hover:bg-[#B32025] rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 group-hover:border-[#B32025]"
-                        >
-                          <span>Importar para Controle</span>
-                          <ArrowRight size={14} />
-                        </button>
+                            {/* Vehicle Details */}
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-slate-700">
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 w-24 flex items-center gap-1">
+                                  <User size={11} /> Condutor:
+                                </span>
+                                <span className="font-bold text-slate-900 text-right truncate">
+                                  {item.condutor || "NÃO INFORMADO"}
+                                </span>
+                              </div>
+
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 w-24 flex items-center gap-1">
+                                  <Building2 size={11} /> Empresa:
+                                </span>
+                                <span className="font-bold text-slate-900 text-right truncate">
+                                  {item.transportador || "NÃO INFORMADO"}
+                                </span>
+                              </div>
+
+                              {item.origem && (
+                                <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-200">
+                                  <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 w-24">
+                                    Origem:
+                                  </span>
+                                  <span className="font-semibold text-slate-600 text-right truncate">
+                                    {item.origem}
+                                  </span>
+                                </div>
+                              )}
+
+                              {item.tecnologia && (
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 w-24 flex items-center gap-1">
+                                    <Cpu size={11} /> Tecnologia:
+                                  </span>
+                                  <span className="font-semibold text-slate-700 text-right truncate">
+                                    {item.tecnologia}
+                                  </span>
+                                </div>
+                              )}
+
+                              {item.valorNf && (
+                                <div className="flex items-start justify-between gap-2 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 mt-1">
+                                  <span className="text-[10px] font-black uppercase text-emerald-800 shrink-0 w-24 flex items-center gap-1">
+                                    <DollarSign size={11} /> VALOR NF:
+                                  </span>
+                                  <span className="font-mono font-black text-emerald-700 text-right truncate text-xs">
+                                    {item.valorNf}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleImportPlacaItem(item)}
+                            className="w-full py-3 bg-[#1E293B] hover:bg-[#B32025] text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-98"
+                          >
+                            <span>Importar para Gerador PGR</span>
+                            <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* VIEW 2: CORPORATE TABLE VIEW */
+                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs text-slate-700">
+                          <thead className="bg-slate-100 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-600">
+                            <tr>
+                              <th className="px-4 py-3">#</th>
+                              <th className="px-4 py-3">Cavalo</th>
+                              <th className="px-4 py-3">Carretas</th>
+                              <th className="px-4 py-3">Condutor</th>
+                              <th className="px-4 py-3">Transportadora</th>
+                              <th className="px-4 py-3">Destino</th>
+                              <th className="px-4 py-3">Valor NF</th>
+                              <th className="px-4 py-3 text-right">Ação</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {filteredPlacas.map((item, idx) => (
+                              <tr key={item.id} className="hover:bg-red-50/50 transition-colors">
+                                <td className="px-4 py-3 font-mono font-bold text-slate-400">
+                                  {idx + 1}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="font-mono font-black text-slate-900 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded uppercase">
+                                    {item.cavalo || "S/ PLACA"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 font-mono font-bold text-slate-700">
+                                  {item.carreta1 || "---"}
+                                  {item.carreta2 && ` / ${item.carreta2}`}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-slate-900">
+                                  {item.condutor || "NÃO INFORMADO"}
+                                </td>
+                                <td className="px-4 py-3 font-medium text-slate-700">
+                                  {item.transportador || "NÃO INFORMADO"}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-[#B32025]">
+                                  {item.destino || "NÃO INFORMADO"}
+                                </td>
+                                <td className="px-4 py-3 font-mono font-black text-emerald-700">
+                                  {item.valorNf || "---"}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleImportPlacaItem(item)}
+                                    className="px-3 py-1.5 bg-[#B32025] hover:bg-red-700 text-white rounded-xl text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                                  >
+                                    <span>Importar</span>
+                                    <ArrowRight size={12} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="bg-[#F8FAFC] border-2 border-dashed border-[#CBD5E1] rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center">
-                    <Truck size={24} />
+                /* Empty State */
+                <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 text-[#B32025] flex items-center justify-center shadow-md">
+                    <Truck size={32} />
                   </div>
-                  <h3 className="text-sm font-black uppercase text-[#1E293B] tracking-wider">
-                    Nenhum veículo carregado no momento
-                  </h3>
-                  <p className="text-xs text-[#64748B] max-w-md">
-                    Copie as linhas da planilha com as colunas <strong>TRANSPORTADOR, CONDUTOR, CAVALO, CARRETA e DESTINO</strong> e cole no campo acima, ou clique em <strong>"Carregar Exemplo"</strong> para testar.
-                  </p>
+                  <div className="max-w-md">
+                    <h3 className="text-base font-black uppercase text-slate-900 tracking-wider">
+                      Nenhuma viagem carregada no momento
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Copie as linhas da sua planilha Google Sheets ou Excel com as colunas de frotas e cole no campo acima, ou clique abaixo para testar com uma carga real.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPlacasPastedData(SAMPLE_PLACAS_SHEET_DATA)}
+                    className="px-4 py-2.5 bg-[#B32025] hover:bg-red-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+                  >
+                    <Sparkles size={14} />
+                    <span>Carregar Carga de Exemplo de Santa Luzia</span>
+                  </button>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* TAB CONTENT: Unidades */}
+        {/* TAB CONTENT: Unidades (CUIABÁ / MT) */}
         {activeTab === "unidades" && (
           <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
-            <div className="bg-white rounded-[2rem] border border-[#D1E1EB] shadow-md p-6 sm:p-8 flex flex-col gap-6">
-              {/* Header info */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-[#E2E8F0] gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="bg-blue-700 text-white p-3 rounded-2xl shadow-md border border-blue-900">
-                    <Package size={24} className="stroke-[2.5]" />
+            {/* Main Station Cockpit */}
+            <div className="bg-white rounded-3xl border border-[#D1E1EB] shadow-lg p-6 sm:p-8 flex flex-col gap-6 relative overflow-hidden">
+              {/* Decorative top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-700 via-indigo-600 to-amber-500" />
+
+              {/* Station Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#E2E8F0]">
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 text-white p-3.5 shadow-md shadow-blue-900/30 flex items-center justify-center shrink-0 border border-blue-900">
+                    <Compass size={28} className="stroke-[2.5]" />
                   </div>
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight flex items-center gap-2">
-                      Cuiaba - Importador de Embarque
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-300">
+                        Terminal de Embarques
+                      </span>
+                      <span className="text-xs font-mono font-bold text-slate-400">
+                        CUIABÁ / MT
+                      </span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E293B] uppercase tracking-tight mt-1 flex items-center gap-2">
+                      Processador de Embarques & Iscas
                     </h2>
-                    <p className="text-xs text-[#64748B] font-medium mt-0.5">
-                      Copie e cole as informações do embarque recebidas da unidade para preencher automaticamente o Gerador PGR e criar o Pré-Alerta.
+                    <p className="text-xs text-[#64748B] font-medium mt-0.5 max-w-2xl">
+                      Recepção de mensagens operacionais da Unidade Cuiabá com extração automatizada das 5 colunas de iscas e despacho direto ao Pré-Alerta PGR.
                     </p>
                   </div>
                 </div>
@@ -2672,178 +2984,327 @@ Embarque: ${
                   <button
                     type="button"
                     onClick={() => setUnidadesPastedText(SAMPLE_UNIDADES_TEXT)}
-                    className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                    title="Carrega os dados de exemplo da mensagem recebida"
+                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                    title="Carrega a mensagem exemplo recebida da unidade Cuiabá"
                   >
                     <Sparkles size={14} className="text-blue-600" />
-                    Carregar Exemplo (Imagem Anexa)
+                    <span>Carregar Ficha Real Cuiabá</span>
                   </button>
                   {unidadesPastedText && (
                     <button
                       type="button"
                       onClick={() => setUnidadesPastedText("")}
-                      className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
                     >
                       <Trash2 size={14} />
-                      Limpar
+                      <span>Limpar</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Banner explaining the 5 required columns */}
-              <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-inner">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-blue-600/30 border border-blue-500/40 rounded-xl text-blue-300">
-                    <Layers size={18} />
+              {/* 5-Column Pipeline Architecture Banner */}
+              <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-inner flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-blue-600/30 border border-blue-500/40 rounded-xl text-blue-300 shrink-0">
+                    <Layers size={20} />
                   </div>
                   <div>
-                    <span className="text-xs font-black uppercase tracking-wider text-blue-300 block">
-                      Estrutura das Colunas Recomendada
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 block">
+                      Pipeline Operacional Obrigatório
                     </span>
-                    <span className="text-xs font-mono font-bold text-slate-200">
-                      Placa da Carreta &nbsp;➔&nbsp; Número da Isca &nbsp;➔&nbsp; Produto &nbsp;➔&nbsp; U.M.A &nbsp;➔&nbsp; NF
-                    </span>
+                    <h4 className="text-sm font-extrabold text-white">
+                      Protocolo das 5 Colunas de Iscas & Carga
+                    </h4>
                   </div>
                 </div>
-                <div className="text-[11px] text-slate-400 font-medium">
-                  Suporta separação por hífen (-), tabulação ou vírgulas.
+
+                {/* Steps sequence */}
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+                  <span className="bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-200">
+                    1. Placa Carreta
+                  </span>
+                  <span className="text-blue-400 font-bold">➔</span>
+                  <span className="bg-red-950/80 border border-red-800/80 text-red-300 px-2.5 py-1 rounded-lg">
+                    2. Número Isca
+                  </span>
+                  <span className="text-blue-400 font-bold">➔</span>
+                  <span className="bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-200">
+                    3. Produto & Esquema
+                  </span>
+                  <span className="text-blue-400 font-bold">➔</span>
+                  <span className="bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-200">
+                    4. U.M.A
+                  </span>
+                  <span className="text-blue-400 font-bold">➔</span>
+                  <span className="bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2.5 py-1 rounded-lg">
+                    5. Nota Fiscal
+                  </span>
                 </div>
               </div>
 
-              {/* Paste Area */}
-              <div className="flex flex-col gap-3">
-                <label className="text-xs font-black uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
-                  <FileText size={16} className="text-blue-600" />
-                  Cole aqui o texto do embarque recebido da Unidade (Ctrl + V):
-                </label>
-                <textarea
-                  value={unidadesPastedText}
-                  onChange={(e) => setUnidadesPastedText(e.target.value)}
-                  placeholder={`Cole aqui as informações da Unidade...\n\nSiga a ordem das colunas:\nPlaca da Carreta - Número da Isca - Produto - U.M.A - NF\n\nExemplo 1:\nRBV2C89 - R100001239 - LADO DIREITO SUPERIOR BATIDO - 12211016 - 305124\n\nExemplo 2:\nData do embarque: 02/09/2026\nPlaca do cavalo: RFX9E81\nPlaca do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR - BATIDO\nNF : 305124\nDestino: CAMPO GRANDE - MS\nTransportadora: Ledfran\nMotorista: Diego Pereira`}
-                  className="w-full h-48 bg-[#F8FAFC] border-2 border-[#CBD5E1] focus:border-blue-600 rounded-2xl p-4 text-xs font-mono text-[#0F172A] outline-none transition-all placeholder:text-slate-400 focus:bg-white shadow-inner resize-y leading-relaxed"
-                />
-              </div>
-
-              {/* Live Preview of Parsed Data */}
-              {parsedUnidades.cavalo || parsedUnidades.carretas.length > 0 || parsedUnidades.destino || parsedUnidades.motorista ? (
-                <div className="bg-blue-50/60 border-2 border-blue-200 rounded-2xl p-5 flex flex-col gap-4 animate-fade-in">
-                  <div className="flex items-center justify-between border-b border-blue-200/80 pb-3">
-                    <span className="text-xs font-black uppercase text-blue-950 tracking-wider flex items-center gap-1.5">
-                      <CheckCircle2 size={16} className="text-blue-600" />
-                      Dados Identificados nas Colunas
-                    </span>
-                    <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
-                      Pronto para importar
-                    </span>
-                  </div>
-
-                  {/* Summary Badges Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Placa Cavalo</span>
-                      <span className="font-mono font-black text-sm text-blue-950">
-                        {parsedUnidades.cavalo || "Não especificado"}
-                      </span>
+              {/* Dual-Pane Split Workspace */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* LEFT PANE: Input Console (5 cols) */}
+                <div className="lg:col-span-5 flex flex-col gap-4">
+                  <div className="bg-slate-50 border-2 border-slate-200 rounded-3xl p-5 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                        <FileText size={16} className="text-blue-600" />
+                        Mensagem da Unidade Cuiabá:
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePasteClipboardUnidades}
+                        className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
+                      >
+                        <ClipboardPaste size={12} className="text-blue-600" />
+                        <span>Colar WhatsApp</span>
+                      </button>
                     </div>
 
-                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Motorista</span>
-                      <span className="font-bold text-xs text-blue-950 truncate">
-                        {parsedUnidades.motorista || "Não especificado"}
+                    <textarea
+                      value={unidadesPastedText}
+                      onChange={(e) => setUnidadesPastedText(e.target.value)}
+                      placeholder={`Cole a mensagem enviada pelo time de Cuiabá...\n\nExemplo estruturado das 5 colunas:\nRBV2C89 - R100001239 - LADO DIREITO SUPERIOR BATIDO - 12211016 - 305124\n\nOu dados completos:\nData do embarque: 02/09/2026\nPlaca do cavalo: RFX9E81\nPlaca do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR\nNF : 305124\nDestino: CAMPO GRANDE - MS\nMotorista: Diego Pereira\nTransportadora: Ledfran`}
+                      className="w-full h-72 bg-white border-2 border-slate-300 focus:border-blue-600 rounded-2xl p-4 text-xs font-mono text-slate-900 outline-none transition-all placeholder:text-slate-400 shadow-inner resize-y leading-relaxed"
+                    />
+
+                    {/* Live Parser Diagnostic Checklist */}
+                    <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                        <span>Diagnóstico do Parser em Tempo Real:</span>
+                        <span className="text-blue-600 font-bold">Auto-Sync</span>
                       </span>
-                    </div>
-
-                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Transportadora</span>
-                      <span className="font-bold text-xs text-blue-950 truncate">
-                        {parsedUnidades.transportadora || "Não especificada"}
-                      </span>
-                    </div>
-
-                    <div className="bg-white border border-blue-200 p-3 rounded-xl flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Destino</span>
-                      <span className="font-bold text-xs text-blue-950 truncate">
-                        {parsedUnidades.destino || "Não especificado"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Carretas List with 5 Columns explicitly labeled */}
-                  {parsedUnidades.carretas.length > 0 && (
-                    <div className="flex flex-col gap-2 pt-1">
-                      <span className="text-[11px] font-black uppercase text-blue-950 tracking-wider flex items-center justify-between">
-                        <span>Carretas / Baús Identificados ({parsedUnidades.carretas.length}):</span>
-                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded">
-                          Mapeamento automático das 5 colunas
-                        </span>
-                      </span>
-                      <div className="grid grid-cols-1 gap-3">
-                        {parsedUnidades.carretas.map((cr, idx) => (
-                          <div key={idx} className="bg-white border-2 border-blue-200 p-4 rounded-xl flex flex-col gap-3 shadow-2xs">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                              <span className="bg-blue-900 text-white font-mono font-black text-xs px-2.5 py-1 rounded-lg uppercase flex items-center gap-1.5">
-                                <Truck size={14} />
-                                Carreta {idx + 1}: {cr.carreta || "S/ Placa"}
-                              </span>
-                              <span className="text-[11px] font-black text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg">
-                                NF: <span className="font-mono text-blue-700">{cr.nf || "---"}</span>
-                              </span>
-                            </div>
-
-                            {/* 5 Columns Display Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
-                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block">1. Placa Carreta</span>
-                                <span className="font-mono font-black text-slate-900 text-xs">{cr.carreta || "---"}</span>
-                              </div>
-
-                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block">2. Número da Isca</span>
-                                <span className="font-mono font-black text-red-600 text-xs">{cr.isca || "---"}</span>
-                              </div>
-
-                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block">3. Produto</span>
-                                <span className="font-bold text-slate-900 text-xs truncate block" title={cr.produto}>
-                                  {cr.produto || "---"}
-                                </span>
-                              </div>
-
-                              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block">4. U.M.A</span>
-                                <span className="font-mono font-black text-blue-900 text-xs">{cr.uma || "---"}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.cavalo ? "text-emerald-600 font-bold" : "text-slate-400"}>
+                            {parsedUnidades.cavalo ? "✓" : "○"}
+                          </span>
+                          <span className="text-slate-600 truncate">
+                            Cavalo: <strong className="text-slate-900 font-mono">{parsedUnidades.cavalo || "Pendente"}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.motorista ? "text-emerald-600 font-bold" : "text-slate-400"}>
+                            {parsedUnidades.motorista ? "✓" : "○"}
+                          </span>
+                          <span className="text-slate-600 truncate">
+                            Condutor: <strong className="text-slate-900">{parsedUnidades.motorista || "Pendente"}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.destino ? "text-emerald-600 font-bold" : "text-slate-400"}>
+                            {parsedUnidades.destino ? "✓" : "○"}
+                          </span>
+                          <span className="text-slate-600 truncate">
+                            Destino: <strong className="text-slate-900">{parsedUnidades.destino || "Pendente"}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.carretas.length > 0 ? "text-emerald-600 font-bold" : "text-slate-400"}>
+                            {parsedUnidades.carretas.length > 0 ? "✓" : "○"}
+                          </span>
+                          <span className="text-slate-600 truncate">
+                            Carretas: <strong className="text-blue-700 font-mono">{parsedUnidades.carretas.length} Baú(s)</strong>
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  )}
-
-                  {/* Import Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleImportUnidadeData(parsedUnidades)}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-98 mt-2"
-                  >
-                    <Send size={16} />
-                    <span>IMPORTAR PARA GERADOR PGR E CRIAR PRÉ-ALERTA COMPLETO</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-[#F8FAFC] border-2 border-dashed border-[#CBD5E1] rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
-                    <Package size={24} />
                   </div>
-                  <h3 className="text-sm font-black uppercase text-[#1E293B] tracking-wider">
-                    Aguardando colagem de dados da Unidade
-                  </h3>
-                  <p className="text-xs text-[#64748B] max-w-md">
-                    Cole as informações da mensagem da unidade na caixa acima ou clique em <strong>"Carregar Exemplo (Imagem Anexa)"</strong> para testar a extração automática.
-                  </p>
                 </div>
-              )}
+
+                {/* RIGHT PANE: Dispatch Cockpit & Live Preview (7 cols) */}
+                <div className="lg:col-span-7 flex flex-col gap-4">
+                  {parsedUnidades.cavalo || parsedUnidades.carretas.length > 0 || parsedUnidades.destino || parsedUnidades.motorista ? (
+                    <div className="bg-blue-50/40 border-2 border-blue-200 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 animate-fade-in">
+                      {/* Cockpit Header */}
+                      <div className="flex items-center justify-between border-b border-blue-200 pb-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <h3 className="text-xs font-black uppercase tracking-wider text-blue-950">
+                            Dados Reconhecidos & Prontos para o PGR
+                          </h3>
+                        </div>
+                        <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white shadow-xs">
+                          Origem: CUIABÁ / MT
+                        </span>
+                      </div>
+
+                      {/* General Vehicle & Driver HUD */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase">
+                            Placa Cavalo
+                          </span>
+                          <span className="font-mono font-black text-sm text-slate-900">
+                            {parsedUnidades.cavalo || "S/ Placa"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase">
+                            Motorista
+                          </span>
+                          <span className="font-bold text-xs text-slate-900 truncate">
+                            {parsedUnidades.motorista || "Não especificado"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase">
+                            Transportadora
+                          </span>
+                          <span className="font-bold text-xs text-slate-900 truncate">
+                            {parsedUnidades.transportadora || "Não especificada"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase">
+                            Destino Final
+                          </span>
+                          <span className="font-bold text-xs text-[#B32025] truncate">
+                            {parsedUnidades.destino || "Não especificado"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 5-Columns Trailer Cards */}
+                      {parsedUnidades.carretas.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                              <Truck size={14} className="text-blue-600" />
+                              Carretas & Mapeamento de Iscas ({parsedUnidades.carretas.length}):
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
+                              5 Colunas Validadas
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col gap-3">
+                            {parsedUnidades.carretas.map((cr, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-white border-2 border-blue-200/90 rounded-2xl p-4 flex flex-col gap-3 shadow-xs hover:border-blue-500 transition-colors"
+                              >
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-slate-900 text-white font-mono font-black text-xs px-2.5 py-1 rounded-lg uppercase flex items-center gap-1.5 shadow-xs">
+                                      <Truck size={13} className="text-blue-400" />
+                                      Carreta {idx + 1}: {cr.carreta || "S/ Placa"}
+                                    </span>
+                                    {cr.esquema && (
+                                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300">
+                                        {cr.esquema}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[11px] font-black text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
+                                      NF: <span className="font-mono text-blue-700">{cr.nf || "---"}</span>
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* 4 Quadrants Grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                  {/* Col 1: Placa */}
+                                  <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+                                    <span className="text-[9px] font-extrabold uppercase text-slate-400 block">
+                                      1. Placa
+                                    </span>
+                                    <span className="font-mono font-black text-slate-900 text-xs mt-0.5 block">
+                                      {cr.carreta || "---"}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 2: Isca */}
+                                  <div className="bg-red-50/70 border border-red-200 p-2.5 rounded-xl relative group">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[9px] font-extrabold uppercase text-red-700 block">
+                                        2. Isca PGR
+                                      </span>
+                                      {cr.isca && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopySingleIsca(`cr-${idx}`, cr.isca)}
+                                          className="text-[9px] text-red-700 hover:text-red-900 cursor-pointer font-bold"
+                                          title="Copiar isca"
+                                        >
+                                          {copiedIscaKey === `cr-${idx}` ? "✓" : <Copy size={11} />}
+                                        </button>
+                                      )}
+                                    </div>
+                                    <span className="font-mono font-black text-red-700 text-xs mt-0.5 block truncate">
+                                      {cr.isca || "---"}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 3: Produto */}
+                                  <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+                                    <span className="text-[9px] font-extrabold uppercase text-slate-400 block">
+                                      3. Produto
+                                    </span>
+                                    <span className="font-bold text-slate-900 text-xs mt-0.5 block truncate" title={cr.produto}>
+                                      {cr.produto || "---"}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 4: UMA */}
+                                  <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+                                    <span className="text-[9px] font-extrabold uppercase text-slate-400 block">
+                                      4. U.M.A
+                                    </span>
+                                    <span className="font-mono font-black text-blue-900 text-xs mt-0.5 block truncate">
+                                      {cr.uma || "---"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Primary Dispatch Action */}
+                      <button
+                        type="button"
+                        onClick={() => handleImportUnidadeData(parsedUnidades)}
+                        className="w-full py-4 bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-blue-900/20 cursor-pointer active:scale-98 mt-2"
+                      >
+                        <Send size={16} />
+                        <span>ENVIAR DADOS PARA O GERADOR PGR & GERAR PRÉ-ALERTA COMPLETO</span>
+                      </button>
+                    </div>
+                  ) : (
+                    /* Empty state for Cuiabá */
+                    <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4 h-full min-h-[360px]">
+                      <div className="w-16 h-16 rounded-2xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center shadow-md">
+                        <Compass size={32} />
+                      </div>
+                      <div className="max-w-md">
+                        <h3 className="text-base font-black uppercase text-slate-900 tracking-wider">
+                          Aguardando mensagem da Unidade Cuiabá
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                          Cole as informações do embarque recebidas da unidade na caixa à esquerda ou clique abaixo para carregar um exemplo real já formatado com as 5 colunas.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUnidadesPastedText(SAMPLE_UNIDADES_TEXT)}
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+                      >
+                        <Sparkles size={14} />
+                        <span>Testar com Ficha Real de Cuiabá</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
