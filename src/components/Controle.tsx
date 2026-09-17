@@ -820,6 +820,8 @@ export default function Controle({ onBack }: ControleProps) {
 
   // PRE ALERTA GR Column View Mode: 'normal' (padrão), 'minimized' (recolhido), 'maximized' (largura total)
   const [preAlertaMode, setPreAlertaMode] = useState<"normal" | "minimized" | "maximized">("normal");
+  // Zoom state for Formulário de Controle and Veículo & Carga when preAlertaMode === 'minimized'
+  const [colunasZoom, setColunasZoom] = useState<number>(1.15);
 
   // --- UNIDADES TAB STATE ---
   const [unidadesPastedText, setUnidadesPastedText] = useState("");
@@ -2960,25 +2962,50 @@ Embarque: ${
 
           {/* Informational Callout when Minimized */}
           {preAlertaMode === "minimized" && (
-            <div className="mt-4 pt-4 border-t border-[#3A2414]/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#FAF6F0] p-4 rounded-2xl border border-[#3A2414]/15">
+            <div className="mt-4 pt-4 border-t border-[#3A2414]/10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 bg-[#FAF6F0] p-4 rounded-2xl border border-[#3A2414]/15">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center shrink-0">
                   <Info size={16} />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-[#3A2414] uppercase">
-                    Coluna PRE ALERTA GR Minimizada
-                  </p>
-                  <p className="text-[11px] text-[#3A2414]/70">
-                    O <strong>Gerador corporativo de pré-alerta e iscas</strong> e o <strong>Assunto do E-mail (Copiar separadamente)</strong> estão recolhidos para priorizar os formulários de preenchimento.
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-black text-[#3A2414] uppercase">
+                      Coluna PRE ALERTA GR Minimizada
+                    </p>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
+                      Zoom Ativo: {Math.round(colunasZoom * 100)}%
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#3A2414]/70 mt-0.5">
+                    O <strong>Gerador corporativo de pré-alerta e iscas</strong> está recolhido e o <strong>Zoom das colunas Formulário de Controle e Veículo & Carga</strong> foi aumentado automaticamente.
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
+                {/* Zoom presets */}
+                <div className="flex items-center gap-1 bg-white border border-[#D1E1EB] px-2 py-1 rounded-xl text-[10px] font-black shadow-sm">
+                  <span className="text-[#64748B] uppercase text-[9px] mr-0.5">Zoom:</span>
+                  {[1.05, 1.10, 1.15, 1.20, 1.25].map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setColunasZoom(level)}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer active:scale-95",
+                        colunasZoom === level
+                          ? "bg-[#3A2414] text-white shadow-xs"
+                          : "text-[#1E293B] hover:bg-slate-100"
+                      )}
+                    >
+                      {Math.round(level * 100)}%
+                    </button>
+                  ))}
+                </div>
+
                 <button
                   type="button"
                   onClick={handleCopySubject}
-                  className="px-3.5 py-2 bg-white border border-[#D1E1EB] hover:bg-slate-50 text-[#1E293B] rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+                  className="px-3 py-1.5 bg-white border border-[#D1E1EB] hover:bg-slate-50 text-[#1E293B] rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
                 >
                   {copiedAssunto ? <Check size={13} className="text-emerald-600 stroke-[3]" /> : <Copy size={13} />}
                   <span>Copiar Assunto</span>
@@ -2986,7 +3013,7 @@ Embarque: ${
                 <button
                   type="button"
                   onClick={() => setPreAlertaMode("normal")}
-                  className="px-4 py-2 bg-[#3A2414] hover:bg-[#25160c] text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+                  className="px-3.5 py-1.5 bg-[#3A2414] hover:bg-[#25160c] text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
                 >
                   <Maximize2 size={13} />
                   <span>Maximizar Coluna</span>
@@ -3946,25 +3973,64 @@ Embarque: ${
       </div>
 
       {/* MIDDLE SIDEBAR: Fast Fill Column (fixed width) */}
-      <div className="col-span-1 xl:col-span-1 flex flex-col">
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden flex flex-col p-5 sm:p-6">
+      <div
+        className={cn(
+          "col-span-1 xl:col-span-1 flex flex-col transition-all duration-300",
+          preAlertaMode === "minimized" && "origin-top"
+        )}
+        style={preAlertaMode === "minimized" ? { zoom: colunasZoom } : undefined}
+      >
+        <div className={cn(
+          "rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden flex flex-col p-5 sm:p-6 transition-all",
+          preAlertaMode === "minimized" && "border-amber-400/50 shadow-xl ring-1 ring-amber-400/20"
+        )}>
           {/* Form Header */}
           <div className="border-b border-slate-200 pb-4 mb-5">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block">
-              Painel Lateral
-            </span>
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-sans font-extrabold text-slate-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block">
+                Painel Lateral
+              </span>
+              {preAlertaMode === "minimized" && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                  Zoom {Math.round(colunasZoom * 100)}%
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <h3 className="text-base font-sans font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
                 <Sliders size={18} className={isGreenOrigem ? "text-emerald-600" : isPurpleOrigem ? "text-purple-700" : isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Formulário de Controle
               </h3>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                title="Limpar formulário"
-              >
-                <Trash2 size={16} />
-              </button>
+              <div className="flex items-center gap-1.5">
+                {preAlertaMode === "minimized" && (
+                  <div className="flex items-center bg-slate-100 border border-slate-300 rounded-lg p-0.5 text-[10px] font-black shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => setColunasZoom((z) => Math.max(1.0, parseFloat((z - 0.05).toFixed(2))))}
+                      title="Diminuir Zoom"
+                      className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-slate-700 active:scale-95 transition-colors cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <span className="px-1.5 font-mono text-slate-800">{Math.round(colunasZoom * 100)}%</span>
+                    <button
+                      type="button"
+                      onClick={() => setColunasZoom((z) => Math.min(1.35, parseFloat((z + 0.05).toFixed(2))))}
+                      title="Aumentar Zoom"
+                      className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-slate-700 active:scale-95 transition-colors cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                  title="Limpar formulário"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -4531,26 +4597,65 @@ Embarque: ${
       </div>
 
       {/* RIGHT SIDEBAR: Vehicle & Cargo Column (fixed width) */}
-      <div className="col-span-1 xl:col-span-1 flex flex-col">
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden flex flex-col p-5 sm:p-6">
+      <div
+        className={cn(
+          "col-span-1 xl:col-span-1 flex flex-col transition-all duration-300",
+          preAlertaMode === "minimized" && "origin-top"
+        )}
+        style={preAlertaMode === "minimized" ? { zoom: colunasZoom } : undefined}
+      >
+        <div className={cn(
+          "rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden flex flex-col p-5 sm:p-6 transition-all",
+          preAlertaMode === "minimized" && "border-amber-400/50 shadow-xl ring-1 ring-amber-400/20"
+        )}>
           {/* Form Header */}
           <div className="border-b border-slate-200 pb-4 mb-5 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block">
-                Painel de Viagem
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block">
+                  Painel de Viagem
+                </span>
+                {preAlertaMode === "minimized" && (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                    Zoom {Math.round(colunasZoom * 100)}%
+                  </span>
+                )}
+              </div>
               <h3 className="text-base font-sans font-extrabold text-slate-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
                 <Truck size={18} className="text-red-600" /> Veículo & Carga
               </h3>
             </div>
-            <button
-              type="button"
-              onClick={handleClearVeiculo}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-              title="Limpar formulário de Veículo & Carga"
-            >
-              <Trash2 size={16} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {preAlertaMode === "minimized" && (
+                <div className="flex items-center bg-slate-100 border border-slate-300 rounded-lg p-0.5 text-[10px] font-black shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setColunasZoom((z) => Math.max(1.0, parseFloat((z - 0.05).toFixed(2))))}
+                    title="Diminuir Zoom"
+                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-slate-700 active:scale-95 transition-colors cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="px-1.5 font-mono text-slate-800">{Math.round(colunasZoom * 100)}%</span>
+                  <button
+                    type="button"
+                    onClick={() => setColunasZoom((z) => Math.min(1.35, parseFloat((z + 0.05).toFixed(2))))}
+                    title="Aumentar Zoom"
+                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-slate-700 active:scale-95 transition-colors cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleClearVeiculo}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                title="Limpar formulário de Veículo & Carga"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Form inputs */}
