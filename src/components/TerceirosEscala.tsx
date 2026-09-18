@@ -149,6 +149,101 @@ const formatPlate = (p?: string): string => {
   return p.toUpperCase().trim();
 };
 
+// Formatar placa SEM hífen para cópia na planilha (Ex: SEV-5A39 -> SEV5A39, POG-7735 -> POG7735)
+export const formatPlateWithoutHyphen = (p?: string): string => {
+  if (!p) return '';
+  return p.replace(/-/g, '').replace(/[^A-Z0-9\/\s]/gi, '').trim().toUpperCase();
+};
+
+// Interface do Documento 3C
+export interface Documento3C {
+  transportador: string;
+  dataCarregamento: string;
+  horarioCarregamento: string;
+  origem: string;
+  ufOrigem: string;
+  destino: string;
+  ufDestino: string;
+  motorista: string;
+  cpf: string;
+  rg: string;
+  registroCnh: string;
+  id3c: string;
+  cargo: string;
+  perfilCavalo: string;
+  perfilCarreta: string;
+  capacidadePallets: string;
+  capacidadeToneladas: string;
+  placaCavalo: string;
+  ufPlacaCavalo: string;
+  placaCarreta1: string;
+  ufPlacaCarreta1: string;
+  placaCarreta2: string;
+  ufPlacaCarreta2: string;
+  rastreador: string;
+  quantidadeEixos: string;
+  comprimentoCarreta: string;
+  larguraCarreta: string;
+  alturaCarreta: string;
+  vinculo: string;
+  celular: string;
+}
+
+// Normalizador de texto para comparação segura sem acentos
+export const normalizeText = (text: string): string => {
+  if (!text) return '';
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Mapa de sinônimos/aliases para cada campo da Ordem de Serviço 3C
+export const FIELD_MAP: Record<keyof Documento3C, string[]> = {
+  transportador: ['TRANSPORTADOR', 'TRANSPORTADORA', 'EMPRESA', 'TRANSP', 'TRANSPORTES'],
+  dataCarregamento: ['DATA DE CARREGAMENTO', 'DATA CARREGAMENTO', 'DATA DO CARREGAMENTO', 'DATA'],
+  horarioCarregamento: [
+    'PREVISAO DA CHEGADA NA FILIAL DE ORIGEM (HORARIO)',
+    'PREVISAO DA CHEGADA NA FILIAL DE ORIGEM',
+    'PREVISÃO DA CHEGADA NA FILIAL DE ORIGEM (HORÁRIO)',
+    'PREVISÃO DA CHEGADA NA FILIAL DE ORIGEM',
+    'PREVISAO DA CHEGADA',
+    'PREVISÃO DA CHEGADA',
+    'HORARIO',
+    'HORÁRIO',
+    'HORA'
+  ],
+  origem: ['FILIAL DE ORIGEM', 'FILIAL ORIGEM', 'ORIGEM', 'CIDADE ORIGEM', 'UNIDADE ORIGEM'],
+  ufOrigem: ['UF ORIGEM', 'UF FILIAL ORIGEM', 'ESTADO ORIGEM', 'UF'],
+  destino: ['FILIAL DE DESTINO', 'FILIAL DESTINO', 'DESTINO', 'CIDADE DESTINO', 'UNIDADE DESTINO'],
+  ufDestino: ['UF DESTINO', 'UF FILIAL DESTINO', 'ESTADO DESTINO'],
+  motorista: ['NOME', 'NOME DO MOTORISTA', 'MOTORISTA', 'CONDUTOR', 'NOME COMPLETO'],
+  cpf: ['CPF', 'CPF DO MOTORISTA'],
+  rg: ['RG', 'IDENTIDADE', 'RG SAP', 'SAP'],
+  registroCnh: ['N° DO REGISTRO CNH', 'N° DO REGISTRO', 'N DO REGISTRO CNH', 'NUMERO REGISTRO CNH', 'REGISTRO CNH', 'CNH', 'REGISTRO'],
+  id3c: ['ID 3 CARGO', 'ID 3C', 'ID CARGO', 'ID DA CARGA', 'ID CARGA'],
+  cargo: ['CARGO', 'FUNCAO', 'FUNÇÃO'],
+  perfilCavalo: ['PERFIL DO CAVALO', 'PERFIL CAVALO', 'TIPO CAVALO', 'MODELO CAVALO'],
+  perfilCarreta: ['PERFIL CARRETA', 'PERFIL DA CARRETA', 'TIPO CARRETA', 'MODELO CARRETA'],
+  capacidadePallets: ['CAPACIDADE PALLETS', 'CAPACIDADE PALLET', 'PALLETS', 'PALETS', 'CAPACIDADE'],
+  capacidadeToneladas: ['CAPACIDADE TONELADAS', 'CAPACIDADE TONELADA', 'TONELADAS', 'TON', 'PESO'],
+  placaCavalo: ['PLACA CAVALO', 'PLACA DO CAVALO', 'CAVALO'],
+  ufPlacaCavalo: ['UF PLACA CAVALO', 'UF CAVALO'],
+  placaCarreta1: ['PLACA CARRETA 1', 'PLACA DA CARRETA 1', 'PLACA CARRETA', 'CARRETA 1', 'CARRETA'],
+  ufPlacaCarreta1: ['UF PLACA CARRETA 1', 'UF CARRETA 1', 'UF CARRETA'],
+  placaCarreta2: ['PLACA CARRETA 2', 'PLACA DA CARRETA 2', 'CARRETA 2'],
+  ufPlacaCarreta2: ['UF PLACA CARRETA 2', 'UF CARRETA 2'],
+  rastreador: ['RASTREADOR', 'TECNOLOGIA', 'SISTEMA RASTREADOR'],
+  quantidadeEixos: ['QUANT DE EIXOS (CAVALO + CARRETA)', 'QUANT DE EIXOS', 'QUANTIDADE DE EIXOS', 'EIXOS'],
+  comprimentoCarreta: ['COMPRIMENTO CARRETA', 'COMPRIMENTO'],
+  larguraCarreta: ['LARGURA CARRETA', 'LARGURA'],
+  alturaCarreta: ['ALTURA CARRETA', 'ALTURA'],
+  vinculo: ['VINCULO MOTORISTA', 'VÍNCULO MOTORISTA', 'VINCULO', 'VÍNCULO'],
+  celular: ['CELULAR', 'TELEFONE', 'TEL', 'WHATSAPP', 'FONE']
+};
+
 export default function TerceirosEscala({
   apoliceItems = [],
   transportadoras = DEFAULT_TRANSPORTADORAS,
@@ -247,134 +342,357 @@ export default function TerceirosEscala({
     return result.value || '';
   };
 
+  // Helper de formatação estrita de data DD/MM/YYYY
+  const formatDateStrict = (rawDate: string): string => {
+    if (!rawDate) return '';
+    const clean = rawDate.replace(/\./g, '/').trim();
+    const match = clean.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/);
+    if (match) {
+      const day = match[1].padStart(2, '0');
+      const month = match[2].padStart(2, '0');
+      let year = match[3];
+      if (year.length === 2) year = `20${year}`;
+      return `${day}/${month}/${year}`;
+    }
+    return rawDate;
+  };
+
+  // Helper de formatação estrita de horário HH:MM
+  const formatTimeStrict = (rawTime: string): string => {
+    if (!rawTime) return '08:00';
+    const match = rawTime.match(/\b(\d{1,2}):(\d{2})\b/);
+    if (match) {
+      const hours = match[1].padStart(2, '0');
+      const minutes = match[2];
+      return `${hours}:${minutes}`;
+    }
+    return rawTime.trim();
+  };
+
+  // Parser semântico estruturado para Ordem de Serviço 3C
+  const parse3CDocument = (rawText: string): Documento3C => {
+    const doc: Documento3C = {
+      transportador: '',
+      dataCarregamento: '',
+      horarioCarregamento: '',
+      origem: '',
+      ufOrigem: '',
+      destino: '',
+      ufDestino: '',
+      motorista: '',
+      cpf: '',
+      rg: '',
+      registroCnh: '',
+      id3c: '',
+      cargo: '',
+      perfilCavalo: '',
+      perfilCarreta: '',
+      capacidadePallets: '',
+      capacidadeToneladas: '',
+      placaCavalo: '',
+      ufPlacaCavalo: '',
+      placaCarreta1: '',
+      ufPlacaCarreta1: '',
+      placaCarreta2: '',
+      ufPlacaCarreta2: '',
+      rastreador: '',
+      quantidadeEixos: '',
+      comprimentoCarreta: '',
+      larguraCarreta: '',
+      alturaCarreta: '',
+      vinculo: '',
+      celular: ''
+    };
+
+    const cleanOneLine = rawText.replace(/\s+/g, ' ').trim();
+
+    // 1. Mapeamento por Chave-Valor (se presente no formato CAMPO: VALOR)
+    for (const [fieldKey, aliases] of Object.entries(FIELD_MAP)) {
+      for (const alias of aliases) {
+        const escapedAlias = alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const kvRegex = new RegExp(`(?:^|\\b)${escapedAlias}\\s*[:\\-]\\s*([^\\r\\n]+)`, 'i');
+        const match = rawText.match(kvRegex);
+        if (match && match[1]) {
+          const val = match[1].trim();
+          if (val && !doc[fieldKey as keyof Documento3C]) {
+            doc[fieldKey as keyof Documento3C] = val;
+          }
+        }
+      }
+    }
+
+    // 2. Extração de Data
+    if (!doc.dataCarregamento) {
+      const dateMatch = cleanOneLine.match(/\b(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})\b/);
+      if (dateMatch) {
+        doc.dataCarregamento = formatDateStrict(dateMatch[1]);
+      }
+    } else {
+      doc.dataCarregamento = formatDateStrict(doc.dataCarregamento);
+    }
+
+    // 3. Extração de Horário
+    if (!doc.horarioCarregamento) {
+      const timeMatch = cleanOneLine.match(/(?:HORA|HORÁRIO|PREVISÃO|PREVISAO)[\s\:\-]+(\d{1,2}\:\d{2}(?:\:\d{2})?)/i) ||
+        cleanOneLine.match(/\b(\d{1,2}\:\d{2})\b/);
+      if (timeMatch) {
+        doc.horarioCarregamento = formatTimeStrict(timeMatch[1]);
+      } else {
+        doc.horarioCarregamento = '08:00';
+      }
+    } else {
+      doc.horarioCarregamento = formatTimeStrict(doc.horarioCarregamento);
+    }
+
+    // 4. Extração de Placas e UFs
+    const plateRegex = /\b([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}[- ]?[0-9]{4})\b/gi;
+    const foundPlates = Array.from(new Set(cleanOneLine.match(plateRegex) || [])).map(p => formatPlateWithoutHyphen(p));
+
+    if (!doc.placaCavalo && foundPlates.length > 0) {
+      doc.placaCavalo = foundPlates[0];
+    }
+    if (!doc.placaCarreta1 && foundPlates.length > 1) {
+      doc.placaCarreta1 = foundPlates[1];
+    }
+    if (!doc.placaCarreta2 && foundPlates.length > 2) {
+      doc.placaCarreta2 = foundPlates[2];
+    }
+
+    // Extrair UFs de Placas se não definidas
+    const ufMatches = Array.from(cleanOneLine.matchAll(/\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/g)).map(m => m[1]);
+    if (!doc.ufPlacaCavalo) {
+      const cavaloUfMatch = cleanOneLine.match(new RegExp(`${doc.placaCavalo}\\s+([A-Z]{2})`, 'i'));
+      doc.ufPlacaCavalo = cavaloUfMatch ? cavaloUfMatch[1].toUpperCase() : (ufMatches[2] || 'SC');
+    }
+    if (!doc.ufPlacaCarreta1) {
+      const car1UfMatch = cleanOneLine.match(new RegExp(`${doc.placaCarreta1}\\s+([A-Z]{2})`, 'i'));
+      doc.ufPlacaCarreta1 = car1UfMatch ? car1UfMatch[1].toUpperCase() : (ufMatches[3] || doc.ufPlacaCavalo || 'SC');
+    }
+
+    // 5. CPF (Tratar rigorosamente como string sem parseInt/Number)
+    if (!doc.cpf) {
+      const cpfMatch = cleanOneLine.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\b\d{11}\b)/);
+      if (cpfMatch) {
+        doc.cpf = cpfMatch[1].replace(/[^0-9]/g, '');
+      }
+    } else {
+      doc.cpf = doc.cpf.replace(/[^0-9]/g, '');
+    }
+
+    // 6. CNH / Registro CNH (Tratar rigorosamente como string)
+    if (!doc.registroCnh) {
+      const cnhWithLabel = cleanOneLine.match(/(?:CNH|REGISTRO CNH|REGISTRO|N[°º]?\s*DO REGISTRO(?:\s*CNH)?)[\s\:\-]+(\d{9,11})/i);
+      if (cnhWithLabel && cnhWithLabel[1]) {
+        doc.registroCnh = cnhWithLabel[1].replace(/[^0-9]/g, '');
+      } else {
+        const potentialCnhs = cleanOneLine.match(/\b(0\d{10}|\d{11})\b/g);
+        if (potentialCnhs && potentialCnhs.length > 0) {
+          const distinct = potentialCnhs.find(c => c.replace(/[^0-9]/g, '') !== doc.cpf);
+          if (distinct) doc.registroCnh = distinct.replace(/[^0-9]/g, '');
+        }
+      }
+    } else {
+      doc.registroCnh = doc.registroCnh.replace(/[^0-9]/g, '');
+    }
+
+    // 7. RG (Tratar rigorosamente como string)
+    if (!doc.rg) {
+      const rgMatch = cleanOneLine.match(/(?:RG|IDENTIDADE|SAP)[\s\:\-]+([A-Z0-9\.\-\/\s]{5,15})/i) ||
+        cleanOneLine.match(/\b([A-Z]\d{6,8}[A-Z]?|MG\d{6,9}|\d{7,10})\b/i);
+      if (rgMatch) {
+        doc.rg = rgMatch[1].trim();
+      }
+    }
+
+    // 8. Motorista / Condutor
+    if (!doc.motorista) {
+      const driverMatch = cleanOneLine.match(/(?:MOTORISTA|CONDUTOR|NOME DO MOTORISTA|NOME)[\s\:\-]+([A-ZÁÉÍÓÚÃÕÂÊÔÇ\s]{4,40})/i);
+      if (driverMatch) {
+        doc.motorista = driverMatch[1].replace(/\b(CPF|RG|CNH|PLACA|CARRETA|CAVALO|TEL|CELULAR|VINCULO|FROTA)\b.*/i, '').trim().toUpperCase();
+      } else if (doc.cpf) {
+        const beforeCpfMatch = cleanOneLine.match(new RegExp(`([A-ZÁÉÍÓÚÃÕÂÊÔÇ\\s]{5,40})\\s+${doc.cpf}`));
+        if (beforeCpfMatch) {
+          doc.motorista = beforeCpfMatch[1].replace(/.*(?:SP|MG|RJ|PR|SC|RS|BA|GO|ES|DF)\s+/i, '').trim().toUpperCase();
+        }
+      }
+    }
+
+    // 9. Transportador
+    if (!doc.transportador) {
+      const transpMatch = cleanOneLine.match(/(?:TRANSPORTADOR|TRANSPORTADORA|EMPRESA|TRANSP|TRANSPORTES)[\s\:\-]+([A-Z0-9\s\.\/\-\&]{3,40})/i);
+      const rawTransp = transpMatch ? transpMatch[1].replace(/\b(DATA|HORA|PLACA|MOTORISTA|CONDUTOR|DESTINO|CAVALO|CARRETA|CPF|CNH|RG|TEL|ORIGEM|STATUS)\b.*/i, '').trim() : cleanOneLine;
+      const matched = findClosestTransportador(rawTransp, transportadoras);
+      doc.transportador = matched.matchedName;
+    } else {
+      const matched = findClosestTransportador(doc.transportador, transportadoras);
+      doc.transportador = matched.matchedName;
+    }
+
+    // 10. Origem e UF Origem
+    if (!doc.origem) {
+      const origMatch = cleanOneLine.match(/(?:FILIAL DE ORIGEM|FILIAL ORIGEM|ORIGEM)[\s\:\-]+([A-ZÁÉÍÓÚÃÕÂÊÔÇ\s]{3,30})/i);
+      if (origMatch) {
+        doc.origem = origMatch[1].replace(/\b(MG|SP|RJ|PR|SC|RS|BA|GO|FILIAL|DESTINO|DATA)\b.*/i, '').trim().toUpperCase();
+      } else if (/SANTA LUZIA/i.test(cleanOneLine)) {
+        doc.origem = 'SANTA LUZIA';
+      } else {
+        doc.origem = 'SANTA LUZIA';
+      }
+    }
+    if (!doc.ufOrigem) {
+      const origUfMatch = cleanOneLine.match(/SANTA LUZIA\s+([A-Z]{2})/i) || cleanOneLine.match(/FILIAL DE ORIGEM[\s\S]*?([A-Z]{2})\s+FILIAL/i);
+      doc.ufOrigem = origUfMatch ? origUfMatch[1].toUpperCase() : 'MG';
+    }
+
+    // 11. Destino e UF Destino
+    if (!doc.destino) {
+      const destMatch = cleanOneLine.match(/(?:FILIAL DE DESTINO|FILIAL DESTINO|DESTINO)[\s\:\-]+([A-ZÁÉÍÓÚÃÕÂÊÔÇ\s]{3,30})/i);
+      if (destMatch) {
+        doc.destino = destMatch[1].replace(/\b(SP|MG|RJ|PR|SC|RS|BA|GO|AGENDA|DATA|HORA)\b.*/i, '').trim().toUpperCase();
+      } else if (/GUARULHOS/i.test(cleanOneLine)) {
+        doc.destino = 'GUARULHOS';
+      } else {
+        doc.destino = 'LONDRINA';
+      }
+    }
+    if (!doc.ufDestino) {
+      const destUfMatch = cleanOneLine.match(/GUARULHOS\s+([A-Z]{2})/i) || cleanOneLine.match(/FILIAL DE DESTINO[\s\S]*?([A-Z]{2})/i);
+      doc.ufDestino = destUfMatch ? destUfMatch[1].toUpperCase() : 'SP';
+    }
+
+    // 12. Modelos Cavalo e Carreta
+    if (!doc.perfilCarreta) {
+      if (/RODOTREM/i.test(cleanOneLine)) {
+        doc.perfilCarreta = /SIDER/i.test(cleanOneLine) ? 'RODOTREM SIDER' : 'RODOTREM BAÚ';
+      } else if (/SIDER/i.test(cleanOneLine)) {
+        doc.perfilCarreta = 'SIDER';
+      } else {
+        doc.perfilCarreta = 'BAÚ';
+      }
+    }
+    if (!doc.perfilCavalo) {
+      if (/TOCO/i.test(cleanOneLine)) doc.perfilCavalo = 'TOCO';
+      else if (/6X2|6X4|TRUCADO/i.test(cleanOneLine)) doc.perfilCavalo = 'TRUCADO';
+      else doc.perfilCavalo = 'TRUCADO';
+    }
+
+    // 13. Capacidades (Pallets e Toneladas)
+    if (!doc.capacidadePallets) {
+      const pMatch = cleanOneLine.match(/(\d{1,2})\s*(?:PALLETS|PALETS|PLT)/i) || cleanOneLine.match(/CAPACIDADE PALLETS\s*(\d{1,2})/i);
+      if (pMatch) doc.capacidadePallets = pMatch[1];
+      else {
+        const numPairMatch = cleanOneLine.match(/(?:BAU|BAÚ|SIDER)\s+(\d{1,2})\s+(\d{1,2})/i);
+        if (numPairMatch) {
+          doc.capacidadePallets = numPairMatch[1];
+          doc.capacidadeToneladas = numPairMatch[2];
+        } else {
+          doc.capacidadePallets = '28';
+        }
+      }
+    }
+    if (!doc.capacidadeToneladas) {
+      const tMatch = cleanOneLine.match(/(\d{1,2}(?:[\.,]\d{1,2})?)\s*(?:TON|TONELADAS|PESO)/i) || cleanOneLine.match(/CAPACIDADE TONELADAS\s*(\d{1,2})/i);
+      if (tMatch) doc.capacidadeToneladas = tMatch[1];
+      else doc.capacidadeToneladas = '30';
+    }
+
+    // 14. Rastreador / Tecnologia
+    if (!doc.rastreador) {
+      const rastrMatch = cleanOneLine.match(/(?:RASTREADOR|TECNOLOGIA)[\s\:\-]+([A-Z0-9\s]{3,20})/i) ||
+        cleanOneLine.match(/\b(SIGHRA|AUTOTRAC|OMNILINK|ONIXSAT|SASCAR|POSIGEO|KRONA|SASI)\b/i);
+      if (rastrMatch) doc.rastreador = (rastrMatch[1] || rastrMatch[0]).trim().toUpperCase();
+      else doc.rastreador = 'SIGHRA';
+    }
+
+    // 15. Quantidade de Eixos
+    if (!doc.quantidadeEixos) {
+      const eixosMatch = cleanOneLine.match(/(?:QUANT(?:IDADE)? DE EIXOS|EIXOS)[\s\:\-]+([0-9\s\+]+)/i) ||
+        cleanOneLine.match(/\b(\d{2}\s*\+\s*\d{1,2}|\d{1,2}\s*\+\s*\d{1,2})\b/);
+      if (eixosMatch) doc.quantidadeEixos = eixosMatch[1].trim();
+      else doc.quantidadeEixos = '04 + 1';
+    }
+
+    // 16. Celular / Telefone (Tratar rigorosamente como string)
+    if (!doc.celular) {
+      const celMatch = cleanOneLine.match(/(?:CELULAR|TELEFONE|TEL|WHATSAPP)[\s\:\-]+([0-9\s\(\)\-]{8,20})/i) ||
+        cleanOneLine.match(/\b(9\d{7,8}|\d{2}\s*9?\d{8}|04\s*1\s*9\d{7})\b/i);
+      if (celMatch) {
+        doc.celular = celMatch[1] ? celMatch[1].replace(/[^0-9]/g, '') : celMatch[0].replace(/[^0-9]/g, '');
+        if (doc.celular.startsWith('041') && doc.celular.length === 11) {
+          doc.celular = doc.celular.slice(3);
+        }
+      }
+    } else {
+      doc.celular = doc.celular.replace(/[^0-9]/g, '');
+    }
+
+    // 17. Vínculo
+    if (!doc.vinculo) {
+      const vincMatch = cleanOneLine.match(/(?:VINCULO MOTORISTA|VÍNCULO MOTORISTA|VINCULO|VÍNCULO)[\s\:\-]+([A-Z\/\s]{3,20})/i);
+      if (vincMatch) doc.vinculo = vincMatch[1].trim().toUpperCase();
+      else if (/FROTA/i.test(cleanOneLine)) doc.vinculo = 'FROTA';
+      else doc.vinculo = 'TERCEIRO';
+    }
+
+    return doc;
+  };
+
   // Parser de dados do documento extraído no Frontend
   const parseDocumentTextToDispoRows = (text: string): DispoRow[] => {
-    const cleanText = text.replace(/\s+/g, ' ');
+    const doc = parse3CDocument(text);
 
-    // 1. Data e Hora
-    const dateMatch = cleanText.match(/(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})/);
-    const dataStr = dateMatch ? dateMatch[1].replace(/\./g, '/') : new Date().toLocaleDateString('pt-BR');
-    const timeMatch = cleanText.match(/(?:HORA|HORÁRIO|PREVISÃO|PREVISAO)[\s\:\-]+(\d{1,2}\:\d{2}(?:\:\d{2})?)/i) ||
-      cleanText.match(/(\d{2}\:\d{2}(?:\:\d{2})?)/);
-    const horaVal = timeMatch ? (timeMatch[1].length === 5 ? `${timeMatch[1]}:00` : timeMatch[1]) : '08:00:00';
-
-    // 2. Placas
-    const plateRegex = /\b([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})\b/gi;
-    const foundPlates = Array.from(new Set(cleanText.match(plateRegex) || [])).map(p => formatPlateWithHyphen(p));
-
-    const cavaloPlaca = foundPlates[0] || '';
-    const carreta1Placa = foundPlates[1] || '';
-    const carreta2Placa = foundPlates[2] || '';
-
-    // 3. Documentos e Contatos
-    const cpfMatch = cleanText.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\b\d{11}\b)/);
-    const cpf = cpfMatch ? cpfMatch[1] : '';
-
-    const cnhMatch = cleanText.match(/(?:CNH|REGISTRO CNH|REGISTRO)[\s\:\-]+(\d{9,11})/i);
-    const cnh = cnhMatch ? cnhMatch[1] : '';
-
-    const rgMatch = cleanText.match(/(?:RG|IDENTIDADE|SAP)[\s\:\-]+([A-Z0-9\.\-\/\s]{5,15})/i);
-    const rgSap = rgMatch ? rgMatch[1].trim() : '';
-
-    const telMatch = cleanText.match(/(?:TEL|TELEFONE|CEL|CELULAR|WHATSAPP)[\s\:\-]+(?:\(?\d{2}\)?\s*)?(?:9\s*)?\d{4}[-\s]?\d{4}/i) ||
-      cleanText.match(/\(?\d{2}\)?\s*9?\d{4}[-\s]?\d{4}/);
-    const telefone = telMatch ? telMatch[0].trim() : '';
-
-    // 4. Motorista / Condutor
-    let conductor = '';
-    const driverMatch = cleanText.match(/(?:MOTORISTA|CONDUTOR|NOME DO MOTORISTA)[\s\:\-]+([A-ZÁÉÍÓÚÃÕÂÊÔÇ\s]{4,40})/i);
-    if (driverMatch) {
-      conductor = driverMatch[1].replace(/\b(CPF|RG|CNH|PLACA|CARRETA|CAVALO|TEL|CELULAR)\b.*/i, '').trim().toUpperCase();
-    }
-
-    // 5. Transportador - Analisa a correspondência mais próxima
-    let rawTransportadorFound = '';
-    const transpMatch = cleanText.match(/(?:TRANSPORTADOR|TRANSPORTADORA|EMPRESA|TRANSP|TRANSPORTES)[\s\:\-]+([A-Z0-9\s\.\/\-\&]{3,40})/i);
-    if (transpMatch) {
-      rawTransportadorFound = transpMatch[1].replace(/\b(DATA|HORA|PLACA|MOTORISTA|CONDUTOR|DESTINO|CAVALO|CARRETA|CPF|CNH|RG|TEL|ORIGEM|STATUS)\b.*/i, '').trim();
-    } else {
-      rawTransportadorFound = cleanText;
-    }
-
-    const matchResult = findClosestTransportador(rawTransportadorFound, transportadoras);
-    const transportador = matchResult.matchedName;
-
-    // 6. Destino
-    let destino = 'LONDRINA';
-    const destMatch = cleanText.match(/(?:DESTINO|FILIAL DESTINO|CIDADE DESTINO)[\s\:\-]+([A-ZÁÉÍÓÚÃÕÂÊÔÇ\s\|\-]+)/i);
-    if (destMatch) {
-      const rawDest = destMatch[1].replace(/\b(DATA|HORA|PLACA|MOTORISTA|TRANSPORTADOR)\b.*/i, '').trim();
-      destino = normalizeDestino(rawDest);
-    }
-
-    // 7. Modelos
-    let modeloCarreta = 'BAÚ';
-    if (/RODOTREM/i.test(cleanText)) {
-      modeloCarreta = /SIDER/i.test(cleanText) ? 'RODOTREM SIDER' : 'RODOTREM BAÚ';
-    } else if (/SIDER/i.test(cleanText)) {
-      modeloCarreta = 'SIDER';
-    }
-
-    let modeloCavalo = 'TRUCADO';
-    if (/TOCO/i.test(cleanText)) modeloCavalo = 'TOCO';
-    else if (/6X2|6X4|CAVALO TRUCADO/i.test(cleanText)) modeloCavalo = 'TRUCADO';
-
-    // 8. Capacidades
-    const palletsMatch = cleanText.match(/(\d{1,2})\s*(?:PALLETS|PALETS|PLT)/i);
-    const tonMatch = cleanText.match(/(\d{1,2}(?:[\.,]\d{1,2})?)\s*(?:TON|TONELADAS|PESO)/i);
-    const pallets = palletsMatch ? palletsMatch[1] : (modeloCarreta.includes('RODOTREM') ? '30' : '28');
-    const ton = tonMatch ? tonMatch[1] : (modeloCarreta.includes('RODOTREM') ? '30' : '28');
-
-    // 9. Checklist
-    let chkDetails = { checkList: '', pendencia: '' };
-    if (getChecklistDetails && cavaloPlaca) {
-      chkDetails = getChecklistDetails(cavaloPlaca, carreta1Placa);
-    }
-
+    const dataStr = doc.dataCarregamento || new Date().toLocaleDateString('pt-BR');
     const mes = getMonthAbbrev(dataStr);
     const dia = getDayOfWeek(dataStr);
     const now = new Date();
     const horaAtual = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-    // STATUS RIGOROSO: "REALIZAR IMPRESSÃO"
     const EXACT_STATUS = 'REALIZAR IMPRESSÃO';
+    const origemFormatted = doc.origem ? `${doc.origem}|${doc.ufOrigem || 'MG'}` : 'SANTA LUZIA|MG';
+    const destinoFormatted = normalizeDestino(doc.destino || 'LONDRINA');
 
-    if (carreta1Placa && carreta2Placa) {
-      const halfP = String(Math.round(parseInt(pallets, 10) / 2) || 15);
-      const halfT = String(Math.round(parseFloat(ton) / 2) || 15);
+    let chkDetails = { checkList: '', pendencia: '' };
+    if (getChecklistDetails && doc.placaCavalo) {
+      chkDetails = getChecklistDetails(doc.placaCavalo, doc.placaCarreta1);
+    }
+
+    // Caso possua 2 carretas (Bitrem / Rodotrem)
+    if (doc.placaCarreta1 && doc.placaCarreta2) {
+      const halfP = String(Math.round(parseInt(doc.capacidadePallets || '30', 10) / 2) || 15);
+      const halfT = String(Math.round(parseFloat(doc.capacidadeToneladas || '30') / 2) || 15);
 
       const row1: DispoRow = {
         id: `terceiro-${Date.now()}-1`,
         mes,
-        origem: 'SANTA LUZIA|MG',
+        origem: origemFormatted,
         dia,
         data: dataStr,
-        contatoWhats: horaVal,
+        contatoWhats: doc.horarioCarregamento || '08:00',
         horaLiberado: horaAtual,
         status: EXACT_STATUS,
-        modeloCarreta,
-        modeloCavalo,
+        modeloCarreta: doc.perfilCarreta || 'RODOTREM BAÚ',
+        modeloCavalo: doc.perfilCavalo || 'TRUCADO',
         fezContato: 'SIM',
-        destino: destino.toUpperCase(),
-        transportador,
-        cavalo: cavaloPlaca,
-        carreta: carreta1Placa,
+        destino: destinoFormatted,
+        transportador: doc.transportador,
+        cavalo: formatPlateWithoutHyphen(doc.placaCavalo),
+        carreta: formatPlateWithoutHyphen(doc.placaCarreta1),
         pallets: halfP,
         ton: halfT,
         m3: '95 m³',
         categoria: 'TERCEIRO',
-        tecnologia: 'SIGHRA',
-        conductor,
-        cpf,
-        rgSap,
-        cnh,
-        telefone,
+        tecnologia: doc.rastreador || 'SIGHRA',
+        conductor: doc.motorista,
+        cpf: doc.cpf,
+        rgSap: doc.rg,
+        cnh: doc.registroCnh,
+        telefone: doc.celular,
         vigenciaCadastro: 'TERCEIRO',
-        codigoTransportadora: '100000496',
+        codigoTransportadora: doc.id3c || '100000496',
         idCarga: '',
-        estadoMotorista: 'MG',
-        estadoCavalo: 'MG',
-        estadoCarreta: 'MG',
+        estadoMotorista: doc.ufOrigem || 'MG',
+        estadoCavalo: doc.ufPlacaCavalo || 'SC',
+        estadoCarreta: doc.ufPlacaCarreta1 || 'SC',
         pendencia: chkDetails.pendencia,
         checkList: chkDetails.checkList
       };
@@ -382,7 +700,8 @@ export default function TerceirosEscala({
       const row2: DispoRow = {
         ...row1,
         id: `terceiro-${Date.now()}-2`,
-        carreta: carreta2Placa,
+        carreta: formatPlateWithoutHyphen(doc.placaCarreta2),
+        estadoCarreta: doc.ufPlacaCarreta2 || doc.ufPlacaCarreta1 || 'SC',
         pallets: halfP,
         ton: halfT
       };
@@ -390,38 +709,39 @@ export default function TerceirosEscala({
       return [row1, row2];
     }
 
+    // Carreta Única (Padrão 3C)
     const singleRow: DispoRow = {
       id: `terceiro-${Date.now()}-1`,
       mes,
-      origem: 'SANTA LUZIA|MG',
+      origem: origemFormatted,
       dia,
       data: dataStr,
-      contatoWhats: horaVal,
+      contatoWhats: doc.horarioCarregamento || '08:00',
       horaLiberado: horaAtual,
       status: EXACT_STATUS,
-      modeloCarreta,
-      modeloCavalo,
+      modeloCarreta: doc.perfilCarreta || 'BAÚ',
+      modeloCavalo: doc.perfilCavalo || 'TRUCADO',
       fezContato: 'SIM',
-      destino: destino.toUpperCase(),
-      transportador,
-      cavalo: cavaloPlaca,
-      carreta: carreta1Placa,
-      pallets,
-      ton,
+      destino: destinoFormatted,
+      transportador: doc.transportador,
+      cavalo: formatPlateWithoutHyphen(doc.placaCavalo),
+      carreta: formatPlateWithoutHyphen(doc.placaCarreta1),
+      pallets: doc.capacidadePallets || '28',
+      ton: doc.capacidadeToneladas || '30',
       m3: '90 m³',
       categoria: 'TERCEIRO',
-      tecnologia: 'SIGHRA',
-      conductor,
-      cpf,
-      rgSap,
-      cnh,
-      telefone,
+      tecnologia: doc.rastreador || 'SIGHRA',
+      conductor: doc.motorista,
+      cpf: doc.cpf,
+      rgSap: doc.rg,
+      cnh: doc.registroCnh,
+      telefone: doc.celular,
       vigenciaCadastro: 'TERCEIRO',
-      codigoTransportadora: '100000496',
+      codigoTransportadora: doc.id3c || '100000496',
       idCarga: '',
-      estadoMotorista: 'MG',
-      estadoCavalo: 'MG',
-      estadoCarreta: 'MG',
+      estadoMotorista: doc.ufOrigem || 'MG',
+      estadoCavalo: doc.ufPlacaCavalo || 'SC',
+      estadoCarreta: doc.ufPlacaCarreta1 || 'SC',
       pendencia: chkDetails.pendencia,
       checkList: chkDetails.checkList
     };
@@ -484,54 +804,82 @@ export default function TerceirosEscala({
     }
   };
 
-  // Copiar dados para a planilha (TSV limpo para colar no app ou Excel)
+  // Helper to generate EXACT 33-column TSV line for spreadsheet export
+  const getRowTSV = (r: DispoRow): string => {
+    const cols: string[] = [
+      r.mes ?? '',                                       // 1 (A)
+      r.origem ?? '',                                    // 2 (B)
+      r.dia ?? '',                                       // 3 (C)
+      r.data ?? '',                                      // 4 (D)
+      r.contatoWhats ?? '',                              // 5 (E)
+      r.horaLiberado ?? '',                              // 6 (F)
+      r.status || 'REALIZAR IMPRESSÃO',                  // 7 (G)
+      r.modeloCarreta ?? '',                             // 8 (H)
+      r.modeloCavalo ?? '',                              // 9 (I)
+      r.fezContato || 'SIM',                             // 10 (J)
+      r.destino ?? '',                                   // 11 (K)
+      r.transportador ?? '',                             // 12 (L)
+      formatPlateWithoutHyphen(r.cavalo),                // 13 (M) - Cavalo SEM hífen
+      formatPlateWithoutHyphen(r.carreta),               // 14 (N) - Carreta SEM hífen
+      r.pallets ?? '',                                   // 15 (O)
+      r.ton ?? '',                                       // 16 (P)
+      r.m3 ?? '',                                        // 17 (Q)
+      r.categoria || 'TERCEIRO',                         // 18 (R)
+      r.tecnologia ?? '',                                // 19 (S)
+      r.conductor ?? '',                                 // 20 (T)
+      r.cpf ?? '',                                       // 21 (U)
+      r.rgSap ?? '',                                     // 22 (V)
+      r.cnh ?? '',                                       // 23 (W)
+      r.telefone ?? '',                                  // 24 (X)
+      r.vigenciaCadastro || 'TERCEIRO',                  // 25 (Y)
+      r.codigoTransportadora || '100000496',             // 26 (Z)
+      r.idCarga ?? '',                                   // 27 (AA)
+      r.estadoMotorista ?? '',                           // 28 (AB)
+      r.estadoCavalo ?? '',                              // 29 (AC)
+      r.estadoCarreta ?? '',                             // 30 (AD)
+      '',                                                // 31 (AE - Vazio obrigatório)
+      r.pendencia ?? '',                                 // 32 (AF)
+      r.checkList ?? ''                                  // 33 (AG)
+    ];
+
+    return cols.join('\t');
+  };
+
+  // Copiar dados para a planilha (TSV estruturado em 33 colunas com placas sem hífen)
   const handleCopyTableToClipboard = async () => {
     if (filteredRows.length === 0) return;
 
-    const tsvLines = filteredRows.map(r => [
-      r.mes,
-      r.origem,
-      r.dia,
-      r.data,
-      r.contatoWhats,
-      r.horaLiberado,
-      r.status, // Garante o valor exato "REALIZAR IMPRESSÃO"
-      r.modeloCarreta,
-      r.modeloCavalo,
-      r.fezContato,
-      r.destino,
-      r.transportador,
-      r.cavalo,
-      r.carreta,
-      r.pallets,
-      r.ton,
-      r.m3,
-      r.categoria,
-      r.tecnologia,
-      r.conductor,
-      r.cpf,
-      r.rgSap,
-      r.cnh,
-      r.telefone,
-      r.vigenciaCadastro,
-      r.codigoTransportadora,
-      r.idCarga,
-      r.estadoMotorista,
-      r.estadoCavalo,
-      r.estadoCarreta,
-      '',
-      r.pendencia || '',
-      r.checkList || ''
-    ].join('\t'));
-
-    const fullTSV = tsvLines.join('\n');
+    const tsvLines = filteredRows.map(r => getRowTSV(r));
+    const fullTSV = tsvLines.join('\r\n');
 
     try {
       await navigator.clipboard.writeText(fullTSV);
       setCopiedStatus(true);
+      setNotification({
+        show: true,
+        message: `${filteredRows.length} linha(s) de Terceiros copiada(s) com placas sem hífen (Ex: SEV5A39)!`,
+        type: 'success'
+      });
       setTimeout(() => setCopiedStatus(false), 3000);
+      setTimeout(() => setNotification({ show: false, message: '' }), 4000);
     } catch (err) {
       console.error('Erro ao copiar dados:', err);
+    }
+  };
+
+  // Copiar linha individual (com placas sem hífen)
+  const handleCopySingleRow = async (row: DispoRow) => {
+    const line = getRowTSV(row);
+    try {
+      await navigator.clipboard.writeText(line);
+      setNotification({
+        show: true,
+        message: `Linha de "${row.conductor || 'Terceiro'}" (${formatPlateWithoutHyphen(row.cavalo) || 'Sem Placa'}) copiada com placas sem hífen!`,
+        type: 'success'
+      });
+      setTimeout(() => setNotification({ show: false, message: '' }), 3500);
+    } catch (err) {
+      console.error('Erro ao copiar linha:', err);
     }
   };
 
@@ -552,8 +900,8 @@ export default function TerceirosEscala({
       'FEZ CONTATO': r.fezContato,
       'DESTINO': r.destino,
       'TRANSPORTADOR': r.transportador,
-      'CAVALO': r.cavalo,
-      'CARRETA': r.carreta,
+      'CAVALO': formatPlateWithoutHyphen(r.cavalo),
+      'CARRETA': formatPlateWithoutHyphen(r.carreta),
       'Nº PALLETS': r.pallets,
       'TON': r.ton,
       'M³': r.m3,
@@ -1350,6 +1698,14 @@ export default function TerceirosEscala({
                           {/* Actions */}
                           <td className="py-2 px-3 text-right pr-4 align-middle">
                             <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleCopySingleRow(row)}
+                                className="p-1 text-stone-400 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                                title="Copiar linha sem hífen nas placas (Ex: SEV5A39)"
+                              >
+                                <Copy size={13} />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(row)}

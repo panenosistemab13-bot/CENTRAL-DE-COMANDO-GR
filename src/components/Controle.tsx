@@ -911,12 +911,12 @@ export default function Controle({ onBack }: ControleProps) {
 
   const FRASE_RESGATE_PADRAO = "FAVOR SE ATENTAR AO RESGATE!";
   const FRASE_RESGATE_DESCARTAVEL =
-    "ESSE PRÉ-ALERTA É APENAS PARA CONTROLE E ACOMPANHAMENTO, POIS A ISCA É DESCARTÁVEL E NÃO NECESSITA DE DEVOLUÇÃO!";
+    "ESSE PRÉ-ALERTA É APENAS PARA CONTROLE E ACOMPANHAMENTO,\nPOIS A ISCA É DESCARTÁVEL E NÃO NECESSITA DE DEVOLUÇÃO!";
 
   const isPrefix30D1 = (prefix: string, fullNumber: string) => {
-    const p = (prefix || "").trim().toLowerCase();
-    const f = (fullNumber || "").trim().toLowerCase();
-    return p.startsWith("30d1") || f.startsWith("30d1");
+    const p = (prefix || "").trim().toUpperCase();
+    const f = (fullNumber || "").trim().toUpperCase();
+    return p === "30D10000" || p.startsWith("30D10000") || f.startsWith("30D10000");
   };
 
   const isDispositivoDescartavel = (
@@ -930,16 +930,6 @@ export default function Controle({ onBack }: ControleProps) {
     if (totalCarretas === 1) return d1;
     const d2 = f2 !== "SEM ISCA" && isPrefix30D1(p2, f2);
     return d1 || d2;
-  };
-
-  const isStandardAlertaResgate = (currentAlert: string) => {
-    if (!currentAlert || !currentAlert.trim()) return true;
-    const norm = currentAlert.trim().toLowerCase().replace(/!+$/, "");
-    const unaccented = norm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return (
-      unaccented === "favor se atentar ao resgate" ||
-      unaccented.includes("apenas para controle e acompanhamento, pois a isca e descartavel")
-    );
   };
 
   // State for all form fields
@@ -977,7 +967,7 @@ export default function Controle({ onBack }: ControleProps) {
     );
   }, [origem]);
   const [rota1, setRota1] = useState("");
-  const [instrucao1, setInstrucao1] = useState("* Favor, acusar o recebimento do pré-alerta;");
+  const [instrucao1, setInstrucao1] = useState("Favor, acusar o recebimento do pré-alerta;");
 
   // Table information (CCC.PNG layout)
   const [nfInicio, setNfInicio] = useState("");
@@ -1119,6 +1109,16 @@ export default function Controle({ onBack }: ControleProps) {
   const [iscaPrefix2, setIscaPrefix2] = useState("R10000");
   const [iscaSuffix1, setIscaSuffix1] = useState("2195");
   const [iscaSuffix2, setIscaSuffix2] = useState("3797");
+
+  const isDescartavel = useMemo(() => {
+    return isDispositivoDescartavel(
+      iscaPrefix1,
+      iscaPrefix2,
+      isca1,
+      isca2,
+      numCarretas
+    );
+  }, [iscaPrefix1, iscaPrefix2, isca1, isca2, numCarretas]);
 
   const [copied, setCopied] = useState(false);
   const [copiedAssunto, setCopiedAssunto] = useState(false);
@@ -1375,7 +1375,7 @@ export default function Controle({ onBack }: ControleProps) {
     if (val.startsWith(iscaPrefix1)) {
       setIscaSuffix1(val.substring(iscaPrefix1.length));
     } else {
-      const prefixes = ["R100000", "R10000", "30D10000", "30D1"];
+      const prefixes = ["R100000", "R10000", "30D10000"];
       const matched = prefixes.find((p) => val.startsWith(p));
       if (matched) {
         setIscaPrefix1(matched);
@@ -1391,7 +1391,7 @@ export default function Controle({ onBack }: ControleProps) {
     if (val.startsWith(iscaPrefix2)) {
       setIscaSuffix2(val.substring(iscaPrefix2.length));
     } else {
-      const prefixes = ["R100000", "R10000", "30D10000", "30D1"];
+      const prefixes = ["R100000", "R10000", "30D10000"];
       const matched = prefixes.find((p) => val.startsWith(p));
       if (matched) {
         setIscaPrefix2(matched);
@@ -1591,7 +1591,13 @@ export default function Controle({ onBack }: ControleProps) {
         if (data.infoAbaixo !== undefined) setInfoAbaixo(data.infoAbaixo);
         if (data.origem !== undefined) setOrigem(data.origem);
         if (data.rota1 !== undefined) setRota1(data.rota1);
-        if (data.instrucao1 !== undefined) setInstrucao1(data.instrucao1);
+        if (data.instrucao1 !== undefined) {
+          if (data.instrucao1 === "* Favor, acusar o recebimento do pré-alerta;") {
+            setInstrucao1("Favor, acusar o recebimento do pré-alerta;");
+          } else {
+            setInstrucao1(data.instrucao1);
+          }
+        }
         if (data.nfInicio !== undefined) setNfInicio(data.nfInicio);
         if (data.nfFim !== undefined) setNfFim(data.nfFim);
         if (data.transportadora !== undefined) setTransportadora(data.transportadora);
@@ -1726,7 +1732,7 @@ export default function Controle({ onBack }: ControleProps) {
     customTransportadoras,
   ]);
 
-  // Monitora e atualiza alertaResgate automaticamente para iscas descartáveis (iniciadas com 30d1)
+  // Monitora e atualiza alertaResgate automaticamente para iscas descartáveis (prefixo 30D10000)
   useEffect(() => {
     const descartavel = isDispositivoDescartavel(
       iscaPrefix1,
@@ -1736,23 +1742,11 @@ export default function Controle({ onBack }: ControleProps) {
       numCarretas
     );
     if (descartavel) {
-      if (
-        isStandardAlertaResgate(alertaResgate) &&
-        alertaResgate !== FRASE_RESGATE_DESCARTAVEL
-      ) {
+      if (alertaResgate !== FRASE_RESGATE_DESCARTAVEL) {
         setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
       }
     } else {
-      const norm = (alertaResgate || "")
-        .trim()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-      if (
-        norm.includes(
-          "apenas para controle e acompanhamento, pois a isca e descartavel"
-        )
-      ) {
+      if (alertaResgate === FRASE_RESGATE_DESCARTAVEL) {
         setAlertaResgate(FRASE_RESGATE_PADRAO);
       }
     }
@@ -1783,7 +1777,7 @@ export default function Controle({ onBack }: ControleProps) {
       setInfoAbaixo("Atentar às informações abaixo:");
       setOrigem("SANTA LUZIA/MG");
       setRota1("");
-      setInstrucao1("* Favor, acusar o recebimento do pré-alerta;");
+      setInstrucao1("Favor, acusar o recebimento do pré-alerta;");
       setNfInicio("");
       setNfFim("");
       setTransportadora("");
@@ -2148,8 +2142,8 @@ export default function Controle({ onBack }: ControleProps) {
         <p style="font-family: 'Segoe UI', Arial, sans-serif; font-weight: 700; color: #0F172A; font-size: 15px; margin-bottom: 16px; margin-top: 0; padding: 0;">${saudacao || "Boa tarde,"}</p>
         
         <!-- Alerta Resgate Corporate Banner -->
-        <div style="background-color: ${alertBg}; color: ${alertTextColor}; font-weight: 900; padding: 10px 18px; display: inline-block; margin-bottom: 20px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          ${alertaResgate || "FAVOR SE ATENTAR AO RESGATE!"}
+        <div style="background-color: ${alertBg}; color: ${alertTextColor}; font-weight: 900; padding: 10px 18px; display: inline-block; margin-bottom: 20px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 6px; line-height: 1.45; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          ${(alertaResgate || "FAVOR SE ATENTAR AO RESGATE!").replace(/\n/g, "<br>")}
         </div>
         
         <p style="font-weight: 800; font-size: 13px; margin-bottom: 14px; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px;">${infoAbaixo || "Atentar às informações abaixo:"}</p>
@@ -2333,6 +2327,10 @@ export default function Controle({ onBack }: ControleProps) {
         `
         }
 
+        ${
+          isDescartavel
+            ? ""
+            : `
         <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 25px 0; clear: both;">
 
         <!-- Rodapé Corporativo -->
@@ -2343,6 +2341,8 @@ export default function Controle({ onBack }: ControleProps) {
           <p style="font-size: 11px; color: #334155; margin: 0 0 6px 0; font-weight: 500; line-height: 1.5;">A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.</p>
           <p style="font-size: 11px; color: #334155; margin: 0; font-weight: 500; line-height: 1.5;">Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.</p>
         </div>
+        `
+        }
 
       </div>
     `;
@@ -2403,6 +2403,18 @@ Embarque: ${
         .filter(Boolean)
         .join(" / ")
     : "PALETIZADO (PADRÃO)"
+}
+${
+  isDescartavel
+    ? ""
+    : `
+-----------------------------------------------------------------------------------------------------------------
+GERENCIAMENTO DE RISCO:
+• Ressalto a importância de encaminhar todas as iscas resgatadas para suas respectivas unidades de origem.
+Agradeço antecipadamente pelo compromisso em assegurar que esses envios sejam efetuados via veículos dedicados ou postagem de maneira a evitar qualquer inconveniente em nossa operação.
+A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.
+Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.
+`
 }
     `;
 
@@ -3465,28 +3477,43 @@ Embarque: ${
 
                 {/* 2. Executive Alert Banner */}
                 <div className={cn(
-                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wider shadow-md flex items-center rounded-xl border-2 transition-all max-w-max ml-0",
+                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wide shadow-md inline-flex items-center rounded-lg transition-all max-w-max ml-0",
                   isGreenOrigem
                     ? "bg-emerald-600 text-white border-emerald-700/40"
                     : isPurpleOrigem
                       ? "bg-purple-700 text-white border-purple-800/40"
                       : isCuiabaOrigem
                         ? "bg-amber-500 text-slate-950 border-amber-600/40"
-                        : "bg-[#B32025] text-white border-[#3A2414]/30"
+                        : "bg-[#DC2626] text-white"
                 )}>
-                  <input
-                    type="text"
-                    value={alertaResgate}
-                    onChange={(e) => setAlertaResgate(e.target.value)}
-                    size={Math.max(28, alertaResgate.length + 1)}
-                    className={cn(
-                      "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all min-w-[280px] max-w-full",
-                      isCuiabaOrigem
-                        ? "text-slate-950 focus:ring-1 focus:ring-slate-950/40 hover:bg-black/10 placeholder:text-slate-800"
-                        : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
-                    )}
-                    placeholder="ALERTA RESGATE"
-                  />
+                  {alertaResgate.includes("\n") ? (
+                    <textarea
+                      rows={2}
+                      value={alertaResgate}
+                      onChange={(e) => setAlertaResgate(e.target.value)}
+                      className={cn(
+                        "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1 transition-all resize-none leading-snug tracking-wide w-[540px] max-w-full overflow-hidden",
+                        isCuiabaOrigem
+                          ? "text-slate-950 focus:ring-1 focus:ring-slate-950/40 hover:bg-black/10 placeholder:text-slate-800"
+                          : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
+                      )}
+                      placeholder="ALERTA RESGATE"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={alertaResgate}
+                      onChange={(e) => setAlertaResgate(e.target.value)}
+                      size={Math.max(28, alertaResgate.length + 1)}
+                      className={cn(
+                        "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all min-w-[280px] max-w-full tracking-wide",
+                        isCuiabaOrigem
+                          ? "text-slate-950 focus:ring-1 focus:ring-slate-950/40 hover:bg-black/10 placeholder:text-slate-800"
+                          : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
+                      )}
+                      placeholder="ALERTA RESGATE"
+                    />
+                  )}
                 </div>
 
                 {/* 3. Atentar às informações */}
@@ -3521,7 +3548,7 @@ Embarque: ${
                       value={instrucao1}
                       onChange={(e) => setInstrucao1(e.target.value)}
                       className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-[#3A2414]/5 focus:bg-[#3A2414]/10 rounded text-xs text-[#3A2414] transition-all"
-                      placeholder="· * Favor, acusar o recebimento do pré-alerta;"
+                      placeholder="· Favor, acusar o recebimento do pré-alerta;"
                     />
                   </div>
                   {!pastePlanilha.trim() && (
@@ -4307,6 +4334,27 @@ Embarque: ${
                     </p>
                   )}
                 </div>
+
+                {/* 7. GERENCIAMENTO DE RISCO (OCULTO AUTOMATICAMENTE QUANDO PREFIXO FOR 30D10000) */}
+                {!isDescartavel && (
+                  <div className="mt-6 bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-xl text-left shadow-2xs">
+                    <p className="text-[11px] font-black text-[#0F172A] mb-2 uppercase tracking-wide">
+                      GERENCIAMENTO DE RISCO
+                    </p>
+                    <p className="text-[11px] text-[#334155] mb-1.5 font-medium leading-relaxed">
+                      • Ressalto a importância de encaminhar todas as iscas resgatadas para suas respectivas unidades de origem.
+                    </p>
+                    <p className="text-[11px] text-[#334155] mb-1.5 font-medium leading-relaxed">
+                      Agradeço antecipadamente pelo compromisso em assegurar que esses envios sejam efetuados via veículos dedicados ou postagem de maneira a evitar qualquer inconveniente em nossa operação.
+                    </p>
+                    <p className="text-[11px] text-[#334155] mb-1.5 font-medium leading-relaxed">
+                      A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.
+                    </p>
+                    <p className="text-[11px] text-[#334155] font-medium leading-relaxed">
+                      Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -4667,7 +4715,6 @@ Embarque: ${
                         <option value="R100000">R100000</option>
                         <option value="R10000">R10000</option>
                         <option value="30D10000">30D10000</option>
-                        <option value="30D1">30D1</option>
                       </select>
                     </div>
                     <div>
@@ -4731,7 +4778,6 @@ Embarque: ${
                           <option value="R100000">R100000</option>
                           <option value="R10000">R10000</option>
                           <option value="30D10000">30D10000</option>
-                          <option value="30D1">30D1</option>
                         </select>
                       </div>
                       <div>
