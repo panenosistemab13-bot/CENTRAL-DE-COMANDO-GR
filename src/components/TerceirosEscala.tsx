@@ -533,7 +533,12 @@ export default function TerceirosEscala({
       file.name.toLowerCase().endsWith('.doc');
 
     if (!isPDF && !isDOCX) {
-      alert('Por favor, selecione um arquivo no formato PDF (.pdf) ou Word (.docx).');
+      setNotification({
+        show: true,
+        message: 'Por favor, selecione um arquivo no formato PDF (.pdf) ou Word (.docx).',
+        type: 'info'
+      });
+      setTimeout(() => setNotification({ show: false, message: '' }), 4000);
       return;
     }
 
@@ -566,7 +571,12 @@ export default function TerceirosEscala({
       setTimeout(() => setNotification({ show: false, message: '' }), 4000);
     } catch (error) {
       console.error('Erro ao processar arquivo no frontend:', error);
-      alert('Ocorreu um erro ao processar o arquivo diretamente no navegador.');
+      setNotification({
+        show: true,
+        message: 'Ocorreu um erro ao processar o arquivo diretamente no navegador.',
+        type: 'delete'
+      });
+      setTimeout(() => setNotification({ show: false, message: '' }), 4000);
     } finally {
       setIsProcessing(false);
       if (fileInputRef.current) {
@@ -584,7 +594,12 @@ export default function TerceirosEscala({
       const extractedRows = parseDocumentTextToDispoRows(pastedText);
 
       if (extractedRows.length === 0) {
-        alert('Não foi possível identificar registros no texto colado.');
+        setNotification({
+          show: true,
+          message: 'Não foi possível identificar registros no texto colado.',
+          type: 'info'
+        });
+        setTimeout(() => setNotification({ show: false, message: '' }), 4000);
         return;
       }
 
@@ -600,7 +615,12 @@ export default function TerceirosEscala({
       setTimeout(() => setNotification({ show: false, message: '' }), 4000);
     } catch (error) {
       console.error('Erro ao converter texto colado:', error);
-      alert('Erro ao processar o texto colado.');
+      setNotification({
+        show: true,
+        message: 'Erro ao processar o texto colado.',
+        type: 'delete'
+      });
+      setTimeout(() => setNotification({ show: false, message: '' }), 4000);
     } finally {
       setIsProcessing(false);
     }
@@ -706,9 +726,6 @@ export default function TerceirosEscala({
 
   // Exclusão individual
   const handleDeleteRow = (id: string, cavalo?: string) => {
-    if (!window.confirm(`Deseja remover o registro ${cavalo || ''} da lista de Terceiros?`)) {
-      return;
-    }
     saveRows(prev => prev.filter(r => r.id !== id));
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -726,9 +743,6 @@ export default function TerceirosEscala({
   // Exclusão em massa
   const handleDeleteSelected = () => {
     if (selectedIds.size === 0) return;
-    if (!window.confirm(`Tem certeza que deseja apagar os ${selectedIds.size} registros selecionados de Terceiros?`)) {
-      return;
-    }
     const count = selectedIds.size;
     saveRows(prev => prev.filter(r => !selectedIds.has(r.id)));
     setSelectedIds(new Set());
@@ -742,16 +756,15 @@ export default function TerceirosEscala({
 
   // Limpar todos os registros
   const handleClearAll = () => {
-    if (rows.length === 0) return;
-    if (!window.confirm(`Deseja realmente limpar TODOS os ${rows.length} registros importados de Terceiros?`)) {
-      return;
-    }
     saveRows([]);
     setSelectedIds(new Set());
     setUploadedFileName(null);
+    try {
+      localStorage.removeItem('terceiros_escala_rows');
+    } catch {}
     setNotification({
       show: true,
-      message: 'Todos os registros de Terceiros foram limpos.',
+      message: 'Todos os registros de Terceiros foram limpos com sucesso.',
       type: 'delete'
     });
     setTimeout(() => setNotification({ show: false, message: '' }), 3500);
