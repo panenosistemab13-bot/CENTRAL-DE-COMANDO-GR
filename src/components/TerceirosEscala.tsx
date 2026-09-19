@@ -261,23 +261,111 @@ export default function TerceirosEscala({
 
   // Parser de dados do documento extraído no Frontend
   const parseDocumentTextToDispoRows = (text: string): DispoRow[] => {
-    const cleanText = text.replace(/\s+/g, ' ');
-
     // (E) "DATA" e (D) "DIA" SEMPRE com o dia/data atual em que o usuário cola/importa
     const now = new Date();
     const dataStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
     const daysOfWeek = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
     const diaStr = daysOfWeek[now.getDay()] || 'sexta-feira';
     const mesStr = getCurrentMonthAbbrev(dataStr);
+    const horaAtual = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const EXACT_STATUS = 'AGUARDANDO CONTATO';
+
+    // Suporte a tabelas estruturadas (Excel / CSV / TSV coladas com cabeçalho)
+    const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (rawLines.length > 1) {
+      const headerLine = rawLines[0];
+      const isTabular = headerLine.includes('\t') || headerLine.includes(';') ||
+        /FILIAL DE DESTINO|VINCULO MOTORISTA|CAPACIDADE TONELADAS|NOME|CELULAR/i.test(headerLine);
+      
+      if (isTabular) {
+        const delimiter = headerLine.includes('\t') ? '\t' : (headerLine.includes(';') ? ';' : ',');
+        const headers = headerLine.split(delimiter).map(h => h.trim().toUpperCase());
+        
+        // Mapeamentos obrigatórios solicitados:
+        const idxDestino = headers.findIndex(h => /FILIAL DE DESTINO|FILIAL DESTINO/i.test(h));
+        const idxCategoria = headers.findIndex(h => /VINCULO MOTORISTA|VÍNCULO MOTORISTA/i.test(h));
+        const idxCondutor = headers.findIndex(h => /^NOME$|NOME CONDUTOR|NOME DO MOTORISTA/i.test(h));
+        const idxTon = headers.findIndex(h => /CAPACIDADE TONELADAS|CAPACIDADE TONELADA|CAPACIDADE TON/i.test(h));
+        const idxTelefone = headers.findIndex(h => /^CELULAR$|CELULAR|TELEFONE|TEL/i.test(h));
+
+        const idxCavalo = headers.findIndex(h => /PLACA CAVALO|^CAVALO$|^PLACA$/i.test(h));
+        const idxCarreta = headers.findIndex(h => /PLACA CARRETA|^CARRETA$|BAU/i.test(h));
+        const idxCpf = headers.findIndex(h => /^CPF$/i.test(h));
+        const idxCnh = headers.findIndex(h => /^CNH$/i.test(h));
+        const idxRg = headers.findIndex(h => /^RG$|IDENTIDADE/i.test(h));
+        const idxTransp = headers.findIndex(h => /TRANSPORTADOR|TRANSPORTADORA/i.test(h));
+
+        if (idxDestino !== -1 || idxCategoria !== -1 || idxCondutor !== -1 || idxTon !== -1 || idxTelefone !== -1) {
+          const parsedRows: DispoRow[] = [];
+          for (let i = 1; i < rawLines.length; i++) {
+            const cols = rawLines[i].split(delimiter).map(c => c.trim());
+            if (cols.length < 2) continue;
+
+            const rawDest = idxDestino !== -1 ? cols[idxDestino] : '';
+            const rawCat = idxCategoria !== -1 ? cols[idxCategoria] : 'TERCEIRO';
+            const rawCond = idxCondutor !== -1 ? cols[idxCondutor] : '';
+            const rawT = idxTon !== -1 ? cols[idxTon] : '28';
+            const rawTel = idxTelefone !== -1 ? cols[idxTelefone] : '';
+            const rawCav = idxCavalo !== -1 ? cols[idxCavalo] : '';
+            const rawCarr = idxCarreta !== -1 ? cols[idxCarreta] : '';
+            const rawCpfVal = idxCpf !== -1 ? cols[idxCpf] : '';
+            const rawCnhVal = idxCnh !== -1 ? cols[idxCnh] : '';
+            const rawRgVal = idxRg !== -1 ? cols[idxRg] : '';
+            const rawTr = idxTransp !== -1 ? cols[idxTransp] : '';
+
+            const cavPlaca = formatPlateWithHyphen(rawCav);
+            const carrPlaca = rawCarr.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            const matchedTr = findClosestTransportador(rawTr, transportadoras).matchedName;
+
+            parsedRows.push({
+              id: `terceiro-tab-${Date.now()}-${i}`,
+              mes: mesStr,
+              origem: 'SANTA LUZIA|MG',
+              dia: diaStr,
+              data: dataStr,
+              contatoWhats: '08:00:00',
+              horaLiberado: horaAtual,
+              status: EXACT_STATUS,
+              modeloCarreta: 'BAÚ',
+              modeloCavalo: 'TRUCADO',
+              fezContato: 'SIM',
+              destino: (rawDest ? normalizeDestino(rawDest) : 'LONDRINA').toUpperCase(),
+              transportador: matchedTr,
+              cavalo: cavPlaca,
+              carreta: carrPlaca,
+              pallets: '28',
+              ton: (rawT || '28').replace(',', '.'),
+              m3: '90 m³',
+              categoria: (rawCat || 'TERCEIRO').toUpperCase(),
+              tecnologia: 'SIGHRA',
+              conductor: rawCond.toUpperCase(),
+              cpf: rawCpfVal,
+              rgSap: rawRgVal,
+              cnh: rawCnhVal,
+              telefone: rawTel,
+              vigenciaCadastro: (rawCat || '').toUpperCase().includes('FROTA') ? 'FROTA' : 'TERCEIRO',
+              codigoTransportadora: '100000496',
+              idCarga: '',
+              estadoMotorista: 'MG',
+              estadoCavalo: 'MG',
+              estadoCarreta: 'MG',
+              pendencia: '',
+              checkList: ''
+            });
+          }
+          if (parsedRows.length > 0) {
+            return parsedRows;
+          }
+        }
+      }
+    }
+
+    const cleanText = text.replace(/\s+/g, ' ');
 
     // Horário de previsão do documento
     const timeMatch = cleanText.match(/(?:HORA|HORÁRIO|PREVISÃO|PREVISAO|PREVISÃO DA CHEGADA NA FILIAL DE ORIGEM|HORARIO)[\s\:\-]+(\d{1,2}\:\d{2}(?:\:\d{2})?)/i) ||
       cleanText.match(/(\d{2}\:\d{2}(?:\:\d{2})?)/);
     const horaVal = timeMatch ? (timeMatch[1].length === 5 ? `${timeMatch[1]}:00` : timeMatch[1]) : '08:00:00';
-    const horaAtual = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-
-    // (H) "STATUS" SEMPRE PRECISA FICAR COM A FRASE: "AGUARDANDO CONTATO"
-    const EXACT_STATUS = 'AGUARDANDO CONTATO';
 
     // 1. Placas (Cavalo e Carretas)
     const plateRegex = /\b([A-Z]{3}[- ]?[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}-?[0-9]{4})\b/gi;
@@ -520,7 +608,7 @@ export default function TerceirosEscala({
     return [singleRow];
   };
 
-  // Upload e processamento de arquivos PDF ou DOCX
+  // Upload e processamento de arquivos PDF, DOCX, XLSX, XLS e CSV
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -531,11 +619,12 @@ export default function TerceirosEscala({
       file.type === 'application/msword' ||
       file.name.toLowerCase().endsWith('.docx') ||
       file.name.toLowerCase().endsWith('.doc');
+    const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.csv');
 
-    if (!isPDF && !isDOCX) {
+    if (!isPDF && !isDOCX && !isExcel) {
       setNotification({
         show: true,
-        message: 'Por favor, selecione um arquivo no formato PDF (.pdf) ou Word (.docx).',
+        message: 'Por favor, selecione um arquivo no formato PDF (.pdf), Word (.docx) ou Planilha (.xlsx/.csv).',
         type: 'info'
       });
       setTimeout(() => setNotification({ show: false, message: '' }), 4000);
@@ -554,9 +643,16 @@ export default function TerceirosEscala({
       } else if (isDOCX) {
         setStatusMessage('Extraindo texto do DOCX no navegador via Mammoth...');
         extractedText = await extractTextFromDOCX(file);
+      } else if (isExcel) {
+        setStatusMessage('Lendo dados da Planilha Excel/CSV...');
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: 'array' });
+        const firstSheetName = wb.SheetNames[0];
+        const ws = wb.Sheets[firstSheetName];
+        extractedText = XLSX.utils.sheet_to_csv(ws, { FS: '\t' });
       }
 
-      setStatusMessage('Estruturando dados da Ordem de Serviço...');
+      setStatusMessage('Estruturando dados da Ordem de Serviço / Planilha...');
       const extractedRows = parseDocumentTextToDispoRows(extractedText);
 
       saveRows(prev => [...extractedRows, ...prev]);
@@ -626,44 +722,44 @@ export default function TerceirosEscala({
     }
   };
 
-  // Copiar dados para a planilha (TSV limpo para colar no app ou Excel)
+  // Copiar dados para a planilha (TSV formatado para colar na planilha: Col L=Destino, Col Q=PBT Ton, Col S=Categoria, Col U=Condutor, Col Y=Telefone)
   const handleCopyTableToClipboard = async () => {
     if (filteredRows.length === 0) return;
 
     const tsvLines = filteredRows.map(r => [
-      r.mes,
-      r.origem,
-      r.dia,
-      r.data,
-      r.contatoWhats,
-      r.horaLiberado,
-      r.status, // Garante o valor exato "AGUARDANDO CONTATO"
-      r.modeloCarreta,
-      r.modeloCavalo,
-      r.fezContato,
-      r.destino,
-      r.transportador,
-      r.cavalo,
-      r.carreta,
-      r.pallets,
-      r.ton,
-      r.m3,
-      r.categoria,
-      r.tecnologia,
-      r.conductor,
-      r.cpf,
-      r.rgSap,
-      r.cnh,
-      r.telefone,
-      r.vigenciaCadastro,
-      r.codigoTransportadora,
-      r.idCarga,
-      r.estadoMotorista,
-      r.estadoCavalo,
-      r.estadoCarreta,
-      '',
-      r.pendencia || '',
-      r.checkList || ''
+      r.mes,                           // 1 (A) - MÊS
+      r.origem,                        // 2 (B) - ORIGEM
+      r.dia,                           // 3 (C) - DIA
+      r.data,                          // 4 (D) - DATA
+      r.contatoWhats,                  // 5 (E) - CONTATO WHATS
+      r.horaLiberado,                  // 6 (F) - HORA LIBERADO
+      r.status,                        // 7 (G) - STATUS ("AGUARDANDO CONTATO")
+      r.modeloCarreta,                 // 8 (H) - MODELO CARRETA
+      r.modeloCavalo,                  // 9 (I) - MODELO CAVALO
+      r.fezContato,                    // 10 (J) - FEZ CONTATO
+      r.transportador,                 // 11 (K) - TRANSPORTADOR
+      r.destino,                       // 12 (L) - DESTINO (Filial de Destino)
+      formatPlateWithHyphen(r.cavalo), // 13 (M) - CAVALO
+      r.carreta,                       // 14 (N) - CARRETA
+      r.pallets,                       // 15 (O) - Nº PALLETS
+      r.m3,                            // 16 (P) - M³
+      r.ton,                           // 17 (Q) - PBT (TON) (Capacidade Toneladas)
+      r.tecnologia,                    // 18 (R) - TECNOLOGIA
+      r.categoria,                     // 19 (S) - CATEGORIA (Vínculo Motorista)
+      r.vigenciaCadastro,              // 20 (T) - VIGÊNCIA DO CADASTRO
+      r.conductor,                     // 21 (U) - CONDUTOR (Nome)
+      r.cpf,                           // 22 (V) - CPF
+      r.rgSap,                         // 23 (W) - RG / SAP
+      r.cnh,                           // 24 (X) - CNH
+      r.telefone,                      // 25 (Y) - TELEFONE (Celular)
+      r.codigoTransportadora,          // 26 (Z) - CÓDIGO DA TRANSPORTADORA
+      r.idCarga,                       // 27 (AA) - ID DA CARGA / LACRE
+      r.estadoMotorista,               // 28 (AB) - ESTADO MOTORISTA
+      r.estadoCavalo,                  // 29 (AC) - ESTADO CAVALO
+      r.estadoCarreta,                 // 30 (AD) - ESTADO CARRETA
+      '',                              // 31 (AE) - VAZIO
+      r.pendencia || '',               // 32 (AF) - PENDÊNCIA
+      r.checkList || ''                // 33 (AG) - CHECK LIST
     ].join('\t'));
 
     const fullTSV = tsvLines.join('\n');
@@ -677,7 +773,7 @@ export default function TerceirosEscala({
     }
   };
 
-  // Baixar Excel (.xlsx)
+  // Baixar Excel (.xlsx) respeitando rigorosamente o mapeamento das colunas
   const handleDownloadXLSX = () => {
     if (filteredRows.length === 0) return;
 
@@ -688,30 +784,31 @@ export default function TerceirosEscala({
       'DATA': r.data,
       'CONTATO WHATS': r.contatoWhats,
       'HORA LIBERADO': r.horaLiberado,
-      'STATUS': r.status, // "AGUARDANDO CONTATO"
+      'STATUS': r.status,
       'MODELO CARRETA': r.modeloCarreta,
       'MODELO CAVALO': r.modeloCavalo,
       'FEZ CONTATO': r.fezContato,
-      'DESTINO': r.destino,
       'TRANSPORTADOR': r.transportador,
-      'CAVALO': r.cavalo,
+      'DESTINO': r.destino,
+      'CAVALO': formatPlateWithHyphen(r.cavalo),
       'CARRETA': r.carreta,
       'Nº PALLETS': r.pallets,
-      'TON': r.ton,
       'M³': r.m3,
-      'CATEGORIA': r.categoria,
+      'PBT (TON)': r.ton,
       'TECNOLOGIA': r.tecnologia,
+      'CATEGORIA': r.categoria,
+      'VIGÊNCIA DO CADASTRO': r.vigenciaCadastro,
       'CONDUTOR': r.conductor,
       'CPF': r.cpf,
       'RG / SAP': r.rgSap,
       'CNH': r.cnh,
       'TELEFONE': r.telefone,
-      'VIGÊNCIA DO CADASTRO': r.vigenciaCadastro,
       'CÓDIGO DA TRANSPORTADORA': r.codigoTransportadora,
       'ID DA CARGA / LACRE': r.idCarga,
       'ESTADO MOTORISTA': r.estadoMotorista,
       'ESTADO CAVALO': r.estadoCavalo,
       'ESTADO CARRETA': r.estadoCarreta,
+      '': '',
       'PENDÊNCIA': r.pendencia,
       'CHECK LIST': r.checkList
     }));
