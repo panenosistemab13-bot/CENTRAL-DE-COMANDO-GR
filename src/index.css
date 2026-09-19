@@ -1,30 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Montserrat", "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-heading: "Orbitron", "Montserrat", sans-serif;
-  --font-tech: "Rajdhani", "Orbitron", sans-serif;
+  --font-heading: "Cinzel", "Playfair Display", Georgia, serif;
   --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+  --font-serif-display: "Cinzel", "Playfair Display", Georgia, serif;
   
-  --color-pgr-blue: #0088ff;
-  --color-pgr-cyan: #00e5ff;
-  --color-pgr-dark: #060b14;
-  --color-pgr-panel: #0a1426;
-  --color-pgr-card: rgba(10, 22, 40, 0.85);
-  --color-pgr-red: #ff2233;
-  --color-pgr-amber: #ffaa00;
-  --color-pgr-green: #00e676;
+  --color-primary: #B32025; /* Institutional Red */
+  --color-primary-dark: #8c060a;
+  --color-canvas: #f8f6f0; /* Executive Office Warm Linen */
+  --color-card: #ffffff; /* Crisp Executive White */
+  --color-border-dark: rgba(43, 24, 13, 0.15);
 }
 
 @layer base {
   body {
-    background-color: #040810;
-    color: #e2e8f0;
+    @apply bg-canvas text-[#1f1610] antialiased selection:bg-[#B32025]/20 selection:text-[#B32025];
     font-family: var(--font-sans);
     min-height: 100%;
-    selection-background-color: #0088ff;
-    selection-color: #ffffff;
   }
   
   html {
@@ -46,61 +40,35 @@
 }
 
 @layer components {
-  /* Ultra 8K 3D Glass Panel */
-  .pgr-glass-card {
-    background: linear-gradient(145deg, rgba(14, 26, 48, 0.85) 0%, rgba(6, 12, 24, 0.95) 100%);
-    border: 1px solid rgba(0, 160, 255, 0.22);
-    box-shadow: 
-      0 12px 36px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      inset 0 -1px 0 rgba(0, 180, 255, 0.08);
-    backdrop-filter: blur(16px);
+  .logo-text {
+    @apply text-sm font-black text-white tracking-[0.2em] uppercase leading-tight text-nowrap font-heading;
   }
 
-  .pgr-glass-card-hover {
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  .report-card {
+    @apply bg-white border-2 border-[#3A2414]/15 rounded-2xl shadow-lg transition-all duration-300 hover:border-[#B32025]/50 hover:shadow-xl;
+  }
+  
+  .toolbar-button {
+    @apply flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-[#3A2414] hover:text-[#B32025] hover:bg-[#3A2414]/5 rounded-xl transition-all border border-[#3A2414]/10 hover:border-[#3A2414]/30 shadow-2xs;
   }
 
-  .pgr-glass-card-hover:hover {
-    border-color: rgba(0, 210, 255, 0.45);
-    box-shadow: 
-      0 16px 42px rgba(0, 140, 255, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25),
-      inset 0 0 20px rgba(0, 180, 255, 0.12);
-    transform: translateY(-2px);
+  .toolbar-button-active {
+    @apply text-white bg-[#B32025] border-[#8c060a] shadow-[0_4px_12px_rgba(179,32,37,0.3)];
+  }
+  
+  .canvas-grid {
+    background-color: #f8f6f0;
+    background-image: 
+      radial-gradient(circle at center, rgba(179, 32, 37, 0.03) 0%, rgba(58, 36, 20, 0.05) 100%);
+    background-attachment: fixed;
   }
 
-  /* 3D Prism Jewel Badges */
-  .pgr-prism-red {
-    background: radial-gradient(circle at 35% 30%, #ff5252, #d50000 60%, #850000 100%);
-    box-shadow: 0 0 24px rgba(255, 34, 51, 0.65), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -3px 6px rgba(0, 0, 0, 0.7);
+  .executive-panel {
+    @apply bg-white border-2 border-[#3A2414]/20 rounded-[2rem] shadow-xl p-6 sm:p-8 backdrop-blur-md;
   }
 
-  .pgr-prism-amber {
-    background: radial-gradient(circle at 35% 30%, #ffd740, #ff9100 60%, #c66900 100%);
-    box-shadow: 0 0 24px rgba(255, 170, 0, 0.65), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -3px 6px rgba(0, 0, 0, 0.7);
-  }
-
-  .pgr-prism-cyan {
-    background: radial-gradient(circle at 35% 30%, #40c4ff, #0091ea 60%, #005b9f 100%);
-    box-shadow: 0 0 24px rgba(0, 229, 255, 0.65), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -3px 6px rgba(0, 0, 0, 0.7);
-  }
-
-  .pgr-prism-green {
-    background: radial-gradient(circle at 35% 30%, #69f0ae, #00c853 60%, #007e33 100%);
-    box-shadow: 0 0 24px rgba(0, 230, 118, 0.65), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -3px 6px rgba(0, 0, 0, 0.7);
-  }
-
-  /* 3D Cinema Metallic Typography */
-  .text-3d-metallic {
-    background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
-  }
-
-  .text-3d-glow-cyan {
-    text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 136, 255, 0.4);
+  .executive-header {
+    @apply font-heading font-black tracking-tight text-[#2B180D] uppercase;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -114,9 +82,8 @@
 
   :focus-visible {
     outline: none !important;
-    border-color: #00e5ff !important;
-    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.3) !important;
+    border-color: #B32025 !important;
+    box-shadow: 0 0 0 3px rgba(179, 32, 37, 0.15) !important;
     transition: all 0.2s ease;
   }
 }
-

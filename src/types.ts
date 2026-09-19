@@ -9,11 +9,7 @@ export type Tab =
   | 'patio' 
   | 'checklist' 
   | 'controle' 
-  | 'escala'
-  | 'mapa_riscos'
-  | 'alertas'
-  | 'relatorios'
-  | 'monitoramento';
+  | 'escala';
 
 export interface User {
   email: string;

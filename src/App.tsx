@@ -70,43 +70,9 @@ import {
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
 import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
-import pgrShieldImg from './assets/images/pgr_shield_3d_1789796132107.jpg';
-import pgrNightHighwayImg from './assets/images/pgr_night_highway_1789796143992.jpg';
-import PgrCommandCenter from './components/PgrCommandCenter';
-import PgrTacticalViews from './components/PgrTacticalViews';
-import {
-  Globe,
-  Database,
-  FileSpreadsheet,
-  SunMedium,
-  CloudSun,
-  ShieldCheck,
-  ChevronDown,
-  Layers,
-  MapPin,
-  Bell,
-  FileText,
-  Radio,
-  SlidersHorizontal,
-  Home
-} from 'lucide-react';
+import { Globe, Database, FileSpreadsheet } from 'lucide-react';
 
-export type Tab = 
-  | 'menu' 
-  | 'slides' 
-  | 'presence' 
-  | 'risk' 
-  | 'averbacao' 
-  | 'sm_creator' 
-  | 'rotas' 
-  | 'patio' 
-  | 'checklist' 
-  | 'controle' 
-  | 'escala'
-  | 'mapa_riscos'
-  | 'alertas'
-  | 'relatorios'
-  | 'monitoramento';
+export type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'escala';
 
 const backgroundImages: Record<Tab, string> = {
   menu: '', // Empty for pure dark background
@@ -119,11 +85,7 @@ const backgroundImages: Record<Tab, string> = {
   patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
   checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
   controle: '/images/bg_presence.jpg',
-  escala: '/images/bg_patio.jpg',
-  mapa_riscos: '/images/tactical_sat_map_8k.png',
-  alertas: '/images/security_shield_core_8k.png',
-  relatorios: '/images/bg_presence.jpg',
-  monitoramento: '/images/semi_truck_heavy_8k.png'
+  escala: '/images/bg_patio.jpg'
 };
 
 const allTabs = [
@@ -220,7 +182,6 @@ export default function App() {
 
   const [appointments, setAppointments] = useState<Record<string, Appointment>>({});
   const [isAlertDismissed, setIsAlertDismissed] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const appsRef = ref(db, 'presence_list/appointments');
@@ -386,20 +347,14 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'menu':
-      case 'mapa_riscos':
         return (
-          <PgrCommandCenter 
-            onNavigateTab={(id) => { setActiveTab(id as Tab); }} 
-            onOpenSettings={handleOpenPageSelector}
-          />
-        );
-      case 'alertas':
-      case 'relatorios':
-      case 'monitoramento':
-        return (
-          <PgrTacticalViews 
-            view={activeTab} 
-            onBack={() => setActiveTab('menu')} 
+          <InitialMenu 
+            onSelect={(id) => { setActiveTab(id as Tab); }} 
+            focusedIndex={focusedCardIndex}
+            setFocusedIndex={setFocusedCardIndex}
+            pageVisibility={pageVisibility}
+            availablePages={availablePages}
+            onUnlockPresenceList={handleOpenPageSelector}
           />
         );
       case 'slides':
@@ -422,10 +377,11 @@ export default function App() {
         return <Escala onBack={() => setActiveTab('menu')} />;
       default:
         return (
-          <PgrCommandCenter 
-            onNavigateTab={(id) => { setActiveTab(id as Tab); }} 
-            onOpenSettings={handleOpenPageSelector}
-          />
+          <div className="flex flex-col items-center justify-center p-20 text-zinc-500">
+            <AlertOctagon className="w-12 h-12 mb-4 opacity-50" />
+            <h2 className="text-xl font-medium tracking-tight text-zinc-300">Em Desenvolvimento</h2>
+            <p className="text-sm">Este módulo está sendo refatorado para o novo padrão de design.</p>
+          </div>
         );
     }
   };
@@ -490,242 +446,142 @@ export default function App() {
     }
   };
 
-  const formattedDate = currentDateTime.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
-  const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-  const formattedTime = currentDateTime.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
   return (
-    <div className="min-h-screen h-screen flex flex-col bg-[#040812] text-slate-100 overflow-hidden font-sans relative selection:bg-cyan-500/30">
+    <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
+      {/* Top Banner: Última Atualização + Data (Aparece exclusivamente no Menu Inicial) */}
+      {activeTab === 'menu' && <UpdateTopBanner />}
       
-      {/* 8K ULTRA HDR Cinematic Top Header (Exact Match to Reference Image) */}
-      <header className="shrink-0 h-16 bg-[#060b14]/90 backdrop-blur-xl border-b border-cyan-500/20 px-3 sm:px-6 flex items-center justify-between z-50 relative select-none shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+      {/* Immersive Background Image / Radial glow */}
+      {(activeTab === 'menu' || activeTab === 'checklist') ? (
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+           <img
+             src={toAbsoluteUrl(coffeeBg)}
+             className="w-full h-full object-cover select-none brightness-105 saturate-110"
+             alt="Dashboard Coffee Background"
+             referrerPolicy="no-referrer"
+           />
+           {/* Cinematic warm light glow overlays */}
+           <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, rgba(181, 138, 76, 0.15) 0%, rgba(242, 228, 204, 0.45) 100%)' }} />
+        </div>
+      ) : (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <AnimatePresence mode="wait">
+            {backgroundImages[activeTab] && (
+              <motion.img
+                key={activeTab}
+                src={backgroundImages[activeTab]}
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 0.92, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                transition={{ duration: 1.5 }}
+                className="w-full h-full object-cover select-none"
+                referrerPolicy="no-referrer"
+              />
+            )}
+          </AnimatePresence>
+          {/* Immersive warm chocolate/dark vignette to integrate the page element contrast beautifully */}
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, transparent 20%, rgba(45, 26, 16, 0.4) 100%)' }} />
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full">
         
-        {/* Left: 3D Shield Logo + PGR text + Prevenção Gestão Resultados */}
-        <div 
-          className="flex items-center gap-3 cursor-pointer group" 
-          onClick={() => setActiveTab('menu')}
-        >
-          <div className="w-10 h-10 rounded-xl overflow-hidden p-0.5 bg-slate-900 border border-cyan-400/40 shadow-[0_0_15px_rgba(0,229,255,0.4)] shrink-0 group-hover:scale-105 transition-transform">
-            <img src={pgrShieldImg} alt="PGR 3D Shield" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-baseline gap-1.5 leading-none">
-              <span className="text-xl sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-heading">
-                PGR
-              </span>
-            </div>
-            <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase leading-tight mt-0.5">
-              Prevenção • Gestão • Resultados
-            </span>
-          </div>
-        </div>
-
-        {/* Center Widgets Group: User, Calendar, Weather */}
-        <div className="hidden xl:flex items-center gap-3">
-          
-          {/* User Greeting Pill */}
-          <div className="px-3.5 py-1.5 rounded-2xl bg-slate-900/70 border border-cyan-500/20 backdrop-blur-md flex items-center gap-2.5 shadow-sm">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white text-xs font-black shadow-[0_0_10px_rgba(0,180,255,0.4)]">
-              <User size={14} />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-bold text-white leading-tight">Olá, Jefferson</span>
-              <span className="text-[10px] text-slate-400 font-medium leading-none">Gestão de Riscos</span>
-            </div>
-          </div>
-
-          {/* Live Date & Time Pill */}
-          <div className="px-3.5 py-1.5 rounded-2xl bg-slate-900/70 border border-cyan-500/20 backdrop-blur-md flex items-center gap-2.5 shadow-sm">
-            <div className="w-7 h-7 rounded-lg bg-slate-800/80 border border-cyan-500/40 flex items-center justify-center text-cyan-300">
-              <Calendar size={14} />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] text-slate-400 font-medium leading-none">{capitalizedDate}</span>
-              <span className="text-xs font-black text-white font-mono leading-tight mt-0.5 tracking-wider">{formattedTime}</span>
-            </div>
-          </div>
-
-          {/* Weather Pill */}
-          <div className="px-3.5 py-1.5 rounded-2xl bg-slate-900/70 border border-cyan-500/20 backdrop-blur-md flex items-center gap-2.5 shadow-sm">
-            <div className="w-7 h-7 rounded-lg bg-slate-800/80 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_10px_rgba(255,170,0,0.3)]">
-              <CloudSun size={15} />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-bold text-white leading-tight">22°C Santa Luzia - MG</span>
-              <span className="text-[10px] text-slate-400 font-medium leading-none">Parcialmente nublado</span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right Controls: Notifications & User Avatar */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          
-          {/* Notification Bell */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('alertas')}
-            className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-cyan-500/30 flex items-center justify-center text-slate-200 transition-colors cursor-pointer"
-            title="Alertas Ativos (3)"
-          >
-            <Bell size={17} />
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 border-2 border-slate-950 text-white text-[10px] font-black flex items-center justify-center shadow-[0_0_10px_#ff2233] animate-pulse">
-              3
-            </span>
-          </button>
-
-          {/* User Avatar Capsule */}
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-cyan-500/30 cursor-pointer hover:border-cyan-400 transition-colors">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-700 text-white text-xs font-black flex items-center justify-center shadow-md">
-              JD
-            </div>
-            <span className="text-xs font-bold text-slate-200 hidden sm:inline">Jefferson</span>
-            <ChevronDown size={14} className="text-slate-400" />
-          </div>
-
-          {/* Mobile Sidebar Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="lg:hidden p-2 rounded-xl bg-slate-900 border border-cyan-500/30 text-slate-200 cursor-pointer"
-          >
-            <Menu size={18} />
-          </button>
-
-        </div>
-
-      </header>
-
-      {/* Main Body Area: Left Navigation Sidebar + Content Canvas */}
-      <div className="flex flex-1 min-h-0 relative overflow-hidden">
-        
-        {/* Left Navigation Sidebar */}
-        <aside className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 w-64 shrink-0 bg-[#050b14]/95 lg:bg-[#050b14]/85 backdrop-blur-2xl border-r border-cyan-500/20 p-3.5 flex flex-col justify-between transition-transform duration-300 select-none overflow-y-auto no-scrollbar shadow-2xl",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}>
-          <div className="flex flex-col gap-1">
-            
-            {/* Main Nav Items (Exact match to reference design) */}
-            {[
-              { id: 'menu', label: 'Início', icon: Home },
-              { id: 'mapa_riscos', label: 'Mapa de Riscos', icon: MapPin },
-              { id: 'alertas', label: 'Alertas', icon: Bell, badge: '3' },
-              { id: 'relatorios', label: 'Relatórios', icon: FileText },
-              { id: 'monitoramento', label: 'Monitoramento', icon: Radio },
-            ].map((item) => {
-              const isActive = activeTab === item.id || (item.id === 'menu' && activeTab === 'menu');
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveTab(item.id as Tab);
-                    setIsSidebarOpen(false);
-                  }}
+        {/* Desktop Top Header (Always on active modules) */}
+        {activeTab !== 'menu' && (
+          <header className="flex py-3 shrink-0 items-center justify-center px-2 sm:px-8 z-50 relative pointer-events-none w-full">
+            {/* Centered Navigation Dock */}
+            <div className="flex items-center justify-center pointer-events-auto max-w-full overflow-x-auto no-scrollbar py-1">
+              <AnimatePresence>
+                <motion.nav 
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
                   className={cn(
-                    "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer group text-left",
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(0,180,255,0.4)] border border-cyan-400 font-black"
-                      : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+                    "flex items-center gap-1.5 sm:gap-2 px-5 py-2.5 rounded-full relative select-none transition-all duration-300",
+                    activeTab === 'slides'
+                      ? "bg-[#020617]/95 border-2 border-cyan-500/50 shadow-[0_0_35px_rgba(0,240,255,0.25)] backdrop-blur-2xl"
+                      : "bg-gradient-to-r from-[#1a0e07] via-[#26150d] to-[#1a0e07] border-[2.5px] border-[#4a2e1b] shadow-[0_16px_36px_rgba(0,0,0,0.92),inset_0_1px_1.5px_rgba(255,255,255,0.12)]"
                   )}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <item.icon size={16} className={isActive ? "text-white" : "text-slate-400 group-hover:text-cyan-300"} />
-                    <span className="truncate">{item.label}</span>
-                  </div>
-                  {item.badge && (
-                    <span className="px-1.5 py-0.5 rounded-md bg-red-600 text-[10px] font-black text-white shadow-[0_0_8px_#ff2233]">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                  {/* Decorative corner authentic brass slotted screws */}
+                  <NavCornerScrew position="tl" />
+                  <NavCornerScrew position="bl" />
+                  <NavCornerScrew position="tr" />
+                  <NavCornerScrew position="br" />
 
-            {/* Section Divider */}
-            <div className="my-2 border-t border-slate-800/80 px-2 pt-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                Módulos Operacionais
-              </span>
+                  {/* First button: Início (Home) inside distinctive squircle container */}
+                  <motion.button
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => setActiveTab('menu')}
+                    className={cn(
+                      "p-3 rounded-2xl transition-all duration-200 relative group flex items-center justify-center cursor-pointer",
+                      (activeTab as string) === 'menu'
+                        ? "bg-gradient-to-b from-[#d62329] to-[#9c1419] text-white shadow-[0_0_24px_rgba(214,35,41,0.9),0_4px_12px_rgba(0,0,0,0.5)] border border-[#ff6b6b]/40 font-black"
+                        : activeTab === 'slides'
+                          ? "bg-slate-900/80 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 border border-cyan-500/30"
+                          : "bg-[#331e12] text-[#dfba87] hover:bg-[#432918] hover:text-[#fae5c7] border border-[#4e301c] shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_2px_6px_rgba(0,0,0,0.4)]"
+                    )}
+                  >
+                    <LayoutGrid size={22} strokeWidth={(activeTab as string) === 'menu' ? 2.5 : 2.2} />
+                    {/* Tooltip */}
+                    <div className={cn(
+                      "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
+                      activeTab === 'slides'
+                        ? "bg-slate-950 border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                        : "bg-[#24160E] border-[#543b28] text-[#fdefd1]"
+                    )}>
+                      Início
+                    </div>
+                  </motion.button>
+                  
+                  {/* Vertical Divider in brass/bronze */}
+                  <div className={cn(
+                    "w-[1px] h-7 mx-1.5 shrink-0 transition-all",
+                    activeTab === 'slides' ? "bg-cyan-500/40" : "bg-gradient-to-b from-transparent via-[#5a3a24] to-transparent"
+                  )} />
+
+                  {/* Module Icons */}
+                  {visibleTabs.filter(t => t.id !== 'menu').map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <motion.button
+                        key={tab.id}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => setActiveTab(tab.id as Tab)}
+                        className={cn(
+                          "relative p-3 rounded-2xl transition-all duration-200 group flex items-center justify-center cursor-pointer",
+                          isActive
+                            ? activeTab === 'slides'
+                              ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_#00f0ff] border border-cyan-300 font-black"
+                              : "bg-gradient-to-b from-[#d62329] to-[#9c1419] text-white shadow-[0_0_24px_rgba(214,35,41,0.9),0_4px_12px_rgba(0,0,0,0.5)] border border-[#ff6b6b]/40 font-black" 
+                            : activeTab === 'slides'
+                              ? "bg-transparent text-cyan-400/70 hover:bg-cyan-500/10 hover:text-cyan-200"
+                              : "bg-transparent text-[#dfba87] hover:bg-[#331e12]/60 hover:text-[#fae5c7]"
+                        )}
+                      >
+                        <tab.icon size={22} strokeWidth={isActive ? 2.6 : 2} className={isActive ? "text-white" : "text-[#dfba87] group-hover:text-[#fae5c7]"} />
+                        
+                        {/* Tooltip */}
+                        <div className={cn(
+                          "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
+                          activeTab === 'slides'
+                            ? "bg-slate-950 border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                            : "bg-[#24160E] border-[#543b28] text-[#fdefd1]"
+                        )}>
+                          {tab.label}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </motion.nav>
+              </AnimatePresence>
             </div>
 
-            {/* Operational Tabs (Escala, Checklist, Pátio, Averbação, etc.) */}
-            {visibleTabs.filter(t => t.id !== 'menu').map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveTab(tab.id as Tab);
-                    setIsSidebarOpen(false);
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer group text-left",
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_18px_rgba(0,180,255,0.4)] border border-cyan-400 font-bold"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                  )}
-                >
-                  <tab.icon size={15} className={isActive ? "text-white" : "text-slate-500 group-hover:text-cyan-400"} />
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              );
-            })}
-
-            {/* Settings Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setShowPasswordModal(true);
-                setIsSidebarOpen(false);
-              }}
-              className="w-full mt-1 flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all cursor-pointer"
-            >
-              <Settings size={15} className="text-slate-500" />
-              <span>Configurações</span>
-            </button>
-
-          </div>
-
-          {/* Bottom Left Banner (Night highway photo) */}
-          <div className="mt-4 rounded-2xl overflow-hidden border border-cyan-500/25 relative group shadow-lg">
-            <img
-              src={pgrNightHighwayImg}
-              alt="PGR Segurança Rodoviária Noturna"
-              className="w-full h-24 object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-2.5 flex flex-col justify-end">
-              <span className="text-[10px] font-bold text-white leading-tight drop-shadow">
-                Mais segurança para o seu patrimônio.
-              </span>
-              <div className="flex items-center gap-1.5 mt-1">
-                <div className="w-4 h-4 rounded overflow-hidden">
-                  <img src={pgrShieldImg} alt="PGR Logo" className="w-full h-full object-contain" />
-                </div>
-                <span className="text-[9px] font-black text-cyan-300 uppercase tracking-wider">
-                  PGR Prevenção
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </aside>
-
-        {/* Mobile Backdrop */}
-        {isSidebarOpen && (
-          <div 
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
-          />
+            {/* Right side widgets hidden per user request */}
+          </header>
         )}
 
         {/* ALERTA DE COMPROMISSOS GLOBAL */}
@@ -903,45 +759,22 @@ export default function App() {
 
         {/* Scrollable Canvas */}
         <main id="main-scroll-container" className={cn(
-          "flex-1 relative bg-[#040812] selection:bg-cyan-500/30",
-          activeTab === 'menu' ? "overflow-hidden" : "overflow-y-auto pb-4 md:pb-8"
+          "flex-1 relative",
+          activeTab === 'menu' ? "overflow-hidden" : "overflow-y-visible md:overflow-y-auto pb-4 md:pb-8"
         )}>
           <div className={cn(
             "w-full max-w-full mx-auto relative z-10 flex flex-col transition-all duration-500",
-            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-3 sm:p-5 md:p-6"
+            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-2.5 sm:p-5 md:p-6 pb-28 md:pb-8"
           )}>
-            {/* Operational Module HUD Header */}
-            {activeTab !== 'menu' && activeTab !== 'mapa_riscos' && (
-              <div className="mb-4 flex items-center justify-between p-3 rounded-2xl bg-slate-900/80 border border-cyan-500/20 backdrop-blur-md shadow-lg shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('menu')}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-xs font-bold text-slate-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-                  >
-                    ← Início
-                  </button>
-                  <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                    Módulo: <strong className="text-cyan-400 font-black">{activeTabInfo?.label || activeTab}</strong>
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-[10px] text-cyan-300 font-mono font-bold tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                    8K ULTRA RESOLUTION • LIVE HUD
-                  </span>
-                </div>
-              </div>
-            )}
+
 
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className={cn(
                   activeTab === 'menu' ? "h-full" : "w-full transition-all duration-300"
                 )}
