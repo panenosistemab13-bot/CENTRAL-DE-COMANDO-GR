@@ -6,7 +6,8 @@ import {
   Minimize2,
   Activity,
   Layers,
-  Sparkles
+  Zap,
+  Globe
 } from 'lucide-react';
 import {
   BarChart,
@@ -16,10 +17,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  CartesianGrid,
-  AreaChart,
-  Area,
-  Line
+  LineChart,
+  Line,
+  CartesianGrid
 } from 'recharts';
 import { cn } from '../lib/utils';
 
@@ -53,10 +53,6 @@ const DEFAULT_TIMELINE_DATA: TimelineDataItem[] = [
   { hora: '18:00', emRota: 21, noDestino: 12, alerta: 2 },
 ];
 
-const GOLD = '#B88935';
-const BRONZE = '#754B2A';
-const GREEN = '#3D8B68';
-
 export const StatusAnalyticsHUD: React.FC<StatusAnalyticsHUDProps> = ({
   statusStats,
   timelineData = DEFAULT_TIMELINE_DATA,
@@ -69,7 +65,6 @@ export const StatusAnalyticsHUD: React.FC<StatusAnalyticsHUDProps> = ({
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -78,7 +73,9 @@ export const StatusAnalyticsHUD: React.FC<StatusAnalyticsHUDProps> = ({
 
   const toggleFullscreen = () => {
     if (!isFullscreen) {
-      containerRef.current?.requestFullscreen().catch(() => {});
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen().catch(() => {});
+      }
       setIsFullscreen(true);
     } else {
       if (document.fullscreenElement) {
@@ -92,320 +89,134 @@ export const StatusAnalyticsHUD: React.FC<StatusAnalyticsHUDProps> = ({
     <section
       ref={containerRef}
       className={cn(
-        "relative cinema-card cinema-3d p-5 md:p-7 lg:p-8 overflow-hidden",
-        isFullscreen &&
-          "fixed inset-0 z-[999] rounded-none w-screen h-screen overflow-auto bg-[#F7F3EC]"
+        "bg-gradient-to-b from-[#020617] via-[#070e24] to-[#020617] backdrop-blur-2xl border-2 border-cyan-500/40 rounded-3xl p-4 sm:p-6 shadow-[0_0_80px_rgba(0,240,255,0.18)] relative overflow-hidden group transition-all duration-300 space-y-6 font-mono",
+        isFullscreen && "fixed inset-0 z-50 rounded-none border-0 p-4 sm:p-6 flex flex-col justify-between w-screen h-screen overflow-y-auto"
       )}
     >
-      <div className="cinema-light -top-40 -right-40" />
+      {/* Tech Brackets Corners */}
+      <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
+      <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
+      <div className="absolute bottom-2 left-2 w-5 h-5 border-b-2 border-l-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
+      <div className="absolute bottom-2 right-2 w-5 h-5 border-b-2 border-r-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
 
-      {/* HEADER */}
-      <header className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-6 border-b border-[#754B2A]/10">
-        <div className="flex items-center gap-4">
-          <div
-            className="
-              w-14 h-14
-              rounded-2xl
-              flex items-center justify-center
-              bg-gradient-to-br from-[#E7C88A] to-[#B88935]
-              shadow-[0_15px_35px_rgba(117,75,42,.20)]
-            "
-          >
-            <Activity className="w-6 h-6 text-white" />
-          </div>
-
+      {/* Top HUD Analytics Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-cyan-500/30">
+        <div className="flex items-center gap-3">
+          <span className="relative flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-300 shadow-[0_0_12px_#00f0ff]"></span>
+          </span>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full bg-[#3D8B68] animate-pulse" />
-              <span className="text-[10px] uppercase tracking-[.22em] font-extrabold text-[#B88935]">
-                Monitoramento operacional
-              </span>
-            </div>
-
-            <h2 className="cinema-title text-3xl md:text-4xl text-[#2C1B12]">
-              Painel de Estatísticas e Fluxo
+            <h2 className="text-sm font-black uppercase tracking-widest text-cyan-300 flex items-center gap-2 drop-shadow-[0_0_12px_rgba(0,240,255,0.6)]">
+              <Activity className="w-4.5 h-4.5 text-cyan-400 animate-pulse" />
+              PAINEL DE ESTATÍSTICAS E FLUXO // ANALYTICS HUD
             </h2>
-
-            <p className="text-xs text-[#756D63] mt-1">
-              Métricas de performance em tempo real
-              <span className="mx-2">•</span>
-              Total de iscas:
-              <strong className="ml-1 text-[#754B2A]">
-                {totalIscas}
-              </strong>
-            </p>
+            <span className="text-[10px] text-cyan-400/70 flex items-center gap-2 mt-0.5">
+              <span>MÉTRICAS DE PERFORMANCE EM TEMPO REAL</span>
+              <span className="text-cyan-500">•</span>
+              <span className="text-cyan-200 font-bold">TOTAL DE ISCAS: {totalIscas}</span>
+            </span>
           </div>
         </div>
 
+        {/* Full Screen Toggle Control Button */}
         <button
           onClick={toggleFullscreen}
-          className="cinema-button flex items-center gap-2 self-start"
+          title={isFullscreen ? "Sair da Tela Cheia" : "Expandir Painel em Tela Cheia"}
+          className={cn(
+            "px-4 py-2 rounded-xl border font-mono font-bold uppercase transition-all flex items-center gap-2 cursor-pointer text-xs self-start sm:self-auto",
+            isFullscreen
+              ? "bg-cyan-500 text-slate-950 border-cyan-300 shadow-[0_0_25px_#00f0ff]"
+              : "bg-cyan-950/80 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/20 hover:border-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.1)]"
+          )}
         >
           {isFullscreen ? (
             <>
-              <Minimize2 className="w-4 h-4" />
-              <span>Sair da tela cheia</span>
+              <Minimize2 className="w-4 h-4 text-slate-950" />
+              <span>SAIR DA TELA CHEIA (ESC)</span>
             </>
           ) : (
             <>
-              <Maximize2 className="w-4 h-4" />
-              <span>Tela cheia</span>
+              <Maximize2 className="w-4 h-4 text-cyan-400" />
+              <span>TELA CHEIA</span>
             </>
           )}
         </button>
-      </header>
-
-      {/* MÉTRICAS */}
-      <div className="
-        relative z-10
-        grid
-        grid-cols-2
-        md:grid-cols-3
-        xl:grid-cols-7
-        gap-4
-        mt-7
-      ">
-        {statusStats.map((stat, index) => {
-          const percentage = Math.min(100, Math.max(0, stat.percentage));
-
-          return (
-            <div
-              key={stat.key}
-              className="
-                group
-                relative
-                overflow-hidden
-                rounded-3xl
-                p-5
-                bg-white/75
-                border border-white
-                shadow-[0_15px_40px_rgba(67,46,28,.08)]
-                transition-all duration-300
-                hover:-translate-y-1
-              "
-            >
-              <div
-                className="
-                  absolute
-                  -right-10
-                  -top-10
-                  w-24
-                  h-24
-                  rounded-full
-                  bg-[#E7C88A]/20
-                  blur-xl
-                "
-              />
-
-              <div className="relative">
-                <div className="
-                  text-[10px]
-                  font-extrabold
-                  uppercase
-                  tracking-[.12em]
-                  text-[#756D63]
-                  min-h-[28px]
-                ">
-                  {stat.label}
-                </div>
-
-                <div className="
-                  relative
-                  w-24
-                  h-24
-                  mx-auto
-                  my-4
-                ">
-                  <svg
-                    viewBox="0 0 100 100"
-                    className="w-full h-full -rotate-90"
-                  >
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="#E9E1D5"
-                      strokeWidth="9"
-                    />
-
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke={
-                        index % 3 === 0
-                          ? GOLD
-                          : index % 3 === 1
-                            ? BRONZE
-                            : GREEN
-                      }
-                      strokeWidth="9"
-                      strokeLinecap="round"
-                      strokeDasharray={`${percentage * 2.51} 251`}
-                    />
-                  </svg>
-
-                  <div className="
-                    absolute
-                    inset-0
-                    flex
-                    items-center
-                    justify-center
-                  ">
-                    <span className="cinema-number text-xl text-[#2C1B12]">
-                      {percentage}%
-                    </span>
-                  </div>
-                </div>
-
-                <div className="
-                  flex
-                  justify-between
-                  items-center
-                  pt-3
-                  border-t
-                  border-[#754B2A]/10
-                ">
-                  <span className="text-[10px] text-[#756D63]">
-                    Quantidade
-                  </span>
-
-                  <span className="cinema-number text-[#754B2A]">
-                    {stat.count}
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
 
-      {/* GRÁFICOS */}
-      <div className="
-        relative z-10
-        grid
-        grid-cols-1
-        xl:grid-cols-2
-        gap-6
-        mt-7
-      ">
-        {/* BARRAS */}
-        <div className="
-          rounded-3xl
-          bg-white/70
-          border border-white
-          p-6
-          shadow-[0_20px_50px_rgba(67,46,28,.08)]
-        ">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="
-                  w-9 h-9
-                  rounded-xl
-                  bg-[#F2E4C8]
-                  flex
-                  items-center
-                  justify-center
-                ">
-                  <BarChart3 className="w-4 h-4 text-[#754B2A]" />
-                </div>
+      {/* 1. HUD Radial Gauges Cards Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+        {statusStats.map(stat => (
+          <div
+            key={stat.key}
+            className="bg-slate-950/90 border border-cyan-500/30 rounded-2xl p-3.5 flex flex-col items-center text-center relative overflow-hidden group hover:border-cyan-400 transition-all shadow-[0_0_20px_rgba(0,240,255,0.05)]"
+          >
+            {/* Top Neon Color Bar */}
+            <div
+              className="absolute top-0 left-0 right-0 h-1"
+              style={{ backgroundColor: stat.color, boxShadow: `0 0 10px ${stat.glow}` }}
+            />
 
-                <h3 className="font-extrabold text-sm text-[#2C1B12]">
-                  Distribuição de cargas
-                </h3>
-              </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1 truncate w-full">
+              {stat.label}
+            </span>
 
-              <p className="text-[10px] text-[#756D63] mt-1">
-                Distribuição por status operacional
-              </p>
+            {/* Circular Radial HUD Gauge */}
+            <div className="relative w-16 h-16 my-2.5 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="32" cy="32" r="24" stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none" />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="24"
+                  stroke={stat.color}
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray={150}
+                  strokeDashoffset={150 - (150 * stat.percentage) / 100}
+                  strokeLinecap="round"
+                  style={{ filter: `drop-shadow(0 0 6px ${stat.color})` }}
+                />
+              </svg>
+              <span className="absolute text-sm font-black text-white">{stat.count}</span>
             </div>
 
-            <Layers className="w-5 h-5 text-[#B88935]" />
+            <span
+              className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700"
+              style={{ color: stat.color }}
+            >
+              {stat.percentage}% DO TOTAL
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* 2. Lateral Bar Charts & Timeline Line Chart Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Chart 1: Horizontal Bar Chart - Status Distribution */}
+        <div className="bg-slate-950/90 border border-cyan-500/30 rounded-3xl p-5 sm:p-6 shadow-[0_0_35px_rgba(0,240,255,0.08)] space-y-4">
+          <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-cyan-300 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-cyan-400" />
+              DISTRIBUIÇÃO POR STATUS (BARRAS HORIZONTAIS)
+            </h3>
+            <span className="text-[10px] text-cyan-400/60 font-bold">TOTAL: {totalIscas} ISCAS</span>
           </div>
 
-          <div className="h-[330px]">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <BarChart
-                data={statusStats}
-                margin={{
-                  top: 15,
-                  right: 15,
-                  left: -20,
-                  bottom: 25
-                }}
-              >
-                <defs>
-                  <linearGradient
-                    id="goldBar"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="0%" stopColor="#E7C88A" />
-                    <stop offset="50%" stopColor="#B88935" />
-                    <stop offset="100%" stopColor="#754B2A" />
-                  </linearGradient>
-                </defs>
-
-                <CartesianGrid
-                  vertical={false}
-                  stroke="#E5DED2"
-                  strokeDasharray="4 8"
-                />
-
-                <XAxis
-                  dataKey="label"
-                  stroke="#8A8074"
-                  fontSize={9}
-                  tickLine={false}
-                  axisLine={false}
-                  interval={0}
-                />
-
-                <YAxis
-                  stroke="#8A8074"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                />
-
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart layout="vertical" data={statusStats} margin={{ left: 20, right: 30, top: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#00f0ff" strokeOpacity={0.15} horizontal={false} />
+                <XAxis type="number" stroke="#00f0ff" strokeOpacity={0.5} tick={{ fill: '#00f0ff', fontSize: 10, fontFamily: 'monospace' }} />
+                <YAxis dataKey="label" type="category" width={110} stroke="#00f0ff" strokeOpacity={0.5} tick={{ fill: '#00f0ff', fontSize: 10, fontFamily: 'monospace' }} />
                 <Tooltip
-                  cursor={{
-                    fill: 'rgba(184,137,53,.06)'
-                  }}
-                  contentStyle={{
-                    background: '#FFFDF8',
-                    border: '1px solid #E7C88A',
-                    borderRadius: '16px',
-                    boxShadow: '0 20px 40px rgba(67,46,28,.15)',
-                    fontFamily: 'Manrope'
-                  }}
+                  contentStyle={{ backgroundColor: '#030712', borderColor: '#00f0ff', borderRadius: '12px', color: '#fff', fontFamily: 'monospace', fontSize: '11px' }}
+                  cursor={{ fill: 'rgba(0, 240, 255, 0.08)' }}
                 />
-
-                <Bar
-                  dataKey="count"
-                  radius={[12, 12, 5, 5]}
-                  maxBarSize={52}
-                  fill="url(#goldBar)"
-                >
-                  {statusStats.map((_, index) => (
-                    <Cell
-                      key={index}
-                      fill={
-                        index % 3 === 0
-                          ? '#B88935'
-                          : index % 3 === 1
-                            ? '#754B2A'
-                            : '#3D8B68'
-                      }
-                    />
+                <Bar dataKey="count" radius={[0, 8, 8, 0]}>
+                  {statusStats.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>
@@ -413,142 +224,33 @@ export const StatusAnalyticsHUD: React.FC<StatusAnalyticsHUDProps> = ({
           </div>
         </div>
 
-        {/* AREA CHART */}
-        <div className="
-          rounded-3xl
-          bg-[#2C1B12]
-          p-6
-          shadow-[0_25px_70px_rgba(44,27,18,.25)]
-          overflow-hidden
-          relative
-        ">
-          <div className="
-            absolute
-            -right-20
-            -top-20
-            w-64
-            h-64
-            rounded-full
-            bg-[#E7C88A]/10
-            blur-3xl
-          " />
+        {/* Chart 2: Line Chart - Timeline / Status Flow Trend */}
+        <div className="bg-slate-950/90 border border-cyan-500/30 rounded-3xl p-5 sm:p-6 shadow-[0_0_35px_rgba(0,240,255,0.08)] space-y-4">
+          <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-cyan-300 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-cyan-400" />
+              FLUXO DE MOVIMENTAÇÃO DE ISCAS (LINHAS TEMPO)
+            </h3>
+            <span className="text-[10px] text-cyan-400/60 font-bold">HUD TIMELINE</span>
+          </div>
 
-          <div className="relative">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="
-                    w-9 h-9
-                    rounded-xl
-                    bg-white/10
-                    flex
-                    items-center
-                    justify-center
-                  ">
-                    <TrendingUp className="w-4 h-4 text-[#E7C88A]" />
-                  </div>
-
-                  <h3 className="font-extrabold text-sm text-white">
-                    Fluxo operacional
-                  </h3>
-                </div>
-
-                <p className="text-[10px] text-white/50 mt-1">
-                  Evolução das movimentações durante o dia
-                </p>
-              </div>
-
-              <Sparkles className="w-5 h-5 text-[#E7C88A]" />
-            </div>
-
-            <div className="h-[330px]">
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-                <AreaChart data={timelineData}>
-                  <defs>
-                    <linearGradient
-                      id="cinemaArea"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="#E7C88A"
-                        stopOpacity=".45"
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="#E7C88A"
-                        stopOpacity="0"
-                      />
-                    </linearGradient>
-                  </defs>
-
-                  <CartesianGrid
-                    stroke="#FFFFFF"
-                    strokeOpacity=".08"
-                    vertical={false}
-                  />
-
-                  <XAxis
-                    dataKey="hora"
-                    stroke="#FFFFFF"
-                    strokeOpacity=".4"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-
-                  <YAxis
-                    stroke="#FFFFFF"
-                    strokeOpacity=".4"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-
-                  <Tooltip
-                    contentStyle={{
-                      background: '#FFFDF8',
-                      border: 'none',
-                      borderRadius: '16px',
-                      color: '#2C1B12',
-                      boxShadow: '0 20px 40px rgba(0,0,0,.2)'
-                    }}
-                  />
-
-                  <Area
-                    type="monotone"
-                    dataKey="emRota"
-                    stroke="#E7C88A"
-                    strokeWidth={4}
-                    fill="url(#cinemaArea)"
-                  />
-
-                  <Line
-                    type="monotone"
-                    dataKey="noDestino"
-                    stroke="#70B58F"
-                    strokeWidth={3}
-                    dot={false}
-                  />
-
-                  <Line
-                    type="monotone"
-                    dataKey="alerta"
-                    stroke="#D97973"
-                    strokeWidth={3}
-                    dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={timelineData} margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#00f0ff" strokeOpacity={0.15} />
+                <XAxis dataKey="hora" stroke="#00f0ff" strokeOpacity={0.5} tick={{ fill: '#00f0ff', fontSize: 10, fontFamily: 'monospace' }} />
+                <YAxis stroke="#00f0ff" strokeOpacity={0.5} tick={{ fill: '#00f0ff', fontSize: 10, fontFamily: 'monospace' }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#030712', borderColor: '#00f0ff', borderRadius: '12px', color: '#fff', fontFamily: 'monospace', fontSize: '11px' }}
+                />
+                <Line type="monotone" dataKey="emRota" stroke="#00f0ff" strokeWidth={3} dot={{ r: 4, fill: '#00f0ff' }} name="Em Rota (Ativas)" />
+                <Line type="monotone" dataKey="noDestino" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} name="No Destino" />
+                <Line type="monotone" dataKey="alerta" stroke="#ef4444" strokeWidth={2} dot={{ r: 3, fill: '#ef4444' }} name="Ocorrências" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
+
       </div>
     </section>
   );

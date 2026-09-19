@@ -6,18 +6,44 @@ import {
   Layers,
   MapPin,
   TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Truck,
   Building2,
   Search,
   ClipboardPaste,
+  RotateCcw,
   Sparkles,
   Zap,
+  Cpu,
+  Shield,
+  Filter,
+  BarChart3,
+  PieChart,
   Activity,
+  Maximize2,
+  Crosshair,
+  Download,
+  Plus,
   Trash2,
   FileSpreadsheet,
   X,
-  Database,
-  ArrowRight
+  ChevronRight,
+  Database
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LineChart,
+  Line,
+  CartesianGrid
+} from 'recharts';
 import { cn } from '../lib/utils';
 import { BrazilMapHUD } from './BrazilMapHUD';
 import { StatusAnalyticsHUD } from './StatusAnalyticsHUD';
@@ -38,8 +64,12 @@ export interface IscaDataRow {
   unidade: string;
 }
 
+// Initial sample dataset pre-loaded directly from attached image.png + additional status samples
+export const INITIAL_SLIDES_DATA: IscaDataRow[] = [];
+
 export type ActiveTabType = 'status' | 'destinos' | 'unidade' | 'import';
 
+// List of all units based on user requirement
 export const ALL_UNIDADES = [
   'MONTES CLAROS',
   'SANTA LUZIA',
@@ -50,14 +80,15 @@ export const ALL_UNIDADES = [
   'CUIABÁ'
 ];
 
+// Standardized Status Categories requested by prompt
 export const STATUS_CATEGORIES = [
-  { key: 'Em Rota Ida', label: 'Em Rota Ida', color: '#B88935', glow: 'rgba(184, 137, 53, 0.4)' },
-  { key: 'Em Rota Volta', label: 'Em Rota Volta', color: '#754B2A', glow: 'rgba(117, 75, 42, 0.4)' },
-  { key: 'No Destino', label: 'No Destino', color: '#3D8B68', glow: 'rgba(61, 139, 104, 0.4)' },
-  { key: 'Preparação', label: 'Preparação', color: '#E7C88A', glow: 'rgba(231, 200, 138, 0.4)' },
-  { key: 'Extraviada', label: 'Extraviada', color: '#B94A48', glow: 'rgba(185, 74, 72, 0.4)' },
-  { key: 'Possível Extravio', label: 'Possível Extravio', color: '#A8443B', glow: 'rgba(168, 68, 59, 0.4)' },
-  { key: 'Disponível', label: 'Disponível', color: '#8A7B6D', glow: 'rgba(138, 123, 109, 0.4)' },
+  { key: 'Em Rota Ida', label: 'Em Rota Ida', color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.4)' },
+  { key: 'Em Rota Volta', label: 'Em Rota Volta', color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' },
+  { key: 'No Destino', label: 'No Destino', color: '#10b981', glow: 'rgba(16, 185, 129, 0.4)' },
+  { key: 'Preparação', label: 'Preparação', color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.4)' },
+  { key: 'Extraviada', label: 'Extraviada', color: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' },
+  { key: 'Possível Extravio', label: 'Possível Extravio', color: '#ec4899', glow: 'rgba(236, 72, 153, 0.4)' },
+  { key: 'Disponível', label: 'Disponível', color: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.4)' },
 ];
 
 export function normalizeStatus(statusRaw: string): string {
@@ -155,14 +186,11 @@ export default function Slides() {
     return Object.entries(counts)
       .map(([name, val]) => ({
         name,
-        cidade: name,
         count: val.count,
-        total: val.count,
-        percentage: Math.round((val.count / (filteredData.length || 1)) * 100),
         iscas: val.iscas,
         drivers: val.drivers
       }))
-      .sort((a, b) => (b.count || 0) - (a.count || 0));
+      .sort((a, b) => b.count - a.count);
   }, [filteredData]);
 
   // Aggregation 3: Unidade Counts (Unidades)
@@ -187,6 +215,7 @@ export default function Slides() {
     const lines = rawText.split('\n').filter(l => l.trim().length > 0);
     const parsedRows: IscaDataRow[] = [];
 
+    // Detect delimiter (Tab or Semicolon or Comma)
     lines.forEach((line, index) => {
       let delimiter = '\t';
       if (line.includes('\t')) delimiter = '\t';
@@ -195,8 +224,9 @@ export default function Slides() {
 
       const cols = line.split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
       
+      // Check if line is header
       if (index === 0 && (cols[0].toUpperCase().includes('ID') || cols[0].toUpperCase().includes('ISCA'))) {
-        return;
+        return; // Skip header line
       }
 
       if (cols.length > 0 && cols[0]) {
@@ -222,157 +252,222 @@ export default function Slides() {
     }
   };
 
+  // Timeline series for line chart simulation
   const timelineData = useMemo(() => {
-    const len = filteredData.length;
     return [
-      { hora: '06:00', emRota: Math.floor(len * 0.3), noDestino: 2, alerta: 0 },
-      { hora: '09:00', emRota: Math.floor(len * 0.5), noDestino: 4, alerta: 1 },
-      { hora: '12:00', emRota: Math.floor(len * 0.7), noDestino: 6, alerta: 1 },
-      { hora: '15:00', emRota: Math.floor(len * 0.8), noDestino: 9, alerta: 2 },
-      { hora: '18:00', emRota: len, noDestino: 12, alerta: 2 },
+      { hora: '06:00', emRota: Math.floor(filteredData.length * 0.3), noDestino: 2, alerta: 0 },
+      { hora: '09:00', emRota: Math.floor(filteredData.length * 0.5), noDestino: 4, alerta: 1 },
+      { hora: '12:00', emRota: Math.floor(filteredData.length * 0.7), noDestino: 6, alerta: 1 },
+      { hora: '15:00', emRota: Math.floor(filteredData.length * 0.8), noDestino: 9, alerta: 2 },
+      { hora: '18:00', emRota: filteredData.length, noDestino: 12, alerta: 2 },
     ];
   }, [filteredData]);
 
   return (
-    <div className="cinema-background w-full min-h-screen p-4 sm:p-8 space-y-8 relative selection:bg-[#E7C88A] selection:text-[#2C1B12]">
-      <div className="relative z-10 space-y-8 w-full max-w-[120rem] mx-auto">
+    <div className="w-full min-h-screen bg-[#030712] text-slate-100 font-sans p-3 sm:p-6 space-y-6 relative overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+      
+      {/* Custom Wallpaper Background & 3D High-Tech HUD Grid */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* User Defined Background Image from Google Drive */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 mix-blend-luminosity scale-105"
+          style={{
+            backgroundImage: `url('https://lh3.googleusercontent.com/d/1-OMBqWyF1Lt7YwnSHUYtU8-DeNGpsOE1'), url('https://drive.google.com/uc?export=view&id=1-OMBqWyF1Lt7YwnSHUYtU8-DeNGpsOE1')`
+          }}
+        />
 
-        {/* TOP COMMAND HEADER */}
-        <header className="cinema-card cinema-3d p-6 sm:p-8 overflow-hidden">
-          <div className="cinema-light -top-40 -right-40" />
+        {/* Dark Vignette Overlay for Readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/80 via-[#030712]/70 to-[#030712]/90" />
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#754B2A]/10">
+        {/* Holographic cyan grid background */}
+        <div 
+          className="absolute inset-0 opacity-[0.08]" 
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #00f0ff 1px, transparent 1px),
+              linear-gradient(to bottom, #00f0ff 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px'
+          }} 
+        />
+
+        {/* Studio spotlight glows */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 blur-[140px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-sky-400/5 blur-[120px] rounded-full pointer-events-none" />
+
+        {/* Scanline Effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/[0.015] to-transparent animate-pulse pointer-events-none" />
+      </div>
+
+      <div className="relative z-10 space-y-6 max-w-[110rem] mx-auto">
+
+        {/* TOP HEADER - "Slides" High-Tech 4K Command Center Title */}
+        <header className="bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-4 sm:p-6 shadow-[0_0_50px_rgba(0,240,255,0.15)] relative overflow-hidden group">
+          {/* Decorative Corner HUD Brackets */}
+          <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+          <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
+          <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
+          <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+
+          {/* Cyan Glowing Header Line */}
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#00f0ff]" />
+
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            
             {/* Title Block */}
-            <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#E7C88A] via-[#B88935] to-[#754B2A] flex items-center justify-center shadow-[0_20px_45px_rgba(117,75,42,.25)] shrink-0 border border-white/60">
-                <Globe className="w-8 h-8 text-white" />
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-blue-600/30 to-slate-900 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_30px_rgba(0,240,255,0.3)] shrink-0 relative group-hover:scale-105 transition-transform">
+                <Globe className="w-8 h-8 text-cyan-300 animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-slate-950 shadow-[0_0_10px_#00f0ff]" />
               </div>
 
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="cinema-title text-4xl sm:text-5xl text-[#2C1B12]">
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-100 to-blue-400 font-mono uppercase drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]">
                     Slides
                   </h1>
-                  <span className="px-3 py-1 rounded-full bg-[#E7C88A]/30 border border-[#B88935]/40 text-xs font-extrabold tracking-widest text-[#754B2A] uppercase flex items-center gap-2 shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-[#3D8B68] animate-pulse" />
-                    Centro de Comando 4K
+                  <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-[10px] font-mono font-bold tracking-widest text-cyan-300 uppercase flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                    <Radio className="w-3 h-3 text-cyan-400 animate-ping" />
+                    4K COMMAND HUD UI
                   </span>
                 </div>
-                <p className="text-xs text-[#756D63] font-bold tracking-wide mt-1 uppercase flex items-center gap-2">
-                  <span>SISTEMA DE MONITORAMENTO DE ISCAS E RASTREAMENTO LOGÍSTICO</span>
+                <p className="text-xs text-cyan-200/70 font-mono tracking-widest mt-1 uppercase flex items-center gap-2">
+                  <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                  SISTEMA DE MONITORAMENTO DE ISCAS E RASTREAMENTO LOGÍSTICO
                 </p>
               </div>
             </div>
 
             {/* Quick Metrics & Actions Bar */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="bg-white/80 border border-[#754B2A]/15 rounded-2xl px-5 py-3 flex items-center gap-4 shadow-sm">
+              {/* Telemetry Counter Pill */}
+              <div className="bg-slate-900/80 border border-cyan-500/30 rounded-2xl px-4 py-2 flex items-center gap-3 font-mono shadow-[inset_0_0_15px_rgba(0,240,255,0.05)]">
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-widest font-extrabold text-[#756D63]">Total de Iscas</span>
-                  <span className="text-2xl cinema-number text-[#2C1B12]">{data.length}</span>
+                  <span className="text-[9px] uppercase tracking-widest text-cyan-400/70">TOTAL DE ISCAS</span>
+                  <span className="text-xl font-black text-cyan-300 font-mono">{data.length}</span>
                 </div>
-                <Database className="w-6 h-6 text-[#B88935]" />
+                <Database className="w-5 h-5 text-cyan-400 opacity-60" />
               </div>
 
+              {/* Limpar Tudo Button */}
               <button
                 onClick={() => setData([])}
-                className="cinema-button-secondary flex items-center gap-2 text-xs py-3 px-4 text-[#B94A48] hover:bg-[#B94A48]/10"
+                className="bg-slate-900/80 border border-rose-500/30 rounded-2xl px-4 py-3 flex items-center gap-2 font-mono hover:bg-rose-950/30 transition-colors cursor-pointer"
               >
-                <Trash2 className="w-4 h-4" />
-                <span>Limpar Registros</span>
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                <span className="text-xs font-black uppercase tracking-wider text-rose-300">LIMPAR TUDO</span>
               </button>
             </div>
           </div>
 
-          {/* Navigation Tabs & Search */}
-          <div className="relative z-10 mt-6 pt-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Capsule Tabs */}
-            <div className="flex flex-wrap items-center gap-2 bg-white/70 p-2 rounded-2xl border border-white shadow-sm">
+          {/* HUD Navigation Tabs */}
+          <div className="mt-6 pt-4 border-t border-cyan-500/20 flex flex-wrap items-center justify-between gap-4">
+            
+            {/* Abas requested by user styled as capsule dock with rivets */}
+            <div className="flex items-center gap-2 bg-[#020617]/95 p-2 rounded-full border-2 border-cyan-500/40 font-mono shadow-[0_0_30px_rgba(0,240,255,0.15)] relative">
+              {/* Corner cyan tech rivets */}
+              <div className="absolute top-1 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-cyan-300 to-cyan-800 border border-cyan-400/60 shadow-[0_0_6px_#00f0ff] flex items-center justify-center">
+                <div className="w-1 h-[1px] bg-cyan-950 rotate-45" />
+              </div>
+              <div className="absolute bottom-1 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-cyan-300 to-cyan-800 border border-cyan-400/60 shadow-[0_0_6px_#00f0ff] flex items-center justify-center">
+                <div className="w-1 h-[1px] bg-cyan-950 rotate-45" />
+              </div>
+              <div className="absolute top-1 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-cyan-300 to-cyan-800 border border-cyan-400/60 shadow-[0_0_6px_#00f0ff] flex items-center justify-center">
+                <div className="w-1 h-[1px] bg-cyan-950 -rotate-45" />
+              </div>
+              <div className="absolute bottom-1 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-cyan-300 to-cyan-800 border border-cyan-400/60 shadow-[0_0_6px_#00f0ff] flex items-center justify-center">
+                <div className="w-1 h-[1px] bg-cyan-950 -rotate-45" />
+              </div>
+
               <button
                 onClick={() => setActiveTab('status')}
                 className={cn(
-                  "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+                  "px-5 py-2.5 rounded-full font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
                   activeTab === 'status'
-                    ? "cinema-button shadow-md"
-                    : "text-[#756D63] hover:text-[#2C1B12] hover:bg-white/90"
+                    ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(0,240,255,0.8)] font-black border border-cyan-300"
+                    : "text-cyan-300/70 hover:text-cyan-300 hover:bg-cyan-500/10"
                 )}
               >
                 <Activity className="w-4 h-4" />
-                Aba Status
+                ABA STATUS
               </button>
 
               <button
                 onClick={() => setActiveTab('destinos')}
                 className={cn(
-                  "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+                  "px-5 py-2.5 rounded-full font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
                   activeTab === 'destinos'
-                    ? "cinema-button shadow-md"
-                    : "text-[#756D63] hover:text-[#2C1B12] hover:bg-white/90"
+                    ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(0,240,255,0.8)] font-black border border-cyan-300"
+                    : "text-cyan-300/70 hover:text-cyan-300 hover:bg-cyan-500/10"
                 )}
               >
                 <MapPin className="w-4 h-4" />
-                Aba Destinos ({destinoStats.length})
+                ABA DESTINOS ({destinoStats.length})
               </button>
 
               <button
                 onClick={() => setActiveTab('unidade')}
                 className={cn(
-                  "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+                  "px-5 py-2.5 rounded-full font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
                   activeTab === 'unidade'
-                    ? "cinema-button shadow-md"
-                    : "text-[#756D63] hover:text-[#2C1B12] hover:bg-white/90"
+                    ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(0,240,255,0.8)] font-black border border-cyan-300"
+                    : "bg-transparent text-cyan-300/70 hover:text-cyan-300 hover:bg-cyan-500/10"
                 )}
               >
                 <Building2 className="w-4 h-4" />
-                Aba Unidade ({unidadeStats.length})
+                ABA UNIDADE ({unidadeStats.length})
               </button>
 
               <button
                 onClick={() => setActiveTab('import')}
                 className={cn(
-                  "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
+                  "px-5 py-2.5 rounded-full font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer",
                   activeTab === 'import'
-                    ? "cinema-button shadow-md"
-                    : "text-[#756D63] hover:text-[#2C1B12] hover:bg-white/90"
+                    ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(0,240,255,0.8)] font-black border border-cyan-300"
+                    : "text-cyan-300/70 hover:text-cyan-300 hover:bg-cyan-500/10"
                 )}
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                Campo de Importação
+                CAMPO DE IMPORTAÇÃO
               </button>
             </div>
 
-            {/* Search Filter */}
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#754B2A]" />
+            {/* Search Filter input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400" />
               <input
                 type="text"
-                placeholder="Filtrar isca, destino, status..."
+                placeholder="FILTRAR ISCA, DESTINO, STATUS..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/90 border border-[#754B2A]/20 rounded-2xl py-2.5 pl-11 pr-10 text-xs font-bold text-[#2C1B12] placeholder-[#756D63]/60 focus:outline-none focus:border-[#B88935] focus:ring-2 focus:ring-[#E7C88A]/50 shadow-sm"
+                className="w-full bg-slate-950/90 border border-cyan-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-mono text-cyan-200 placeholder-cyan-500/40 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 shadow-[inset_0_0_10px_rgba(0,240,255,0.1)]"
               />
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#756D63] hover:text-[#2C1B12]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-white"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
           </div>
         </header>
 
-        {/* MAIN TAB CONTENT */}
+        {/* MAIN TAB CONTENT - 4 DYNAMIC VIEWS */}
         
-        {/* VIEW 1: STATUS */}
+        {/* ========================================================= */}
+        {/* VIEW 1: ABA "STATUS" */}
+        {/* ========================================================= */}
         {activeTab === 'status' && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="space-y-8"
+            className="space-y-6"
           >
+            {/* CENTRAL MAIN HIGHLIGHT - HIGHLY DETAILED 4K CARTOGRAPHIC MAP OF BRAZIL UI (16:9 HUD) */}
             <BrazilMapHUD
               selectedMapNode={selectedMapNode}
               setSelectedMapNode={setSelectedMapNode}
@@ -380,13 +475,13 @@ export default function Slides() {
               setHoveredCity={setHoveredCity}
               count={filteredData.length}
             />
-
+            {/* GROUPED STATUS ANALYTICS HUD WITH FULL SCREEN TOGGLE */}
             <StatusAnalyticsHUD
               statusStats={statusStats}
-              timelineData={timelineData}
               totalIscas={filteredData.length}
             />
 
+            {/* Live Data Table for Status with Fullscreen Toggle */}
             <StatusDetailHUD
               filteredData={filteredData}
               normalizeStatus={normalizeStatus}
@@ -395,57 +490,53 @@ export default function Slides() {
           </motion.div>
         )}
 
-        {/* VIEW 2: DESTINOS */}
+
+        {/* ========================================================= */}
+        {/* VIEW 2: ABA "DESTINOS" */}
+        {/* ========================================================= */}
         {activeTab === 'destinos' && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="space-y-8"
+            className="space-y-6"
           >
-            <DestinoRankingHUD destinos={destinoStats} />
+            {/* Top Bar Chart: Destinations ranking with Fullscreen option */}
+            <DestinoRankingHUD destinoStats={destinoStats} />
 
-            {/* Destination Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Destination Numeric HUD Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono">
               {destinoStats.map(dest => (
                 <div
                   key={dest.name}
-                  className="
-                    cinema-card
-                    p-6
-                    space-y-4
-                    shadow-[0_15px_35px_rgba(67,46,28,.06)]
-                    hover:-translate-y-1
-                    transition-all
-                    duration-300
-                  "
+                  className="bg-slate-950/90 border border-cyan-500/30 rounded-2xl p-5 shadow-[0_0_20px_rgba(0,240,255,0.05)] hover:border-cyan-400 transition-all space-y-3 relative overflow-hidden group"
                 >
-                  <div className="flex items-center justify-between border-b border-[#754B2A]/10 pb-3">
+                  <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#F2E4C8] flex items-center justify-center">
-                        <MapPin className="w-4 h-4 text-[#754B2A]" />
-                      </div>
-                      <h4 className="cinema-title text-xl text-[#2C1B12] font-bold">{dest.name}</h4>
+                      <MapPin className="w-4 h-4 text-cyan-400" />
+                      <h4 className="font-black text-sm text-white uppercase tracking-wider">{dest.name}</h4>
                     </div>
-                    <span className="px-3 py-1 bg-[#E7C88A]/30 text-[#754B2A] border border-[#B88935]/30 rounded-xl text-xs font-extrabold">
-                      {dest.count} iscas
+                    <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 rounded-xl text-xs font-black">
+                      {dest.count} ISCAS
                     </span>
                   </div>
 
-                  <div className="space-y-2 text-xs">
-                    <div className="text-[10px] uppercase tracking-wider font-extrabold text-[#756D63]">Códigos das Iscas:</div>
-                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  {/* List of Iscas attached */}
+                  <div className="space-y-1.5 text-xs text-slate-300">
+                    <div className="text-[10px] text-cyan-400/70 uppercase">CÓDIGOS DAS ISCAS:</div>
+                    <div className="flex flex-wrap gap-1.5">
                       {dest.iscas.map(id => (
-                        <span key={id} className="px-2 py-1 bg-white border border-[#754B2A]/15 rounded-lg text-[#754B2A] font-extrabold text-[10px] cinema-number shadow-2xs">
+                        <span key={id} className="px-2 py-0.5 bg-slate-900 border border-cyan-500/30 rounded text-cyan-300 font-bold text-[10px]">
                           {id}
                         </span>
                       ))}
                     </div>
                   </div>
 
+                  {/* Drivers attached */}
                   {dest.drivers.length > 0 && (
-                    <div className="pt-3 border-t border-[#754B2A]/10 text-[11px] text-[#756D63]">
-                      Motoristas: <span className="text-[#2C1B12] font-bold">{dest.drivers.join(', ')}</span>
+                    <div className="pt-2 border-t border-cyan-500/10 text-[10px] text-slate-400">
+                      MOTORISTAS: <span className="text-white font-bold">{dest.drivers.join(', ')}</span>
                     </div>
                   )}
                 </div>
@@ -454,13 +545,16 @@ export default function Slides() {
           </motion.div>
         )}
 
-        {/* VIEW 3: UNIDADE */}
+
+        {/* ========================================================= */}
+        {/* VIEW 3: ABA "UNIDADE" */}
+        {/* ========================================================= */}
         {activeTab === 'unidade' && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="space-y-8"
+            className="space-y-6"
           >
             <UnidadeAnalyticsHUD
               unidadeStats={unidadeStats}
@@ -469,27 +563,28 @@ export default function Slides() {
           </motion.div>
         )}
 
-        {/* VIEW 4: IMPORTAÇÃO */}
+
+        {/* ========================================================= */}
+        {/* VIEW 4: CAMPO DE IMPORTAÇÃO INTEGRADO */}
+        {/* ========================================================= */}
         {(activeTab === 'import' || showImportModal) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            className="cinema-card cinema-3d p-6 sm:p-10 space-y-6 relative overflow-hidden"
+            className="bg-slate-950/95 border-2 border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,240,255,0.2)] font-mono space-y-6 relative"
           >
-            <div className="cinema-light -top-40 -left-40" />
-
-            <div className="relative z-10 flex items-center justify-between border-b border-[#754B2A]/10 pb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#F2E4C8] flex items-center justify-center text-[#754B2A] shadow-sm">
-                  <ClipboardPaste className="w-6 h-6" />
+            <div className="flex items-center justify-between border-b border-cyan-500/30 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
+                  <ClipboardPaste className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="cinema-title text-3xl text-[#2C1B12]">
-                    Importação de Dados da Planilha
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                    CAMPO EM BRANCO PARA COLAR INFORMAÇÕES DA PLANILHA (IMAGE.PNG)
                   </h3>
-                  <p className="text-xs text-[#756D63] font-medium">
-                    Cole as linhas diretamente da sua planilha Excel ou Google Sheets para sincronizar os dados.
+                  <p className="text-xs text-cyan-400/70">
+                    Copie e cole diretamente da sua planilha Excel, Google Sheets ou texto formatado.
                   </p>
                 </div>
               </div>
@@ -497,7 +592,7 @@ export default function Slides() {
               {showImportModal && (
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="p-2.5 text-[#756D63] hover:text-[#2C1B12] rounded-xl hover:bg-white/80"
+                  className="p-2 text-cyan-400 hover:text-white rounded-xl hover:bg-slate-900"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -505,33 +600,38 @@ export default function Slides() {
             </div>
 
             {/* Instruction Banner */}
-            <div className="relative z-10 bg-white/70 border border-[#754B2A]/15 rounded-2xl p-4 text-xs text-[#2C1B12] space-y-2">
-              <div className="font-extrabold text-[#754B2A] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#B88935]" />
-                Formato Reconhecido Automaticamente:
+            <div className="bg-cyan-950/40 border border-cyan-500/30 rounded-2xl p-4 text-xs text-cyan-200/90 leading-relaxed space-y-2">
+              <div className="font-black text-cyan-300 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                FORMATO RECOMENDADO DAS COLUNAS (PARSER AUTOMÁTICO):
               </div>
-              <p className="text-[11px] font-bold text-[#756D63] bg-[#F2E4C8]/50 p-3 rounded-xl border border-[#754B2A]/10">
+              <p className="font-mono text-[11px] text-cyan-400/80 bg-slate-950 p-2.5 rounded-xl border border-cyan-500/20">
                 ID ISCA &nbsp;|&nbsp; DESTINO &nbsp;|&nbsp; STATUS &nbsp;|&nbsp; OBS 1 &nbsp;|&nbsp; DATA STATUS &nbsp;|&nbsp; CARRETA &nbsp;|&nbsp; CAVALO &nbsp;|&nbsp; MOTORISTA &nbsp;|&nbsp; UNIDADE
               </p>
             </div>
 
-            {/* Large Textarea */}
-            <div className="relative z-10 space-y-2">
-              <label className="text-xs font-extrabold text-[#754B2A] uppercase tracking-wider flex items-center gap-2">
-                <FileSpreadsheet className="w-4 h-4 text-[#B88935]" />
-                Área de Transferência:
+            {/* Large Blank Textarea for Paste */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-cyan-400" />
+                COLE OS DADOS DA PLANILHA AQUI:
               </label>
               <textarea
                 rows={10}
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
-                placeholder={`Cole aqui as linhas copiadas da planilha...`}
-                className="w-full bg-white/90 border border-[#754B2A]/20 rounded-2xl p-4 text-xs font-bold text-[#2C1B12] placeholder-[#756D63]/50 focus:outline-none focus:border-[#B88935] focus:ring-2 focus:ring-[#E7C88A]/40 shadow-inner resize-y"
+                placeholder={`Exemplo de dados para colar:
+R100000783\tBRASILIA\tEM ROTA(IDA)\tPRÉ ALERTA OK\t30.jul.\tPOF9075\tPNY2605\tRENATO LÚCIO FERREIRA\tSANTA LUZIA
+R100000579\tGUARULHOS\tEM ROTA(IDA)\tPRÉ ALERTA OK\t30.jul.\tMGL9787\tTAX0F37\tROBERTO DA SILVA SOBREIRA\tSANTA LUZIA
+R100000586\tRIO DE JANEIRO\tEM ROTA(IDA)\tPRÉ ALERTA OK\t30.jul.\tQOX3168\tTHX8C51\tSAMUEL ALVES PEREIRA DA SILVA\tSANTA LUZIA
+R100000882\t\tPREPARAÇÃO\t\t31.jul.\t\t\t\tSANTA LUZIA
+R100000876\t\tDISPONIVEL\t\t30.jul.\t\t\t\tSANTA LUZIA`}
+                className="w-full bg-slate-950 border border-cyan-500/40 rounded-2xl p-4 font-mono text-xs text-cyan-200 placeholder-cyan-600/40 focus:outline-none focus:border-cyan-300 focus:ring-1 focus:ring-cyan-400 shadow-[inset_0_0_20px_rgba(0,240,255,0.05)] resize-y"
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
               <button
                 onClick={() => {
                   setPastedText(`R100000783\tBRASILIA\tEM ROTA(IDA)\tPRÉ ALERTA OK\t30.jul.\tPOF9075\tPNY2605\tRENATO LÚCIO FERREIRA\tSANTA LUZIA
@@ -552,32 +652,33 @@ R100000835\t\tDISPONIVEL\t\t30.jul.\t\t\t\tSANTA LUZIA
 R100002336\tRIO DE JANEIRO\tEM ROTA(IDA)\tPRÉ ALERTA OK\t31.jul.\tSBF9G98\tSAR8D82\tADILSON DOS REIS SILVA\tSANTA LUZIA
 R100000571\tGOVERNADOR VALADARES\tEM ROTA(IDA)\tPRÉ ALERTA OK\t30.jul.\tEIH6I81\tSJL8H32\tALAN SANTOS SOARES\tSANTA LUZIA`);
                 }}
-                className="cinema-button-secondary flex items-center gap-2 text-xs"
+                className="px-4 py-2.5 rounded-xl bg-slate-900 border border-cyan-500/30 text-cyan-300 text-xs font-bold uppercase hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-[#B88935]" />
-                Carregar Exemplo Modelo
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                PREENCHER COM EXEMPO DA PLANILHA IMAGE.PNG
               </button>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setPastedText('')}
-                  className="cinema-button-secondary text-xs text-[#B94A48]"
+                  className="px-4 py-2.5 rounded-xl bg-slate-900 border border-rose-500/30 text-rose-400 text-xs font-bold uppercase hover:bg-rose-950/30 transition-colors cursor-pointer"
                 >
-                  Limpar
+                  LIMPAR TEXTO
                 </button>
 
                 <button
                   onClick={() => handleParsePastedText(pastedText)}
                   disabled={!pastedText.trim()}
-                  className="cinema-button flex items-center gap-2 text-xs disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(0,240,255,0.4)] disabled:opacity-50 hover:shadow-[0_0_30px_rgba(0,240,255,0.7)] cursor-pointer transition-all border border-cyan-300 flex items-center gap-2"
                 >
-                  <Zap className="w-4 h-4" />
-                  Processar e Sincronizar
+                  <Zap className="w-4 h-4 fill-slate-950" />
+                  PROCESSAR E ATUALIZAR DASHBOARD
                 </button>
               </div>
             </div>
           </motion.div>
         )}
+
       </div>
     </div>
   );
