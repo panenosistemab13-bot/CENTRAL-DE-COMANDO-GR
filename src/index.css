@@ -1,89 +1,298 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Montserrat", "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-heading: "Cinzel", "Playfair Display", Georgia, serif;
-  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
-  --font-serif-display: "Cinzel", "Playfair Display", Georgia, serif;
-  
-  --color-primary: #B32025; /* Institutional Red */
-  --color-primary-dark: #8c060a;
-  --color-canvas: #f8f6f0; /* Executive Office Warm Linen */
-  --color-card: #ffffff; /* Crisp Executive White */
-  --color-border-dark: rgba(43, 24, 13, 0.15);
+:root {
+  --cinema-bg: #f3efe7;
+  --cinema-bg-2: #e8e0d3;
+  --cinema-white: #fffdf8;
+
+  --cinema-gold: #b88935;
+  --cinema-champagne: #e7c88a;
+  --cinema-bronze: #754b2a;
+  --cinema-brown: #2c1b12;
+
+  --cinema-green: #3d8b68;
+  --cinema-red: #b94a48;
+
+  --cinema-text: #292521;
+  --cinema-muted: #756d63;
+
+  --cinema-shadow: 0 30px 80px rgba(74, 52, 31, 0.16);
+  --cinema-shadow-soft: 0 15px 40px rgba(74, 52, 31, 0.10);
 }
 
-@layer base {
-  body {
-    @apply bg-canvas text-[#1f1610] antialiased selection:bg-[#B32025]/20 selection:text-[#B32025];
-    font-family: var(--font-sans);
-    min-height: 100%;
-  }
-  
-  html {
-    min-height: 100%;
-  }
-
-  #root {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  @media (min-width: 768px) {
-    html, body, #root {
-      height: 100%;
-      overflow: hidden;
-    }
-  }
+* {
+  box-sizing: border-box;
 }
 
-@layer components {
-  .logo-text {
-    @apply text-sm font-black text-white tracking-[0.2em] uppercase leading-tight text-nowrap font-heading;
-  }
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
 
-  .report-card {
-    @apply bg-white border-2 border-[#3A2414]/15 rounded-2xl shadow-lg transition-all duration-300 hover:border-[#B32025]/50 hover:shadow-xl;
-  }
-  
-  .toolbar-button {
-    @apply flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-[#3A2414] hover:text-[#B32025] hover:bg-[#3A2414]/5 rounded-xl transition-all border border-[#3A2414]/10 hover:border-[#3A2414]/30 shadow-2xs;
-  }
+body {
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(231, 200, 138, 0.35),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(117, 75, 42, 0.12),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #f7f3ec 0%,
+      #eee7db 45%,
+      #e4d9ca 100%
+    );
 
-  .toolbar-button-active {
-    @apply text-white bg-[#B32025] border-[#8c060a] shadow-[0_4px_12px_rgba(179,32,37,0.3)];
-  }
-  
-  .canvas-grid {
-    background-color: #f8f6f0;
-    background-image: 
-      radial-gradient(circle at center, rgba(179, 32, 37, 0.03) 0%, rgba(58, 36, 20, 0.05) 100%);
-    background-attachment: fixed;
-  }
+  color: var(--cinema-text);
+  font-family: 'Manrope', sans-serif;
+  overflow-x: hidden;
+}
 
-  .executive-panel {
-    @apply bg-white border-2 border-[#3A2414]/20 rounded-[2rem] shadow-xl p-6 sm:p-8 backdrop-blur-md;
-  }
+/* =========================================
+   CINEMATIC BACKGROUND
+========================================= */
 
-  .executive-header {
-    @apply font-heading font-black tracking-tight text-[#2B180D] uppercase;
-  }
+.cinema-background {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+  overflow: hidden;
+}
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+.cinema-background::before {
+  content: "";
+  position: fixed;
+  inset: 0;
 
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  background:
+    radial-gradient(
+      ellipse at 50% -10%,
+      rgba(255, 255, 255, 0.95),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 0% 100%,
+      rgba(117, 75, 42, 0.12),
+      transparent 40%
+    );
 
-  :focus-visible {
-    outline: none !important;
-    border-color: #B32025 !important;
-    box-shadow: 0 0 0 3px rgba(179, 32, 37, 0.15) !important;
-    transition: all 0.2s ease;
-  }
+  pointer-events: none;
+  z-index: -3;
+}
+
+.cinema-background::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(117, 75, 42, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(117, 75, 42, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size: 70px 70px;
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* =========================================
+   GLASS PREMIUM
+========================================= */
+
+.cinema-card {
+  position: relative;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(247, 242, 233, 0.80)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.95);
+
+  box-shadow:
+    0 30px 80px rgba(67, 46, 28, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border-radius: 28px;
+}
+
+.cinema-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      115deg,
+      rgba(255,255,255,.65),
+      transparent 35%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================
+   3D DEPTH
+========================================= */
+
+.cinema-3d {
+  transform:
+    perspective(1400px)
+    rotateX(1deg)
+    translateZ(0);
+
+  transition:
+    transform .5s cubic-bezier(.2,.8,.2,1),
+    box-shadow .5s ease;
+}
+
+.cinema-3d:hover {
+  transform:
+    perspective(1400px)
+    rotateX(0deg)
+    translateY(-5px)
+    scale(1.005);
+
+  box-shadow:
+    0 40px 100px rgba(67, 46, 28, 0.18);
+}
+
+/* =========================================
+   GOLD LIGHT
+========================================= */
+
+.cinema-light {
+  position: absolute;
+  pointer-events: none;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(231, 200, 138, .28),
+      rgba(231, 200, 138, 0) 70%
+    );
+
+  filter: blur(10px);
+}
+
+/* =========================================
+   PREMIUM BUTTON
+========================================= */
+
+.cinema-button {
+  border: 1px solid rgba(184, 137, 53, .35);
+
+  background:
+    linear-gradient(
+      135deg,
+      #d7ae61,
+      #a9782e
+    );
+
+  color: #fffdf8;
+  border-radius: 14px;
+  padding: 11px 18px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+
+  box-shadow:
+    0 12px 25px rgba(117, 75, 42, .18),
+    inset 0 1px 0 rgba(255,255,255,.35);
+
+  transition: all .25s ease;
+  cursor: pointer;
+}
+
+.cinema-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 35px rgba(117, 75, 42, .25);
+}
+
+.cinema-button-secondary {
+  border: 1px solid rgba(117, 75, 42, .15);
+  background: rgba(255, 253, 248, 0.85);
+  color: #2c1b12;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(117, 75, 42, .06);
+  transition: all .25s ease;
+  cursor: pointer;
+}
+
+.cinema-button-secondary:hover {
+  background: rgba(231, 200, 138, 0.25);
+  border-color: rgba(184, 137, 53, 0.4);
+  transform: translateY(-1px);
+}
+
+/* =========================================
+   NUMBERS
+========================================= */
+
+.cinema-number {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+/* =========================================
+   TITLES
+========================================= */
+
+.cinema-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* =========================================
+   PREMIUM SCROLLBAR
+========================================= */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e9e1d5;
+}
+
+::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(
+      #b88935,
+      #754b2a
+    );
+
+  border-radius: 20px;
+  border: 2px solid #e9e1d5;
 }

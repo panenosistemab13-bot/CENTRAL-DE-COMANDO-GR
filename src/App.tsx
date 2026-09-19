@@ -355,7 +355,6 @@ export default function App() {
             pageVisibility={pageVisibility}
             availablePages={availablePages}
             onUnlockPresenceList={handleOpenPageSelector}
-            notificationsCount={activeTodayApps.length}
           />
         );
       case 'slides':
@@ -448,9 +447,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen md:h-screen flex bg-[#0a0502] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
+    <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
+      {/* Top Banner: Última Atualização + Data (Aparece exclusivamente no Menu Inicial) */}
+      {activeTab === 'menu' && <UpdateTopBanner />}
+      
       {/* Immersive Background Image / Radial glow */}
-      {activeTab === 'checklist' ? (
+      {(activeTab === 'menu' || activeTab === 'checklist') ? (
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
            <img
              src={toAbsoluteUrl(coffeeBg)}
@@ -461,7 +463,7 @@ export default function App() {
            {/* Cinematic warm light glow overlays */}
            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, rgba(181, 138, 76, 0.15) 0%, rgba(242, 228, 204, 0.45) 100%)' }} />
         </div>
-      ) : activeTab !== 'menu' ? (
+      ) : (
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <AnimatePresence mode="wait">
             {backgroundImages[activeTab] && (
@@ -480,7 +482,7 @@ export default function App() {
           {/* Immersive warm chocolate/dark vignette to integrate the page element contrast beautifully */}
           <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, transparent 20%, rgba(45, 26, 16, 0.4) 100%)' }} />
         </div>
-      ) : null}
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full">

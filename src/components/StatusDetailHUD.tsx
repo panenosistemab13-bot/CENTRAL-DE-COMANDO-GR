@@ -2,7 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Zap,
   Maximize2,
-  Minimize2
+  Minimize2,
+  ChevronDown,
+  ChevronUp,
+  ListFilter
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { IscaDataRow } from './Slides';
@@ -19,7 +22,7 @@ export const StatusDetailHUD: React.FC<StatusDetailHUDProps> = ({
   STATUS_CATEGORIES
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,9 +37,7 @@ export const StatusDetailHUD: React.FC<StatusDetailHUDProps> = ({
 
   const toggleFullscreen = () => {
     if (!isFullscreen) {
-      if (containerRef.current?.requestFullscreen) {
-        containerRef.current.requestFullscreen().catch(() => {});
-      }
+      containerRef.current?.requestFullscreen().catch(() => {});
       setIsFullscreen(true);
     } else {
       if (document.fullscreenElement) {
@@ -46,96 +47,111 @@ export const StatusDetailHUD: React.FC<StatusDetailHUDProps> = ({
     }
   };
 
+  const getStatusBadgeStyle = (status: string) => {
+    const norm = normalizeStatus(status);
+    if (norm === 'Em Rota Ida' || norm === 'Em Rota Volta') {
+      return 'bg-[#E7C88A]/30 text-[#754B2A] border-[#B88935]/40';
+    }
+    if (norm === 'No Destino') {
+      return 'bg-[#3D8B68]/15 text-[#3D8B68] border-[#3D8B68]/30';
+    }
+    if (norm === 'Extraviada' || norm === 'Possível Extravio') {
+      return 'bg-[#B94A48]/15 text-[#B94A48] border-[#B94A48]/30';
+    }
+    return 'bg-[#F2E4C8] text-[#2C1B12] border-[#754B2A]/20';
+  };
+
   return (
     <div
       ref={containerRef}
       className={cn(
-        "bg-slate-950/90 border border-cyan-500/30 rounded-3xl p-6 shadow-[0_0_40px_rgba(0,240,255,0.08)] space-y-4 font-mono relative overflow-hidden transition-all duration-300",
-        isFullscreen && "fixed inset-0 z-50 rounded-none border-0 p-4 sm:p-6 flex flex-col justify-between w-screen h-screen overflow-hidden bg-[#020617]"
+        "relative cinema-card cinema-3d p-6 md:p-8 space-y-4 overflow-hidden transition-all duration-300",
+        isFullscreen && "fixed inset-0 z-[999] rounded-none p-6 flex flex-col justify-between w-screen h-screen overflow-hidden bg-[#F7F3EC]"
       )}
     >
-      {/* Corner Decorative Tech Brackets for Fullscreen or HUD feel */}
-      {isFullscreen && (
-        <>
-          <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-          <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-          <div className="absolute bottom-2 left-2 w-5 h-5 border-b-2 border-l-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-          <div className="absolute bottom-2 right-2 w-5 h-5 border-b-2 border-r-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-        </>
-      )}
+      <div className="cinema-light -top-40 -left-40" />
 
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3 gap-4 cursor-pointer" onClick={() => setIsMinimized(!isMinimized)}>
-        <h3 className="text-xs font-black uppercase tracking-widest text-cyan-300 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-cyan-400" />
-          DETALHAMENTO DE ISCAS POR STATUS ({filteredData.length}) - {isMinimized ? "MAXIMIZAR" : "MINIMIZAR"}
-        </h3>
+      <div 
+        className="relative z-10 flex items-center justify-between border-b border-[#754B2A]/10 pb-4 gap-4 cursor-pointer"
+        onClick={() => setIsMinimized(!isMinimized)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#F2E4C8] flex items-center justify-center shadow-sm">
+            <ListFilter className="w-5 h-5 text-[#754B2A]" />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-[.2em] font-extrabold text-[#B88935]">
+              Auditoria de Registros
+            </div>
+            <h3 className="cinema-title text-2xl text-[#2C1B12]">
+              Detalhamento de Iscas por Status ({filteredData.length})
+            </h3>
+          </div>
+        </div>
 
-        {/* Full Screen Toggle Button */}
-        <button
-          onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-          title={isFullscreen ? "Sair da Tela Cheia" : "Expandir Detalhamento em Tela Cheia"}
-          className={cn(
-            "px-3 py-1.5 rounded-xl border font-mono font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer text-[10px]",
-            isFullscreen
-              ? "bg-cyan-500 text-slate-950 border-cyan-300 shadow-[0_0_20px_#00f0ff]"
-              : "bg-cyan-950/80 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/20 hover:border-cyan-400"
-          )}
-        >
-          {isFullscreen ? (
-            <>
-              <Minimize2 className="w-3.5 h-3.5 text-slate-950" />
-              <span>SAIR DA TELA CHEIA (ESC)</span>
-            </>
-          ) : (
-            <>
-              <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>TELA CHEIA</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+            className="cinema-button-secondary flex items-center gap-2 text-xs py-2 px-3"
+          >
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{isFullscreen ? "Sair Tela Cheia" : "Tela Cheia"}</span>
+          </button>
+
+          <button 
+            type="button" 
+            className="w-9 h-9 rounded-xl bg-white/80 border border-[#754B2A]/15 flex items-center justify-center text-[#754B2A] hover:bg-[#F2E4C8]"
+          >
+            {isMinimized ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Table Container */}
       {!isMinimized && (
-        <div className={cn("overflow-x-auto", isFullscreen && "flex-1 overflow-y-auto")}>
+        <div className={cn("relative z-10 overflow-x-auto", isFullscreen && "flex-1 overflow-y-auto")}>
           <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-slate-950 z-10">
-              <tr className="border-b border-cyan-500/20 text-cyan-400/70 text-[10px] uppercase tracking-wider">
-                <th className="p-3">ID ISCA</th>
-                <th className="p-3">DESTINO</th>
-                <th className="p-3">STATUS</th>
-                <th className="p-3">MOTORISTA</th>
-                <th className="p-3">PLACA (CAVALO)</th>
-                <th className="p-3">CARRETA</th>
-                <th className="p-3">UNIDADE</th>
-                <th className="p-3">OBSERVACAO</th>
+            <thead className="sticky top-0 bg-[#F4EFE6] z-10">
+              <tr className="border-b border-[#754B2A]/15 text-[#756D63] text-[10px] uppercase tracking-wider font-extrabold">
+                <th className="p-3.5">ID Isca</th>
+                <th className="p-3.5">Destino</th>
+                <th className="p-3.5">Status</th>
+                <th className="p-3.5">Motorista</th>
+                <th className="p-3.5">Cavalo</th>
+                <th className="p-3.5">Carreta</th>
+                <th className="p-3.5">Unidade</th>
+                <th className="p-3.5">Observação</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-cyan-500/10 text-slate-300">
-              {filteredData.map(row => {
-                const norm = normalizeStatus(row.status);
-                const cat = STATUS_CATEGORIES.find(c => c.key === norm) || { color: '#00f0ff' };
-                return (
-                  <tr key={row.id} className="hover:bg-cyan-500/5 transition-colors">
-                    <td className="p-3 font-bold text-cyan-300">{row.idIsca}</td>
-                    <td className="p-3 font-bold text-white">{row.destino || '---'}</td>
-                    <td className="p-3">
-                      <span 
-                        className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border"
-                        style={{ backgroundColor: `${cat.color}15`, color: cat.color, borderColor: `${cat.color}40` }}
-                      >
+            <tbody className="divide-y divide-[#754B2A]/10 text-[#2C1B12]">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-[#756D63] font-medium">
+                    Nenhum registro encontrado com os filtros atuais.
+                  </td>
+                </tr>
+              ) : (
+                filteredData.map(row => (
+                  <tr key={row.id} className="hover:bg-[#E7C88A]/15 transition-colors">
+                    <td className="p-3.5 font-extrabold text-[#754B2A] cinema-number">{row.idIsca}</td>
+                    <td className="p-3.5 font-bold text-[#2C1B12]">{row.destino || '---'}</td>
+                    <td className="p-3.5">
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border",
+                        getStatusBadgeStyle(row.status)
+                      )}>
                         {row.status}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-200">{row.motorista || '---'}</td>
-                    <td className="p-3 text-cyan-400 font-bold">{row.cavalo || '---'}</td>
-                    <td className="p-3 text-slate-400">{row.carreta || '---'}</td>
-                    <td className="p-3 text-emerald-400 font-bold">{row.unidade}</td>
-                    <td className="p-3 text-slate-400">{row.obs1 || '---'}</td>
+                    <td className="p-3.5 text-[#524B43]">{row.motorista || '---'}</td>
+                    <td className="p-3.5 text-[#754B2A] font-bold cinema-number">{row.cavalo || '---'}</td>
+                    <td className="p-3.5 text-[#756D63] cinema-number">{row.carreta || '---'}</td>
+                    <td className="p-3.5 text-[#3D8B68] font-bold">{row.unidade}</td>
+                    <td className="p-3.5 text-[#756D63] max-w-xs truncate">{row.obs1 || '---'}</td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>

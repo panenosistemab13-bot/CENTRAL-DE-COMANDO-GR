@@ -1,129 +1,221 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MapPin, Maximize2, Minimize2 } from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Cell
-} from 'recharts';
-import { cn } from '../lib/utils';
+import React from 'react';
+import { Award, MapPin } from 'lucide-react';
 
-export interface DestinoStatItem {
-  name: string;
-  count: number;
-  iscas: string[];
-  drivers: string[];
+export interface DestinoStat {
+  cidade?: string;
+  name?: string;
+  uf?: string;
+  total?: number;
+  count?: number;
+  percentage?: number;
+  iscas?: string[];
+  drivers?: string[];
 }
 
 interface DestinoRankingHUDProps {
-  destinoStats: DestinoStatItem[];
+  destinos?: DestinoStat[];
+  destinoStats?: DestinoStat[];
 }
 
-export const DestinoRankingHUD: React.FC<DestinoRankingHUDProps> = ({ destinoStats }) => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+export const DestinoRankingHUD: React.FC<DestinoRankingHUDProps> = ({ destinos, destinoStats }) => {
+  const rawList = destinos || destinoStats || [];
+  const totalSum = rawList.reduce((acc, curr) => acc + (curr.total || curr.count || 0), 0) || 1;
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
+  const normalizedList = rawList.map(item => {
+    const cityName = item.cidade || item.name || 'Desconhecido';
+    const parts = cityName.split('-');
+    const cidade = parts[0]?.trim() || cityName;
+    const uf = item.uf || parts[1]?.trim() || (
+      cidade.toUpperCase() === 'BRASILIA' ? 'DF' :
+      cidade.toUpperCase() === 'RIO DE JANEIRO' ? 'RJ' :
+      cidade.toUpperCase().includes('GUARULHOS') || cidade.toUpperCase().includes('SUMARE') ? 'SP' :
+      cidade.toUpperCase().includes('CUIABA') || cidade.toUpperCase().includes('CUIABÁ') ? 'MT' :
+      cidade.toUpperCase().includes('NATAL') ? 'RN' :
+      cidade.toUpperCase().includes('SALVADOR') ? 'BA' : 'MG'
+    );
+    const count = item.total ?? item.count ?? 0;
+    const percentage = item.percentage ?? Math.round((count / totalSum) * 100);
 
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      if (containerRef.current?.requestFullscreen) {
-        containerRef.current.requestFullscreen().catch(() => {});
-      }
-      setIsFullscreen(true);
-    } else {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-      setIsFullscreen(false);
-    }
-  };
+    return {
+      cidade,
+      uf,
+      total: count,
+      percentage
+    };
+  });
 
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "bg-slate-950/90 border border-cyan-500/30 rounded-3xl p-6 shadow-[0_0_35px_rgba(0,240,255,0.08)] space-y-4 font-mono relative overflow-hidden transition-all duration-300",
-        isFullscreen && "fixed inset-0 z-50 rounded-none border-0 p-4 sm:p-6 flex flex-col justify-between w-screen h-screen overflow-hidden bg-[#020617]"
-      )}
-    >
-      {/* Corner Tech Brackets in Fullscreen */}
-      {isFullscreen && (
-        <>
-          <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-          <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-          <div className="absolute bottom-2 left-2 w-5 h-5 border-b-2 border-l-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-          <div className="absolute bottom-2 right-2 w-5 h-5 border-b-2 border-r-2 border-cyan-400 drop-shadow-[0_0_8px_#00f0ff] pointer-events-none z-10" />
-        </>
-      )}
+    <div className="relative cinema-card cinema-3d p-6 md:p-8 overflow-hidden">
+      <div className="cinema-light -top-40 -right-40" />
 
-      {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3 gap-4">
-        <h3 className="text-xs font-black uppercase tracking-widest text-cyan-300 flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-cyan-400" />
-          RANKING DE ISCAS POR DESTINO (BARRAS LATERAIS)
-        </h3>
-        
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-cyan-400/60 font-bold hidden sm:inline">
-            TOTAL DESTINOS: {destinoStats.length}
-          </span>
+      {/* HEADER */}
+      <div className="relative z-10 flex items-center justify-between mb-8 pb-4 border-b border-[#754B2A]/10">
+        <div>
+          <div className="text-[10px] uppercase tracking-[.2em] font-extrabold text-[#B88935]">
+            Análise de Rotas Principais
+          </div>
+          <h3 className="cinema-title text-3xl md:text-4xl text-[#2C1B12]">
+            Ranking de Destinos
+          </h3>
+        </div>
 
-          <button
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Sair da Tela Cheia" : "Expandir Ranking em Tela Cheia"}
-            className={cn(
-              "px-3 py-1.5 rounded-xl border font-mono font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer text-[10px]",
-              isFullscreen
-                ? "bg-cyan-500 text-slate-950 border-cyan-300 shadow-[0_0_20px_#00f0ff]"
-                : "bg-cyan-950/80 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/20 hover:border-cyan-400"
-            )}
-          >
-            {isFullscreen ? (
-              <>
-                <Minimize2 className="w-3.5 h-3.5 text-slate-950" />
-                <span>SAIR DA TELA CHEIA (ESC)</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
-                <span>TELA CHEIA</span>
-              </>
-            )}
-          </button>
+        <div className="w-12 h-12 rounded-2xl bg-[#F2E4C8] flex items-center justify-center shadow-md">
+          <MapPin className="text-[#754B2A] w-6 h-6" />
         </div>
       </div>
 
-      {/* Recharts Bar Chart Container */}
-      <div className={cn("w-full transition-all", isFullscreen ? "flex-1 min-h-0" : "h-[300px]")}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={destinoStats} margin={{ left: 10, right: 20, top: 10, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#00f0ff" strokeOpacity={0.15} />
-            <XAxis dataKey="name" stroke="#00f0ff" strokeOpacity={0.5} tick={{ fill: '#00f0ff', fontSize: 11, fontFamily: 'monospace' }} />
-            <YAxis stroke="#00f0ff" strokeOpacity={0.5} tick={{ fill: '#00f0ff', fontSize: 11, fontFamily: 'monospace' }} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#030712', borderColor: '#00f0ff', borderRadius: '12px', color: '#fff', fontFamily: 'monospace', fontSize: '11px' }}
-            />
-            <Bar dataKey="count" fill="#00f0ff" radius={[8, 8, 0, 0]}>
-              {destinoStats.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#00f0ff' : '#0066ff'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      {/* PODIUM TOP 3 */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5">
+        {normalizedList.slice(0, 3).map((dest, index) => (
+          <div
+            key={index}
+            className={`
+              relative
+              overflow-hidden
+              rounded-[30px]
+              p-6
+              min-h-[260px]
+              flex
+              flex-col
+              justify-between
+              ${
+                index === 0
+                  ? 'bg-gradient-to-br from-[#F5D99C] via-[#B88935] to-[#754B2A]'
+                  : index === 1
+                    ? 'bg-gradient-to-br from-[#F4F1EB] via-[#D8CFC4] to-[#8C7D6D]'
+                    : 'bg-gradient-to-br from-[#E2B792] via-[#A86F45] to-[#5C3218]'
+              }
+              shadow-[0_25px_60px_rgba(67,46,28,.18)]
+              text-white
+            `}
+          >
+            <div className="
+              absolute
+              -right-12
+              -top-12
+              w-40
+              h-40
+              rounded-full
+              bg-white/20
+              blur-2xl
+            " />
+
+            <div className="relative flex justify-between items-start">
+              <span className="
+                w-12
+                h-12
+                rounded-2xl
+                bg-white/30
+                backdrop-blur
+                flex
+                items-center
+                justify-center
+                text-xl
+                font-black
+                text-white
+                shadow-md
+              ">
+                {index + 1}
+              </span>
+
+              <Award className="w-7 h-7 text-white drop-shadow" />
+            </div>
+
+            <div className="relative">
+              <div className="text-xs uppercase tracking-widest text-white/80 font-extrabold">
+                Destino Principal
+              </div>
+
+              <div className="cinema-title text-3xl text-white mt-1 drop-shadow-sm font-bold">
+                {dest.cidade}
+              </div>
+
+              <div className="text-sm text-white/90 font-extrabold">
+                {dest.uf}
+              </div>
+
+              <div className="mt-5 flex items-end justify-between">
+                <div>
+                  <span className="text-4xl cinema-number text-white font-extrabold">
+                    {dest.total}
+                  </span>
+                  <span className="text-xs text-white/80 ml-2">
+                    viagens
+                  </span>
+                </div>
+
+                <span className="text-sm font-extrabold text-white bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                  {dest.percentage}%
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* DEMAIS DESTINOS */}
+      {normalizedList.length > 3 && (
+        <div className="relative z-10 mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {normalizedList.slice(3).map((dest, index) => (
+            <div
+              key={index}
+              className="
+                flex
+                items-center
+                gap-4
+                p-4
+                rounded-2xl
+                bg-white/70
+                border
+                border-[#754B2A]/10
+                shadow-sm
+                hover:bg-white/90
+                transition-colors
+              "
+            >
+              <span className="
+                w-9
+                h-9
+                rounded-xl
+                bg-[#F2E4C8]
+                flex
+                items-center
+                justify-center
+                font-extrabold
+                text-[#754B2A]
+              ">
+                {index + 4}
+              </span>
+
+              <div className="flex-1">
+                <div className="flex justify-between text-sm font-bold text-[#2C1B12]">
+                  <span>
+                    {dest.cidade} - {dest.uf}
+                  </span>
+                  <span className="cinema-number text-[#754B2A]">
+                    {dest.total} viagens
+                  </span>
+                </div>
+
+                <div className="mt-2 h-2 rounded-full bg-[#E9E1D5] overflow-hidden">
+                  <div
+                    className="
+                      h-full
+                      rounded-full
+                      bg-gradient-to-r
+                      from-[#E7C88A]
+                      to-[#754B2A]
+                    "
+                    style={{
+                      width: `${dest.percentage}%`
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
