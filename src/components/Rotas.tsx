@@ -7,7 +7,7 @@ import {
   Plus, 
   Trash2, 
   Search, 
-  ArrowRightLeft, 
+  Route, 
   MapPin, 
   Navigation,
   Globe,
@@ -24,13 +24,16 @@ import {
   Upload,
   Download,
   AlertTriangle,
-  LayoutGrid
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { toAbsoluteUrl } from '../utils/url';
-import coffeeBg from '../assets/images/coffee_rustic_bg_1780760486326.png';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set } from 'firebase/database';
+import { GlassPanel3D } from './3d/GlassPanel3D';
+import { MetricCard3D } from './3d/MetricCard3D';
+import { HUDPanel } from './3d/HUDPanel';
+import { FilterPanel3D } from './3d/FilterPanel3D';
+import { Modal3D } from './3d/Modal3D';
 
 interface RouteItem {
   ida: string;
@@ -67,36 +70,15 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // States for backup and migration
-  const [legacyData, setLegacyData] = useState<RouteItem[] | null>(null);
-  const [isBackupOpen, setIsBackupOpen] = useState(false);
-  const [backupText, setBackupText] = useState('');
-  const [backupStatus, setBackupStatus] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
-  const [isCopied, setIsCopied] = useState(false);
-  const [copiedCode, setCopiedCode] = useState<{ type: 'ida' | 'volta' | 'idaName' | 'voltaName'; index: number } | null>(null);
+  const [copiedCode, setCopiedCode] = useState<{ type: string; index: number } | null>(null);
 
-  const copyIndividualCode = (code: string, type: 'ida' | 'volta' | 'idaName' | 'voltaName', index: number) => {
+  const copyIndividualCode = (code: string, type: string, index: number) => {
     if (!code) return;
     navigator.clipboard.writeText(code).then(() => {
       setCopiedCode({ type, index });
       setTimeout(() => setCopiedCode(null), 1500);
     });
   };
-
-  // Check for legacy localstorage on load
-  useEffect(() => {
-    const localSaved = localStorage.getItem('app_rotas_data');
-    if (localSaved) {
-      try {
-        const parsed = JSON.parse(localSaved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setLegacyData(parsed);
-        }
-      } catch (e) {
-        console.warn("Legacy localstorage parse error in Rotas:", e);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const rotasRef = ref(db, 'app_rotas_data');
@@ -112,764 +94,271 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
     return () => unsubscribe();
   }, []);
 
-  const handleDragStart = (e: React.DragEvent, realIndex: number) => {
-    e.dataTransfer.effectAllowed = "move";
-    setDraggedIndex(realIndex);
-  };
-
-  const handleDragOver = (e: React.DragEvent, realIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === realIndex) return;
-    setHoveredIndex(realIndex);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setHoveredIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetRealIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === targetRealIndex) {
-      setDraggedIndex(null);
-      setHoveredIndex(null);
-      return;
-    }
-
-    const list = isEditing ? [...tempRoutes] : [...routes];
-    const [draggedItem] = list.splice(draggedIndex, 1);
-    list.splice(targetRealIndex, 0, draggedItem);
-
-    if (isEditing) {
-      setTempRoutes(list);
-    } else {
-      setRoutes(list);
-      set(ref(db, 'app_rotas_data'), list);
-    }
-    setDraggedIndex(null);
-    setHoveredIndex(null);
-  };
-
-  const handleImportLegacy = (mode: 'merge' | 'replace') => {
-    if (!legacyData) return;
-    
-    let updated: RouteItem[] = [];
-    if (mode === 'replace') {
-      updated = [...legacyData];
-    } else {
-      const existingSignatures = new Set(
-        routes.map(r => `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`)
-      );
-      
-      const uniqueLegacy = legacyData.filter(r => {
-        const sig = `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`;
-        return !existingSignatures.has(sig);
-      });
-      
-      updated = [...routes, ...uniqueLegacy];
-    }
-    
-    set(ref(db, 'app_rotas_data'), updated).then(() => {
-      setRoutes(updated);
-      localStorage.removeItem('app_rotas_data');
-      setLegacyData(null);
-    }).catch(err => {
-      console.error(err);
-    });
-  };
-
-  const handleManualImport = (mode: 'merge' | 'replace') => {
-    try {
-      const parsed = JSON.parse(backupText);
-      if (!Array.isArray(parsed)) {
-        setBackupStatus({ type: 'error', message: 'Formato inválido: O backup deve ser um array de rotas!' });
-        return;
-      }
-      
-      const cleaned: RouteItem[] = parsed.map(item => ({
-        ida: String(item.ida || ''),
-        idaCod: String(item.idaCod || ''),
-        volta: String(item.volta || ''),
-        voltaCod: String(item.voltaCod || ''),
-      }));
-
-      let updated: RouteItem[] = [];
-      if (mode === 'replace') {
-        updated = cleaned;
-      } else {
-        const existingSignatures = new Set(
-          routes.map(r => `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`)
-        );
-        
-        const uniquePasted = cleaned.filter(r => {
-          const sig = `${(r.ida || '').toLowerCase()}|${(r.volta || '').toLowerCase()}`;
-          return !existingSignatures.has(sig);
-        });
-        
-        updated = [...routes, ...uniquePasted];
-      }
-
-      set(ref(db, 'app_rotas_data'), updated).then(() => {
-        setRoutes(updated);
-        setBackupStatus({ type: 'success', message: `${cleaned.length} rotas importadas e sincronizadas com a Nuvem!` });
-        setTimeout(() => {
-          setIsBackupOpen(false);
-          setBackupText('');
-          setBackupStatus({ type: '', message: '' });
-        }, 1500);
-      }).catch(err => {
-        console.error(err);
-        setBackupStatus({ type: 'error', message: 'Erro ao salvar no banco.' });
-      });
-    } catch (e) {
-      setBackupStatus({ type: 'error', message: 'Código de backup inválido! Verifique a sintaxe JSON.' });
-    }
-  };
-
-  const copyToClipboard = () => {
-    const jsonStr = JSON.stringify(routes, null, 2);
-    navigator.clipboard.writeText(jsonStr).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    });
-  };
-
-  const handleStartEdit = () => {
+  const handleStartEditing = () => {
     setTempRoutes([...routes]);
     setIsEditing(true);
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
-
-  const handleSave = () => {
+  const handleSaveEditing = async () => {
     setRoutes(tempRoutes);
-    set(ref(db, 'app_rotas_data'), tempRoutes);
+    await set(ref(db, 'app_rotas_data'), tempRoutes);
     setIsEditing(false);
   };
 
-  const updateRow = (index: number, field: keyof RouteItem, value: string) => {
-    const newRoutes = [...tempRoutes];
-    newRoutes[index] = { ...newRoutes[index], [field]: value };
-    setTempRoutes(newRoutes);
+  const handleCancelEditing = () => {
+    setIsEditing(false);
   };
 
-  const addRow = () => {
-    setTempRoutes([{ ida: '', idaCod: '', volta: '', voltaCod: '' }, ...tempRoutes]);
+  const handleAddRoute = () => {
+    setTempRoutes([...tempRoutes, { ida: '', idaCod: '', volta: '', voltaCod: '' }]);
   };
 
-  const removeRow = (index: number) => {
-    setTempRoutes(tempRoutes.filter((_, i) => i !== index));
+  const handleDeleteRoute = (index: number) => {
+    const next = [...tempRoutes];
+    next.splice(index, 1);
+    setTempRoutes(next);
   };
 
-  const moveRoute = (route: RouteItem, direction: 'up' | 'down') => {
-    const list = isEditing ? [...tempRoutes] : [...routes];
-    const index = list.indexOf(route);
-    if (index === -1) return;
+  const activeRoutesList = isEditing ? tempRoutes : routes;
 
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex >= 0 && targetIndex < list.length) {
-      // Swap
-      const temp = list[index];
-      list[index] = list[targetIndex];
-      list[targetIndex] = temp;
-      if (isEditing) {
-        setTempRoutes(list);
-      } else {
-        setRoutes(list);
-        set(ref(db, 'app_rotas_data'), list);
-      }
-    }
-  };
-
-  const clearAll = () => {
-    if(confirm('Limpar todas as rotas permanentemente?')) {
-        setTempRoutes([]);
-    }
-  };
-
-  const rawData = isEditing ? tempRoutes : routes;
-  const safeRawData = Array.isArray(rawData) ? rawData : [];
-  
-  const currentData = safeRawData.filter(r => 
-    (r?.ida || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (r?.idaCod || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r?.volta || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r?.voltaCod || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRoutes = activeRoutesList.filter(item => {
+    const query = searchTerm.toLowerCase();
+    return (
+      item.ida.toLowerCase().includes(query) ||
+      item.idaCod.toLowerCase().includes(query) ||
+      item.volta.toLowerCase().includes(query) ||
+      item.voltaCod.toLowerCase().includes(query)
+    );
+  });
 
   return (
-    <div className="min-h-full bg-transparent p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 pb-32 text-[#3A2414]">
-
-      {/* Dynamic Earthy Hero Section */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#ebd8bf] via-[#e2ccaa] to-[#d6bc99] border-4 border-[#3A2414] p-6 sm:p-8 lg:p-10 shadow-xl">
-        {/* Decorative corner accents */}
-        <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-[#3A2414]/30 pointer-events-none" />
-        <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-[#3A2414]/30 pointer-events-none" />
-        <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-[#3A2414]/30 pointer-events-none" />
-        <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-[#3A2414]/30 pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-8">
-          <div className="flex flex-col md:flex-row items-center gap-6 w-full xl:w-2/3">
-            {/* Studio Composition Image Frame */}
-            <div className="relative w-full md:w-56 h-40 shrink-0 rounded-2xl overflow-hidden border-2 border-[#3A2414] shadow-lg group">
-              <img 
-                src={toAbsoluteUrl(coffeeBg)} 
-                alt="Edição Rústica Sofisticada" 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#3A2414]/40 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 bg-[#3A2414]/70 px-2.5 py-1 rounded-full backdrop-blur-sm border border-white/10">
-                <span className="w-2 h-2 rounded-full bg-[#B32025] animate-pulse" />
-                <span className="text-[9px] font-mono font-bold tracking-widest text-white uppercase">Sincronizado</span>
-              </div>
-            </div>
-
-            <div className="text-center md:text-left space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3A2414] text-[#EEDBC5] rounded-full text-[10px] font-mono font-black uppercase tracking-widest shadow-sm">
-                <Navigation size={12} className="text-[#B32025]" />
-                <span>Central de Trechos e SM</span>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-serif font-black text-[#3A2414] tracking-tight leading-none uppercase">
-                Gestão de Rotas
-              </h1>
-              <p className="text-xs text-[#3A2414]/85 leading-relaxed max-w-xl font-medium">
-                Controle operacional de rotas de ida e volta, códigos SM integrados em tempo real com backup em nuvem e reordenação instantânea.
-              </p>
-            </div>
-          </div>
-
-          {/* Metrics styled like paper tag tickets hanging */}
-          <div className="flex items-center gap-4 w-full xl:w-auto justify-center xl:justify-end">
-            <div className="px-6 py-4 bg-[#fdfcf9] border-2 border-[#3A2414]/30 rounded-2xl shadow-md min-w-[130px] text-center relative rotate-[-1.5deg] hover:rotate-0 transition-transform">
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-3.5 bg-[#3A2414]/40 rounded-full" />
-              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">TOTAL TRECHOS</span>
-              <span className="text-3xl font-serif font-black text-[#3A2414]">{currentData.length}</span>
-            </div>
-            
-            <div className="px-6 py-4 bg-[#fdfcf9] border-2 border-[#3A2414]/30 rounded-2xl shadow-md min-w-[130px] text-center relative rotate-[1.5deg] hover:rotate-0 transition-transform">
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-3.5 bg-[#3A2414]/40 rounded-full" />
-              <span className="text-[9px] font-black text-[#B32025] uppercase tracking-widest block mb-1">CÓDIGOS SM</span>
-              <span className="text-3xl font-serif font-black text-[#3A2414]">
-                {currentData.filter(r => r.idaCod).length + currentData.filter(r => r.voltaCod).length}
+    <div className="w-full flex flex-col gap-6 text-slate-100 font-sans">
+      
+      {/* HEADER BAR */}
+      <GlassPanel3D className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" variant="glow">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          )}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="led-status led-status-blue" />
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest text-sky-400">
+                PGR COMMAND CENTER 3D • MÓDULO LOGÍSTICO
               </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Legacy Data Sync Banner */}
-      {legacyData && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-50/95 backdrop-blur-md border-4 border-[#3A2414] rounded-[2.5rem] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden"
-        >
-          <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
-          <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
-          <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
-          <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
-          
-          <div className="flex flex-col md:flex-row gap-5 items-center text-center md:text-left">
-            <div className="w-14 h-14 bg-[#B32025] text-white rounded-2xl shrink-0 shadow-lg flex items-center justify-center border-2 border-[#3A2414]/30">
-              <Database size={26} />
-            </div>
-            <div>
-              <h4 className="font-serif font-black text-lg text-[#3A2414] uppercase tracking-tight">Sincronização de Rotas Pendente</h4>
-              <p className="text-xs text-[#3A2414]/90 mt-1 font-medium max-w-2xl leading-relaxed">
-                Detectamos <span className="font-black text-[#B32025]">{legacyData.length} rotas locais</span> armazenadas no navegador. Deseja importá-las para a Nuvem para acesso global em qualquer dispositivo?
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2.5 shrink-0 justify-center w-full md:w-auto">
-            <button 
-              onClick={() => handleImportLegacy('merge')}
-              className="px-6 py-3.5 bg-[#3A2414] hover:bg-[#2B180D] text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer border border-[#3A2414]"
-            >
-              Mesclar com Nuvem
-            </button>
-            <button 
-              onClick={() => handleImportLegacy('replace')}
-              className="px-6 py-3.5 bg-[#B32025] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer border-2 border-[#3A2414]/20"
-            >
-              Substituir Nuvem
-            </button>
-            <button 
-              onClick={() => {
-                localStorage.removeItem('app_rotas_data');
-                setLegacyData(null);
-              }}
-              className="px-6 py-3.5 bg-white hover:bg-stone-100 text-stone-700 border-2 border-[#3A2414]/20 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              Descartar
-            </button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Main Content Card - Styled as a premium rustic board sheet */}
-      <div className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden text-[#3A2414]">
-        
-        {/* Actions & Filters Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-grow group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#B32025]">
-              <Search size={18} />
-            </div>
-            <input 
-              type="text" 
-              placeholder="PESQUISAR ROTA, CIDADE OU CÓDIGO SM..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border-2 border-[#3A2414]/20 focus:border-[#B32025] rounded-2xl pl-12 pr-6 py-4 text-xs font-black text-[#3A2414] placeholder-stone-400 transition-all outline-none uppercase tracking-widest font-mono shadow-inner"
-            />
-          </div>
-
-          <div className="flex flex-wrap md:flex-nowrap gap-3">
-            {!isEditing ? (
-              <>
-                <button 
-                  onClick={handleStartEdit} 
-                  className="flex items-center justify-center gap-2.5 px-6 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-md"
-                >
-                  <Edit2 size={16} /> <span>Editar Rotas</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    setIsBackupOpen(true);
-                    setBackupStatus({ type: '', message: '' });
-                    setBackupText('');
-                  }} 
-                  className="flex items-center justify-center gap-2.5 px-6 py-4 bg-[#3A2414] hover:bg-[#2B180D] text-[#EEDBC5] border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all whitespace-nowrap cursor-pointer shadow-md"
-                  title="Fazer Backup ou Restaurar Rotas"
-                >
-                  <Database size={16} /> <span>Sincronizar Backup</span>
-                </button>
-              </>
-            ) : (
-              <div className="flex gap-2.5 w-full md:w-auto">
-                <button 
-                  onClick={addRow} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#3A2414] hover:bg-[#2B180D] text-white border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-md"
-                >
-                  <Plus size={16} /> <span>Adicionar</span>
-                </button>
-                <button 
-                  onClick={handleSave} 
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-[#B32025] hover:brightness-110 text-white border-2 border-[#3A2414]/30 rounded-2xl text-xs font-black uppercase transition-all cursor-pointer shadow-md"
-                >
-                  <Save size={16} /> <span>Salvar Alterações</span>
-                </button>
-                <button 
-                  onClick={handleCancel} 
-                  className="px-5 py-4 bg-white hover:bg-stone-100 text-[#3A2414] border-2 border-[#3A2414]/20 rounded-2xl transition-all cursor-pointer shadow-sm flex items-center justify-center"
-                  title="Cancelar"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            )}
+            <h1 className="text-2xl font-mono font-black uppercase tracking-tight text-white flex items-center gap-2">
+              <Route size={24} className="text-sky-400" />
+              CÓDIGOS E ROTAS OPERACIONAIS
+            </h1>
           </div>
         </div>
 
-        {/* Premium Responsive Route Cards Grid */}
-        <div className="space-y-4">
-          <AnimatePresence mode="popLayout">
-            {currentData.map((route) => {
-              const realIndex = safeRawData.indexOf(route);
-              if (realIndex === -1) return null;
-              return (
-                <motion.div 
-                  layout
-                  draggable={!isEditing}
-                  onDragStart={(e: any) => handleDragStart(e, realIndex)}
-                  onDragOver={(e: any) => handleDragOver(e, realIndex)}
-                  onDragEnd={() => handleDragEnd()}
-                  onDrop={(e: any) => handleDrop(e, realIndex)}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  key={`${route.idaCod}-${route.voltaCod}-${realIndex}`} 
-                  className={cn(
-                    "grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch p-1.5 rounded-[2.2rem] transition-all relative",
-                    draggedIndex === realIndex ? "opacity-30 bg-[#3A2414]/10" : "",
-                    hoveredIndex === realIndex ? "border-2 border-dashed border-[#B32025] bg-[#B32025]/5" : ""
-                  )}
-                >
-                  {/* CARD LEFT: IDA */}
-                  <div className="flex items-center gap-4 bg-white hover:bg-[#FAF6F0] border-2 border-[#3A2414]/15 rounded-[2rem] p-3.5 pr-5 shadow-sm hover:shadow-md transition-all group/card relative w-full">
-                    {/* Six Dots Drag Handle */}
-                    {!isEditing && (
-                      <div 
-                        className="pl-1 pr-1 text-[#3A2414]/30 hover:text-[#B32025] cursor-grab active:cursor-grabbing shrink-0 transition-colors" 
-                        title="Arraste para reordenar"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <GripVertical size={18} className="stroke-[2.5]" />
-                      </div>
-                    )}
-                    
-                    {/* Brown button with right arrow (→) */}
-                    <div className="w-11 h-11 bg-[#B37C4E] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md transition-transform duration-300 group-hover/card:scale-105">
-                      <ArrowRight size={18} className="stroke-[3]" />
-                    </div>
-
-                    {/* Route Name Column */}
-                    <div className="flex-1 min-w-0 pr-1">
-                      {isEditing ? (
-                        <div className="flex items-center gap-2">
-                          <MapPin size={14} className="text-[#B32025] shrink-0" />
-                          <input 
-                            value={route.ida} 
-                            onChange={(e) => updateRow(realIndex, 'ida', e.target.value)} 
-                            className="w-full bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-inner font-mono tracking-tight"
-                            placeholder="ORIGEM X DESTINO"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between gap-3" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-xs lg:text-sm font-bold text-[#3A2414] uppercase tracking-wide break-words leading-snug">
-                            {route.ida || '---'}
-                          </span>
-                          {route.ida && (
-                            <button
-                              onClick={() => copyIndividualCode(route.ida, 'idaName', realIndex)}
-                              className={cn(
-                                "w-8 h-8 flex items-center justify-center rounded-xl transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
-                                copiedCode?.type === 'idaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-[#FAF6F0] border border-[#3A2414]/10 text-[#3A2414]/50 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5 shadow-sm"
-                              )}
-                              title="Copiar nome da Rota (Ida)"
-                            >
-                              {copiedCode?.type === 'idaName' && copiedCode?.index === realIndex ? (
-                                <Check size={13} className="stroke-[3]" />
-                              ) : (
-                                <Clipboard size={13} />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Code Badge & Copy Code Button */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      {isEditing ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-black uppercase text-[#B32025] tracking-widest">Código</span>
-                          <input 
-                            value={route.idaCod} 
-                            onChange={(e) => updateRow(realIndex, 'idaCod', e.target.value)} 
-                            className="w-24 bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-inner"
-                            placeholder="----"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="bg-[#FAF6F0] hover:bg-[#F2E8DE] text-[#3A2414] border-2 border-[#3A2414]/15 px-4 py-2 rounded-2xl font-mono text-xs font-black shadow-inner min-w-[76px] text-center transition-colors">
-                            {route.idaCod || '—'}
-                          </div>
-                          {route.idaCod && (
-                            <button
-                              onClick={() => copyIndividualCode(route.idaCod, 'ida', realIndex)}
-                              className={cn(
-                                "w-9 h-9 flex items-center justify-center rounded-2xl transition-all shrink-0 cursor-pointer shadow-sm",
-                                copiedCode?.type === 'ida' && copiedCode?.index === realIndex
-                                  ? "bg-green-100 border-2 border-green-300 text-green-700"
-                                  : "bg-[#FAF6F0] border-2 border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/40 hover:bg-[#B32025]/10"
-                              )}
-                              title="Copiar Código Ida"
-                            >
-                              {copiedCode?.type === 'ida' && copiedCode?.index === realIndex ? (
-                                <Check size={14} className="stroke-[3]" />
-                              ) : (
-                                <Clipboard size={14} />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Remove button inside card, visible only if editing */}
-                    {isEditing && (
-                      <button 
-                        onClick={() => removeRow(realIndex)} 
-                        className="absolute -top-2.5 -left-2.5 w-7 h-7 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-full transition-all cursor-pointer shadow-md z-10 border-2 border-white"
-                        title="Excluir trecho"
-                      >
-                        <X size={12} className="stroke-[3]" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* CARD RIGHT: VOLTA */}
-                  <div className="flex items-center gap-4 bg-white hover:bg-[#FAF6F0] border-2 border-[#3A2414]/15 rounded-[2rem] p-3.5 pr-5 shadow-sm hover:shadow-md transition-all group/card relative w-full">
-                    {/* Light beige button with left arrow (←) */}
-                    <div className="w-11 h-11 bg-[#EEDBC5] text-[#3A2414] rounded-2xl flex items-center justify-center shrink-0 shadow-md transition-transform duration-300 group-hover/card:scale-105 border border-[#3A2414]/20">
-                      <ArrowRight size={18} className="stroke-[3] rotate-180" />
-                    </div>
-
-                    {/* Route Name Column */}
-                    <div className="flex-1 min-w-0 pr-1">
-                      {isEditing ? (
-                        <div className="flex items-center gap-2">
-                          <MapPin size={14} className="text-[#B32025] shrink-0" />
-                          <input 
-                            value={route.volta} 
-                            onChange={(e) => updateRow(realIndex, 'volta', e.target.value)} 
-                            className="w-full bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-black focus:border-[#B32025] outline-none uppercase shadow-inner font-mono tracking-tight"
-                            placeholder="ORIGEM X DESTINO"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between gap-3" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-xs lg:text-sm font-bold text-[#3A2414] uppercase tracking-wide break-words leading-snug">
-                            {route.volta || '---'}
-                          </span>
-                          {route.volta && (
-                            <button
-                              onClick={() => copyIndividualCode(route.volta, 'voltaName', realIndex)}
-                              className={cn(
-                                "w-8 h-8 flex items-center justify-center rounded-xl transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover/card:opacity-100 focus:opacity-100 shrink-0",
-                                copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-[#FAF6F0] border border-[#3A2414]/10 text-[#3A2414]/50 hover:text-[#B32025] hover:border-[#B32025]/30 hover:bg-[#B32025]/5 shadow-sm"
-                              )}
-                              title="Copiar nome da Rota (Volta)"
-                            >
-                              {copiedCode?.type === 'voltaName' && copiedCode?.index === realIndex ? (
-                                <Check size={13} className="stroke-[3]" />
-                              ) : (
-                                <Clipboard size={13} />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Code Badge & Copy Code Button */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      {isEditing ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-black uppercase text-[#B32025] tracking-widest">Código</span>
-                          <input 
-                            value={route.voltaCod} 
-                            onChange={(e) => updateRow(realIndex, 'voltaCod', e.target.value)} 
-                            className="w-24 bg-[#FAF6F0] p-2.5 rounded-xl border-2 border-[#3A2414]/20 text-xs text-[#3A2414] font-mono text-center focus:border-[#B32025] outline-none font-bold shadow-inner"
-                            placeholder="----"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="bg-[#FAF6F0] hover:bg-[#F2E8DE] text-[#3A2414] border-2 border-[#3A2414]/15 px-4 py-2 rounded-2xl font-mono text-xs font-black shadow-inner min-w-[76px] text-center transition-colors">
-                            {route.voltaCod || '—'}
-                          </div>
-                          {route.voltaCod && (
-                            <button
-                              onClick={() => copyIndividualCode(route.voltaCod, 'volta', realIndex)}
-                              className={cn(
-                                "w-9 h-9 flex items-center justify-center rounded-2xl transition-all shrink-0 cursor-pointer shadow-sm",
-                                copiedCode?.type === 'volta' && copiedCode?.index === realIndex
-                                  ? "bg-green-100 border-2 border-green-300 text-green-700"
-                                  : "bg-[#FAF6F0] border-2 border-[#3A2414]/15 text-[#3A2414]/60 hover:text-[#B32025] hover:border-[#B32025]/40 hover:bg-[#B32025]/10"
-                              )}
-                              title="Copiar Código Volta"
-                            >
-                              {copiedCode?.type === 'volta' && copiedCode?.index === realIndex ? (
-                                <Check size={14} className="stroke-[3]" />
-                              ) : (
-                                <Clipboard size={14} />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-
-          {currentData.length === 0 && (
-            <div className="p-20 text-center bg-white rounded-3xl border-2 border-dashed border-[#3A2414]/20">
-              <Database className="w-12 h-12 text-[#3A2414]/30 mx-auto mb-4" />
-              <p className="text-xs font-black text-[#3A2414]/60 uppercase tracking-widest">Nenhuma rota encontrada para os filtros aplicados</p>
-            </div>
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleAddRoute}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Plus size={14} /> ADICIONAR ROTA
+              </button>
+              <button
+                onClick={handleCancelEditing}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs font-bold uppercase transition-all cursor-pointer"
+              >
+                CANCELAR
+              </button>
+              <button
+                onClick={handleSaveEditing}
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-black uppercase tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Save size={14} /> SALVAR ALTERAÇÕES
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleStartEditing}
+              className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono text-xs font-black uppercase tracking-wider shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Edit2 size={14} /> EDITAR ROTAS
+            </button>
           )}
         </div>
+      </GlassPanel3D>
 
-        {/* Destructive Action */}
-        {isEditing && (
-          <div className="mt-10 pt-8 border-t-2 border-[#3A2414]/15 flex justify-center">
-            <button 
-              onClick={clearAll} 
-              className="px-8 py-4 bg-red-100 text-red-900 hover:bg-red-200 border-2 border-red-300 rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-md flex items-center gap-2"
-            >
-              <Trash2 size={16} /> Resetar Base de Dados de Rotas
-            </button>
-          </div>
-        )}
+      {/* METRICS ROW */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetricCard3D
+          title="Total de Rotas Mapeadas"
+          value={routes.length}
+          subtitle="Base Operacional Ativa"
+          icon={Route}
+          status="info"
+        />
+        <MetricCard3D
+          title="Códigos de Ida Ativos"
+          value={routes.filter(r => Boolean(r.idaCod)).length}
+          subtitle="Trajetos Diretos"
+          icon={Navigation}
+          status="normal"
+        />
+        <MetricCard3D
+          title="Códigos de Volta Ativos"
+          value={routes.filter(r => Boolean(r.voltaCod)).length}
+          subtitle="Retornos Mapeados"
+          icon={Globe}
+          status="warning"
+        />
       </div>
 
-      {/* Backup and Sync Modal Overlay */}
-      <AnimatePresence>
-        {isBackupOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-[100] select-none">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-[2.5rem] w-full max-w-2xl  overflow-hidden relative shadow-2xl p-6 md:p-8 text-[#3A2414] max-h-[90vh] overflow-y-auto"
-            >
-              {/* Decorative corner accents */}
-              <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
-              <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
-              <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#3A2414]/20 pointer-events-none" />
-              <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#3A2414]/20 pointer-events-none" />
+      {/* FILTER PANEL */}
+      <FilterPanel3D
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Buscar rota ou código (ex: 4069, Rio de Janeiro)..."
+      />
 
-              {/* Header */}
-              <div className="flex items-center justify-between border-b-2 border-[#3A2414]/10 pb-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-[#3A2414] text-[#fdefd1] rounded-xl">
-                    <Database size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-serif font-black text-xl text-[#3A2414] leading-tight">Backup e Sincronização</h3>
-                    <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider font-mono">Migração de Dados e Nuvem</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setIsBackupOpen(false)}
-                  className="p-2 bg-stone-100 hover:bg-stone-200 text-[#3A2414] rounded-full transition-all border border-[#3A2414]/10 cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="space-y-6">
-                
-                {/* Export Section */}
-                <div className="space-y-3">
-                  <h4 className="font-serif font-black text-sm text-[#3A2414] uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#B32025]" />
-                    Exportar Rotas Atuais
-                  </h4>
-                  <p className="text-xs text-[#3A2414]/80 font-medium">
-                    Copie o código abaixo no seu computador com internet para carregar e transferir suas rotas editadas para outro dispositivo ou navegador.
-                  </p>
+      {/* ROUTES TABLE */}
+      <HUDPanel title={`Tabela de Rotas e Códigos Logísticos (${filteredRoutes.length})`} badge="RTDB SYNC">
+        <div className="overflow-x-auto no-scrollbar w-full">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-sky-500/20 bg-slate-900/90 text-[10px] font-mono font-black uppercase tracking-wider text-sky-400">
+                <th className="py-3 px-4">Rota de Ida</th>
+                <th className="py-3 px-4">Código Ida</th>
+                <th className="py-3 px-4">Rota de Volta</th>
+                <th className="py-3 px-4">Código Volta</th>
+                {isEditing && <th className="py-3 px-4 text-right">Ações</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60 text-xs font-mono text-slate-200">
+              {filteredRoutes.map((route, idx) => (
+                <tr key={idx} className="hover:bg-sky-500/10 transition-colors">
                   
-                  <div className="relative">
-                    <div className="bg-[#3A2414]/5 pl-4 pr-32 py-3 rounded-2xl border border-[#3A2414]/15 font-mono text-[11px] font-bold overflow-x-auto whitespace-nowrap text-[#3A2414]/80 max-w-full">
-                      {JSON.stringify(routes)}
-                    </div>
-                    <button
-                      onClick={copyToClipboard}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 px-3.5 bg-[#3A2414] hover:bg-[#3A2414]/95 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check size={12} className="text-green-300" /> Copiado!
-                        </>
-                      ) : (
-                        <>
-                          <Clipboard size={12} /> Copiar Código
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+                  {/* IDA NAME */}
+                  <td className="py-3 px-4">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={route.ida}
+                        onChange={(e) => {
+                          const next = [...tempRoutes];
+                          next[idx].ida = e.target.value.toUpperCase();
+                          setTempRoutes(next);
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono uppercase text-xs"
+                      />
+                    ) : (
+                      <span className="font-bold text-white uppercase">{route.ida}</span>
+                    )}
+                  </td>
 
-                {/* Import Section */}
-                <div className="space-y-3 pt-4 border-t border-[#3A2414]/10">
-                  <h4 className="font-serif font-black text-sm text-[#3A2414] uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-                    Importar ou Restaurar Rotas
-                  </h4>
-                  <p className="text-xs text-[#3A2414]/80 font-medium">
-                    Cole o código de backup copiado de outro dispositivo no campo abaixo para restaurá-lo diretamente na nuvem:
-                  </p>
+                  {/* IDA CODE */}
+                  <td className="py-3 px-4">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={route.idaCod}
+                        onChange={(e) => {
+                          const next = [...tempRoutes];
+                          next[idx].idaCod = e.target.value;
+                          setTempRoutes(next);
+                        }}
+                        className="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-sky-400 font-mono font-bold text-xs"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => copyIndividualCode(route.idaCod, 'ida', idx)}
+                        disabled={!route.idaCod}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md border font-mono font-bold text-xs transition-all cursor-pointer inline-flex items-center gap-1.5",
+                          route.idaCod
+                            ? "bg-sky-500/15 border-sky-500/30 text-sky-400 hover:bg-sky-500/30"
+                            : "bg-slate-900/40 border-slate-800 text-slate-600 cursor-not-allowed"
+                        )}
+                      >
+                        {route.idaCod || 'SEM CÓDIGO'}
+                        {copiedCode?.type === 'ida' && copiedCode.index === idx && (
+                          <Check size={12} className="text-emerald-400" />
+                        )}
+                      </button>
+                    )}
+                  </td>
 
-                  <textarea 
-                    value={backupText}
-                    onChange={(e) => {
-                      setBackupText(e.target.value);
-                      if (backupStatus.message) setBackupStatus({ type: '', message: '' });
-                    }}
-                    placeholder='Cole aqui seu código JSON de backup... Ex: [{"ida": "ROTA A", "idaCod": "123", ...}]'
-                    className="w-full h-24 bg-white border-2 border-[#3A2414]/15 focus:border-[#B32025] rounded-2xl p-4 text-[11px] font-mono font-bold text-[#3A2414] placeholder-stone-400 outline-none shadow-sm resize-none"
-                  />
+                  {/* VOLTA NAME */}
+                  <td className="py-3 px-4">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={route.volta}
+                        onChange={(e) => {
+                          const next = [...tempRoutes];
+                          next[idx].volta = e.target.value.toUpperCase();
+                          setTempRoutes(next);
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono uppercase text-xs"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-300 uppercase">{route.volta}</span>
+                    )}
+                  </td>
 
-                  {/* Inline Status Message */}
-                  {backupStatus.message && (
-                    <div className={cn(
-                      "p-4 rounded-xl text-xs font-bold border flex items-center gap-3",
-                      backupStatus.type === 'success' 
-                        ? "bg-green-50 border-green-200 text-green-800" 
-                        : "bg-red-50 border-red-200 text-red-800"
-                    )}>
-                      {backupStatus.type === 'success' ? <Check size={16} /> : <AlertTriangle size={16} />}
-                      {backupStatus.message}
-                    </div>
+                  {/* VOLTA CODE */}
+                  <td className="py-3 px-4">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={route.voltaCod}
+                        onChange={(e) => {
+                          const next = [...tempRoutes];
+                          next[idx].voltaCod = e.target.value;
+                          setTempRoutes(next);
+                        }}
+                        className="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-amber-400 font-mono font-bold text-xs"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => copyIndividualCode(route.voltaCod, 'volta', idx)}
+                        disabled={!route.voltaCod}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md border font-mono font-bold text-xs transition-all cursor-pointer inline-flex items-center gap-1.5",
+                          route.voltaCod
+                            ? "bg-amber-500/15 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+                            : "bg-slate-900/40 border-slate-800 text-slate-600 cursor-not-allowed"
+                        )}
+                      >
+                        {route.voltaCod || 'SEM CÓDIGO'}
+                        {copiedCode?.type === 'volta' && copiedCode.index === idx && (
+                          <Check size={12} className="text-emerald-400" />
+                        )}
+                      </button>
+                    )}
+                  </td>
+
+                  {/* EDIT ACTIONS */}
+                  {isEditing && (
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => handleDeleteRoute(idx)}
+                        className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 text-rose-400 transition-colors cursor-pointer border border-rose-500/30"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
                   )}
-
-                  <div className="flex gap-2 justify-end pt-2">
-                    <button
-                      onClick={() => handleManualImport('merge')}
-                      disabled={!backupText.trim()}
-                      className={cn(
-                        "px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm border border-[#3A2414] cursor-pointer transition-all",
-                        backupText.trim()
-                          ? "bg-[#3A2414] hover:brightness-110 text-white"
-                          : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
-                      )}
-                    >
-                      Mesclar com Base
-                    </button>
-                    <button
-                      onClick={() => handleManualImport('replace')}
-                      disabled={!backupText.trim()}
-                      className={cn(
-                        "px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm border-2 border-[#3A2414]/20 cursor-pointer transition-all",
-                        backupText.trim()
-                          ? "bg-[#B32025] hover:brightness-110 text-white"
-                          : "bg-stone-50 text-stone-300 border-stone-100 cursor-not-allowed"
-                      )}
-                    >
-                      Sobrescrever Tudo
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Info Tip footer */}
-              <div className="mt-8 pt-4 border-t-2 border-[#3A2414]/10 bg-[#3A2414]/5 p-4 rounded-2xl flex items-start gap-3">
-                <span className="text-xs">💡</span>
-                <p className="text-[10px] text-stone-600 font-medium leading-normal">
-                  Ao atualizar e sincronizar com o sistema, o banco de dados Realtime Database unificado é alimentado na nuvem. Suas alterações estarão seguras e prontas para uso em celulares, tablets ou qualquer outro dispositivo instantaneamente.
-                </p>
-              </div>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Status Indicator - Styled as an extraction badge */}
-      <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-[#3A2414]/90 backdrop-blur-md border border-white/20 px-6 py-3 rounded-full shadow-lg z-50">
-        <div className="relative">
-          <div className="absolute inset-0 bg-[#B32025] blur shadow-[0_0_10px_#B32025]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#B32025] relative z-10" />
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <span className="text-[10px] font-black text-white uppercase tracking-widest font-mono">Torra e Rastreio Ativo</span>
-      </div>
+      </HUDPanel>
+
     </div>
   );
 }
