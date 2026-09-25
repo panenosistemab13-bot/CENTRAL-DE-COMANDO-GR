@@ -43,15 +43,11 @@ interface RestrictedPagesModalProps {
   onSave: (newVisibility: Record<string, boolean>, updatedPages: PageDefinition[]) => void;
 }
 
-function Screw({ className }: { className?: string }) {
+function TechCorner({ className }: { className?: string }) {
   return (
-    <div 
-      className={cn(
-        "w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
-        className
-      )}
-    >
-      <div className="w-2 h-[1px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+    <div className={cn("w-3.5 h-3.5 pointer-events-none select-none z-20", className)}>
+      <div className="w-full h-[2px] bg-gradient-to-r from-red-500 to-transparent" />
+      <div className="w-[2px] h-full bg-gradient-to-b from-red-500 to-transparent" />
     </div>
   );
 }
@@ -117,7 +113,7 @@ export default function RestrictedPagesModal({
           updated[page.id] = ['presence', 'averbacao', 'sm_creator', 'rotas'].includes(page.id);
           break;
         case 'executive':
-          updated[page.id] = ['slides', 'patio', 'controle'].includes(page.id);
+          updated[page.id] = ['patio', 'controle', 'escala'].includes(page.id);
           break;
       }
     });
@@ -281,53 +277,53 @@ export default function RestrictedPagesModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
       <motion.div 
         initial={{ scale: 0.92, opacity: 0, y: 15 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 15 }}
-        className="w-full max-w-3xl bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-[0_25px_60px_rgba(0,0,0,0.9)] rounded-[2rem] p-4 sm:p-7 relative ring-4 ring-[#1c1109]/30 text-[#2D1A10] flex flex-col max-h-[90vh]"
+        className="w-full max-w-3xl glass-card-3d bg-slate-950/95 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-7 relative text-white flex flex-col max-h-[90vh] backdrop-blur-2xl font-mono"
       >
-        {/* Corner Rivets */}
-        <Screw className="absolute top-3.5 left-3.5" />
-        <Screw className="absolute top-3.5 right-3.5" />
-        <Screw className="absolute bottom-3.5 left-3.5" />
-        <Screw className="absolute bottom-3.5 right-3.5" />
+        {/* Tech Corner Brackets */}
+        <TechCorner className="absolute top-3.5 left-3.5" />
+        <TechCorner className="absolute top-3.5 right-3.5 rotate-90" />
+        <TechCorner className="absolute bottom-3.5 left-3.5 -rotate-90" />
+        <TechCorner className="absolute bottom-3.5 right-3.5 rotate-180" />
 
         {/* Close Button Top Right */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#311f14] text-[#fdefd1] hover:bg-[#800609] hover:text-white flex items-center justify-center transition-colors shadow-md z-20 cursor-pointer"
+          className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/10 text-slate-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all shadow-md z-20 cursor-pointer border border-white/10"
           title="Fechar"
         >
           <X size={18} />
         </button>
 
         {/* Header Title Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-2 border-[#5c3e29]/30 shrink-0 pr-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 pr-8">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#311f14] to-[#1a0f08] flex items-center justify-center border-2 border-[#bfa27a] text-[#fdefd1] shadow-lg shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/15 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0">
               <Settings size={22} className="stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-black uppercase tracking-tight text-[#2D1A10] leading-none">
+              <h2 className="text-xl sm:text-2xl font-heading font-black uppercase tracking-tight text-white leading-none">
                 Sugestão de Páginas Restritas
               </h2>
-              <p className="text-[11px] sm:text-xs font-bold text-[#5c3e29] mt-1">
-                Configure individualmente quais páginas ficarão <strong className="text-emerald-800">visíveis</strong> ou <strong className="text-[#800609]">ocultas</strong> no sistema.
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 font-mono">
+                Configure individualmente quais páginas ficarão <strong className="text-emerald-400">visíveis</strong> ou <strong className="text-red-400">ocultas</strong> no sistema.
               </p>
             </div>
           </div>
 
           {/* Quick Counter Chips */}
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <span className="px-2.5 py-1 rounded-xl bg-emerald-900/15 border border-emerald-800/30 text-emerald-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-              <Eye size={12} className="text-emerald-700" />
+          <div className="flex items-center gap-2 self-start sm:self-center font-mono">
+            <span className="px-2.5 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <Eye size={12} className="text-emerald-400" />
               {visibleCount} Visíveis
             </span>
-            <span className="px-2.5 py-1 rounded-xl bg-[#800609]/15 border border-[#800609]/30 text-[#800609] text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-              <EyeOff size={12} className="text-[#800609]" />
+            <span className="px-2.5 py-1 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_10px_rgba(255,42,75,0.2)]">
+              <EyeOff size={12} className="text-red-400" />
               {hiddenCount} Ocultas
             </span>
           </div>
@@ -335,42 +331,42 @@ export default function RestrictedPagesModal({
 
         {/* PRESET QUICK ACTIONS SUGGESTIONS */}
         <div className="mt-3 shrink-0">
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#5c3e29] mb-1.5 block">
+          <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] text-cyan-400 mb-1.5 block">
             ⚡ Sugestões Rápidas de Configuração:
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full font-mono">
             <button
               type="button"
               onClick={() => applyPreset('all_visible')}
-              className="py-1.5 px-2 rounded-xl bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center"
+              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
             >
               🌟 Exibir Todas
             </button>
             <button
               type="button"
               onClick={() => applyPreset('default')}
-              className="py-1.5 px-2 rounded-xl bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center"
+              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
             >
               🔒 Padrão Seguro
             </button>
             <button
               type="button"
               onClick={() => applyPreset('operational')}
-              className="py-1.5 px-2 rounded-xl bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center"
+              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
             >
               🚛 Operacional
             </button>
             <button
               type="button"
               onClick={() => applyPreset('admin')}
-              className="py-1.5 px-2 rounded-xl bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center"
+              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
             >
               👥 Gestão / Adm
             </button>
             <button
               type="button"
               onClick={() => applyPreset('executive')}
-              className="py-1.5 px-2 rounded-xl bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center col-span-2 sm:col-span-1"
+              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center col-span-2 sm:col-span-1 hover:border-cyan-400"
             >
               🌐 Executivo 4K
             </button>
@@ -378,22 +374,22 @@ export default function RestrictedPagesModal({
         </div>
 
         {/* SEARCH & FILTER CONTROLS */}
-        <div className="mt-3 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
+        <div className="mt-3 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0 font-mono">
           {/* Search Input */}
           <div className="relative w-full sm:w-72">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c3e29]/70" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar páginas ou módulos..."
-              className="w-full bg-[#fcf8f0] border border-[#5c3e29]/30 rounded-xl pl-9 pr-3 py-1.5 text-xs text-[#2D1A10] placeholder-[#5c3e29]/60 font-semibold focus:outline-none focus:border-[#800609] transition-colors"
+              className="w-full bg-slate-900 border border-white/20 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-cyan-400 transition-colors shadow-inner"
             />
             {searchQuery && (
               <button 
                 type="button" 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#5c3e29]/70 hover:text-black"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
               >
                 <X size={12} />
               </button>
@@ -401,16 +397,16 @@ export default function RestrictedPagesModal({
           </div>
 
           {/* Filter Tabs & Add Button */}
-          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-1 bg-[#24160E]/10 p-0.5 rounded-xl border border-[#311f14]/20">
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto no-scrollbar font-mono">
+            <div className="flex items-center gap-1 bg-white/5 p-0.5 rounded-xl border border-white/10">
               <button
                 type="button"
                 onClick={() => setFilterTab('all')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+                  "px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer",
                   filterTab === 'all' 
-                    ? "bg-[#311f14] text-[#fdefd1] shadow" 
-                    : "text-[#3c2518] hover:bg-black/5"
+                    ? "bg-cyan-500 text-slate-950 font-black shadow-[0_0_8px_rgba(6,182,212,0.6)]" 
+                    : "text-slate-400 hover:text-white"
                 )}
               >
                 Todas ({pagesList.length})
@@ -419,10 +415,10 @@ export default function RestrictedPagesModal({
                 type="button"
                 onClick={() => setFilterTab('visible')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+                  "px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer",
                   filterTab === 'visible' 
-                    ? "bg-emerald-900 text-white shadow" 
-                    : "text-[#3c2518] hover:bg-black/5"
+                    ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_8px_rgba(16,185,129,0.6)]" 
+                    : "text-slate-400 hover:text-white"
                 )}
               >
                 Visíveis ({visibleCount})
@@ -431,10 +427,10 @@ export default function RestrictedPagesModal({
                 type="button"
                 onClick={() => setFilterTab('hidden')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+                  "px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer",
                   filterTab === 'hidden' 
-                    ? "bg-[#800609] text-white shadow" 
-                    : "text-[#3c2518] hover:bg-black/5"
+                    ? "bg-red-500 text-white font-black shadow-[0_0_8px_rgba(255,42,75,0.6)]" 
+                    : "text-slate-400 hover:text-white"
                 )}
               >
                 Ocultas ({hiddenCount})
@@ -446,10 +442,10 @@ export default function RestrictedPagesModal({
               type="button"
               onClick={() => setShowAddPageForm(!showAddPageForm)}
               className={cn(
-                "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border shadow-sm transition-all cursor-pointer shrink-0",
+                "px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 border shadow-sm transition-all cursor-pointer shrink-0",
                 showAddPageForm 
-                  ? "bg-[#800609] text-white border-[#800609]"
-                  : "bg-[#311f14] hover:bg-[#4a2e1d] text-[#fdefd1] border-[#5c3e29]"
+                  ? "bg-red-500/20 text-red-300 border-red-500/50"
+                  : "bg-white/5 hover:bg-white/10 text-white border-white/15"
               )}
             >
               {showAddPageForm ? <X size={12} /> : <Plus size={12} />}
@@ -469,27 +465,27 @@ export default function RestrictedPagesModal({
             >
               <form 
                 onSubmit={handleAddNewPage}
-                className="bg-[#24160E] border-2 border-[#5c3e29] p-4 rounded-2xl text-[#fdefd1] shadow-xl space-y-3"
+                className="bg-slate-900 border border-white/15 p-4 rounded-2xl text-white shadow-xl space-y-3 font-mono"
               >
-                <div className="flex items-center justify-between border-b border-[#5c3e29]/50 pb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-[#e6c29b] flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-amber-400" />
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-cyan-400" />
                     Adicionar Nova Página ao Gerenciador de Restrições
                   </span>
-                  <span className="text-[10px] text-zinc-400 font-mono">
+                  <span className="text-[10px] text-slate-500 font-mono">
                     Cadastre uma nova página customizada
                   </span>
                 </div>
 
                 {formError && (
-                  <div className="bg-red-950/80 border border-red-500/50 text-red-200 text-xs px-3 py-1.5 rounded-lg font-bold">
+                  <div className="bg-red-950/80 border border-red-500/50 text-red-200 text-xs px-3 py-1.5 rounded-lg font-bold font-mono">
                     ⚠️ {formError}
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[#cca07d] block mb-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
                       Nome da Página *
                     </label>
                     <input
@@ -497,13 +493,13 @@ export default function RestrictedPagesModal({
                       value={newPageLabel}
                       onChange={(e) => setNewPageLabel(e.target.value)}
                       placeholder="Ex: Auditoria PGR"
-                      className="w-full bg-[#140b07] border border-[#5c3e29] rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 font-semibold"
+                      className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[#cca07d] block mb-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
                       Categoria / Subtítulo
                     </label>
                     <input
@@ -511,21 +507,21 @@ export default function RestrictedPagesModal({
                       value={newPageCategory}
                       onChange={(e) => setNewPageCategory(e.target.value)}
                       placeholder="Ex: Qualidade & Segurança"
-                      className="w-full bg-[#140b07] border border-[#5c3e29] rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 font-semibold"
+                      className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[#cca07d] block mb-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
                       Ícone
                     </label>
                     <select
                       value={newPageIcon}
                       onChange={(e) => setNewPageIcon(e.target.value)}
-                      className="w-full bg-[#140b07] border border-[#5c3e29] rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400 font-semibold cursor-pointer"
+                      className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono cursor-pointer"
                     >
                       {Object.keys(ICON_MAP).map((iconKey) => (
-                        <option key={iconKey} value={iconKey} className="bg-[#140b07] text-white">
+                        <option key={iconKey} value={iconKey} className="bg-slate-950 text-white">
                           {iconKey}
                         </option>
                       ))}
@@ -534,7 +530,7 @@ export default function RestrictedPagesModal({
                 </div>
 
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[#cca07d] block mb-1">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
                     Descrição do Módulo
                   </label>
                   <input
@@ -542,20 +538,20 @@ export default function RestrictedPagesModal({
                     value={newPageDescription}
                     onChange={(e) => setNewPageDescription(e.target.value)}
                     placeholder="Breve descrição da função desta página..."
-                    className="w-full bg-[#140b07] border border-[#5c3e29] rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 font-semibold"
+                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-1 font-mono">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={newPageVisible}
                       onChange={(e) => setNewPageVisible(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 rounded"
+                      className="w-4 h-4 accent-cyan-400 rounded"
                     />
-                    <span className="text-xs font-bold text-[#fdefd1]">
-                      Iniciar como <strong className={newPageVisible ? "text-emerald-400" : "text-amber-400"}>{newPageVisible ? "Visível no Menu" : "Oculta (Restrita)"}</strong>
+                    <span className="text-xs font-bold text-slate-300">
+                      Iniciar como <strong className={newPageVisible ? "text-emerald-400" : "text-red-400"}>{newPageVisible ? "Visível no Menu" : "Oculta (Restrita)"}</strong>
                     </span>
                   </label>
 
@@ -563,13 +559,13 @@ export default function RestrictedPagesModal({
                     <button
                       type="button"
                       onClick={() => setShowAddPageForm(false)}
-                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-black uppercase tracking-wider text-zinc-300 transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 transition-colors"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-xs font-black uppercase tracking-wider text-white shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-xs font-mono font-black uppercase tracking-wider text-white shadow-md transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       <Plus size={14} /> Salvar Nova Página
                     </button>
@@ -581,15 +577,15 @@ export default function RestrictedPagesModal({
         </AnimatePresence>
 
         {/* SEQUENCE INFO BAR */}
-        <div className="mt-2.5 px-3 py-2 rounded-xl bg-[#24160E]/20 border border-[#311f14]/20 flex flex-wrap items-center justify-between gap-2 text-xs text-[#5c3e29] font-bold shrink-0">
+        <div className="mt-2.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-mono shrink-0">
           <span className="flex items-center gap-1.5 text-[11px]">
-            <ArrowUpDown size={14} className="text-[#800609] shrink-0" />
-            <span><strong>Sequência das Páginas & Atalhos:</strong> A ordem numérica define a navegação rápida por teclado (<kbd className="px-1.5 py-0.5 rounded bg-[#311f14] text-[#fdefd1] font-mono text-[10px]">Ctrl + 1</kbd> até <kbd className="px-1.5 py-0.5 rounded bg-[#311f14] text-[#fdefd1] font-mono text-[10px]">Ctrl + 9</kbd>). Use as setas (▲/▼) para reordenar.</span>
+            <ArrowUpDown size={14} className="text-cyan-400 shrink-0" />
+            <span><strong>Sequência das Páginas & Atalhos:</strong> A ordem numérica define a navegação rápida por teclado (<kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-white/20 text-cyan-300 font-mono text-[10px]">Ctrl + 1</kbd> até <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-white/20 text-cyan-300 font-mono text-[10px]">Ctrl + 9</kbd>). Use as setas (▲/▼) para reordenar.</span>
           </span>
           <button
             type="button"
             onClick={handleResetOrder}
-            className="px-2.5 py-1 rounded-lg bg-[#f7eedf] hover:bg-[#fff7eb] text-[#2D1A10] border border-[#311f14]/30 font-black text-[10px] uppercase tracking-wide transition-all shadow-xs cursor-pointer shrink-0"
+            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/15 font-mono font-bold text-[10px] uppercase tracking-wide transition-all shadow-xs cursor-pointer shrink-0"
             title="Restaurar a ordem original das páginas"
           >
             Restaurar Ordem Original
@@ -597,14 +593,14 @@ export default function RestrictedPagesModal({
         </div>
 
         {/* SCROLLABLE LIST OF ALL PAGES */}
-        <div className="mt-3 flex-1 overflow-y-auto pr-1 space-y-2 min-h-[14rem] max-h-[42vh] custom-scrollbar">
+        <div className="mt-3 flex-1 overflow-y-auto pr-1 space-y-2 min-h-[14rem] max-h-[42vh] custom-scrollbar font-mono">
           {filteredPages.length === 0 ? (
-            <div className="p-8 text-center bg-[#f7eedf]/60 rounded-2xl border border-[#311f14]/20 text-[#5c3e29]">
+            <div className="p-8 text-center bg-white/5 rounded-2xl border border-white/10 text-slate-400">
               <p className="font-bold text-sm">Nenhuma página encontrada com os filtros atuais.</p>
               <button
                 type="button"
                 onClick={() => { setSearchQuery(''); setFilterTab('all'); }}
-                className="mt-2 text-xs font-black uppercase text-[#800609] underline cursor-pointer"
+                className="mt-2 text-xs font-black uppercase text-cyan-400 underline cursor-pointer"
               >
                 Limpar Filtros
               </button>
@@ -621,26 +617,26 @@ export default function RestrictedPagesModal({
                 <div
                   key={page.id}
                   className={cn(
-                    "p-3 rounded-2xl border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm",
+                    "p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md",
                     isVisible
-                      ? "bg-[#faf4ea] border-emerald-800/40 hover:border-emerald-800/80 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-                      : "bg-[#ebe0cb]/80 border-[#800609]/30 hover:border-[#800609]/60 opacity-85"
+                      ? "bg-slate-900/80 border-emerald-500/30 hover:border-emerald-500/60 shadow-[0_4px_12px_rgba(16,185,129,0.1)]"
+                      : "bg-slate-900/40 border-white/10 hover:border-white/20 opacity-70"
                   )}
                 >
                   {/* Left Info */}
                   <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                     <div className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center border-2 shrink-0 shadow-md transition-all",
+                      "w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 shadow-md transition-all",
                       isVisible
-                        ? "bg-emerald-950 border-emerald-600 text-emerald-400"
-                        : "bg-[#311f14] border-[#800609]/60 text-[#800609]"
+                        ? "bg-emerald-950 border-emerald-500/60 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                        : "bg-slate-950 border-white/15 text-slate-500"
                     )}>
                       <IconComponent size={20} strokeWidth={2.2} />
                     </div>
 
                     <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-serif font-black text-sm text-[#2D1A10] uppercase tracking-wide">
+                        <span className="font-mono font-black text-sm text-white uppercase tracking-wide">
                           {page.label}
                         </span>
                         
@@ -648,34 +644,34 @@ export default function RestrictedPagesModal({
                           <span className={cn(
                             "px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border",
                             isVisible 
-                              ? "bg-emerald-100 text-emerald-900 border-emerald-300"
-                              : "bg-[#dfcbab] text-[#5c3e29] border-[#5c3e29]/30"
+                              ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
+                              : "bg-white/5 text-slate-400 border-white/10"
                           )}>
                             {page.badge}
                           </span>
                         )}
 
                         {page.isCustom && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                          <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] font-mono font-bold uppercase tracking-wider">
                             Custom
                           </span>
                         )}
                       </div>
 
-                      <p className="text-[11px] font-medium text-[#5c3e29] line-clamp-1 mt-0.5">
+                      <p className="text-[11px] font-medium text-slate-400 line-clamp-1 mt-0.5 font-mono">
                         {page.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Middle / Reorder Sequence Controls */}
-                  <div className="flex items-center gap-1.5 bg-[#311f14]/10 p-1.5 rounded-xl border border-[#311f14]/20 shrink-0 self-start sm:self-center">
+                  <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-xl border border-white/10 shrink-0 self-start sm:self-center font-mono">
                     <div className="flex flex-col items-center">
-                      <span className="px-2 py-0.5 rounded-lg bg-[#311f14] text-[#e5c687] font-mono text-[10px] font-black border border-[#5c3e29] shrink-0" title={`Posição #${globalIndex + 1} na sequência`}>
+                      <span className="px-2 py-0.5 rounded-lg bg-slate-950 text-cyan-300 font-mono text-[10px] font-black border border-white/15 shrink-0" title={`Posição #${globalIndex + 1} na sequência`}>
                         #{globalIndex + 1}
                       </span>
                       {globalIndex < 9 && (
-                        <span className="text-[8.5px] font-mono font-bold text-[#800609] leading-tight mt-0.5">
+                        <span className="text-[8.5px] font-mono font-bold text-red-400 leading-tight mt-0.5">
                           Ctrl+{globalIndex + 1}
                         </span>
                       )}
@@ -684,7 +680,7 @@ export default function RestrictedPagesModal({
                     <select
                       value={globalIndex}
                       onChange={(e) => movePageToPosition(page.id, Number(e.target.value))}
-                      className="bg-[#1c1109] text-[#fdefd1] text-[10px] font-bold rounded-lg px-1.5 py-1 border border-[#8c6039]/60 focus:outline-none focus:border-[#ca1a20] cursor-pointer"
+                      className="bg-slate-950 text-white text-[10px] font-bold rounded-lg px-1.5 py-1 border border-white/20 focus:outline-none focus:border-cyan-400 cursor-pointer font-mono"
                       title="Alterar posição na sequência"
                     >
                       {pagesList.map((_, idx) => (
@@ -701,8 +697,8 @@ export default function RestrictedPagesModal({
                       className={cn(
                         "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border shadow-xs",
                         isFirst
-                          ? "bg-black/5 text-zinc-400 border-transparent cursor-not-allowed opacity-40"
-                          : "bg-[#311f14] hover:bg-[#800609] text-[#fdefd1] border-[#8c6039]/50 hover:border-[#b32025] active:scale-90"
+                          ? "bg-white/5 text-slate-600 border-transparent cursor-not-allowed opacity-40"
+                          : "bg-white/10 hover:bg-cyan-500 hover:text-slate-950 text-white border-white/15 active:scale-90"
                       )}
                       title="Mover para cima (anterior)"
                     >
@@ -716,8 +712,8 @@ export default function RestrictedPagesModal({
                       className={cn(
                         "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border shadow-xs",
                         isLast
-                          ? "bg-black/5 text-zinc-400 border-transparent cursor-not-allowed opacity-40"
-                          : "bg-[#311f14] hover:bg-[#800609] text-[#fdefd1] border-[#8c6039]/50 hover:border-[#b32025] active:scale-90"
+                          ? "bg-white/5 text-slate-600 border-transparent cursor-not-allowed opacity-40"
+                          : "bg-white/10 hover:bg-cyan-500 hover:text-slate-950 text-white border-white/15 active:scale-90"
                       )}
                       title="Mover para baixo (próxima)"
                     >
@@ -732,7 +728,7 @@ export default function RestrictedPagesModal({
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomPage(page.id)}
-                        className="p-2 rounded-xl text-red-700 hover:bg-red-200/60 transition-colors cursor-pointer"
+                        className="p-2 rounded-xl text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
                         title="Excluir página personalizada"
                       >
                         <Trash2 size={16} />
@@ -744,17 +740,17 @@ export default function RestrictedPagesModal({
                       type="button"
                       onClick={() => togglePageVisibility(page.id)}
                       className={cn(
-                        "px-3.5 py-2 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 border-2 transition-all shadow-md active:scale-95 cursor-pointer select-none",
+                        "px-3.5 py-2 rounded-xl font-mono font-black text-xs uppercase tracking-wider flex items-center gap-2 border transition-all shadow-md active:scale-95 cursor-pointer select-none",
                         isVisible
-                          ? "bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500 shadow-[0_4px_10px_rgba(16,185,129,0.3)]"
-                          : "bg-[#800609] hover:bg-[#a10d11] text-white border-[#b32025] shadow-[0_4px_10px_rgba(128,6,9,0.3)]"
+                          ? "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                          : "bg-red-950/80 hover:bg-red-900 text-red-300 border-red-500/50 shadow-[0_0_12px_rgba(255,42,75,0.3)]"
                       )}
                     >
                       {isVisible ? (
                         <>
                           <Eye size={15} />
                           <span>Visível</span>
-                          <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse ml-0.5" />
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
                         </>
                       ) : (
                         <>
@@ -772,12 +768,12 @@ export default function RestrictedPagesModal({
         </div>
 
         {/* FOOTER ACTIONS */}
-        <div className="mt-4 pt-3 border-t-2 border-[#5c3e29]/30 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+        <div className="mt-4 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 font-mono">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => applyPreset('default')}
-              className="py-2.5 px-3 rounded-xl bg-black/10 hover:bg-black/20 text-[#2D1A10] font-black uppercase text-[11px] tracking-wider transition-colors border border-[#311f14]/20 cursor-pointer flex items-center justify-center gap-1.5 w-full sm:w-auto"
+              className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-mono font-bold uppercase text-[11px] tracking-wider transition-colors border border-white/15 cursor-pointer flex items-center justify-center gap-1.5 w-full sm:w-auto"
             >
               <RotateCcw size={13} />
               Restaurar Padrão
@@ -788,14 +784,14 @@ export default function RestrictedPagesModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 sm:flex-initial py-2.5 px-5 rounded-xl bg-black/10 hover:bg-black/20 text-[#2D1A10] font-black uppercase text-xs tracking-wider transition-colors border border-[#311f14]/20 cursor-pointer text-center"
+              className="flex-1 sm:flex-initial py-2.5 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-mono font-bold uppercase text-xs tracking-wider transition-colors border border-white/15 cursor-pointer text-center"
             >
               Cancelar
             </button>
             <button
               type="button"
               onClick={handleSaveAndApply}
-              className="flex-1 sm:flex-initial py-2.5 px-6 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-initial py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-white font-mono font-black uppercase text-xs tracking-wider shadow-[0_0_15px_rgba(255,42,75,0.4)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 border border-red-500/40"
             >
               <Check size={16} className="stroke-[3]" />
               Salvar & Aplicar
@@ -810,16 +806,16 @@ export default function RestrictedPagesModal({
               initial={{ opacity: 0, scale: 0.9, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 10 }}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm rounded-[2rem] flex items-center justify-center z-50 p-6"
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md rounded-3xl flex items-center justify-center z-50 p-6"
             >
-              <div className="bg-[#24160E] border-2 border-emerald-500/80 rounded-2xl p-6 text-center text-[#fdefd1] shadow-2xl flex flex-col items-center gap-3 max-w-xs">
-                <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg">
+              <div className="bg-slate-900 border border-emerald-500/60 rounded-2xl p-6 text-center text-white shadow-2xl flex flex-col items-center gap-3 max-w-xs">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.4)]">
                   <Check size={26} className="stroke-[3]" />
                 </div>
-                <h3 className="font-serif font-black text-lg text-emerald-300 uppercase">
+                <h3 className="font-heading font-black text-lg text-emerald-400 uppercase">
                   Páginas Atualizadas!
                 </h3>
-                <p className="text-xs text-zinc-300">
+                <p className="text-xs text-slate-400 font-mono">
                   As configurações de visibilidade das páginas foram aplicadas com sucesso.
                 </p>
               </div>

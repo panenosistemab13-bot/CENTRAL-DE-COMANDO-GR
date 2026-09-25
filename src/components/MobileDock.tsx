@@ -251,7 +251,6 @@ export function MobileTopBar({ activeTab, onBack, onSelectTab, availablePages = 
       case 'controle': return 'Controle Geral';
       case 'escala': return 'Conversor Escala';
       case 'rotas': return 'Mapeamento Rotas';
-      case 'slides': return 'Command Center 4K';
       default: return 'Três Corações';
     }
   };
@@ -267,7 +266,6 @@ export function MobileTopBar({ activeTab, onBack, onSelectTab, availablePages = 
       case 'controle': return 'Baterias & Iscas';
       case 'escala': return 'Planilha Disponibilidade';
       case 'rotas': return 'Trajetos & Códigos';
-      case 'slides': return 'Executive HUD 3D';
       default: return 'PGR Mobile';
     }
   };

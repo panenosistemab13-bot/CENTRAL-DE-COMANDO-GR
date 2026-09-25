@@ -1,729 +1,463 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Users2, 
-  FileCheck2, 
-  CalendarDays, 
-  Route, 
-  Container, 
-  ChevronLeft, 
-  ChevronRight, 
-  ClipboardCheck, 
-  Sliders, 
-  Lock, 
-  Unlock, 
-  Globe, 
-  Database, 
+import {
+  Home,
+  Truck,
+  ClipboardCheck,
+  FileCheck2,
+  Share2,
+  BarChart3,
+  Calendar,
+  Users2,
+  MapPin,
+  Search,
+  Bell,
+  ChevronRight,
+  ChevronDown,
+  ShieldCheck,
+  Warehouse,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  Info,
+  Wrench,
+  Lock,
   LogOut,
-  Package,
-  ShieldAlert,
-  Sparkles,
-  FileSpreadsheet
+  CloudSun,
+  Maximize2,
+  Settings
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { toAbsoluteUrl } from '../utils/url';
-import coffeeLogo from '../assets/images/artisan_coffee_cup_1780921602243.png';
-import { PageDefinition, ICON_MAP, getAllAvailablePages } from '../data/pagesConfig';
+import { PageDefinition } from '../data/pagesConfig';
 
-interface MenuItem {
-  id: string;
-  label: string;
-  buttonLabel: string;
-  icon: React.ElementType;
-  color: string;
-  description: string;
-}
+import Checklist from './Checklist';
+import Averbacao from './Averbacao';
+import SMCreator from './SMCreator';
+import Controle from './Controle';
+import Escala from './Escala';
+import PresenceList from './PresenceList';
+import Rotas from './Rotas';
+import { PremiumBarChart, PremiumDonutChart, PremiumChart } from './charts';
+import DashboardInicioFuturistic from './DashboardInicioFuturistic';
 
-const baseMenuItems: MenuItem[] = [
-  { id: 'patio', label: 'Pátio', buttonLabel: 'Logística', icon: Container, color: 'text-zinc-300', description: 'Gestão inteligente de entrada e saída de veículos.' },
-  { id: 'checklist', label: 'Checklist', buttonLabel: 'Vistorias', icon: ClipboardCheck, color: 'text-zinc-300', description: 'Controle de validade e vistorias técnicas de periféricos frota.' },
-  { id: 'averbacao', label: 'Averbação', buttonLabel: 'Seguros', icon: FileCheck2, color: 'text-zinc-300', description: 'Gestão de apólices e seguros integrados.' },
-  { id: 'sm_creator', label: 'SM', buttonLabel: 'Eventos', icon: CalendarDays, color: 'text-zinc-300', description: 'Criação e agendamento de solicitações de monitoramento.' },
-  { id: 'controle', label: 'Controle', buttonLabel: 'Gerais', icon: Sliders, color: 'text-zinc-300', description: 'Gerador inteligente de controle, pré-alerta e iscas.' },
-  { id: 'escala', label: 'Escala', buttonLabel: 'Disponibilidade', icon: FileSpreadsheet, color: 'text-zinc-300', description: 'Conversor de escala para a planilha de Disponibilidade do Pátio (30 colunas).' },
-  { id: 'presence', label: 'Lista de Presença', buttonLabel: 'Efetivo', icon: Users2, color: 'text-zinc-300', description: 'Controle de escala e presença dos colaboradores.' },
-  { id: 'rotas', label: 'Rotas', buttonLabel: 'Logística', icon: Route, color: 'text-zinc-300', description: 'Otimização e códigos de rotas operacionais.' },
-  { id: 'slides', label: 'Slides HUD', buttonLabel: 'Command Center 4K', icon: Globe, color: 'text-cyan-400', description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, abas de status, destinos e unidades.' },
-];
+// High-definition cinematic image assets matching the reference
+import heroLogistica from '../assets/images/cafe_tres_coracoes_terminal_hub_1790250325063.jpg';
+import cctvYard from '../assets/images/cctv_cinematic_yard_1790214986048.jpg';
+import sidebarTruck from '../assets/images/sidebar_truck_red_1790209039511.jpg';
+import avatarJefferson from '../assets/images/avatar_jefferson_dias_1790206857666.jpg';
+import truckHighwaySunset from '../assets/images/hero_truck_sunset_1789847050862.jpg';
+import tacticalMapPin from '../assets/images/wallpaper_tactical_satellite_1790202511817.jpg';
+import coffeeBeansBg from '../assets/images/coffee_beans_3d_1789847062486.jpg';
 
 interface InitialMenuProps {
   onSelect: (id: string) => void;
-  focusedIndex: number;
-  setFocusedIndex: React.Dispatch<React.SetStateAction<number>>;
+  activeTab?: string;
+  focusedIndex?: number;
+  setFocusedIndex?: React.Dispatch<React.SetStateAction<number>>;
   showPresenceList?: boolean;
   showRotasPage?: boolean;
-  showSlides?: boolean;
   pageVisibility?: Record<string, boolean>;
   availablePages?: PageDefinition[];
   onUnlockPresenceList: () => void;
   onLogout?: () => void;
+  averbacaoView?: 'generator' | 'codes';
+  smCreatorView?: 'generator' | 'codes';
 }
 
-// Slotted Vintage Flat-head Screw Component for authentic industrial look
-function Screw({ className }: { className?: string }) {
-  return (
-    <div 
-      className={cn(
-        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
-        className
-      )}
-    >
-      {/* Screw threads flat groove */}
-      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
-    </div>
-  );
-}
-
-// Interactive render of gorgeous photorealistic 3D/Isometric modular vectors
-function ModuleGraphic({ id }: { id: string }) {
-  switch (id) {
-    case 'slides':
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_0_25px_rgba(0,240,255,0.6)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.6)" filter="blur(8px)" />
-          {/* Holographic 3D Globe HUD Base */}
-          <polygon points="40,120 100,145 160,120 100,95" fill="#030712" stroke="#00f0ff" strokeWidth="1.5" />
-          <polygon points="40,120 100,145 100,149 40,124" fill="#00f0ff" />
-          <polygon points="100,145 160,120 160,124 100,149" fill="#0066ff" />
-          
-          {/* Globe Mesh */}
-          <circle cx="100" cy="85" r="34" fill="#050b18" stroke="#00f0ff" strokeWidth="2" />
-          <circle cx="100" cy="85" r="40" fill="none" stroke="#00f0ff" strokeWidth="1" strokeDasharray="4 2" />
-          <line x1="66" y1="85" x2="134" y2="85" stroke="#00f0ff" strokeWidth="1" opacity="0.6" />
-          <line x1="100" y1="51" x2="100" y2="119" stroke="#00f0ff" strokeWidth="1" opacity="0.6" />
-          
-          {/* Active Nodes */}
-          <circle cx="100" cy="85" r="5" fill="#00f0ff" />
-          <circle cx="116" cy="74" r="3.5" fill="#3b82f6" />
-          <circle cx="84" cy="96" r="3.5" fill="#10b981" />
-        </svg>
-      );
-    case 'dados':
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_0_25px_rgba(16,185,129,0.5)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.6)" filter="blur(8px)" />
-          <polygon points="40,110 100,135 160,110 100,85" fill="#064e3b" stroke="#10b981" strokeWidth="1.5" />
-          <polygon points="40,110 100,135 100,142 40,117" fill="#047857" />
-          <polygon points="100,135 160,110 160,117 100,142" fill="#059669" />
-          
-          <circle cx="100" cy="75" r="28" fill="#022c22" stroke="#10b981" strokeWidth="2" />
-          <circle cx="100" cy="75" r="34" fill="none" stroke="#34d399" strokeWidth="1" strokeDasharray="3 3" />
-          <circle cx="100" cy="75" r="6" fill="#10b981" />
-        </svg>
-      );
-    case 'presence':
-      // The Legendary 3D Wooden Crate with Gold Edge angle-irons and a glowing crimson light band
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          {/* Base shadow */}
-          <ellipse cx="100" cy="160" rx="60" ry="14" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          
-          {/* Isometric Cube projection */}
-          {/* Left Wood Panel Face */}
-          <polygon points="40,105 100,135 100,75 40,45" fill="#5c3f25" />
-          {/* Wood Planks Lines on Left Face */}
-          <line x1="60" y1="55" x2="60" y2="115" stroke="#412c1a" strokeWidth="2.5" />
-          <line x1="80" y1="65" x2="80" y2="125" stroke="#412c1a" strokeWidth="2.5" />
-          
-          {/* Active Glowing Crimson Warning Neon Column on the left face */}
-          <rect x="52" y="72" width="6" height="30" fill="#ff0000" rx="1" transform="skewY(26)" filter="drop-shadow(0 0 6px #ff0000)" />
-          {/* Left vent grille lines */}
-          <line x1="50" y1="80" x2="52" y2="81" stroke="#333" strokeWidth="1" />
-          <line x1="50" y1="84" x2="52" y2="85" stroke="#333" strokeWidth="1" />
-          <line x1="50" y1="88" x2="52" y2="89" stroke="#333" strokeWidth="1" />
-
-          {/* Right Wood Panel Face */}
-          <polygon points="100,135 160,105 160,45 100,75" fill="#755030" />
-          {/* Planks Lines on Right Face */}
-          <line x1="120" y1="125" x2="120" y2="65" stroke="#503721" strokeWidth="2.5" />
-          <line x1="140" y1="115" x2="140" y2="55" stroke="#503721" strokeWidth="2.5" />
-          
-          {/* Woodburn Engraving of Coffee Bean logo on Front Right */}
-          <path 
-            d="M 125,76 C 120,81 120,93 128,95 C 133,96 137,86 131,80 Z" 
-            fill="#321e0f" 
-            className="opacity-90"
-            transform="skewY(-26) translate(-26, 114)"
-            filter="drop-shadow(1px 1px 0px rgba(255,255,255,0.08))"
-          />
-          <path 
-            d="M 124,78 C 127,82 124,91 129,91" 
-            stroke="#211208" 
-            strokeWidth="1.5" 
-            fill="none" 
-            transform="skewY(-26) translate(-26, 114)"
-          />
-
-          {/* Top Wood Lid Face */}
-          <polygon points="40,45 100,75 160,45 100,15" fill="#8c613c" />
-          {/* Top Lid Wood Planks */}
-          <line x1="60" y1="55" x2="120" y2="25" stroke="#68472c" strokeWidth="2.5" />
-          <line x1="80" y1="65" x2="140" y2="35" stroke="#68472c" strokeWidth="2.5" />
-
-          {/* Reinforcements - Metal Edge Brackets (Aged Gold/Bronze) */}
-          {/* Edge Left Vertical */}
-          <polygon points="38,45 42,47 42,107 38,105" fill="#cead82" />
-          {/* Edge Middle Vertical Column */}
-          <polygon points="98,75 102,75 102,135 98,135" fill="#f0dbb6" />
-          <polygon points="98,75 98,135 96,134 96,74" fill="#a48259" />
-          {/* Edge Right Vertical */}
-          <polygon points="158,105 162,107 162,47 158,45" fill="#a48259" />
-
-          {/* Corners caps */}
-          {/* Top Corner Cap */}
-          <polygon points="96,15 104,15 100,20" fill="#f3dfb9" />
-          {/* Right Corner Cap */}
-          <polygon points="154,45 162,45 158,52" fill="#a48259" />
-          {/* Bottom Middle Joint */}
-          <polygon points="96,133 104,133 100,138" fill="#e0c297" />
-          {/* Bottom Left Joint */}
-          <polygon points="36,104 44,104 40,109" fill="#a48259" />
-
-          {/* Tiny screws on brackets */}
-          <circle cx="100" cy="82" r="1.5" fill="#444" />
-          <circle cx="100" cy="128" r="1.5" fill="#444" />
-          <circle cx="41" cy="52" r="1.2" fill="#444" />
-          <circle cx="41" cy="98" r="1.2" fill="#444" />
-          <circle cx="159" cy="52" r="1.2" fill="#555" />
-          <circle cx="159" cy="98" r="1.2" fill="#555" />
-        </svg>
-      );
-
-    case 'patio':
-      // Red Industrial Corrugated Ground Container with heavy iron doors and yellow decals
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="60" ry="14" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Cargo Container Isometric Base */}
-          {/* Left Panel */}
-          <polygon points="40,110 100,138 100,75 40,47" fill="#801818" />
-          {/* Right Panel with Corrugations */}
-          <polygon points="100,138 160,110 160,47 100,75" fill="#b32424" />
-          
-          {/* Corrugation Shading - repeatable stripes */}
-          {[110, 120, 130, 140, 150].map((x, i) => (
-            <g key={i}>
-              <line x1={x} y1={75 - (x-100)*0.46} x2={x} y2={138 - (x-100)*0.46} stroke="#e53e3e" strokeWidth="2.5" />
-              <line x1={x+2} y1={75 - (x+2-100)*0.46} x2={x+2} y2={138 - (x+2-100)*0.46} stroke="#681212" strokeWidth="2.5" />
-            </g>
-          ))}
-
-          {/* Top Panel */}
-          <polygon points="40,47 100,75 160,47 100,19" fill="#c53030" />
-          {/* Top Panel ridges */}
-          <line x1="60" y1="56" x2="120" y2="28" stroke="#a62c2c" strokeWidth="2" />
-          <line x1="80" y1="65" x2="140" y2="37" stroke="#a62c2c" strokeWidth="2" />
-
-          {/* Industrial hinges and lockbars on front-left door */}
-          <line x1="50" y1="54" x2="50" y2="114" stroke="#d2d6dc" strokeWidth="2" />
-          <line x1="75" y1="66" x2="75" y2="126" stroke="#d2d6dc" strokeWidth="2" />
-          <rect x="49" y="75" width="4" height="6" fill="#4a5568" transform="skewY(26)" />
-          <rect x="74" y="85" width="4" height="6" fill="#4a5568" transform="skewY(26)" />
-
-          {/* Yellow warning hazard decal */}
-          <polygon points="115,75 130,68 135,71 120,78" fill="#ecc94b" />
-          <polygon points="118,74 122,72 125,75 121,77" fill="#1a202c" />
-        </svg>
-      );
-
-    case 'averbacao':
-      // Vintage Heavy Cast Iron Safe Box with polished brass combination dial
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Safe Outer Frame Isometric */}
-          <polygon points="45,115 100,140 100,75 45,50" fill="#2d3748" />
-          <polygon points="100,140 155,115 155,50 100,75" fill="#4a5568" />
-          <polygon points="45,50 100,75 155,50 100,25" fill="#718096" />
-
-          {/* Beveled Vault Front Door Face */}
-          <polygon points="107,131 148,111 148,58 107,79" fill="#1a202c" />
-          <polygon points="107,79 148,58 148,56 107,77" fill="#ffd700" /> {/* Gold trim frame */}
-
-          {/* Brass combination dial center */}
-          <circle cx="127" cy="95" r="14" fill="#d69e2e" stroke="#744210" strokeWidth="1.5" />
-          <circle cx="127" cy="95" r="10" fill="#1a202c" />
-          <circle cx="127" cy="95" r="3" fill="#ffd700" />
-          {/* Dial tick marks */}
-          <line x1="127" y1="81" x2="127" y2="83" stroke="#ffd700" strokeWidth="1" />
-          <line x1="139" y1="95" x2="141" y2="95" stroke="#ffd700" strokeWidth="1" />
-          <line x1="127" y1="107" x2="127" y2="109" stroke="#ffd700" strokeWidth="1" />
-          <line x1="113" y1="95" x2="115" y2="95" stroke="#ffd700" strokeWidth="1" />
-
-          {/* Safe Heavy door handle */}
-          <rect x="111" y="94" width="3" height="15" fill="#a0aec0" rx="1" />
-          <circle cx="112.5" cy="94" r="2.5" fill="#ffffff" />
-
-          {/* Left panel riveted steel look */}
-          <circle cx="55" cy="59" r="1.5" fill="#1a202c" />
-          <circle cx="90" cy="74" r="1.5" fill="#1a202c" />
-          <circle cx="55" cy="107" r="1.5" fill="#1a202c" />
-          <circle cx="90" cy="122" r="1.5" fill="#1a202c" />
-        </svg>
-      );
-
-    case 'sm_creator':
-      // Futuristic Tactical Communications Transmitter with retro screens and glowing antennas
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Base Unit Transmitter */}
-          <polygon points="45,120 100,145 100,85 45,60" fill="#1e293b" />
-          <polygon points="100,145 155,120 155,60 100,85" fill="#334155" />
-          <polygon points="45,60 100,85 155,60 100,35" fill="#475569" />
-
-          {/* Radar sweeping graphic display on right panel */}
-          <polygon points="107,133 148,114 148,70 107,89" fill="#020617" />
-          <circle cx="127.5" cy="101.5" r="15" fill="none" stroke="#22c55e" strokeWidth="1" opacity="0.4" />
-          <circle cx="127.5" cy="101.5" r="8" fill="none" stroke="#22c55e" strokeWidth="1" opacity="0.6" />
-          {/* Sweeper green line */}
-          <line x1="127.5" y1="101.5" x2="138" y2="92" stroke="#22c55e" strokeWidth="1.5" filter="drop-shadow(0 0 2px #22c55e)" />
-          {/* Blinking signal nodes */}
-          <circle cx="132" cy="98" r="1.5" fill="#e11d48" filter="drop-shadow(0 0 3px #e11d48)" />
-          <circle cx="121" cy="104" r="1.2" fill="#22c55e" filter="drop-shadow(0 0 2px #22c55e)" />
-
-          {/* Transmitter hardware knobs on the left panel */}
-          <circle cx="60" cy="76" r="3" fill="#e2e8f0" transform="skewY(26)" />
-          <circle cx="72" cy="82" r="3.5" fill="#e2e8f0" transform="skewY(26)" />
-          <circle cx="84" cy="88" r="3" fill="#cbd5e1" transform="skewY(26)" />
-          <rect x="58" y="95" width="28" height="8" fill="#0f172a" rx="1.5" transform="skewY(26)" />
-          <rect x="62" y="103" width="4" height="4" fill="#3b82f6" rx="0.5" filter="drop-shadow(0 0 2px #3b82f6)" />
-          <rect x="70" y="107" width="4" height="4" fill="#f59e0b" rx="0.5" filter="drop-shadow(0 0 2px #f59e0b)" />
-
-          {/* Vertical Antennas on Top */}
-          {/* Left Antenna rod */}
-          <line x1="72" y1="67" x2="72" y2="25" stroke="#94a3b8" strokeWidth="2.5" />
-          <circle cx="72" cy="23" r="3" fill="#e11d48" filter="drop-shadow(0 0 4px #e11d48)" />
-          {/* Right Antenna rod */}
-          <line x1="128" y1="67" x2="128" y2="25" stroke="#64748b" strokeWidth="2.5" />
-          <circle cx="128" cy="23" r="3" fill="#3b82f6" filter="drop-shadow(0 0 4px #3b82f6)" />
-        </svg>
-      );
-
-    case 'rotas':
-      // Traditional Golden Marine Brass Compass in premium casing
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Wooden Deck/Base */}
-          <polygon points="45,110 100,135 155,110 100,85" fill="#4a2d10" opacity="0.3" />
-          
-          {/* Giant Round Compass Shell (Aged Solid Gold/Brass) */}
-          <circle cx="100" cy="90" r="42" fill="url(#brassGrad)" stroke="#513008" strokeWidth="4" />
-          <circle cx="100" cy="90" r="36" fill="#1b120c" stroke="#b7791f" strokeWidth="2.5" />
-          <circle cx="100" cy="90" r="34" fill="#faf0e6" />
-
-          {/* Compass Rose Rose des Vents inside dial */}
-          {/* North/South pointing triangle */}
-          <polygon points="100,58 104,90 96,90" fill="#b91c1c" /> {/* Red North pointer */}
-          <polygon points="100,122 104,90 96,90" fill="#4a5568" /> {/* Grey South pointer */}
-          <polygon points="68,90 100,94 100,86" fill="#718096" />
-          <polygon points="132,90 100,94 100,86" fill="#718096" />
-
-          {/* Directions Labels */}
-          <text x="96" y="68" fill="#b91c1c" fontSize="10" fontWeight="bold" fontFamily="serif">N</text>
-          <text x="97" y="120" fill="#2d3748" fontSize="8" fontWeight="bold" fontFamily="serif">S</text>
-          <text x="122" y="93" fill="#2d3748" fontSize="8" fontWeight="bold" fontFamily="serif">E</text>
-          <text x="71" y="93" fill="#2d3748" fontSize="8" fontWeight="bold" fontFamily="serif">W</text>
-
-          {/* Polished Glass sheen highlight */}
-          <path d="M 72,70 A 34,34 0 0,1 128,70" fill="none" stroke="#ffffff" strokeWidth="3" opacity="0.6" strokeLinecap="round" />
-
-          {/* Brass outer lid ring */}
-          <circle cx="100" cy="42" r="8" fill="none" stroke="#d69e2e" strokeWidth="2.5" />
-
-          {/* Definition for elegant metallic gold brass gradient */}
-          <defs>
-            <radialGradient id="brassGrad" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="30%" stopColor="#ca8a04" />
-              <stop offset="70%" stopColor="#854d0e" />
-              <stop offset="100%" stopColor="#451a03" />
-            </radialGradient>
-          </defs>
-        </svg>
-      );
-
-    case 'checklist':
-      // Stately inspection parchment clipboard in premium hand-stitched tan leather binder
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="165" rx="55" ry="10" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Leather clipboard background tilted in isometric 3D space */}
-          <polygon points="50,135 110,155 150,115 90,95" fill="#fcf6f0" opacity="0.1" /> {/* Shadow */}
-          
-          {/* Backing leather board layout */}
-          <polygon points="55,135 115,155 150,110 90,90" fill="#78350f" />
-          <polygon points="57,133 113,152 147,108 91,89" fill="#92400e" />
-
-          {/* Inspection ivory document paper */}
-          <polygon points="67,125 111,141 139,103 95,87" fill="#fffefc" />
-          {/* Woodburned paper shadow */}
-          <polygon points="69,127 109,141 109,142 69,128" fill="#e2d8cd" />
-
-          {/* Clipboard solid vintage bronze metallic clamp at the top */}
-          <polygon points="86,96 102,102 110,92 94,86" fill="#854d0e" />
-          <polygon points="88,94 100,99 108,89 96,84" fill="#b45309" />
-          <circle cx="97" cy="92" r="1.5" fill="#451a03" />
-
-          {/* Checklist horizontal paper writing lines */}
-          <line x1="78" y1="117" x2="101" y2="125" stroke="#cbd5e1" strokeWidth="1.5" />
-          <line x1="84" y1="110" x2="114" y2="121" stroke="#cbd5e1" strokeWidth="1.5" />
-          <line x1="90" y1="104" x2="120" y2="115" stroke="#cbd5e1" strokeWidth="1.5" />
-
-          {/* Glowing Green Retro Checkmarks indicating compliance */}
-          <polyline points="73,115 75,117 79,112" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="drop-shadow(0 0 2px #22c55e)" />
-          <polyline points="79,108 81,110 85,105" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="drop-shadow(0 0 2px #22c55e)" />
-          <polyline points="85,101 87,103 91,98" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="drop-shadow(0 0 2px #22c55e)" />
-        </svg>
-      );
-
-    case 'controle':
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          {/* Main Dashboard Panel tilted in 3D */}
-          <polygon points="45,115 100,140 155,115 100,90" fill="#2d1d0f" />
-          <polygon points="45,115 100,140 100,143 45,118" fill="#1e1108" />
-          <polygon points="100,140 155,115 155,118 100,143" fill="#1e1108" />
-
-          {/* Copper base plate */}
-          <polygon points="50,112 100,135 150,112 100,89" fill="#8c5024" />
-          <polygon points="52,110 100,133 148,110 100,87" fill="#b4642d" />
-
-          {/* Brass screws in corners */}
-          <circle cx="56" cy="108" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
-          <circle cx="144" cy="108" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
-          <circle cx="100" cy="129" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
-          <circle cx="100" cy="91" r="1.5" fill="#fef08a" stroke="#451a03" strokeWidth="0.5" />
-
-          {/* Left vertical slider track */}
-          <polygon points="70,105 74,107 74,117 70,115" fill="#1e1108" />
-          {/* Slider knob (Red) */}
-          <polygon points="68,109 76,113 76,111 68,107" fill="#B32025" />
-          <polygon points="68,107 76,111 76,108 68,104" fill="#e53e3e" />
-
-          {/* Right vertical slider track */}
-          <polygon points="126,105 130,107 130,117 126,115" fill="#1e1108" />
-          {/* Slider knob (Brass/Yellow) */}
-          <polygon points="124,109 132,113 132,111 124,107" fill="#ca8a04" />
-          <polygon points="124,107 132,111 132,108 124,104" fill="#fef08a" />
-
-          {/* Center Gauge dial */}
-          <ellipse cx="100" cy="108" rx="14" ry="10" fill="#1e1108" stroke="#ca8a04" strokeWidth="1" />
-          {/* Indicator needle */}
-          <line x1="100" y1="108" x2="108" y2="101" stroke="#e53e3e" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="100" cy="108" r="2" fill="#fff" />
-        </svg>
-      );
-
-    default:
-      return (
-        <svg viewBox="0 0 200 200" className="w-40 h-40 drop-shadow-[0_12px_18px_rgba(0,0,0,0.7)]">
-          <ellipse cx="100" cy="160" rx="55" ry="12" fill="rgba(0,0,0,0.4)" filter="blur(8px)" />
-          <polygon points="45,115 100,140 155,115 100,90" fill="#311f14" />
-          <polygon points="45,115 100,140 100,75 45,50" fill="#4a2e1d" />
-          <polygon points="100,140 155,115 155,50 100,75" fill="#5c3e29" />
-          <polygon points="45,50 100,75 155,50 100,25" fill="#bfa27a" />
-          <circle cx="100" cy="50" r="16" fill="#800609" stroke="#cead80" strokeWidth="2" />
-          <polygon points="95,44 105,50 95,56" fill="#ffffff" />
-        </svg>
-      );
-  }
-}
-
-export default function InitialMenu({ 
-  onSelect, 
-  focusedIndex, 
-  setFocusedIndex, 
-  showPresenceList, 
-  showRotasPage, 
-  showSlides, 
-  pageVisibility, 
-  availablePages, 
-  onUnlockPresenceList, 
-  onLogout 
+export default function InitialMenu({
+  onSelect,
+  activeTab = 'menu',
+  onUnlockPresenceList,
+  onLogout,
+  averbacaoView = 'generator',
+  smCreatorView = 'generator',
 }: InitialMenuProps) {
-  const [direction, setDirection] = useState(0);
-
-  const allPages = availablePages || getAllAvailablePages();
-
-  const menuItemsList: MenuItem[] = allPages.map(page => {
-    const existing = baseMenuItems.find(b => b.id === page.id);
-    const IconComp = ICON_MAP[page.iconName] || existing?.icon || Sliders;
-    return {
-      id: page.id,
-      label: page.label,
-      buttonLabel: page.buttonLabel || page.category || 'Módulo',
-      icon: IconComp,
-      color: existing?.color || 'text-zinc-300',
-      description: page.description
-    };
-  });
-
-  const filteredMenuItems = menuItemsList.filter(item => {
-    if (pageVisibility && pageVisibility[item.id] !== undefined) {
-      return Boolean(pageVisibility[item.id]);
-    }
-    if (item.id === 'presence') return Boolean(showPresenceList);
-    if (item.id === 'rotas') return Boolean(showRotasPage);
-    if (item.id === 'slides') return Boolean(showSlides);
-    return true;
-  });
-
-  const itemsToRender = filteredMenuItems.length > 0 ? filteredMenuItems : menuItemsList.slice(0, 1);
-  const safeFocusedIndex = Math.min(focusedIndex, Math.max(0, itemsToRender.length - 1));
-  const activeItem = itemsToRender[safeFocusedIndex] || itemsToRender[0];
-
-  const paginate = useCallback((newDirection: number) => {
-    setDirection(newDirection);
-    setFocusedIndex((prev) => {
-      let next = prev + newDirection;
-      if (next < 0) next = itemsToRender.length - 1;
-      if (next >= itemsToRender.length) next = 0;
-      return next;
-    });
-  }, [setFocusedIndex, itemsToRender.length]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [activeNav, setActiveNav] = useState(activeTab);
+  const [movementTab, setMovementTab] = useState<'entradas' | 'saidas'>('entradas');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+    setActiveNav(activeTab);
+  }, [activeTab]);
 
-      if (e.key === 'ArrowRight') paginate(1);
-      if (e.key === 'ArrowLeft') paginate(-1);
-      if (e.key === 'Enter') {
-        const currentItem = itemsToRender[safeFocusedIndex] || itemsToRender[0];
-        if (currentItem) onSelect(currentItem.id);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [safeFocusedIndex, paginate, onSelect, itemsToRender]);
+  // Synchronized real-time clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = useMemo(() => {
+    return currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }, [currentTime]);
+
+  const formattedDate = useMemo(() => {
+    const day = currentTime.getDate();
+    const month = currentTime.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+    const year = currentTime.getFullYear();
+    return `${day} ${month} ${year}`;
+  }, [currentTime]);
+
+  // Sidebar navigation items matching reference exactly
+  const sidebarItems = [
+    { id: 'menu', label: 'Início', icon: Home, hasArrow: true },
+    { id: 'checklist', label: 'Checklist', icon: ClipboardCheck, hasArrow: true },
+    { id: 'averbacao', label: 'Averbação', icon: FileCheck2, hasArrow: false },
+    { id: 'sm_creator', label: 'SM', icon: Share2, hasArrow: false },
+    { id: 'controle', label: 'Controle', icon: BarChart3, hasArrow: false },
+    { id: 'escala', label: 'Escala', icon: Calendar, hasArrow: false },
+    { id: 'presence', label: 'Lista de Presença', icon: Users2, hasArrow: false },
+    { id: 'rotas', label: 'Rotas', icon: MapPin, hasArrow: true },
+  ];
+
+  const handleItemClick = (id: string) => {
+    setActiveNav(id);
+    onSelect(id);
+  };
+
+  const renderActiveModuleContent = () => {
+    switch (activeNav) {
+      case 'checklist':
+        return <Checklist />;
+      case 'averbacao':
+        return <Averbacao view={averbacaoView} onBack={() => handleItemClick('menu')} />;
+      case 'sm_creator':
+        return <SMCreator view={smCreatorView} onBack={() => handleItemClick('menu')} />;
+      case 'controle':
+        return <Controle onBack={() => handleItemClick('menu')} />;
+      case 'escala':
+        return <Escala onBack={() => handleItemClick('menu')} />;
+      case 'presence':
+        return <PresenceList onBack={() => handleItemClick('menu')} />;
+      case 'rotas':
+        return <Rotas onBack={() => handleItemClick('menu')} />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="w-full min-h-screen text-[#2b180d] select-none relative flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans overflow-x-hidden md:overflow-y-hidden">
+    <div className="w-full h-screen max-h-screen flex flex-col bg-[#ede6dc] text-stone-900 font-sans select-none overflow-hidden relative max-w-[1920px] mx-auto">
       
-      {/* ================= HEADER AREA ================= */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 max-w-full mx-auto mt-2 px-2 sm:px-4">
+      {/* Cinematic ivory/champagne gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#f5eee3] via-[#ede6dc] to-[#e4dcd0] pointer-events-none z-0" />
+
+      {/* ========================================================================= */}
+      {/* 1. TOP HEADER BAR                                                         */}
+      {/* ========================================================================= */}
+      <header className="w-full h-15 px-4 sm:px-6 bg-[#ede6dc]/95 backdrop-blur-md border-b border-[#ded5c6] flex items-center justify-between shrink-0 z-30 relative shadow-sm">
         
-        {/* TOP LEFT HEADER: MÓDULO ATIVO RED BRAND SEAL AND LABEL */}
-        <div className="hidden flex items-center gap-2.5 bg-black/10 backdrop-blur-md rounded-full py-1 pl-1 pr-4.5 border border-white/5 shadow-2xl backdrop-saturate-150 relative transition-transform duration-300 hover:scale-[1.02]">
-          <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#cead80] bg-[#800609] flex items-center justify-center shrink-0 shadow-lg shadow-black/40">
-            <img 
-              src={toAbsoluteUrl(coffeeLogo)} 
-              alt="3 Corações Logo Badge" 
-              className="w-full h-full object-cover scale-105"
-            />
+        {/* Left: Brand Identity with 3 Corações Heart Logo */}
+        <div 
+          onClick={() => handleItemClick('menu')}
+          className="flex items-center gap-3 cursor-pointer group shrink-0"
+        >
+          {/* Official 3 Corações Red Circle Heart Emblem */}
+          <div className="w-10 h-10 rounded-full bg-[#9b1526] p-0.5 flex items-center justify-center shadow-md border-2 border-[#dfb15b] group-hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+            <svg viewBox="0 0 100 100" className="w-7 h-7">
+              {/* Outer Glow */}
+              <circle cx="50" cy="50" r="46" fill="#9b1526" />
+              {/* Gold Heart Graphic */}
+              <path 
+                d="M50 82 C50 82 20 60 20 38 C20 25 31 16 43 18 C47 19 50 22 50 22 C50 22 53 19 57 18 C69 16 80 25 80 38 C80 60 50 82 50 82 Z" 
+                fill="#dfb15b" 
+              />
+              <path 
+                d="M50 72 C50 72 26 54 26 38 C26 28 35 22 43 24 C46 25 50 28 50 28 C50 28 54 25 57 24 C65 22 74 28 74 38 C74 54 50 72 50 72 Z" 
+                fill="#b81d2c" 
+              />
+              {/* Center Mini Gold Hearts */}
+              <path 
+                d="M44 48 C44 48 36 40 36 34 C36 30 39 27 42 28 C45 29 46 32 46 32 C46 32 47 29 50 28 C53 27 56 30 56 34 C56 40 48 48 44 48 Z" 
+                fill="#ffd27d" 
+                transform="scale(0.8) translate(12, 10)"
+              />
+              <text x="50" y="58" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="900" fontFamily="sans-serif" letterSpacing="-0.5">
+                3corações
+              </text>
+            </svg>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[8px] font-black uppercase tracking-[0.25em] text-[#b49271] leading-none mb-0.5 shadow-sm">
-              Módulo Ativo
+
+          <div className="flex flex-col pl-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-black tracking-wider text-stone-900 uppercase leading-none font-sans">
+                SISTEMA OPERACIONAL
+              </h1>
+              <div className="flex items-center bg-[#9b1526] px-2.5 py-0.5 rounded-full border border-red-900/30 shadow-sm">
+                <span className="text-[8.5px] font-mono font-black text-white tracking-tight">
+                  1920x1080P + DUAL 4K
+                </span>
+              </div>
+            </div>
+            <span className="text-[9px] font-bold text-stone-500 tracking-[0.2em] uppercase mt-1 opacity-90">
+              CONTROLE TÁTICO • GESTÃO • RESULTADOS
             </span>
-            <AnimatePresence mode="popLayout">
-              <motion.h1 
-                key={activeItem.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="text-2xl xs:text-3xl font-black uppercase tracking-tight text-[#f1daaf] leading-none select-none filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.65)] font-sans"
-                style={{
-                  textShadow: '1.2px 1.5px 0px #311b09, 2px 3px 6px rgba(0,0,0,0.5)'
-                }}
-              >
-                {activeItem.buttonLabel}
-              </motion.h1>
+          </div>
+        </div>
+
+        {/* Center: Search Capsule (Oval with soft cream background) */}
+        <div className="hidden md:flex items-center flex-1 max-w-lg mx-8">
+          <div className="relative w-full group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-stone-800 transition-colors" size={16} />
+            <input
+              type="text"
+              placeholder="Buscar no sistema de logística..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#f8f5ee] hover:bg-white focus:bg-white border border-[#ded5c6] focus:border-stone-400 rounded-full py-2 pl-11 pr-10 text-xs text-stone-800 font-medium placeholder-stone-400 outline-none transition-all shadow-inner"
+            />
+            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+          </div>
+        </div>
+
+        {/* Right: Notifications, User Profile & Clock */}
+        <div className="flex items-center gap-3.5 sm:gap-4 shrink-0">
+          
+          {/* Notification Bell */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="w-9 h-9 rounded-full bg-[#f8f5ee] hover:bg-white border border-[#ded5c6] flex items-center justify-center text-stone-700 hover:text-stone-900 transition-all relative cursor-pointer shadow-sm"
+              title="Notificações"
+            >
+              <Bell size={16} />
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#9b1526] text-white text-[9px] font-black flex items-center justify-center border-2 border-[#ede6dc] shadow-xs">
+                3
+              </span>
+            </button>
+
+            {/* Dropdown */}
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  className="absolute right-0 mt-2 w-72 bg-white border border-[#dacfc2] rounded-2xl shadow-xl p-3 z-50 text-xs"
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-200 mb-2">
+                    <span className="font-bold uppercase tracking-wider text-stone-800">Alertas Recentes</span>
+                    <span className="text-[10px] font-mono text-[#9b1526] font-bold">3 novos</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="p-2 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-[#9b1526] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-stone-800">Veículo 023 - Atraso na saída</p>
+                        <p className="text-[10px] text-stone-500">Há 15 min • Pátio</p>
+                      </div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-stone-800">Checklist pendente - Veículo 017</p>
+                        <p className="text-[10px] text-stone-500">Há 32 min • Checklist</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
+
+          {/* User Profile Capsule */}
+          <div className="relative">
+            <div
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-[#f8f5ee] hover:bg-white border border-[#ded5c6] transition-all cursor-pointer shadow-sm group"
+            >
+              <img
+                src={avatarJefferson}
+                alt="Jefferson Dias"
+                className="w-7 h-7 rounded-full object-cover border border-stone-300 shadow-2xs"
+              />
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-xs font-bold text-stone-900 leading-tight">Jefferson Dias</span>
+                <span className="text-[9px] text-stone-500 font-medium leading-none">Administrador</span>
+              </div>
+              <ChevronDown size={13} className="text-stone-400 group-hover:text-stone-700 ml-1 transition-colors" />
+            </div>
+
+            {/* Profile Dropdown */}
+            <AnimatePresence>
+              {showProfileMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  className="absolute right-0 mt-2 w-56 bg-white border border-[#ded5c6] rounded-2xl shadow-xl p-2 z-50 text-xs"
+                >
+                  <button
+                    onClick={onUnlockPresenceList}
+                    className="w-full px-3 py-2.5 rounded-xl text-left hover:bg-stone-50 text-stone-800 font-bold flex items-center gap-3 transition-colors cursor-pointer"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
+                      <Lock size={14} />
+                    </div>
+                    <span>Segurança Operacional</span>
+                  </button>
+                  {onLogout && (
+                    <button
+                      onClick={onLogout}
+                      className="w-full px-3 py-2.5 rounded-xl text-left hover:bg-red-50 text-red-700 font-bold flex items-center gap-3 transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center">
+                        <LogOut size={14} />
+                      </div>
+                      <span>Encerrar Sessão</span>
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Clock & Date */}
+          <div className="hidden lg:flex flex-col items-end pl-2">
+            <span className="text-xl sm:text-2xl font-black font-mono text-stone-900 tracking-tight leading-none">
+              {formattedTime}
+            </span>
+            <span className="text-[10px] font-mono font-bold text-stone-500 mt-0.5 uppercase tracking-wider">
+              {formattedDate}
+            </span>
+          </div>
+
+        </div>
+      </header>
+
+      {/* ========================================================================= */}
+      {/* 2. MAIN VIEWPORT CANVAS: LEFT SIDEBAR + CENTER + RIGHT SIDEBAR           */}
+      {/* ========================================================================= */}
+      <div className="flex-1 min-h-0 flex flex-row overflow-hidden p-2.5 gap-2.5 relative z-10">
+
+        {/* ----------------------------------------------------------------------- */}
+        {/* LEFT SIDEBAR (LIGHT IVORY GLASS CONTAINER MATCHING REFERENCE IMAGE)     */}
+        {/* ----------------------------------------------------------------------- */}
+        <aside className="w-48 lg:w-52 h-full flex flex-col justify-between shrink-0 select-none bg-[#fbf9f5]/90 backdrop-blur-md rounded-2xl p-2.5 border border-[#d6ccbe] shadow-sm overflow-hidden relative">
+          
+          {/* Navigation Links list */}
+          <div className="flex flex-col gap-1.5 overflow-y-auto no-scrollbar pr-0.5 relative z-10">
+            {sidebarItems.map((item) => {
+              const isActive = activeNav === item.id;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemClick(item.id)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer group text-left relative",
+                    isActive
+                      ? "bg-gradient-to-r from-[#9b1526] via-[#85111f] to-[#6d0d18] text-white shadow-md shadow-red-950/20 font-bold border border-red-800/80"
+                      : "text-stone-800 hover:text-stone-950 hover:bg-white/80"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={cn(
+                      "w-6 h-6 rounded-lg flex items-center justify-center transition-colors shrink-0",
+                      isActive ? "bg-white/20 text-white" : "bg-[#9b1526]/10 text-[#9b1526]"
+                    )}>
+                      <Icon size={14} />
+                    </div>
+                    <span className="text-[12px] tracking-wide font-sans">
+                      {item.label}
+                    </span>
+                  </div>
+                  
+                  {item.hasArrow && (
+                    <ChevronRight 
+                      size={13} 
+                      className={cn(
+                        "shrink-0 transition-transform",
+                        isActive ? "text-white translate-x-0.5" : "text-stone-400 group-hover:text-stone-700"
+                      )} 
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom Slanted Truck Card */}
+          <div className="mt-2 pt-2 border-t border-[#e7dac9] relative z-10">
+            <div className="relative rounded-xl overflow-hidden border border-[#d6ccbe] shadow-sm bg-black group h-24">
+              <img
+                src={sidebarTruck}
+                alt="Operação Integrada"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+              
+              <div className="absolute bottom-2 left-2.5 right-2 flex flex-col">
+                <span className="text-[9.5px] font-mono font-black tracking-widest text-white uppercase leading-tight">
+                  OPERAÇÃO
+                </span>
+                <span className="text-[9.5px] font-mono font-black tracking-widest text-white uppercase leading-tight">
+                  INTEGRADA
+                </span>
+                <span className="text-[9.5px] font-mono font-black tracking-widest text-[#dfb15b] uppercase leading-tight">
+                  RESULTADOS
+                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9.5px] font-mono font-black tracking-widest text-white uppercase leading-tight">
+                    REAIS
+                  </span>
+                  <span className="text-[9.5px] font-mono font-black tracking-wider text-red-500">
+                    ////
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+        {/* ----------------------------------------------------------------------- */}
+        {/* CENTER MAIN WORKSPACE CANVAS                                           */}
+        {/* ----------------------------------------------------------------------- */}
+        {activeNav === 'menu' ? (
+          <main className="flex-1 min-w-0 h-full flex flex-col overflow-hidden p-2.5">
+            <DashboardInicioFuturistic />
+          </main>
+        ) : (
+          <main className="flex-1 min-w-0 h-full flex flex-col overflow-hidden p-2.5">
+            <div className="bg-[#ede6dc] rounded-[32px] h-full overflow-hidden border border-white/20 shadow-2xl relative z-10">
+              {renderActiveModuleContent()}
+            </div>
+          </main>
+        )}
+      </div>
+
+      {/* GLOBAL FOOTER (MATCHING REFERENCE IMAGE) */}
+      <footer className="w-full h-7 px-4 sm:px-6 bg-[#ede6dc]/95 backdrop-blur-md border-t border-[#ded5c6] flex items-center justify-between text-[10px] font-mono text-stone-600 shrink-0 relative z-30">
+        <div className="flex items-center gap-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-[#9b1526] flex items-center justify-center text-white text-[7px] font-black">
+            ☕
+          </div>
+          <span className="font-bold text-stone-900">Café Três Corações</span>
+          <span className="text-stone-400">|</span>
+          <span className="text-stone-600 font-medium">Sistema Operacional</span>
         </div>
 
-        {/* TOP RIGHT BRAND PLATE */}
         <div className="flex items-center gap-4">
-          <div 
-            className="relative px-5 py-2.5 rounded-2xl bg-gradient-to-br from-[#4a3222]/85 to-[#1c0e06]/95 border-2 border-[#bfa27a]/60 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_4px_rgba(255,255,255,0.15)] max-w-sm w-full md:w-auto shrink-0 transition-transform duration-300 hover:scale-[1.02]"
-          >
-          {/* Metal plate screws */}
-          <Screw className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5" />
-          
-          {/* Top Right Secret Button Screw */}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+            <span className="font-bold text-stone-900">Sistema Online</span>
+          </div>
+          <span className="text-stone-400">v2.8.7</span>
           <button 
             type="button"
-            onClick={onUnlockPresenceList} 
-            className="absolute -top-1.5 -right-1.5 focus:outline-none cursor-pointer transition-transform active:scale-95"
-            title="Acesso Secreto"
+            onClick={onUnlockPresenceList}
+            className="flex items-center gap-1 hover:text-stone-900 transition-colors cursor-pointer text-stone-600"
+            title="Configurações"
           >
-            <Screw className="w-2.5 h-2.5" />
+            <Settings size={11} className="text-stone-500" />
+            <span>Configurações</span>
           </button>
-
-          <Screw className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5" />
-          <Screw className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5" />
-
-          <div className="flex items-center gap-3.5 text-[#eddabf]">
-            {/* Elegant steaming coffee cup icon */}
-            <div className="relative shrink-0 flex flex-col items-center">
-              {/* Steams */}
-              <div className="flex gap-0.5 -mt-2.5 mb-1 opacity-75">
-                <span className="w-0.5 h-2.5 bg-[#e6cfb5]/80 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <span className="w-0.5 h-3.5 bg-[#e6cfb5]/80 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-                <span className="w-0.5 h-2.5 bg-[#e6cfb5]/80 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-              </div>
-              {/* Cup body & saucer */}
-              <div className="w-5 h-3.5 border-2 border-[#e6cfb5] rounded-b-md relative flex items-center justify-center">
-                <span className="absolute -right-[4.5px] top-0.5 w-[4.5px] h-1.5 border-2 border-l-0 border-[#e6cfb5] rounded-r-md" />
-              </div>
-              <div className="w-7 h-[2px] bg-[#e6cfb5] rounded-full mt-[1px]" />
-            </div>
-
-            <div className="flex flex-col pr-4">
-              <p className="font-serif italic text-[11px] tracking-wide text-[#fdefd1] font-semibold leading-none">
-                Feito com paixão.
-              </p>
-              <p className="font-serif italic text-[10px] text-[#cca07d] font-semibold tracking-wide leading-none mt-1">
-                Feito para entregar.
-              </p>
-              <div className="flex justify-center gap-1 mt-1 text-red-500 text-[7px] animate-pulse relative">
-                <span>♥</span><span>♥</span><span>♥</span>
-                {/* Secret padlock toggle */}
-                <button
-                  type="button"
-                  onClick={onUnlockPresenceList}
-                  className="absolute -right-5 top-1/2 -translate-y-1/2 text-[#bfa27a]/60 hover:text-[#fdefd1] transition-colors cursor-pointer"
-                  title="Acesso Administrador"
-                >
-                  {showPresenceList ? <Unlock size={8} className="text-green-500" /> : <Lock size={8} />}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-      </div>
-
-      {/* ================= CENTRAL CAROUSEL CONTAINER ================= */}
-      <div className="flex-1 flex items-center justify-between gap-4 w-full max-w-full mx-auto px-2 sm:px-4 relative z-10 select-none py-4 md:py-0">
-        
-        {/* LEFT CAROUSEL CHEVRON BUTTON */}
-        <motion.button 
-          whileHover={{ scale: 1.12, boxShadow: "0 0 15px rgba(139,92,26,0.5)" }}
-          whileTap={{ scale: 0.90 }}
-          onClick={() => paginate(-1)}
-          className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-b from-[#5c371d] to-[#1e0e06] border-[2.5px] border-[#cead80] shadow-[0_6px_12px_rgba(0,0,0,0.8)] text-[#eddabf] hover:text-white transition-all cursor-pointer"
-        >
-          <ChevronLeft size={20} className="drop-shadow-md stroke-[3]" />
-        </motion.button>
- 
-        {/* BRASS METAL CORE CAROUSEL PLATE */}
-        <div className="flex-1 flex items-center justify-center relative min-h-[25.5rem] md:min-h-[26.5rem]">
-          <AnimatePresence mode="popLayout" custom={direction}>
-            <motion.div
-              key={activeItem.id}
-              custom={direction}
-              initial={{ x: direction > 0 ? 100 : -100, opacity: 0, scale: 0.94 }}
-              animate={{ x: 0, opacity: 1, scale: 1 }}
-              exit={{ x: direction > 0 ? -100 : 100, opacity: 0, scale: 0.94 }}
-              transition={{ type: "spring", stiffness: 180, damping: 20 }}
-              className="w-full max-w-[316px] rounded-[1.85rem] bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-[0_20px_45px_rgba(0,0,0,0.85),inset_1.5px_1.5px_3px_rgba(255,255,255,0.45)] p-5 flex flex-col items-center justify-between relative ring-4 ring-[#1c1109]/30 cursor-pointer select-none h-[24.5rem]"
-              onClick={() => onSelect(activeItem.id)}
-            >
-              {/* Plaque's Corner Hardware Screws */}
-              <Screw className="absolute top-2.5 left-2.5" />
-              <Screw className="absolute top-2.5 right-2.5" />
-              <Screw className="absolute bottom-2.5 left-2.5" />
-              <Screw className="absolute bottom-2.5 right-2.5" />
- 
-              {/* 3D Isometric Module Visual Vector Item */}
-              <div className="flex-1 flex items-center justify-center relative w-full pt-0">
-                <ModuleGraphic id={activeItem.id} />
-              </div>
- 
-              {/* Module Metadata & Text Panel details */}
-              <div className="flex flex-col items-center text-center w-full mt-0.5">
-                
-                {/* Dynamic Red Category Badge Ribbon */}
-                <span className="bg-gradient-to-b from-[#ca1a20] to-[#800609] border border-[#ff3e47]/30 text-white text-[9px] font-black px-4 py-1 uppercase tracking-widest rounded-full shadow-[0_3px_8px_rgba(179,32,37,0.4)] transform translate-y-[-2px] select-none scale-100">
-                  {activeItem.buttonLabel}
-                </span>
- 
-                {/* Module Primary Heading (Styled as engraved woodcraft) */}
-                <h2 
-                  className="text-lg sm:text-2xl font-serif font-black text-[#2e190e] tracking-tight capitalize mt-3 select-none mb-0.5"
-                  style={{
-                    textShadow: '0.5px 1px 0px rgba(255, 255, 255, 0.4)'
-                  }}
-                >
-                  {activeItem.label}
-                </h2>
- 
-                {/* Styled Rustic Wood/Bean Separator */}
-                <div className="flex items-center gap-2 w-28 justify-center py-1 opacity-80 select-none">
-                  <span className="h-[1px] flex-1 bg-[#5c3c24]" />
-                  <span className="text-[#5c3c24] text-[10px]">☕</span>
-                  <span className="h-[1px] flex-1 bg-[#5c3c24]" />
-                </div>
- 
-                {/* Module Description with high contrast for paper plaque backdrop */}
-                <p className="text-[#3c2518] text-xs font-bold leading-relaxed max-w-[15rem] select-none mt-0.5">
-                  {activeItem.description}
-                </p>
-              </div>
- 
-            </motion.div>
-          </AnimatePresence>
-        </div>
- 
-        {/* RIGHT CAROUSEL CHEVRON BUTTON */}
-        <motion.button 
-          whileHover={{ scale: 1.12, boxShadow: "0 0 15px rgba(139,92,26,0.5)" }}
-          whileTap={{ scale: 0.90 }}
-          onClick={() => paginate(1)}
-          className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-b from-[#5c371d] to-[#1e0e06] border-[2.5px] border-[#cead80] shadow-[0_6px_12px_rgba(0,0,0,0.8)] text-[#eddabf] hover:text-white transition-all cursor-pointer"
-        >
-          <ChevronRight size={20} className="drop-shadow-md stroke-[3]" />
-        </motion.button>
-
-      </div>
-
-      {/* ================= HIGH-FIDELITY FOOTER BAR ================= */}
-      <div className="w-full relative z-10 max-w-full mx-auto mt-auto px-2 sm:px-4">
-        <div 
-          className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-[#442e1d]/90 via-[#26150b]/95 to-[#442e1d]/90 border-2 border-[#bfa27a]/50 shadow-[0_12px_25px_rgba(0,0,0,0.7),inset_0_1px_4px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row justify-between items-center gap-3 relative text-[10px] font-medium text-[#cfa588]"
-        >
-          {/* Edge Anchoring Rivets */}
-          <Screw className="absolute left-5 top-1/2 -translate-y-1/2 w-3 h-3" />
-          <Screw className="absolute right-5 top-1/2 -translate-y-1/2 w-3 h-3" />
-
-          {/* Left copyright notice */}
-          <span className="sm:pl-8 font-bold select-none text-[#cca285]">
-            © 2026 Sistema PGR • Todos os direitos reservados.
-          </span>
-
-          {/* Centered romantic coffee-brand tag */}
-          <div className="flex items-center gap-1.5 font-serif italic text-xs font-semibold text-[#fdefd1] select-none hover:text-[#ca8a04] transition-colors">
-            <span>Feito com paixão. Feito para entregar.</span>
-            <div className="flex gap-0.5 text-[8px] text-red-500 tracking-none animate-pulse">
-              <span>♥</span><span>♥</span><span>♥</span>
-            </div>
-          </div>
-
-          {/* Right author attribution & Logout */}
-          <div className="flex items-center gap-3 sm:pr-8">
-            <span className="text-center sm:text-right font-semibold select-none text-[#cca285]">
-              Sistema Web • <span className="text-[#f1daaf] font-black tracking-wide">Jefferson Augusto</span>
-            </span>
-            {onLogout && (
-              <button
-                type="button"
-                onClick={onLogout}
-                className="px-3.5 py-1.5 bg-gradient-to-br from-[#B32025] to-[#800609] hover:from-[#c9262b] hover:to-[#960a0e] text-white border-2 border-[#cead80] rounded-xl font-serif font-black text-xs shadow-lg flex items-center gap-1.5 uppercase tracking-wider transition-all cursor-pointer shrink-0"
-                title="Sair e voltar para a tela de login"
-              >
-                <LogOut size={14} /> Sair
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
+      </footer>
     </div>
   );
 }
+

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Clock, 
   Plus, 
   Trash2, 
@@ -201,7 +201,7 @@ export default function MobilePresence({ onBack }: { onBack?: () => void }) {
                 : "text-[#c2a67e] hover:text-white"
             )}
           >
-            <Calendar size={13} />
+            <CalendarIcon size={13} />
             <span>Agenda</span>
             {appointments.length > 0 && (
               <span className="w-4 h-4 rounded-full bg-black/50 text-[9px] font-mono flex items-center justify-center text-amber-200">
@@ -301,7 +301,7 @@ export default function MobilePresence({ onBack }: { onBack?: () => void }) {
             <div className="space-y-3">
               {appointments.length === 0 ? (
                 <div className="text-center py-12 px-4 rounded-3xl bg-[#160a04] border border-white/10">
-                  <Calendar size={32} className="mx-auto mb-2 text-[#c2a67e]/40" />
+                  <CalendarIcon size={32} className="mx-auto mb-2 text-[#c2a67e]/40" />
                   <p className="text-sm font-sans font-bold text-white">Nenhum compromisso agendado</p>
                   <p className="text-xs text-[#c2a67e]/70 mt-1">
                     Toque no botão acima para criar uma nova tarefa.

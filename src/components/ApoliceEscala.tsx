@@ -28,15 +28,11 @@ import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
 import { ref, set, onValue } from 'firebase/database';
 
-function Screw({ className }: { className?: string }) {
+function TechCorner({ className }: { className?: string }) {
   return (
-    <div 
-      className={cn(
-        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
-        className
-      )}
-    >
-      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+    <div className={cn("w-3.5 h-3.5 pointer-events-none select-none z-20", className)}>
+      <div className="w-full h-[2px] bg-gradient-to-r from-red-500 to-transparent" />
+      <div className="w-[2px] h-full bg-gradient-to-b from-red-500 to-transparent" />
     </div>
   );
 }
@@ -685,11 +681,11 @@ export default function ApoliceEscala({
   };
 
   return (
-    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans">
+    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans text-stone-900">
       
       {/* Toast Notifications */}
       {copiedNotification && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#2e7d32] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider animate-bounce border border-white/20">
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-lg flex items-center gap-2.5 text-xs font-black uppercase tracking-wider border border-emerald-500">
           <Check size={18} />
           <span>Tabela copiada para a área de transferência!</span>
         </div>
@@ -698,10 +694,10 @@ export default function ApoliceEscala({
       {syncNotification.show && (
         <div
           className={cn(
-            "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-black tracking-wide border transition-all animate-in fade-in slide-in-from-bottom-4",
+            "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-lg flex items-center gap-3 text-xs font-black tracking-wide border transition-all animate-in fade-in slide-in-from-bottom-4",
             syncNotification.type === 'delete'
-              ? "bg-[#4a1215] border-red-500/50 text-red-100 shadow-[0_0_25px_rgba(179,32,37,0.5)]"
-              : "bg-[#18331e] border-emerald-500/50 text-emerald-100 shadow-[0_0_25px_rgba(46,125,50,0.5)]"
+              ? "bg-[#6f0f1d] border-[#8a1424] text-red-100 shadow-md"
+              : "bg-emerald-950 border-emerald-500 text-emerald-100 shadow-md"
           )}
         >
           {syncNotification.type === 'delete' ? (
@@ -713,155 +709,131 @@ export default function ApoliceEscala({
         </div>
       )}
 
-      {/* Main Parchment Panel identical to Lista de Presença */}
-      <div 
-        className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col"
-        style={{
-          backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
-        }}
-      >
-        {/* Inner border trim */}
-        <div className="absolute inset-1.5 rounded-[1.35rem] border border-[#a6866b]/40 pointer-events-none z-0" />
-
-        {/* Decorative corner screws */}
-        <Screw className="absolute top-3 left-3 z-20" />
-        <Screw className="absolute top-3 right-3 z-20" />
-        <Screw className="absolute bottom-3 left-3 z-20" />
-        <Screw className="absolute bottom-3 right-3 z-20" />
+      {/* Main Premium Light Container */}
+      <div className="flex-1 rounded-3xl bg-white border border-[#d6ccbe] shadow-sm relative overflow-visible flex flex-col">
 
         {/* Main Padding Container */}
-        <div className="p-4 sm:p-6 md:p-8 relative z-10 flex flex-col h-full gap-5">
+        <div className="p-5 sm:p-6 md:p-8 relative z-10 flex flex-col h-full gap-5">
 
-          {/* Top Area: Splitted into Left (Shield/Avatar Emblem) and Right (Banner + Header + Black Tag) */}
+          {/* Top Area: Splitted into Left (Shield/Avatar Emblem) and Right (Banner + Header) */}
           <div className="flex flex-col md:flex-row gap-5 items-stretch">
             
-            {/* Left Col: Shield Emblem Card matching Profile Image in PresenceList */}
-            <div className="w-28 h-28 md:w-[26%] md:min-w-[210px] md:max-w-[240px] md:h-auto rounded-2xl mx-auto md:mx-0 relative group border-2 border-[#5c3e29] overflow-hidden shrink-0 shadow-md bg-gradient-to-b from-[#2a170d] to-[#150a04] flex flex-col items-center justify-center p-4 text-center">
-              {/* Gold border accent inside */}
-              <div className="absolute inset-1.5 rounded-xl border border-[#D4AF37]/30 pointer-events-none" />
+            {/* Left Col: Shield Emblem Card - Premium Light Style */}
+            <div className="w-full md:w-[26%] md:min-w-[210px] md:max-w-[240px] rounded-2xl mx-auto md:mx-0 relative border border-[#d6ccbe] overflow-hidden shrink-0 shadow-sm bg-[#fbf9f5] flex flex-col items-center justify-center p-5 text-center">
               
               {/* Logo Emblem */}
-              <div className="w-16 h-16 rounded-full bg-[#B32025] border-2 border-[#D4AF37] flex items-center justify-center relative shadow-lg mb-2 group-hover:scale-105 transition-transform">
-                <ShieldCheck size={26} className="text-[#D4AF37]" />
-                <div className="absolute inset-1 border border-dashed border-[#D4AF37]/50 rounded-full" />
+              <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center relative shadow-xs mb-3">
+                <ShieldCheck size={28} className="text-[#8a1424]" />
               </div>
 
-              <span className="text-[#e2cfb9] font-serif font-black text-xs uppercase tracking-widest leading-tight">
+              <span className="text-stone-900 font-bold text-xs uppercase tracking-widest leading-tight">
                 Apólices & Seguro
               </span>
-              <span className="text-[10px] text-[#D4AF37] font-mono font-bold mt-0.5 tracking-wider uppercase">
+              <span className="text-[10px] text-stone-500 font-mono font-bold mt-1 tracking-wider uppercase">
                 Classificação 3C
               </span>
 
-              <div className="mt-3 bg-[#D4AF37]/15 border border-[#D4AF37]/40 rounded-lg px-2.5 py-1 text-[9px] font-bold text-[#f5ebd7] uppercase tracking-wider">
+              <div className="mt-3 bg-white border border-[#d6ccbe] rounded-xl px-3 py-1 text-[10px] font-mono font-bold text-stone-700 uppercase tracking-wider shadow-sm">
                 Macro • Próprio
               </div>
             </div>
 
-            {/* Right Col: Banner Image + Motivational Quote + Title + Black Tag */}
+            {/* Right Col: Banner Image + Motivational Quote + Title */}
             <div className="flex-1 flex flex-col justify-between pt-0.5 gap-3">
               
-              {/* 4K Aesthetic Banner matching PresenceList */}
-              <div className="w-full h-24 md:h-28 rounded-xl overflow-hidden border-2 border-[#5c3e29]/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative group hidden sm:block">
+              {/* Premium Light Aesthetic Banner */}
+              <div className="w-full h-24 md:h-28 rounded-2xl overflow-hidden border border-[#d6ccbe] shadow-sm relative group hidden sm:block">
                 <img 
                   src="/images/banner_coffee.jpg"
                   alt="Aesthetic Banner"
-                  className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 filter sepia-[20%] contrast-[1.1] brightness-90 relative z-0"
+                  className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 brightness-90 relative z-0"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 shadow-[inset_0_0_25px_rgba(0,0,0,0.5)] pointer-events-none z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none z-10" />
-                <div className="absolute bottom-2 left-4 z-20 flex items-center gap-2">
-                  <span className="bg-[#B32025] text-white text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded shadow">
+                <div className="absolute inset-0 bg-gradient-to-r from-stone-900/45 via-transparent to-stone-900/30 pointer-events-none z-10" />
+                <div className="absolute bottom-3 left-4 z-20 flex items-center gap-2">
+                  <span className="bg-[#8a1424] text-white text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded shadow-sm">
                     LOGÍSTICA & DISTRIBUIÇÃO
                   </span>
-                  <span className="text-white text-[10px] font-semibold drop-shadow-md">
+                  <span className="text-white font-mono text-[10px] font-semibold drop-shadow-sm">
                     Santa Luzia / MG — Brasil
                   </span>
                 </div>
               </div>
 
-              {/* Inspirational Quote */}
-              <p className="w-full text-[#3d2415] font-serif italic text-xs sm:text-sm text-center leading-snug px-2">
+              {/* Motivational Quote */}
+              <p className="w-full text-stone-600 italic text-xs sm:text-sm text-center leading-snug px-2 font-medium">
                 "Seja inquieto, curioso e criativo. Transforme necessidades em oportunidades. Empreenda a fim de gerar valor para o negócio. Seja um agente de transformação!"
               </p>
 
-              {/* Bottom Row: Titles & Signature Black Passion Tag */}
+              {/* Bottom Row: Titles */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 {/* Title and category */}
                 <div className="pb-1">
-                  <span className="text-[#5c3e29] font-bold text-[11px] tracking-widest uppercase block mb-1">
+                  <span className="text-[#8a1424] font-mono font-bold text-[11px] tracking-widest uppercase block mb-1">
                     Classificação de Apólices & Vigências (Conjuntos Homologados)
                   </span>
-                  <h1 className="text-2xl sm:text-3xl font-black text-[#3A2414] font-serif uppercase tracking-tight">
-                    APÓLICES: <span className="text-[#B32025]">{items.length} CONJUNTOS CADASTRADOS</span>
+                  <h1 className="text-2xl sm:text-3xl font-black text-stone-900 uppercase tracking-tight">
+                    APÓLICES: <span className="text-[#8a1424]">{items.length} CONJUNTOS CADASTRADOS</span>
                   </h1>
                 </div>
 
-                {/* Signature Black Tag: Feito com paixão */}
-                <div className="hidden lg:flex bg-[#18110b] border-[3px] border-[#5c3e29] rounded-2xl p-3.5 px-5 items-center justify-center gap-4 shadow-[0_4px_10px_rgba(0,0,0,0.4)] relative shrink-0">
-                  <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
-                  <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
-                  <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
-                  <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
-                  
-                  <div className="w-9 h-9 rounded-xl bg-transparent border border-[#cfab84]/50 flex items-center justify-center">
-                    <Coffee className="text-[#cfab84]" size={18} />
+                {/* Signature Tag: Feito com paixão */}
+                <div className="hidden lg:flex bg-[#fbf9f5] border border-[#d6ccbe] rounded-2xl p-3 px-5 items-center justify-center gap-4 shadow-sm relative shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                    <Coffee className="text-amber-700" size={18} />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-handwritten text-[#e5d5c1] text-lg font-bold leading-none mb-1">Feito com paixão.</span>
-                    <span className="font-handwritten text-[#e5d5c1]/70 text-xs font-medium leading-none">Para quem entrega.</span>
-                    <div className="flex gap-1 mt-1.5">
-                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
-                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
-                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-stone-900 text-xs font-bold leading-none mb-1">Feito com paixão.</span>
+                    <span className="font-mono text-stone-500 text-[10px] font-semibold leading-none">Para quem entrega.</span>
+                    <div className="flex gap-1.5 mt-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
                     </div>
                   </div>
                 </div>
-
               </div>
-
             </div>
 
           </div>
 
-          {/* Status Ribbon & Counters (Matching PresenceList Ribbon Style) */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl px-4 py-2.5 shadow-sm">
+          {/* Status Ribbon & Counters */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#fbf9f5] border border-[#d6ccbe] rounded-2xl px-4 py-2.5 shadow-sm">
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#B32025]" />
-                <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">
-                  Total: <strong className="text-[#3A2414] font-black">{items.length}</strong>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#8a1424]" />
+                <span className="text-xs font-mono font-bold text-stone-600 uppercase tracking-wide">
+                  Total: <strong className="text-stone-900 font-extrabold">{items.length}</strong>
                 </span>
               </div>
 
-              <div className="h-4 w-[1px] bg-[#d6be9c]" />
+              <div className="h-4 w-[1px] bg-[#d6ccbe]" />
 
-              <div className="flex items-center gap-1.5 bg-[#B32025]/10 border border-[#B32025]/30 px-2.5 py-0.5 rounded-lg">
-                <span className="text-[10px] font-bold text-[#B32025] uppercase tracking-wider">MACRO:</span>
-                <span className="text-xs font-black text-[#B32025] font-mono">{totalMacro}</span>
+              <div className="flex items-center gap-1.5 bg-red-50 border border-red-100 px-2.5 py-0.5 rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono font-bold text-[#8a1424] uppercase tracking-wider">MACRO:</span>
+                <span className="text-xs font-black text-[#8a1424] font-mono">{totalMacro}</span>
               </div>
 
-              <div className="flex items-center gap-1.5 bg-[#3a200a]/10 border border-[#5c3e29]/30 px-2.5 py-0.5 rounded-lg">
-                <span className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">SEGURO PRÓPRIO:</span>
-                <span className="text-xs font-black text-[#3A2414] font-mono">{totalSeguroProprio}</span>
+              <div className="flex items-center gap-1.5 bg-cyan-50 border border-cyan-100 px-2.5 py-0.5 rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono font-bold text-cyan-800 uppercase tracking-wider">SEGURO PRÓPRIO:</span>
+                <span className="text-xs font-black text-cyan-900 font-mono">{totalSeguroProprio}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-emerald-800 bg-emerald-100/70 border border-emerald-300/60 px-3 py-1 rounded-lg text-[10px] font-bold font-mono">
+            <div className="flex items-center gap-2 text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg text-[10px] font-bold font-mono shadow-sm">
               <Cloud size={12} className="text-emerald-700" />
               <span>SINCRONIZAÇÃO NUVEM ATIVA</span>
             </div>
           </div>
 
-          {/* Action Buttons Toolbar in PresenceList Aesthetic */}
+          {/* Action Buttons Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex flex-wrap items-center gap-2.5">
               {/* Novo Conjunto */}
               <button
                 type="button"
                 onClick={handleOpenAddModal}
-                className="bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e52229] hover:to-[#a9080d] text-white text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20"
+                className="bg-[#8a1424] hover:bg-[#6f0f1d] text-white text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-[#8a1424]"
               >
                 <Plus size={15} className="stroke-[3]" />
                 <span>+ Novo Conjunto</span>
@@ -872,10 +844,10 @@ export default function ApoliceEscala({
                 type="button"
                 onClick={() => setShowPasteBox(!showPasteBox)}
                 className={cn(
-                  "text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border",
+                  "text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 border",
                   showPasteBox
-                    ? "bg-[#3A2414] text-white border-[#3A2414]"
-                    : "bg-[#5c3e29] hover:bg-[#4a3222] text-[#e8dbcc] border-[#7a5b44]"
+                    ? "bg-stone-100 text-stone-900 border-[#d6ccbe] shadow-inner"
+                    : "bg-[#fbf9f5] hover:bg-stone-50 text-stone-700 border-[#d6ccbe]"
                 )}
               >
                 <ClipboardList size={15} />
@@ -886,10 +858,10 @@ export default function ApoliceEscala({
               <button
                 type="button"
                 onClick={handleLoadSample}
-                className="bg-[#e4d0b6] hover:bg-[#d8c2a5] text-[#3A2414] border border-[#a6866b] text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
+                className="bg-white hover:bg-stone-50 text-amber-800 border border-[#d6ccbe] text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
                 title="Carregar exemplo da planilha de escala oficial"
               >
-                <Sparkles size={14} className="text-[#8c5a2b]" />
+                <Sparkles size={14} className="text-amber-600" />
                 <span>Carregar Exemplo</span>
               </button>
             </div>
@@ -900,7 +872,7 @@ export default function ApoliceEscala({
                 type="button"
                 onClick={handleCopyTable}
                 disabled={filteredItems.length === 0}
-                className="bg-[#FAF6ED] hover:bg-white text-[#3A2414] border border-[#d6be9c] text-xs font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 disabled:opacity-40"
+                className="bg-white hover:bg-stone-50 text-stone-700 border border-[#d6ccbe] text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 disabled:opacity-40"
                 title="Copiar registros formatados para o Excel"
               >
                 <Copy size={14} />
@@ -912,7 +884,7 @@ export default function ApoliceEscala({
                 type="button"
                 onClick={handleExportXLSX}
                 disabled={filteredItems.length === 0}
-                className="bg-[#2e7d32] hover:bg-[#256628] text-white text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20 disabled:opacity-40"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-emerald-600 disabled:opacity-40"
               >
                 <FileSpreadsheet size={15} />
                 <span>Exportar Excel</span>
@@ -923,7 +895,7 @@ export default function ApoliceEscala({
                 <button
                   type="button"
                   onClick={handleClearAll}
-                  className="bg-[#FAF6ED] hover:bg-rose-50 text-rose-800 border border-rose-300 text-xs font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-97"
                   title="Limpar todos os registros"
                 >
                   <Trash2 size={14} />
@@ -933,20 +905,20 @@ export default function ApoliceEscala({
             </div>
           </div>
 
-          {/* Collapsible Parchment Box: Colar Informações da Planilha */}
+          {/* Collapsible Box: Colar Informações da Planilha */}
           {showPasteBox && (
-            <div className="rounded-2xl bg-[#FAF6ED] border-2 border-[#d6be9c] p-4 sm:p-5 shadow-md flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e1ccb0] pb-2">
+            <div className="rounded-2xl bg-[#fbf9f5] border border-[#d6ccbe] p-4 sm:p-5 shadow-sm flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#3A2414] text-[#e8dbcc] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-red-50 text-[#8a1424] border border-red-100 flex items-center justify-center shrink-0">
                     <FileText size={16} />
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-black text-[#3A2414] uppercase tracking-wide">
+                    <h3 className="text-xs sm:text-sm font-bold text-stone-900 uppercase tracking-wide">
                       Colar Linhas do Excel
                     </h3>
-                    <p className="text-[11px] text-[#7a5b44]">
-                      Identifica automaticamente Cavalo, Carreta, Transportador, Motorista, Vigência e Check List.
+                    <p className="text-[11px] text-stone-500">
+                      Cole as colunas de dados da planilha para classificar automaticamente.
                     </p>
                   </div>
                 </div>
@@ -965,11 +937,11 @@ export default function ApoliceEscala({
                 onChange={(e) => setPasteInput(e.target.value)}
                 placeholder="Copie as linhas no Excel e cole aqui (Ctrl+V)..."
                 rows={3}
-                className="w-full bg-white border border-[#d6be9c] rounded-xl p-3 text-xs font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] shadow-inner resize-y"
+                className="w-full bg-white border border-[#d6ccbe] rounded-xl p-3 text-xs font-mono text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 shadow-sm resize-y"
               />
 
               <div className="flex items-center justify-between gap-3 pt-1">
-                <span className="text-[11px] text-[#7a5b44] italic">
+                <span className="text-[11px] text-stone-500 italic">
                   * Registros repetidos são atualizados automaticamente sem duplicar.
                 </span>
 
@@ -977,7 +949,7 @@ export default function ApoliceEscala({
                   type="button"
                   disabled={!pasteInput.trim()}
                   onClick={() => handleParseSheet(pasteInput)}
-                  className="bg-gradient-to-b from-[#B32025] to-[#780d11] hover:from-[#c9252a] hover:to-[#8c0e13] disabled:opacity-40 text-white text-xs font-black uppercase tracking-wider py-2 px-5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer border border-white/20"
+                  className="bg-[#8a1424] hover:bg-[#6f0f1d] disabled:opacity-40 text-white text-xs font-mono font-bold uppercase tracking-wider py-2 px-5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-[#8a1424]"
                 >
                   <Check size={14} className="stroke-[3]" />
                   <span>Processar Linhas Coladas</span>
@@ -987,7 +959,7 @@ export default function ApoliceEscala({
           )}
 
           {/* Search, Filter & Bulk Actions Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#FAF6ED] p-3 rounded-2xl border border-[#d6be9c] shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#fbf9f5] p-3 rounded-2xl border border-[#d6ccbe] shadow-sm">
             <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto flex-1">
               {/* Search */}
               <div className="relative w-full sm:max-w-xs">
@@ -997,24 +969,24 @@ export default function ApoliceEscala({
                   placeholder="Filtrar por placa, transportador, motorista..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white border border-[#d6be9c] rounded-xl py-2 pl-9 pr-3 text-xs text-[#3A2414] placeholder-stone-400 outline-none focus:border-[#B32025] shadow-inner font-medium"
+                  className="w-full bg-white border border-[#d6ccbe] rounded-xl py-2 pl-9 pr-3 text-xs text-stone-900 placeholder-stone-400 outline-none focus:border-stone-400 shadow-sm font-mono font-bold"
                 />
               </div>
 
               {/* Filter by Apolice */}
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Filter size={15} className="text-[#7a5b44] shrink-0" />
+                <Filter size={15} className="text-[#8a1424] shrink-0" />
                 <div className="relative flex-1 sm:flex-initial">
                   <select
                     value={filterApolice}
                     onChange={(e) => setFilterApolice(e.target.value)}
-                    className="appearance-none bg-white border border-[#d6be9c] rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-[#3A2414] outline-none focus:border-[#B32025] shadow-inner cursor-pointer w-full"
+                    className="appearance-none bg-white border border-[#d6ccbe] rounded-xl pl-3 pr-8 py-2 text-xs font-mono font-bold text-stone-800 outline-none focus:border-stone-400 shadow-sm cursor-pointer w-full"
                   >
-                    <option value="TODAS">Todas as Apólices ({items.length})</option>
-                    <option value="MACRO">Apenas MACRO ({totalMacro})</option>
-                    <option value="SEGURO PRÓPRIO">Apenas SEGURO PRÓPRIO ({totalSeguroProprio})</option>
+                    <option value="TODAS" className="bg-white text-stone-900">Todas as Apólices ({items.length})</option>
+                    <option value="MACRO" className="bg-white text-stone-900">Apenas MACRO ({totalMacro})</option>
+                    <option value="SEGURO PRÓPRIO" className="bg-white text-stone-900">Apenas SEGURO PRÓPRIO ({totalSeguroProprio})</option>
                   </select>
-                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -1025,69 +997,68 @@ export default function ApoliceEscala({
                 <button
                   type="button"
                   onClick={handleDeleteSelected}
-                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold uppercase tracking-wider py-2 px-3 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-mono font-bold uppercase tracking-wider py-2 px-3 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 size={13} />
                   <span>Excluir Selecionados ({selectedIds.size})</span>
                 </button>
               )}
 
-              <span className="text-xs font-bold text-[#7a5b44]">
-                Exibindo <strong className="text-[#3A2414]">{filteredItems.length}</strong> de {items.length}
+              <span className="text-xs font-mono font-bold text-stone-500">
+                Exibindo <strong className="text-stone-900">{filteredItems.length}</strong> de {items.length}
               </span>
             </div>
           </div>
 
-          {/* Parchment Ledger Table */}
-          <div className="rounded-2xl border border-[#d6be9c] overflow-hidden bg-white shadow-md">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                {/* Header in deep espresso with gold lettering */}
-                <thead>
-                  <tr className="bg-[#1c1008] text-[#e8dbcc] border-b-2 border-[#5c3e29]">
-                    <th className="py-3 px-3.5 text-center w-10">
+          {/* 4K Cyber Ledger Table */}
+          <div className="rounded-2xl border border-[#d6ccbe] overflow-hidden bg-white shadow-sm relative z-10">
+            <div className="overflow-x-auto max-h-[640px]">
+              <table className="w-full text-left text-xs border-collapse font-mono">
+                <thead className="sticky top-0 z-20">
+                  <tr className="bg-[#fbf9f5] text-stone-800 border-b border-[#d6ccbe]">
+                    <th className="py-3.5 px-3.5 text-center w-10">
                       <input
                         type="checkbox"
                         checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
                         onChange={handleSelectAll}
-                        className="rounded border-[#a6866b] text-[#B32025] focus:ring-0 cursor-pointer"
+                        className="rounded border-[#d6ccbe] text-[#8a1424] focus:ring-0 cursor-pointer accent-[#8a1424]"
                       />
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900">
                       Cavalo
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900">
                       Carretas
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900">
                       Transportador
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900">
                       Motorista
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900">
                       Vigência
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-center">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900 text-center">
                       Check List
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-center">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900 text-center">
                       Apólice (Clique p/ Alternar)
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-right pr-4">
+                    <th className="py-3.5 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-stone-900 text-right pr-4">
                       Ações
                     </th>
                   </tr>
                 </thead>
 
                 {/* Table Body */}
-                <tbody className="divide-y divide-[#ebd9c1]">
+                <tbody className="divide-y divide-stone-200 bg-white font-mono">
                   {paginatedItems.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center text-stone-400 font-medium">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <ShieldCheck size={32} className="text-[#d6be9c]" />
-                          <span>Nenhum conjunto encontrado com os filtros aplicados.</span>
+                          <ShieldCheck size={36} className="text-stone-300" />
+                          <span className="font-bold text-stone-600 text-sm">Nenhum conjunto encontrado com os filtros aplicados.</span>
                         </div>
                       </td>
                     </tr>
@@ -1103,19 +1074,17 @@ export default function ApoliceEscala({
                           className={cn(
                             "transition-colors group",
                             isSelected
-                              ? "bg-[#f5e6d0]"
-                              : index % 2 === 0
-                                ? "bg-white hover:bg-[#FAF6ED]"
-                                : "bg-[#FAF6ED]/60 hover:bg-[#FAF6ED]"
+                              ? "bg-red-50/40 border-y border-red-100"
+                              : "hover:bg-[#fcfaf7]"
                           )}
                         >
                           {/* Selection Checkbox */}
-                          <td className="py-2.5 px-3.5 text-center">
+                          <td className="py-2.5 px-3.5 text-center align-middle">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => handleToggleSelectRow(item.id)}
-                              className="rounded border-[#a6866b] text-[#B32025] focus:ring-0 cursor-pointer"
+                              className="rounded border-[#d6ccbe] text-[#8a1424] focus:ring-0 cursor-pointer accent-[#8a1424]"
                             />
                           </td>
 
@@ -1125,45 +1094,45 @@ export default function ApoliceEscala({
                           </td>
 
                           {/* Carretas */}
-                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] align-middle">
+                          <td className="py-2 px-3 font-mono font-bold text-stone-800 align-middle">
                             {item.carretas ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {item.carretas.split(' ').map((c, i) => (
                                   <span
                                     key={i}
-                                    className="bg-[#f0e2cf] text-[#4a301e] px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#d6be9c]/60 shadow-xs"
+                                    className="bg-stone-100 text-stone-800 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-stone-200 shadow-xs"
                                   >
                                     {c}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-stone-300 italic text-[10px] font-bold uppercase tracking-wider">-</span>
+                              <span className="text-stone-400 italic text-[10px] font-bold uppercase tracking-wider">-</span>
                             )}
                           </td>
 
                           {/* Transportador */}
-                          <td className="py-2 px-3 font-bold text-[#3A2414] text-[10px] uppercase tracking-wider align-middle">
+                          <td className="py-2 px-3 font-bold text-stone-700 text-[10px] uppercase tracking-wider align-middle">
                             <div className="flex items-center gap-1.5">
-                              <Truck size={14} className="text-[#8c5a2b] shrink-0" />
+                              <Truck size={14} className="text-stone-500 shrink-0" />
                               <span className="font-bold tracking-wider">{item.transportador || '3C'}</span>
                             </div>
                           </td>
 
                           {/* Motorista */}
-                          <td className="py-2 px-3 font-bold text-[#4a301e] text-[10px] uppercase tracking-wider max-w-[200px] truncate align-middle" title={item.motorista}>
+                          <td className="py-2 px-3 font-bold text-stone-950 text-[10px] uppercase tracking-wider max-w-[200px] truncate align-middle" title={item.motorista}>
                             {item.motorista ? (
                               <div className="flex items-center gap-1.5">
-                                <User size={14} className="text-[#a6866b] shrink-0" />
+                                <User size={14} className="text-stone-400 shrink-0" />
                                 <span className="truncate">{item.motorista}</span>
                               </div>
                             ) : (
-                              <span className="text-stone-300 italic text-[10px] font-bold uppercase tracking-wider">-</span>
+                              <span className="text-stone-400 italic text-[10px] font-bold uppercase tracking-wider">-</span>
                             )}
                           </td>
 
                           {/* Vigência */}
-                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] text-[10px] uppercase tracking-wider align-middle">
+                          <td className="py-2 px-3 font-mono font-bold text-stone-700 text-[10px] uppercase tracking-wider align-middle">
                             {item.vigenciaCadastro}
                           </td>
 
@@ -1171,10 +1140,10 @@ export default function ApoliceEscala({
                           <td className="py-2 px-3 text-center align-middle">
                             <span
                               className={cn(
-                                "text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl border inline-block shadow-xs",
+                                "text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl border inline-block shadow-sm",
                                 isCheckListValido
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                                  : "bg-rose-50 text-rose-800 border-rose-300"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : "bg-rose-50 text-rose-800 border-rose-200"
                               )}
                             >
                               {item.checkList || 'VALIDO'}
@@ -1190,8 +1159,8 @@ export default function ApoliceEscala({
                                 className={cn(
                                   "text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl transition-all cursor-pointer shadow-sm border flex items-center gap-1.5 mx-auto active:scale-95",
                                   isMacro
-                                    ? "bg-[#B32025] hover:bg-[#8c060a] text-white border-white/20"
-                                    : "bg-[#3A2414] hover:bg-[#25150a] text-[#efdfc6] border-[#7a5b44]"
+                                    ? "bg-red-50 text-[#8a1424] border-red-200 hover:bg-red-100/70"
+                                    : "bg-cyan-50 text-cyan-800 border-cyan-200 hover:bg-cyan-100/70"
                                 )}
                                 title="Clique para alternar entre MACRO e SEGURO PRÓPRIO"
                               >
@@ -1201,12 +1170,12 @@ export default function ApoliceEscala({
                           </td>
 
                           {/* Actions */}
-                          <td className="py-2.5 px-3 text-right pr-4">
+                          <td className="py-2.5 px-3 text-right pr-4 align-middle">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(item)}
-                                className="p-1.5 rounded-lg text-[#5c3e29] hover:bg-[#f0e2cf] transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
                                 title="Editar registro"
                               >
                                 <Edit2 size={14} />
@@ -1214,7 +1183,7 @@ export default function ApoliceEscala({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteRow(item.id, item.cavalo)}
-                                className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                                 title="Excluir conjunto"
                               >
                                 <Trash2 size={14} />
@@ -1231,9 +1200,9 @@ export default function ApoliceEscala({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="p-3 bg-[#FAF6ED] border-t border-[#d6be9c] flex items-center justify-between text-xs text-[#5c3e29]">
+              <div className="p-3 bg-[#fbf9f5] border-t border-[#d6ccbe] flex items-center justify-between text-xs font-mono text-stone-600">
                 <span className="font-semibold">
-                  Página <strong className="text-[#3A2414]">{currentPage}</strong> de {totalPages}
+                  Página <strong className="text-stone-900">{currentPage}</strong> de {totalPages}
                 </span>
 
                 <div className="flex items-center gap-1.5">
@@ -1241,12 +1210,12 @@ export default function ApoliceEscala({
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    className="p-1.5 rounded-lg border border-[#d6be9c] bg-white hover:bg-[#FAF6ED] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                    className="p-1.5 rounded-lg border border-[#d6ccbe] bg-white hover:bg-stone-50 text-stone-700 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed shadow-sm"
                   >
                     <ChevronLeft size={16} />
                   </button>
 
-                  <span className="px-2 font-mono font-bold text-[#3A2414]">
+                  <span className="px-2 font-mono font-bold text-[#8a1424]">
                     {currentPage} / {totalPages}
                   </span>
 
@@ -1254,7 +1223,7 @@ export default function ApoliceEscala({
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    className="p-1.5 rounded-lg border border-[#d6be9c] bg-white hover:bg-[#FAF6ED] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                    className="p-1.5 rounded-lg border border-[#d6ccbe] bg-white hover:bg-stone-50 text-stone-700 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed shadow-sm"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -1269,28 +1238,19 @@ export default function ApoliceEscala({
 
       {/* Modal: Novo / Editar Conjunto */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div 
-            className="w-full max-w-lg rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative p-6 flex flex-col gap-4 text-[#3A2414]"
-            style={{
-              backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
-            }}
-          >
-            <Screw className="absolute top-3 left-3" />
-            <Screw className="absolute top-3 right-3" />
-            <Screw className="absolute bottom-3 left-3" />
-            <Screw className="absolute bottom-3 right-3" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg rounded-3xl bg-white border border-[#d6ccbe] shadow-xl relative p-6 flex flex-col gap-4 text-stone-900">
 
-            <div className="flex items-center justify-between border-b border-[#d6be9c] pb-3">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-[#B32025] text-white flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 text-[#8a1424] flex items-center justify-center">
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-[#3A2414] font-serif uppercase tracking-tight">
+                  <h2 className="text-base font-bold text-stone-900 uppercase tracking-tight">
                     {editingItem ? 'Editar Conjunto' : 'Novo Conjunto'}
                   </h2>
-                  <p className="text-[11px] text-[#7a5b44]">
+                  <p className="text-[11px] text-stone-500 font-mono">
                     Cadastro de Apólice na base oficial 3 Corações
                   </p>
                 </div>
@@ -1302,21 +1262,21 @@ export default function ApoliceEscala({
                   setIsModalOpen(false);
                   setEditingItem(null);
                 }}
-                className="text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                className="text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveModal} className="space-y-3.5 text-xs font-bold text-[#3A2414]">
+            <form onSubmit={handleSaveModal} className="space-y-3.5 text-xs font-mono font-bold text-stone-900">
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                    <label className="text-[11px] text-stone-500 uppercase tracking-wider">
                       Placa Cavalo *
                     </label>
                     {modalForm.cavalo.trim() && (
-                      <span className="text-[9px] text-[#003399] font-black uppercase tracking-wider">
+                      <span className="text-[9px] text-[#8a1424] font-black uppercase tracking-wider">
                         Padrão Mercosul
                       </span>
                     )}
@@ -1328,7 +1288,7 @@ export default function ApoliceEscala({
                       value={modalForm.cavalo}
                       onChange={(e) => setModalForm({ ...modalForm, cavalo: e.target.value })}
                       placeholder="Ex: QWK6A22"
-                      className="flex-1 px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner text-xs font-bold"
+                      className="flex-1 px-3 py-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl font-mono text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 uppercase shadow-sm text-xs font-bold"
                     />
                     {modalForm.cavalo.trim() && (
                       <MercosulPlate plate={modalForm.cavalo} className="scale-90 origin-right" />
@@ -1337,7 +1297,7 @@ export default function ApoliceEscala({
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-stone-500 uppercase tracking-wider">
                     Carretas
                   </label>
                   <input
@@ -1345,14 +1305,14 @@ export default function ApoliceEscala({
                     value={modalForm.carretas}
                     onChange={(e) => setModalForm({ ...modalForm, carretas: e.target.value })}
                     placeholder="Ex: OLN7307 OLN7457"
-                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
+                    className="w-full px-3 py-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl font-mono text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 uppercase shadow-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-stone-500 uppercase tracking-wider">
                     Transportador
                   </label>
                   <input
@@ -1360,12 +1320,12 @@ export default function ApoliceEscala({
                     value={modalForm.transportador}
                     onChange={(e) => setModalForm({ ...modalForm, transportador: e.target.value })}
                     placeholder="Ex: 3C, MOEDENSE"
-                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
+                    className="w-full px-3 py-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 uppercase shadow-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-stone-500 uppercase tracking-wider">
                     Motorista
                   </label>
                   <input
@@ -1373,14 +1333,14 @@ export default function ApoliceEscala({
                     value={modalForm.motorista}
                     onChange={(e) => setModalForm({ ...modalForm, motorista: e.target.value })}
                     placeholder="Nome do motorista"
-                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
+                    className="w-full px-3 py-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 uppercase shadow-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-stone-500 uppercase tracking-wider">
                     Vigência do Cadastro
                   </label>
                   <input
@@ -1388,12 +1348,12 @@ export default function ApoliceEscala({
                     value={modalForm.vigenciaCadastro}
                     onChange={(e) => setModalForm({ ...modalForm, vigenciaCadastro: e.target.value })}
                     placeholder="Ex: 13/05/2027 ou SEGURO PRÓPRIO"
-                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
+                    className="w-full px-3 py-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 uppercase shadow-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-stone-500 uppercase tracking-wider">
                     Check List
                   </label>
                   <input
@@ -1401,13 +1361,13 @@ export default function ApoliceEscala({
                     value={modalForm.checkList}
                     onChange={(e) => setModalForm({ ...modalForm, checkList: e.target.value })}
                     placeholder="Ex: VALIDO ou VENCIDO"
-                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner"
+                    className="w-full px-3 py-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 uppercase shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
+                <label className="block mb-1 text-[11px] text-stone-500 uppercase tracking-wider">
                   Classificação da Apólice
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -1415,10 +1375,10 @@ export default function ApoliceEscala({
                     type="button"
                     onClick={() => setModalForm({ ...modalForm, apolice: 'MACRO' })}
                     className={cn(
-                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer shadow-sm",
+                      "py-2.5 px-4 rounded-xl font-bold uppercase text-center border transition-all cursor-pointer shadow-sm",
                       modalForm.apolice === 'MACRO'
-                        ? "bg-[#B32025] text-white border-[#B32025]"
-                        : "bg-white border-[#d6be9c] text-stone-500 hover:text-stone-800"
+                        ? "bg-[#8a1424] text-white border-[#8a1424]"
+                        : "bg-[#fbf9f5] border-[#d6ccbe] text-stone-500 hover:text-stone-900"
                     )}
                   >
                     MACRO
@@ -1428,10 +1388,10 @@ export default function ApoliceEscala({
                     type="button"
                     onClick={() => setModalForm({ ...modalForm, apolice: 'SEGURO PRÓPRIO' })}
                     className={cn(
-                      "py-2.5 px-4 rounded-xl font-black uppercase text-center border transition-all cursor-pointer shadow-sm",
+                      "py-2.5 px-4 rounded-xl font-bold uppercase text-center border transition-all cursor-pointer shadow-sm",
                       modalForm.apolice === 'SEGURO PRÓPRIO'
-                        ? "bg-[#3A2414] text-[#efdfc6] border-[#3A2414]"
-                        : "bg-white border-[#d6be9c] text-stone-500 hover:text-stone-800"
+                        ? "bg-cyan-50 text-cyan-800 border-cyan-200"
+                        : "bg-[#fbf9f5] border-[#d6ccbe] text-stone-500 hover:text-stone-900"
                     )}
                   >
                     SEGURO PRÓPRIO
@@ -1439,20 +1399,20 @@ export default function ApoliceEscala({
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#d6be9c]">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-stone-200">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     setEditingItem(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-white border border-[#d6be9c] hover:bg-[#FAF6ED] text-[#5c3e29] text-xs font-bold transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white border border-[#d6ccbe] hover:bg-stone-50 text-stone-600 text-xs font-mono font-bold transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-b from-[#B32025] to-[#780d11] hover:from-[#c9252a] hover:to-[#8c0e13] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer border border-white/20"
+                  className="px-5 py-2 rounded-xl bg-[#8a1424] hover:bg-[#6f0f1d] text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-[#6f0f1d]"
                 >
                   <Save size={14} />
                   <span>Salvar Registro</span>

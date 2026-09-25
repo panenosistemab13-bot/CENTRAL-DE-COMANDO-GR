@@ -228,7 +228,7 @@ export default function Financas() {
   };
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="w-full full-width-container space-y-8 pb-32">
       {/* Header & Stats Dashboard */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
         
