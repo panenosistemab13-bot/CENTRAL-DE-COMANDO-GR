@@ -30,8 +30,7 @@ import {
   Compass,
   Container,
   Clock,
-  CheckCircle2,
-  ArrowLeft
+  CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { rtdb as db } from '../firebase';
@@ -43,7 +42,6 @@ function TechCorner({ className }: { className?: string }) {
 }
 
 interface RouteItem {
-  id: string;
   ida: string;
   idaCod: string;
   volta: string;
@@ -51,23 +49,23 @@ interface RouteItem {
 }
 
 const DEFAULT_ROUTES: RouteItem[] = [
-  { id: 'r1', ida: 'SANTA LUZIA-MG X RIO DE JANEIRO-RJ', idaCod: '4069', volta: 'RIO DE JANEIRO-RJ X SANTA LUZIA-MG', voltaCod: '4079' },
-  { id: 'r2', ida: 'SANTA LUZIA-MG X GUARULHOS-SP', idaCod: '4070', volta: 'GUARULHOS-SP X SANTA LUZIA-MG', voltaCod: '3971/4076' },
-  { id: 'r3', ida: 'SANTA LUZIA-MG X MONTES CLAROS-MG', idaCod: '', volta: 'MONTES CLAROS-MG X SANTA LUZIA-MG', voltaCod: '4081' },
-  { id: 'r4', ida: 'SANTA LUZIA-MG X VIANA-ES', idaCod: '', volta: 'VIANA-ES X SANTA LUZIA-MG', voltaCod: '3985' },
-  { id: 'r5', ida: 'SANTA LUZIA-MG X BRASILIA-DF', idaCod: '4071', volta: 'BRASILIA-DF X SANTA LUZIA-MG', voltaCod: '4077' },
-  { id: 'r6', ida: 'SANTA LUZIA-MG X SUMARE-SP', idaCod: '', volta: 'SUMARE-SP X SANTA LUZIA-MG', voltaCod: '3994' },
-  { id: 'r7', ida: 'SANTA LUZIA-MG X PINHAIS-PR', idaCod: '', volta: 'PINHAIS-PR X SANTA LUZIA-MG', voltaCod: '4080' },
-  { id: 'r8', ida: 'SANTA LUZIA-MG X LONDRINA-PR', idaCod: '4027', volta: 'LONDRINA-PR X SANTA LUZIA-MG', voltaCod: '3975/4078/4091' },
-  { id: 'r9', ida: 'SANTA LUZIA-MG X NATAL-RN', idaCod: '4015', volta: 'NATAL-RN X SANTA LUZIA-MG', voltaCod: '3969/3970/4075' },
-  { id: 'r10', ida: 'SANTA LUZIA-MG X GOV. CELSO RAMOS-SC', idaCod: '', volta: 'GOV. CELSO RAMOS-SC X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r11', ida: 'SANTA LUZIA-MG X SALVADOR-BA', idaCod: '', volta: 'SALVADOR-BA X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r12', ida: 'SANTA LUZIA-MG X EUSEBIO-CE', idaCod: '', volta: 'EUSEBIO-CE X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r13', ida: 'SANTA LUZIA-MG X GRAVATAI-RS', idaCod: '', volta: 'GRAVATAI-RS X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r14', ida: 'SANTA LUZIA-MG X CAMPO GRANDE-MT', idaCod: '', volta: 'CAMPO GRANDE-MS X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r15', ida: 'SANTA LUZIA-MG X CUIABA-MT', idaCod: '', volta: 'CUIABA-MT X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r16', ida: 'SANTA LUZIA-MG X ARIQUEMES', idaCod: '', volta: 'ARIQUEMES-RO X SANTA LUZIA-MG', voltaCod: '' },
-  { id: 'r17', ida: 'SANTA LUZIA-MG X VESPASIANO-MG', idaCod: '', volta: 'VESPASIANO-MG X SANTA LUZIA-MG', voltaCod: '3989/3990' },
+  { ida: 'SANTA LUZIA-MG X RIO DE JANEIRO-RJ', idaCod: '4069', volta: 'RIO DE JANEIRO-RJ X SANTA LUZIA-MG', voltaCod: '4079' },
+  { ida: 'SANTA LUZIA-MG X GUARULHOS-SP', idaCod: '4070', volta: 'GUARULHOS-SP X SANTA LUZIA-MG', voltaCod: '3971/4076' },
+  { ida: 'SANTA LUZIA-MG X MONTES CLAROS-MG', idaCod: '', volta: 'MONTES CLAROS-MG X SANTA LUZIA-MG', voltaCod: '4081' },
+  { ida: 'SANTA LUZIA-MG X VIANA-ES', idaCod: '', volta: 'VIANA-ES X SANTA LUZIA-MG', voltaCod: '3985' },
+  { ida: 'SANTA LUZIA-MG X BRASILIA-DF', idaCod: '4071', volta: 'BRASILIA-DF X SANTA LUZIA-MG', voltaCod: '4077' },
+  { ida: 'SANTA LUZIA-MG X SUMARE-SP', idaCod: '', volta: 'SUMARE-SP X SANTA LUZIA-MG', voltaCod: '3994' },
+  { ida: 'SANTA LUZIA-MG X PINHAIS-PR', idaCod: '', volta: 'PINHAIS-PR X SANTA LUZIA-MG', voltaCod: '4080' },
+  { ida: 'SANTA LUZIA-MG X LONDRINA-PR', idaCod: '4027', volta: 'LONDRINA-PR X SANTA LUZIA-MG', voltaCod: '3975/4078/4091' },
+  { ida: 'SANTA LUZIA-MG X NATAL-RN', idaCod: '4015', volta: 'NATAL-RN X SANTA LUZIA-MG', voltaCod: '3969/3970/4075' },
+  { ida: 'SANTA LUZIA-MG X GOV. CELSO RAMOS-SC', idaCod: '', volta: 'GOV. CELSO RAMOS-SC X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X SALVADOR-BA', idaCod: '', volta: 'SALVADOR-BA X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X EUSEBIO-CE', idaCod: '', volta: 'EUSEBIO-CE X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X GRAVATAI-RS', idaCod: '', volta: 'GRAVATAI-RS X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X CAMPO GRANDE-MT', idaCod: '', volta: 'CAMPO GRANDE-MS X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X CUIABA-MT', idaCod: '', volta: 'CUIABA-MT X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X ARIQUEMES', idaCod: '', volta: 'ARIQUEMES-RO X SANTA LUZIA-MG', voltaCod: '' },
+  { ida: 'SANTA LUZIA-MG X VESPASIANO-MG', idaCod: '', volta: 'VESPASIANO-MG X SANTA LUZIA-MG', voltaCod: '3989/3990' },
 ];
 
 export default function Rotas({ onBack }: { onBack?: () => void }) {
@@ -101,23 +99,21 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
       if (data && Array.isArray(data) && data.length > 0) {
         setRoutes(data);
       } else {
-        try {
-          const saved = localStorage.getItem('app_rotas_data');
-          if (saved) {
-            const migration = DEFAULT_ROUTES.map((dr, idx) => {
-              const found = JSON.parse(saved).find((s: any) => s.ida === dr.ida);
-              return found ? { ...found, id: found.id || `r-${idx}-${Date.now()}` } : dr;
-            });
-            set(rotasRef, migration);
-            setRoutes(migration);
-            return;
+        const saved = localStorage.getItem('app_rotas_data');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              set(rotasRef, parsed);
+              setRoutes(parsed);
+              return;
+            }
+          } catch (e) {
+            console.error('Erro ao ler dados locais de rotas:', e);
           }
-        } catch (e) {
-          console.error('Erro ao ler dados locais de rotas:', e);
         }
-        const routesWithIds = DEFAULT_ROUTES.map((r, idx) => ({ ...r, id: r.id || `r-${idx}-${Date.now()}` }));
-        set(rotasRef, routesWithIds);
-        setRoutes(routesWithIds);
+        set(rotasRef, DEFAULT_ROUTES);
+        setRoutes(DEFAULT_ROUTES);
       }
     });
 
@@ -172,7 +168,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
   const addRow = () => {
     setTempRoutes([
       ...tempRoutes,
-      { id: `new-${Date.now()}`, ida: '', idaCod: '', volta: '', voltaCod: '' }
+      { ida: '', idaCod: '', volta: '', voltaCod: '' }
     ]);
   };
 
@@ -188,12 +184,12 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
       let finalData: RouteItem[] = [];
 
       if (mode === 'replace') {
-        finalData = legacyData.map((d, i) => ({ ...d, id: d.id || `legacy-${i}-${Date.now()}` }));
+        finalData = legacyData;
       } else {
         finalData = [...routes];
-        legacyData.forEach((item, i) => {
+        legacyData.forEach(item => {
           const exists = finalData.some(r => r.ida === item.ida && r.volta === item.volta);
-          if (!exists) finalData.push({ ...item, id: item.id || `legacy-merge-${i}-${Date.now()}` });
+          if (!exists) finalData.push(item);
         });
       }
 
@@ -277,12 +273,12 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
       let finalData: RouteItem[] = [];
 
       if (mode === 'replace') {
-        finalData = parsed.map((p, i) => ({ ...p, id: p.id || `backup-${i}-${Date.now()}` }));
+        finalData = parsed;
       } else {
         finalData = [...routes];
-        parsed.forEach((item, i) => {
+        parsed.forEach(item => {
           const exists = finalData.some(r => r.ida === item.ida && r.volta === item.volta);
-          if (!exists) finalData.push({ ...item, id: item.id || `backup-merge-${i}-${Date.now()}` });
+          if (!exists) finalData.push(item);
         });
       }
 
@@ -301,36 +297,26 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
 
   const safeRawData = isEditing ? tempRoutes : routes;
   const currentData = safeRawData.filter(
-    (r) => {
-      // While editing, we don't want the current item being edited to disappear if it doesn't match the search
-      // But for simplicity, we can just allow all items if search is empty or if we are editing
-      // Actually, let's just make the search less aggressive or use IDs
-      if (!searchTerm) return true;
-      const q = searchTerm.toLowerCase();
-      return (
-        r.ida.toLowerCase().includes(q) ||
-        r.volta.toLowerCase().includes(q) ||
-        r.idaCod.toLowerCase().includes(q) ||
-        r.voltaCod.toLowerCase().includes(q)
-      );
-    }
+    (r) =>
+      r.ida.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.volta.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.idaCod.includes(searchTerm) ||
+      r.voltaCod.includes(searchTerm)
   );
 
   return (
-    <div className="w-full h-full flex flex-col gap-6 p-4 md:p-6 lg:p-8 bg-[#fdfaf6] min-h-screen overflow-y-auto no-scrollbar font-sans text-stone-900">
-      {/* 1. PREMIUM HEADER SECTION */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 bg-white p-8 rounded-[40px] border border-stone-200/60 shadow-[0_20px_50px_rgba(155,21,38,0.04)]"
-      >
-        <div className="flex items-center gap-6">
+    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans space-y-6 text-stone-900 cinema-container-2160p" style={{ zoom: '0.80' }}>
+      
+      {/* 1. TOP HEADER */}
+      <div className="bg-[#fbf9f5] rounded-3xl p-5 border border-[#d6ccbe] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-4">
           {onBack && (
             <button
               onClick={onBack}
-              className="p-4 rounded-[20px] bg-stone-50 border border-stone-100 text-stone-600 hover:bg-[#9b1526] hover:text-white hover:border-[#9b1526] transition-all shadow-sm active:scale-95 group"
+              className="p-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 border border-[#d6ccbe] cursor-pointer transition-all shrink-0 flex items-center justify-center shadow-xs"
+              title="Voltar"
             >
-              <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+              <ArrowRight size={18} className="rotate-180" />
             </button>
           )}
           <div>
@@ -345,7 +331,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* 2. MAIN CONTENT CONTAINER */}
       <div className="flex flex-col space-y-6">
@@ -648,7 +634,7 @@ export default function Rotas({ onBack }: { onBack?: () => void }) {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.98 }}
-                      key={route.id} 
+                      key={realIndex} 
                       className={cn(
                         "w-full bg-white hover:bg-stone-50/90 border border-[#dacfc2] hover:border-[#831828]/40 rounded-2xl p-3 sm:p-4 transition-all duration-200 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-4 relative",
                         draggedIndex === realIndex ? "opacity-30 bg-stone-100" : "",

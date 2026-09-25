@@ -48,7 +48,7 @@ import Averbacao from './components/Averbacao';
 import SMCreator from './components/SMCreator';
 import Rotas from './components/Rotas';
 import Checklist from './components/Checklist';
-import Controle from './components/Controle';
+import ControleFuturistic from './components/ControleFuturistic';
 import Escala from './components/Escala';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
@@ -324,7 +324,7 @@ export default function App() {
       case 'checklist':
         return <Checklist />;
       case 'controle':
-        return <Controle onBack={() => setActiveTab('menu')} />;
+        return <ControleFuturistic onBack={() => setActiveTab('menu')} />;
       case 'escala':
         return <Escala onBack={() => setActiveTab('menu')} />;
       default:
@@ -399,8 +399,28 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen max-h-screen w-screen max-w-screen overflow-hidden flex bg-[#ede6dc] text-stone-950 font-sans relative flex-col select-none">
+    <div className="h-screen max-h-screen w-screen max-w-screen overflow-hidden flex bg-[#ede6dc] text-stone-900 font-sans relative flex-col select-none">
       
+      {/* Background Ambient Overlay for Active Modules */}
+      {activeTab !== 'menu' && (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+          <AnimatePresence mode="wait">
+            {backgroundImages[activeTab] && (
+              <motion.img
+                key={activeTab}
+                src={backgroundImages[activeTab]}
+                initial={{ opacity: 0, scale: 1.02 }}
+                animate={{ opacity: 0.15, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                transition={{ duration: 0.8 }}
+                className="w-full h-full object-cover select-none"
+                referrerPolicy="no-referrer"
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* GLOBAL CINEMATIC OPERATIONAL CONTAINER (1920x1080) */}
       <InitialMenu
         activeTab={activeTab}
