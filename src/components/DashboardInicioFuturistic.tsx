@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { PremiumChart, PremiumDonutChart } from './charts';
-import dashboardBg from '../assets/images/dashboard_3d_logistics_bg_1790322086241.jpg';
+import rainyBg from '../assets/images/rainy_morning_logistics_premium_1790324816019.jpg';
 
 interface StatusCardProps {
   title: string;
@@ -30,36 +30,39 @@ interface StatusCardProps {
 
 const StatusCard = ({ title, value, subValue, icon: Icon, color, delay = 0 }: StatusCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.5, delay }}
-    whileHover={{ scale: 1.02, y: -5 }}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6, delay }}
+    whileHover={{ y: -8 }}
     className="relative group cursor-pointer"
   >
-    <div className="absolute -inset-0.5 bg-gradient-to-br from-[#dfb15b]/20 to-transparent rounded-2xl blur-sm opacity-50 group-hover:opacity-100 transition duration-500" />
-    <div className="relative bg-white border border-[#d6ccbe] p-4 rounded-2xl shadow-md overflow-hidden">
-      {/* Decorative background glow */}
-      <div className={cn("absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-10 transition-opacity group-hover:opacity-20", color)} />
+    <div className="absolute -inset-1 bg-gradient-to-br from-[#9b1526]/5 to-transparent rounded-[32px] opacity-0 group-hover:opacity-100 transition duration-700" />
+    <div className="relative bg-[#fbf9f5]/80 backdrop-blur-3xl border border-white p-6 rounded-[32px] shadow-[0_15px_45px_-12px_rgba(155,21,38,0.06)] overflow-hidden transition-all duration-500 group-hover:shadow-[0_30px_60px_-15px_rgba(155,21,38,0.12)]">
+      {/* Subtle animated red glow on hover */}
+      <div className="absolute -right-12 -top-12 w-32 h-32 bg-[#9b1526]/5 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
       
-      <div className="flex items-center justify-between mb-3">
-        <div className={cn("p-2 rounded-xl border border-[#ded5c6] shadow-sm", color.replace('bg-', 'text-'))}>
-          <Icon size={20} className="drop-shadow-sm" />
+      <div className="flex items-center justify-between mb-5">
+        <div className={cn("p-3.5 rounded-[20px] bg-white border border-[#9b1526]/10 shadow-sm transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3", color.replace('bg-', 'text-'))}>
+          <Icon size={24} className="drop-shadow-sm" />
         </div>
         <div className="flex flex-col items-end">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#fbf9f5] border border-stone-100 shadow-inner">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest font-mono">Real-time</span>
+          </div>
         </div>
       </div>
       
       <div>
-        <h3 className="text-[10px] font-mono font-bold tracking-[0.2em] text-stone-500 uppercase mb-1">
+        <h3 className="text-[10px] font-black tracking-[0.3em] text-stone-400 uppercase mb-2 font-mono">
           {title}
         </h3>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-black text-stone-900 tracking-tighter drop-shadow-sm font-mono">
+        <div className="flex items-baseline gap-3">
+          <span className="text-4xl font-black text-stone-900 tracking-tighter font-sans leading-none">
             {value}
           </span>
           {subValue && (
-            <span className="text-[10px] font-bold text-emerald-600 font-mono">
+            <span className="text-[10px] font-black text-emerald-600 font-mono bg-emerald-50/50 px-2 py-0.5 rounded-lg border border-emerald-100/50 shadow-sm">
               {subValue}
             </span>
           )}
@@ -71,331 +74,318 @@ const StatusCard = ({ title, value, subValue, icon: Icon, color, delay = 0 }: St
 
 export default function DashboardInicioFuturistic() {
   return (
-    <div className="w-full h-full flex flex-col gap-4 overflow-y-auto no-scrollbar pb-10">
-      {/* 1. CINEMATIC 3D HERO SECTION */}
-      <section className="relative w-full h-[380px] rounded-[32px] overflow-hidden border border-[#ded5c6] shadow-xl group shrink-0">
+    <div className="w-full h-full flex flex-col gap-8 overflow-y-auto no-scrollbar pb-16 px-1">
+      {/* 1. CINEMATIC PREMIUM HERO SECTION - High Fidelity Photographic Layer */}
+      <section className="relative w-full h-[460px] rounded-[48px] overflow-hidden border border-white shadow-[0_40px_80px_-20px_rgba(155,21,38,0.1)] group shrink-0">
         <img
-          src={dashboardBg}
-          alt="3D Dashboard Hero"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+          src={rainyBg}
+          alt="Rainy Morning Logistics"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/10 to-transparent" />
+        
+        {/* Advanced Layered Gradients for Sophisticated Depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#fbf9f5]/95 via-[#fbf9f5]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#fbf9f5]/90 via-[#fbf9f5]/30 to-transparent" />
+        
+        {/* Soft Grain Overlay */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-50" />
 
-        <div className="relative h-full z-10 p-8 flex flex-col justify-center max-w-2xl">
+        <div className="relative h-full z-10 p-12 flex flex-col justify-center max-w-3xl">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 rounded-full bg-[#9b1526] text-white text-[9px] font-black tracking-widest uppercase border border-red-900/30 shadow-md">
-                Core Engine v4.0
+            <div className="flex items-center gap-5 mb-8">
+              <span className="px-5 py-2 rounded-full bg-[#9b1526] text-white text-[10px] font-black tracking-[0.3em] uppercase border border-white/20 shadow-[0_10px_25px_rgba(155,21,38,0.3)]">
+                OPERACIONAL V4.0
               </span>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 backdrop-blur-md border border-white/40">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] font-mono font-bold text-stone-700 uppercase tracking-wider">
-                  Live Terminal 01
+              <div className="flex items-center gap-3 px-5 py-2 rounded-full bg-white/50 backdrop-blur-2xl border border-white/60 shadow-sm">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#dfb15b] animate-pulse shadow-[0_0_12px_#dfb15b]" />
+                <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest font-mono">
+                  AMANHECER CHUVOSO
                 </span>
               </div>
             </div>
 
-            <h1 className="text-4xl lg:text-6xl font-black text-stone-900 tracking-tighter leading-[0.9] uppercase mb-4 drop-shadow-sm">
+            <h1 className="text-6xl lg:text-8xl font-black text-stone-950 tracking-tighter leading-[0.8] uppercase mb-8 drop-shadow-sm italic">
               Logística <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9b1526] via-[#b32025] to-[#9b1526]">
-                Omnipresente
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9b1526] via-[#d63447] to-[#9b1526] not-italic">
+                Exclusiva
               </span>
             </h1>
 
-            <p className="text-sm text-stone-700 max-w-md leading-relaxed font-medium mb-8 backdrop-blur-sm pr-4">
-              Gerenciamento tático de ativos com precisão milimétrica. Otimização de rotas via IA e monitoramento de segurança em tempo real para toda a malha 3 Corações.
+            <p className="text-lg text-stone-800 max-w-lg leading-relaxed font-bold mb-12 opacity-80 border-l-4 border-[#9b1526]/30 pl-6">
+              Gerenciamento de alta fidelidade para a malha 3 Corações. Monitoramento tático sob condições climáticas adversas com máxima precisão.
             </p>
 
-            <div className="flex items-center gap-4">
-              <button className="px-6 py-3 bg-[#9b1526] hover:bg-[#831220] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-xl cursor-pointer active:scale-95 border border-red-900/20">
-                Lançar Nova Rota
+            <div className="flex items-center gap-6">
+              <button className="px-10 py-5 bg-[#9b1526] hover:bg-[#831220] text-white rounded-[24px] font-black text-[11px] uppercase tracking-[0.3em] transition-all shadow-[0_20px_45px_rgba(155,21,38,0.3)] hover:shadow-[0_25px_55px_rgba(155,21,38,0.4)] cursor-pointer active:scale-95 border border-white/20 group">
+                LANÇAR ROTA <span className="ml-2 group-hover:translate-x-1 inline-block transition-transform">→</span>
               </button>
-              <button className="px-6 py-3 bg-white/40 hover:bg-white/60 backdrop-blur-md text-stone-800 rounded-2xl font-black text-xs uppercase tracking-widest transition-all border border-stone-200 cursor-pointer active:scale-95">
-                Protocolos
+              <button className="px-10 py-5 bg-white/40 hover:bg-white/70 backdrop-blur-3xl text-stone-950 rounded-[24px] font-black text-[11px] uppercase tracking-[0.3em] transition-all border border-white shadow-sm cursor-pointer active:scale-95">
+                VER DASHBOARD
               </button>
             </div>
           </motion.div>
         </div>
-
-        {/* 3D Floating Elements (Decorative) */}
-        <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-6 z-10">
-          <motion.div 
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-48 p-4 bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl shadow-xl"
+        
+        {/* Floating Interactive Badge (Replaced 3D with Premium Glassmorphism) */}
+        <div className="absolute bottom-12 right-12 hidden lg:block z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="p-6 bg-white/30 backdrop-blur-3xl border border-white/40 rounded-[32px] shadow-2xl flex items-center gap-6 ring-1 ring-white/20"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                <Globe size={16} />
-              </div>
-              <span className="text-[10px] font-black text-stone-800 uppercase tracking-wider">Cobertura Global</span>
+            <div className="w-14 h-14 rounded-2xl bg-[#9b1526] flex items-center justify-center text-[#dfb15b] shadow-xl">
+              <ShieldCheck size={32} />
             </div>
-            <div className="h-1 bg-stone-200 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: "94%" }}
-                transition={{ duration: 2 }}
-                className="h-full bg-blue-500 shadow-sm" 
-              />
-            </div>
-            <div className="flex justify-between mt-1 text-[9px] font-mono text-stone-500">
-              <span>94% Eficiência</span>
-              <span>Online</span>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="w-48 p-4 bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl shadow-xl translate-x-4"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-[#dfb15b]">
-                <Cpu size={16} />
-              </div>
-              <span className="text-[10px] font-black text-stone-800 uppercase tracking-wider">Processamento IA</span>
-            </div>
-            <div className="flex gap-1 h-8 items-end">
-              {[0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 0.4].map((h, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${h * 100}%` }}
-                  transition={{ duration: 1, delay: i * 0.1, repeat: Infinity, repeatType: "reverse" }}
-                  className="flex-1 bg-amber-500/30 rounded-t-sm"
-                />
-              ))}
+            <div>
+              <span className="text-[10px] font-black text-[#9b1526] uppercase tracking-[0.2em] block mb-1">PROTOCOLO SEGURANÇA</span>
+              <span className="text-xl font-black text-stone-900 font-mono tracking-tighter">ATIVO • 100%</span>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* 2. GRID STATUS CARDS */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. CORE STATUS GRID - More vivid and intuitive */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatusCard
-          title="Veículos Ativos"
+          title="Frota Operacional"
           value="42"
           subValue="+12%"
           icon={Truck}
-          color="bg-blue-500"
+          color="bg-[#9b1526]"
           delay={0.1}
         />
         <StatusCard
-          title="Entregas Hoje"
+          title="Produtividade"
           value="156"
           subValue="98%"
           icon={Zap}
-          color="bg-amber-500"
+          color="bg-[#dfb15b]"
           delay={0.2}
         />
         <StatusCard
-          title="Segurança Ativa"
+          title="Integridade"
           value="100%"
-          subValue="Safe"
+          subValue="STÁVEL"
           icon={ShieldCheck}
-          color="bg-emerald-500"
+          color="bg-emerald-600"
           delay={0.3}
         />
         <StatusCard
-          title="Volume Mensal"
+          title="Volume Carga"
           value="8.4k"
-          subValue="Ton"
+          subValue="TON"
           icon={Box}
           color="bg-[#9b1526]"
           delay={0.4}
         />
       </section>
 
-      {/* 3. CORE ANALYTICS ROW */}
-      <section className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-        {/* Left: Real-time Telemetry (3D Lines) */}
-        <div className="xl:col-span-8 bg-white border border-[#ded5c6] rounded-[32px] p-6 shadow-lg flex flex-col relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <Layers size={120} className="text-stone-900" />
+      {/* 3. CORE ANALYTICS ROW - Vivid Red Accents */}
+      <section className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        {/* Left: Tactical Analytics (Bar Charts) */}
+        <div className="xl:col-span-8 bg-[#fbf9f5]/50 backdrop-blur-xl border border-white rounded-[48px] p-10 shadow-[0_20px_50px_rgba(155,21,38,0.03)] flex flex-col relative overflow-hidden group">
+          <div className="absolute -top-12 -right-12 p-10 opacity-[0.02] rotate-12 group-hover:opacity-[0.05] transition-opacity duration-1000">
+            <BarChart3 size={240} className="text-[#9b1526]" />
           </div>
           
-          <div className="flex items-center justify-between mb-8 relative z-10">
+          <div className="flex items-center justify-between mb-12 relative z-10">
             <div>
-              <h3 className="text-sm font-black text-stone-900 uppercase tracking-widest font-mono">Telemetria Tática</h3>
-              <p className="text-[10px] text-stone-500 uppercase font-bold tracking-widest mt-1">Fluxo de movimentação 24h</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#9b1526] shadow-sm" />
-                <span className="text-[10px] font-mono text-stone-600">Entradas</span>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-[2px] bg-[#9b1526]" />
+                <h3 className="text-[14px] font-black text-stone-950 uppercase tracking-[0.3em]">Métricas Táticas</h3>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-sm" />
-                <span className="text-[10px] font-mono text-stone-600">Saídas</span>
+              <p className="text-[11px] text-stone-500 uppercase font-bold tracking-widest pl-13">Fluxo de movimentação regional</p>
+            </div>
+            <div className="flex items-center gap-8 bg-white/40 px-6 py-3 rounded-2xl border border-white shadow-sm ring-1 ring-black/5">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-[#9b1526] shadow-[0_0_12px_#9b1526]" />
+                <span className="text-[10px] font-black text-stone-600 uppercase tracking-widest">Ativos</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-stone-300 shadow-[0_0_12px_rgba(0,0,0,0.1)]" />
+                <span className="text-[10px] font-black text-stone-600 uppercase tracking-widest">Média</span>
               </div>
             </div>
           </div>
 
-          <div className="flex-1 min-h-[220px] relative z-10">
+          <div className="flex-1 min-h-[300px] relative z-10">
             <PremiumChart
               type="bar"
               data={[
-                { t: '02h', e: 10, s: 5 },
-                { t: '06h', e: 25, s: 15 },
-                { t: '10h', e: 45, s: 35 },
-                { t: '14h', e: 60, s: 50 },
-                { t: '18h', e: 85, s: 65 },
-                { t: '22h', e: 40, s: 30 },
+                { t: 'SEG', e: 45, s: 30 },
+                { t: 'TER', e: 55, s: 42 },
+                { t: 'QUA', e: 72, s: 58 },
+                { t: 'QUI', e: 98, s: 76 },
+                { t: 'SEX', e: 85, s: 64 },
+                { t: 'SAB', e: 35, s: 20 },
               ]}
               xKey="t"
               barKeys={[
                 { key: 'e', name: 'Entradas', color: '#9b1526' },
-                { key: 's', name: 'Saídas', color: '#06b6d4' }
+                { key: 's', name: 'Saídas', color: '#78716c' }
               ]}
-              height={220}
-              className="bg-transparent border-0 p-0 shadow-none text-stone-600"
+              height={300}
+              className="bg-transparent border-0 p-0 shadow-none"
             />
           </div>
         </div>
 
-        {/* Right: Asset Distribution (3D Donut) */}
-        <div className="xl:col-span-4 bg-white border border-[#ded5c6] rounded-[32px] p-6 shadow-lg flex flex-col items-center justify-center relative overflow-hidden text-center">
-          <div className="absolute -bottom-10 -left-10 p-8 opacity-5 blur-xl">
-            <Database size={120} className="text-[#9b1526]" />
+        {/* Right: Asset Distribution */}
+        <div className="xl:col-span-4 bg-[#fbf9f5]/50 backdrop-blur-xl border border-white rounded-[48px] p-10 shadow-[0_20px_50px_rgba(155,21,38,0.03)] flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="absolute -bottom-16 -left-16 p-10 opacity-[0.03] blur-3xl group-hover:opacity-[0.06] transition-opacity duration-1000">
+            <Database size={200} className="text-[#9b1526]" />
           </div>
 
-          <h3 className="text-sm font-black text-stone-900 uppercase tracking-widest font-mono mb-2 relative z-10">Alocação de Ativos</h3>
-          <p className="text-[10px] text-stone-500 uppercase font-bold tracking-widest mb-6 relative z-10">Distribuição da frota por região</p>
+          <h3 className="text-[14px] font-black text-stone-950 uppercase tracking-[0.3em] mb-3 relative z-10">Alocação Frota</h3>
+          <p className="text-[11px] text-stone-500 uppercase font-bold tracking-widest mb-12 relative z-10">Capacidade por Regional</p>
           
-          <div className="w-full max-w-[220px] relative z-10">
+          <div className="w-full max-w-[260px] relative z-10">
             <PremiumDonutChart
               data={[
-                { name: 'Sudeste', value: 45, color: '#9b1526' },
-                { name: 'Sul', value: 25, color: '#dfb15b' },
-                { name: 'Nordeste', value: 15, color: '#06b6d4' },
-                { name: 'Centro-Oeste', value: 10, color: '#10b981' },
-                { name: 'Norte', value: 5, color: '#6366f1' }
+                { name: 'MATRIZ', value: 50, color: '#9b1526' },
+                { name: 'FILIAIS', value: 30, color: '#dfb15b' },
+                { name: 'EXTERNOS', value: 20, color: '#78716c' }
               ]}
-              height={180}
-              centerLabel="Total Frota"
+              height={220}
+              centerLabel="VÉICULOS"
               centerValue="580"
               showLegend={false}
               className="bg-transparent border-0 p-0 shadow-none"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2 w-full mt-6 relative z-10">
-            <div className="p-2 rounded-xl bg-stone-50 border border-stone-200">
-              <span className="text-[8px] font-mono text-stone-500 uppercase block mb-1">Sudeste</span>
-              <span className="text-xs font-black text-stone-900 font-mono">45%</span>
-            </div>
-            <div className="p-2 rounded-xl bg-stone-50 border border-stone-200">
-              <span className="text-[8px] font-mono text-stone-500 uppercase block mb-1">Sul</span>
-              <span className="text-xs font-black text-stone-900 font-mono">25%</span>
+          <div className="grid grid-cols-1 gap-4 w-full mt-12 relative z-10">
+            <div className="p-4 rounded-2xl bg-white/40 border border-white flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#9b1526]" />
+                <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Matriz Principal</span>
+              </div>
+              <span className="text-xs font-black text-[#9b1526] font-mono">290 UND.</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. ACTIVITY TICKER & DATA FEED */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* 4. ACTIVITY TICKER - Refined and Elegant */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Activity Feed */}
-        <div className="lg:col-span-2 bg-white border border-[#ded5c6] rounded-[28px] p-5 shadow-lg">
-          <div className="flex items-center justify-between mb-4 px-1">
-            <div className="flex items-center gap-2">
-              <Activity size={16} className="text-blue-600" />
-              <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.2em] font-mono">Live Activity Stream</h3>
+        <div className="lg:col-span-2 bg-[#fbf9f5]/50 backdrop-blur-xl border border-white rounded-[48px] p-10 shadow-[0_20px_50px_rgba(155,21,38,0.03)]">
+          <div className="flex items-center justify-between mb-10 px-2">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-[14px] bg-[#9b1526] flex items-center justify-center text-white shadow-lg border border-white/20">
+                <Activity size={20} />
+              </div>
+              <div>
+                <h3 className="text-[13px] font-black text-stone-950 uppercase tracking-[0.2em]">Fluxo Operacional</h3>
+                <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Monitoramento Contínuo</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-              <span className="text-[9px] font-mono text-blue-600 uppercase font-bold">Syncing</span>
+            <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-[#fbf9f5] border border-stone-200 shadow-inner">
+              <div className="w-2 h-2 rounded-full bg-[#9b1526] animate-pulse" />
+              <span className="text-[9px] font-black text-stone-600 uppercase tracking-widest font-mono">Live Sync</span>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             {[
-              { id: '458A', type: 'ROTA', status: 'Iniciada', desc: 'Veículo 084 > HUB Central > MARINGÁ', time: 'Agora', icon: MapPin, color: 'text-emerald-600' },
-              { id: '129C', type: 'CARGA', status: 'Averbada', desc: 'Nota Fiscal #109432 > Café Gourmet', time: '2m ago', icon: Box, color: 'text-blue-600' },
-              { id: '882B', type: 'ALERTA', status: 'Crítico', desc: 'Veículo 012 > Desvio de Rota Detectado', time: '5m ago', icon: AlertCircle, color: 'text-red-600' },
+              { id: 'SM-9023', status: 'SAÍDA', desc: 'VEÍCULO 04 > HUB SÃO PAULO > MATRIZ', time: 'AGORA', icon: Truck, color: 'text-[#9b1526]', bg: 'bg-[#9b1526]/5' },
+              { id: 'SM-8841', status: 'ENTRADA', desc: 'VEÍCULO 12 > MATRIZ > DISTRIBUIÇÃO', time: '12M AGO', icon: MapPin, color: 'text-stone-900', bg: 'bg-stone-100' },
+              { id: 'AV-4421', status: 'AVERBADO', desc: 'CARGA #4023 > CAFÉ GOURMET ESPRESSO', time: '45M AGO', icon: Box, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             ].map((item, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="flex items-center gap-4 p-3 rounded-2xl bg-stone-50 border border-stone-100 hover:bg-stone-100 transition-colors cursor-pointer group"
+                className="flex items-center gap-6 p-5 rounded-[28px] bg-white/40 border border-white hover:bg-white/80 transition-all cursor-pointer group shadow-sm hover:shadow-xl"
               >
-                <div className={cn("p-2 rounded-lg bg-white shadow-sm", item.color)}>
-                  <item.icon size={16} />
+                <div className={cn("p-4 rounded-2xl bg-white shadow-md border border-stone-100 transition-transform group-hover:scale-110 group-hover:rotate-6", item.color)}>
+                  <item.icon size={22} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[9px] font-black text-stone-400 font-mono tracking-widest">{item.type} {item.id}</span>
-                    <span className={cn("text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-white border border-stone-200", item.color)}>{item.status}</span>
+                  <div className="flex items-center gap-4 mb-1.5">
+                    <span className="text-[10px] font-black text-stone-400 font-mono tracking-widest uppercase">{item.id}</span>
+                    <span className={cn("text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border shadow-sm", item.color, item.bg.replace('/5', '/10').replace('50', '100'))}>
+                      {item.status}
+                    </span>
                   </div>
-                  <p className="text-xs font-bold text-stone-800 truncate">{item.desc}</p>
+                  <p className="text-[14px] font-black text-stone-950 truncate tracking-tight uppercase">{item.desc}</p>
                 </div>
-                <span className="text-[9px] font-mono text-stone-400 shrink-0">{item.time}</span>
+                <div className="text-[10px] font-black text-stone-500 font-mono tracking-widest bg-[#fbf9f5] px-4 py-2 rounded-full border border-stone-100 shadow-inner group-hover:bg-[#9b1526] group-hover:text-white transition-colors">
+                  {item.time}
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Tactical Overview */}
-        <div className="bg-gradient-to-br from-[#9b1526] to-[#831220] rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between border border-red-900/20">
-          <div className="absolute -right-8 -bottom-8 opacity-20">
-            <Zap size={160} className="text-white" />
+        {/* Tactical Performance Card - Vivid Red */}
+        <div className="bg-gradient-to-br from-[#9b1526] via-[#b31c2d] to-[#831220] rounded-[48px] p-12 shadow-[0_30px_70px_-15px_rgba(155,21,38,0.4)] relative overflow-hidden flex flex-col justify-between border border-white/20 group">
+          <div className="absolute -right-16 -bottom-16 opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-1000">
+            <Zap size={280} className="text-white" />
           </div>
           
-          <div>
-            <h3 className="text-lg font-black text-white tracking-tighter uppercase leading-tight mb-2">Desempenho <br /> Tático</h3>
-            <div className="w-12 h-1 bg-white/30 rounded-full mb-6" />
+          <div className="relative z-10">
+            <h3 className="text-3xl font-black text-white tracking-tighter uppercase leading-[0.8] mb-6">Eficiência <br /> Regional</h3>
+            <div className="w-20 h-1.5 bg-white/40 rounded-full mb-12 shadow-sm" />
             
-            <div className="space-y-4 relative z-10">
+            <div className="space-y-10">
               <div>
-                <div className="flex justify-between text-[10px] font-black text-white/70 uppercase mb-1">
-                  <span>Meta Diária</span>
-                  <span>88%</span>
+                <div className="flex justify-between text-[11px] font-black text-white/80 uppercase tracking-[0.3em] mb-4">
+                  <span>CAPACIDADE ATUAL</span>
+                  <span className="text-white font-mono bg-white/10 px-2 py-0.5 rounded">94%</span>
                 </div>
-                <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
+                <div className="h-3 w-full bg-black/20 rounded-full overflow-hidden p-1 border border-white/10 shadow-inner">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: '88%' }}
-                    transition={{ duration: 1.5 }}
-                    className="h-full bg-white shadow-sm" 
+                    animate={{ width: '94%' }}
+                    transition={{ duration: 2.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full bg-gradient-to-r from-white/60 to-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.6)]" 
                   />
                 </div>
               </div>
               <div>
-                <div className="flex justify-between text-[10px] font-black text-white/70 uppercase mb-1">
-                  <span>Pontualidade</span>
-                  <span>94%</span>
+                <div className="flex justify-between text-[11px] font-black text-white/80 uppercase tracking-[0.3em] mb-4">
+                  <span>PONTUALIDADE</span>
+                  <span className="text-[#dfb15b] font-mono bg-white/10 px-2 py-0.5 rounded">98%</span>
                 </div>
-                <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
+                <div className="h-3 w-full bg-black/20 rounded-full overflow-hidden p-1 border border-white/10 shadow-inner">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: '94%' }}
-                    transition={{ duration: 1.5, delay: 0.2 }}
-                    className="h-full bg-amber-400 shadow-sm" 
+                    animate={{ width: '98%' }}
+                    transition={{ duration: 2.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full bg-gradient-to-r from-[#dfb15b]/60 to-[#dfb15b] rounded-full shadow-[0_0_20px_rgba(223,177,91,0.6)]" 
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 relative z-10">
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
-              <div className="p-2 rounded-xl bg-white text-[#9b1526] shadow-md">
-                <TrendingUp size={16} />
+          <div className="mt-16 relative z-10">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-5 p-5 rounded-[32px] bg-white/15 backdrop-blur-3xl border border-white/20 shadow-2xl transition-all"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-white text-[#9b1526] shadow-xl flex items-center justify-center">
+                <TrendingUp size={28} />
               </div>
               <div>
-                <span className="text-[10px] font-black text-white/80 uppercase block leading-none mb-1">Aumento de Escopo</span>
-                <span className="text-sm font-black text-white font-mono leading-none">+24.5% <span className="text-[9px] font-medium opacity-60 uppercase ml-1">vs ontem</span></span>
+                <span className="text-[10px] font-black text-white/70 uppercase block mb-1.5 tracking-[0.2em]">Crescimento Real</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-black text-white font-mono leading-none">+24.5%</span>
+                  <span className="text-[9px] font-black bg-[#dfb15b] px-3 py-1 rounded-full text-stone-900 shadow-sm border border-white/20">LIVE</span>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
     </div>
   );
 }
+

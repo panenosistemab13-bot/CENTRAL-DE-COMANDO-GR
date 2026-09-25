@@ -277,297 +277,263 @@ export default function RestrictedPagesModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div className="fixed inset-0 bg-[#ede6dc]/95 backdrop-blur-xl z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
       <motion.div 
-        initial={{ scale: 0.92, opacity: 0, y: 15 }}
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0, y: 15 }}
-        className="w-full max-w-3xl glass-card-3d bg-slate-950/95 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-7 relative text-white flex flex-col max-h-[90vh] backdrop-blur-2xl font-mono"
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="w-full max-w-4xl bg-white border border-[#d6ccbe] shadow-2xl rounded-[48px] p-6 sm:p-10 relative text-stone-900 flex flex-col max-h-[95vh] overflow-hidden"
       >
-        {/* Tech Corner Brackets */}
-        <TechCorner className="absolute top-3.5 left-3.5" />
-        <TechCorner className="absolute top-3.5 right-3.5 rotate-90" />
-        <TechCorner className="absolute bottom-3.5 left-3.5 -rotate-90" />
-        <TechCorner className="absolute bottom-3.5 right-3.5 rotate-180" />
-
         {/* Close Button Top Right */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/10 text-slate-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all shadow-md z-20 cursor-pointer border border-white/10"
+          className="absolute top-6 right-6 w-12 h-12 rounded-2xl bg-[#fbf9f5] text-stone-400 hover:bg-[#9b1526] hover:text-white flex items-center justify-center transition-all shadow-sm z-20 cursor-pointer border border-[#d6ccbe]"
           title="Fechar"
         >
-          <X size={18} />
+          <X size={20} />
         </button>
 
         {/* Header Title Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 pr-8">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/15 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0">
-              <Settings size={22} className="stroke-[2.5]" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-stone-100 shrink-0 pr-12">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-3xl bg-[#9b1526] flex items-center justify-center border border-red-900/10 text-white shadow-xl shrink-0">
+              <Settings size={28} className="stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-heading font-black uppercase tracking-tight text-white leading-none">
-                Sugestão de Páginas Restritas
+              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-stone-950 leading-none font-sans">
+                Configuração Operacional
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 font-mono">
-                Configure individualmente quais páginas ficarão <strong className="text-emerald-400">visíveis</strong> ou <strong className="text-red-400">ocultas</strong> no sistema.
+              <p className="text-xs sm:text-sm text-stone-500 mt-2 font-bold font-sans">
+                Gerenciamento de visibilidade de módulos e ordem de navegação tática.
               </p>
             </div>
           </div>
 
           {/* Quick Counter Chips */}
-          <div className="flex items-center gap-2 self-start sm:self-center font-mono">
-            <span className="px-2.5 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-              <Eye size={12} className="text-emerald-400" />
-              {visibleCount} Visíveis
+          <div className="flex items-center gap-3 self-start sm:self-center">
+            <span className="px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
+              <Eye size={14} className="text-emerald-600" />
+              {visibleCount} Ativos
             </span>
-            <span className="px-2.5 py-1 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_10px_rgba(255,42,75,0.2)]">
-              <EyeOff size={12} className="text-red-400" />
-              {hiddenCount} Ocultas
+            <span className="px-4 py-2 rounded-full bg-red-50 border border-red-200 text-red-700 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
+              <EyeOff size={14} className="text-red-600" />
+              {hiddenCount} Restritos
             </span>
           </div>
         </div>
 
         {/* PRESET QUICK ACTIONS SUGGESTIONS */}
-        <div className="mt-3 shrink-0">
-          <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] text-cyan-400 mb-1.5 block">
-            ⚡ Sugestões Rápidas de Configuração:
+        <div className="mt-6 shrink-0 bg-[#fbf9f5] border border-[#d6ccbe] p-4 rounded-3xl">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9b1526] mb-3 block">
+            ⚡ Presets de Configuração Rápida:
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 w-full">
             <button
               type="button"
               onClick={() => applyPreset('all_visible')}
-              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
+              className="py-2 px-3 rounded-xl bg-white hover:bg-[#9b1526] text-stone-800 hover:text-white border border-[#d6ccbe] font-black text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer text-center"
             >
-              🌟 Exibir Todas
+              🌟 Exibir Tudo
             </button>
             <button
               type="button"
               onClick={() => applyPreset('default')}
-              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
+              className="py-2 px-3 rounded-xl bg-white hover:bg-[#9b1526] text-stone-800 hover:text-white border border-[#d6ccbe] font-black text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer text-center"
             >
               🔒 Padrão Seguro
             </button>
             <button
               type="button"
               onClick={() => applyPreset('operational')}
-              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
+              className="py-2 px-3 rounded-xl bg-white hover:bg-[#9b1526] text-stone-800 hover:text-white border border-[#d6ccbe] font-black text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer text-center"
             >
               🚛 Operacional
             </button>
             <button
               type="button"
               onClick={() => applyPreset('admin')}
-              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center hover:border-cyan-400"
+              className="py-2 px-3 rounded-xl bg-white hover:bg-[#9b1526] text-stone-800 hover:text-white border border-[#d6ccbe] font-black text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer text-center"
             >
-              👥 Gestão / Adm
+              👥 Gestão Adm
             </button>
             <button
               type="button"
               onClick={() => applyPreset('executive')}
-              className="py-1.5 px-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/15 font-bold text-[10px] uppercase tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer text-center col-span-2 sm:col-span-1 hover:border-cyan-400"
+              className="py-2 px-3 rounded-xl bg-white hover:bg-[#9b1526] text-stone-800 hover:text-white border border-[#d6ccbe] font-black text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer text-center"
             >
-              🌐 Executivo 4K
+              🌐 Executivo
             </button>
           </div>
         </div>
 
         {/* SEARCH & FILTER CONTROLS */}
-        <div className="mt-3 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0 font-mono">
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
           {/* Search Input */}
-          <div className="relative w-full sm:w-72">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative w-full sm:w-80">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar páginas ou módulos..."
-              className="w-full bg-slate-900 border border-white/20 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-cyan-400 transition-colors shadow-inner"
+              placeholder="Buscar módulos..."
+              className="w-full bg-[#fbf9f5] border border-[#d6ccbe] rounded-2xl pl-11 pr-4 py-2.5 text-xs text-stone-900 placeholder-stone-400 font-bold focus:outline-none focus:border-[#9b1526] transition-colors shadow-inner"
             />
-            {searchQuery && (
-              <button 
-                type="button" 
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-              >
-                <X size={12} />
-              </button>
-            )}
           </div>
 
           {/* Filter Tabs & Add Button */}
-          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto no-scrollbar font-mono">
-            <div className="flex items-center gap-1 bg-white/5 p-0.5 rounded-xl border border-white/10">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-1 bg-[#fbf9f5] p-1 rounded-2xl border border-[#d6ccbe] shadow-inner">
               <button
                 type="button"
                 onClick={() => setFilterTab('all')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer",
+                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
                   filterTab === 'all' 
-                    ? "bg-cyan-500 text-slate-950 font-black shadow-[0_0_8px_rgba(6,182,212,0.6)]" 
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white text-[#9b1526] shadow-sm" 
+                    : "text-stone-500 hover:text-stone-900"
                 )}
               >
-                Todas ({pagesList.length})
+                Tudo
               </button>
               <button
                 type="button"
                 onClick={() => setFilterTab('visible')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer",
+                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
                   filterTab === 'visible' 
-                    ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_8px_rgba(16,185,129,0.6)]" 
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-emerald-600 text-white shadow-sm" 
+                    : "text-stone-500 hover:text-stone-900"
                 )}
               >
-                Visíveis ({visibleCount})
+                Ativos
               </button>
               <button
                 type="button"
                 onClick={() => setFilterTab('hidden')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer",
+                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
                   filterTab === 'hidden' 
-                    ? "bg-red-500 text-white font-black shadow-[0_0_8px_rgba(255,42,75,0.6)]" 
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-red-600 text-white shadow-sm" 
+                    : "text-stone-500 hover:text-stone-900"
                 )}
               >
-                Ocultas ({hiddenCount})
+                Restritos
               </button>
             </div>
 
-            {/* Add Custom Page Button */}
             <button
               type="button"
               onClick={() => setShowAddPageForm(!showAddPageForm)}
               className={cn(
-                "px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 border shadow-sm transition-all cursor-pointer shrink-0",
+                "px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border shadow-sm transition-all cursor-pointer shrink-0",
                 showAddPageForm 
-                  ? "bg-red-500/20 text-red-300 border-red-500/50"
-                  : "bg-white/5 hover:bg-white/10 text-white border-white/15"
+                  ? "bg-stone-900 text-white border-stone-800"
+                  : "bg-[#9b1526] hover:bg-[#831220] text-white border-red-800"
               )}
             >
-              {showAddPageForm ? <X size={12} /> : <Plus size={12} />}
-              {showAddPageForm ? "Fechar" : "+ Nova Página"}
+              {showAddPageForm ? <X size={14} /> : <Plus size={14} />}
+              {showAddPageForm ? "Fechar" : "Novo Módulo"}
             </button>
           </div>
         </div>
 
-        {/* ADD NEW CUSTOM PAGE EXPANDABLE FORM */}
+        {/* ADD NEW CUSTOM PAGE FORM */}
         <AnimatePresence>
           {showAddPageForm && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mt-3 shrink-0"
+              className="overflow-hidden mt-4 shrink-0"
             >
               <form 
                 onSubmit={handleAddNewPage}
-                className="bg-slate-900 border border-white/15 p-4 rounded-2xl text-white shadow-xl space-y-3 font-mono"
+                className="bg-[#fbf9f5] border border-[#d6ccbe] p-6 rounded-[32px] text-stone-900 shadow-xl space-y-4"
               >
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-cyan-400" />
-                    Adicionar Nova Página ao Gerenciador de Restrições
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    Cadastre uma nova página customizada
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#9b1526] flex items-center gap-2">
+                    <Sparkles size={16} />
+                    Cadastrar Módulo Personalizado
                   </span>
                 </div>
 
                 {formError && (
-                  <div className="bg-red-950/80 border border-red-500/50 text-red-200 text-xs px-3 py-1.5 rounded-lg font-bold font-mono">
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-4 py-2 rounded-xl font-bold">
                     ⚠️ {formError}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                      Nome da Página *
+                    <label className="text-[9px] font-black uppercase tracking-widest text-stone-500 block mb-1.5">
+                      Nome do Módulo *
                     </label>
                     <input
                       type="text"
                       value={newPageLabel}
                       onChange={(e) => setNewPageLabel(e.target.value)}
                       placeholder="Ex: Auditoria PGR"
-                      className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                      className="w-full bg-white border border-[#d6ccbe] rounded-xl px-4 py-2 text-xs text-stone-900 font-bold focus:outline-none focus:border-[#9b1526]"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                      Categoria / Subtítulo
+                    <label className="text-[9px] font-black uppercase tracking-widest text-stone-500 block mb-1.5">
+                      Categoria
                     </label>
                     <input
                       type="text"
                       value={newPageCategory}
                       onChange={(e) => setNewPageCategory(e.target.value)}
-                      placeholder="Ex: Qualidade & Segurança"
-                      className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                      placeholder="Ex: Operacional"
+                      className="w-full bg-white border border-[#d6ccbe] rounded-xl px-4 py-2 text-xs text-stone-900 font-bold focus:outline-none focus:border-[#9b1526]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                      Ícone
+                    <label className="text-[9px] font-black uppercase tracking-widest text-stone-500 block mb-1.5">
+                      Ícone Visual
                     </label>
                     <select
                       value={newPageIcon}
                       onChange={(e) => setNewPageIcon(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono cursor-pointer"
+                      className="w-full bg-white border border-[#d6ccbe] rounded-xl px-4 py-2 text-xs text-stone-900 font-bold focus:outline-none focus:border-[#9b1526] cursor-pointer"
                     >
                       {Object.keys(ICON_MAP).map((iconKey) => (
-                        <option key={iconKey} value={iconKey} className="bg-slate-950 text-white">
-                          {iconKey}
-                        </option>
+                        <option key={iconKey} value={iconKey}>{iconKey}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                    Descrição do Módulo
-                  </label>
-                  <input
-                    type="text"
-                    value={newPageDescription}
-                    onChange={(e) => setNewPageDescription(e.target.value)}
-                    placeholder="Breve descrição da função desta página..."
-                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-1 font-mono">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                <div className="flex items-center justify-between pt-2">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={newPageVisible}
                       onChange={(e) => setNewPageVisible(e.target.checked)}
-                      className="w-4 h-4 accent-cyan-400 rounded"
+                      className="w-5 h-5 accent-[#9b1526] rounded-lg"
                     />
-                    <span className="text-xs font-bold text-slate-300">
-                      Iniciar como <strong className={newPageVisible ? "text-emerald-400" : "text-red-400"}>{newPageVisible ? "Visível no Menu" : "Oculta (Restrita)"}</strong>
+                    <span className="text-xs font-bold text-stone-700">
+                      Disponibilizar imediatamente no menu principal
                     </span>
                   </label>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setShowAddPageForm(false)}
-                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 transition-colors"
+                      className="px-5 py-2 rounded-xl bg-white hover:bg-stone-100 text-xs font-black uppercase text-stone-500 transition-colors border border-[#d6ccbe]"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-xs font-mono font-black uppercase tracking-wider text-white shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-6 py-2 rounded-xl bg-[#9b1526] text-white text-xs font-black uppercase transition-all shadow-md"
                     >
-                      <Plus size={14} /> Salvar Nova Página
+                      Salvar Módulo
                     </button>
                   </div>
                 </div>
@@ -576,34 +542,11 @@ export default function RestrictedPagesModal({
           )}
         </AnimatePresence>
 
-        {/* SEQUENCE INFO BAR */}
-        <div className="mt-2.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-mono shrink-0">
-          <span className="flex items-center gap-1.5 text-[11px]">
-            <ArrowUpDown size={14} className="text-cyan-400 shrink-0" />
-            <span><strong>Sequência das Páginas & Atalhos:</strong> A ordem numérica define a navegação rápida por teclado (<kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-white/20 text-cyan-300 font-mono text-[10px]">Ctrl + 1</kbd> até <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-white/20 text-cyan-300 font-mono text-[10px]">Ctrl + 9</kbd>). Use as setas (▲/▼) para reordenar.</span>
-          </span>
-          <button
-            type="button"
-            onClick={handleResetOrder}
-            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/15 font-mono font-bold text-[10px] uppercase tracking-wide transition-all shadow-xs cursor-pointer shrink-0"
-            title="Restaurar a ordem original das páginas"
-          >
-            Restaurar Ordem Original
-          </button>
-        </div>
-
         {/* SCROLLABLE LIST OF ALL PAGES */}
-        <div className="mt-3 flex-1 overflow-y-auto pr-1 space-y-2 min-h-[14rem] max-h-[42vh] custom-scrollbar font-mono">
+        <div className="mt-8 flex-1 overflow-y-auto pr-2 space-y-3 min-h-[16rem] custom-scrollbar">
           {filteredPages.length === 0 ? (
-            <div className="p-8 text-center bg-white/5 rounded-2xl border border-white/10 text-slate-400">
-              <p className="font-bold text-sm">Nenhuma página encontrada com os filtros atuais.</p>
-              <button
-                type="button"
-                onClick={() => { setSearchQuery(''); setFilterTab('all'); }}
-                className="mt-2 text-xs font-black uppercase text-cyan-400 underline cursor-pointer"
-              >
-                Limpar Filtros
-              </button>
+            <div className="p-12 text-center bg-[#fbf9f5] rounded-[32px] border border-dashed border-[#d6ccbe] text-stone-400">
+              <p className="font-bold text-sm uppercase tracking-widest">Nenhum módulo localizado</p>
             </div>
           ) : (
             filteredPages.map((page) => {
@@ -617,146 +560,109 @@ export default function RestrictedPagesModal({
                 <div
                   key={page.id}
                   className={cn(
-                    "p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md",
+                    "p-4 rounded-[28px] border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm",
                     isVisible
-                      ? "bg-slate-900/80 border-emerald-500/30 hover:border-emerald-500/60 shadow-[0_4px_12px_rgba(16,185,129,0.1)]"
-                      : "bg-slate-900/40 border-white/10 hover:border-white/20 opacity-70"
+                      ? "bg-white border-stone-200 hover:border-[#9b1526]/30"
+                      : "bg-[#fbf9f5]/50 border-stone-100 opacity-60"
                   )}
                 >
                   {/* Left Info */}
-                  <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-5 min-w-0 flex-1">
                     <div className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 shadow-md transition-all",
+                      "w-14 h-14 rounded-2xl flex items-center justify-center border shrink-0 shadow-sm transition-all",
                       isVisible
-                        ? "bg-emerald-950 border-emerald-500/60 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                        : "bg-slate-950 border-white/15 text-slate-500"
+                        ? "bg-[#9b1526]/5 border-[#9b1526]/10 text-[#9b1526]"
+                        : "bg-stone-100 border-stone-200 text-stone-400"
                     )}>
-                      <IconComponent size={20} strokeWidth={2.2} />
+                      <IconComponent size={24} strokeWidth={2.5} />
                     </div>
 
                     <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono font-black text-sm text-white uppercase tracking-wide">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-black text-base text-stone-950 uppercase tracking-tight">
                           {page.label}
                         </span>
                         
-                        {page.badge && (
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border",
-                            isVisible 
-                              ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
-                              : "bg-white/5 text-slate-400 border-white/10"
-                          )}>
-                            {page.badge}
-                          </span>
-                        )}
-
                         {page.isCustom && (
-                          <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] font-mono font-bold uppercase tracking-wider">
-                            Custom
+                          <span className="px-2 py-0.5 rounded-full bg-red-50 text-[#9b1526] border border-red-100 text-[8px] font-black uppercase tracking-widest">
+                            Personalizado
                           </span>
                         )}
                       </div>
 
-                      <p className="text-[11px] font-medium text-slate-400 line-clamp-1 mt-0.5 font-mono">
-                        {page.description}
+                      <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mt-1">
+                        {page.category} • {page.id}
                       </p>
                     </div>
                   </div>
 
                   {/* Middle / Reorder Sequence Controls */}
-                  <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-xl border border-white/10 shrink-0 self-start sm:self-center font-mono">
-                    <div className="flex flex-col items-center">
-                      <span className="px-2 py-0.5 rounded-lg bg-slate-950 text-cyan-300 font-mono text-[10px] font-black border border-white/15 shrink-0" title={`Posição #${globalIndex + 1} na sequência`}>
-                        #{globalIndex + 1}
-                      </span>
+                  <div className="flex items-center gap-2 bg-[#fbf9f5] p-2 rounded-2xl border border-[#d6ccbe] shrink-0 self-start sm:self-center">
+                    <div className="bg-white border border-[#d6ccbe] px-3 py-1.5 rounded-xl shadow-inner text-center min-w-[70px]">
+                      <span className="text-[10px] font-black text-stone-950 font-mono">#{globalIndex + 1}</span>
                       {globalIndex < 9 && (
-                        <span className="text-[8.5px] font-mono font-bold text-red-400 leading-tight mt-0.5">
-                          Ctrl+{globalIndex + 1}
-                        </span>
+                        <span className="text-[7px] font-black text-[#9b1526] block leading-none mt-0.5">CTRL+{globalIndex + 1}</span>
                       )}
                     </div>
 
-                    <select
-                      value={globalIndex}
-                      onChange={(e) => movePageToPosition(page.id, Number(e.target.value))}
-                      className="bg-slate-950 text-white text-[10px] font-bold rounded-lg px-1.5 py-1 border border-white/20 focus:outline-none focus:border-cyan-400 cursor-pointer font-mono"
-                      title="Alterar posição na sequência"
-                    >
-                      {pagesList.map((_, idx) => (
-                        <option key={idx} value={idx}>
-                          {idx + 1}ª Pos
-                        </option>
-                      ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      onClick={() => movePageUp(page.id)}
-                      disabled={isFirst}
-                      className={cn(
-                        "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border shadow-xs",
-                        isFirst
-                          ? "bg-white/5 text-slate-600 border-transparent cursor-not-allowed opacity-40"
-                          : "bg-white/10 hover:bg-cyan-500 hover:text-slate-950 text-white border-white/15 active:scale-90"
-                      )}
-                      title="Mover para cima (anterior)"
-                    >
-                      <ChevronUp size={16} className="stroke-[3]" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => movePageDown(page.id)}
-                      disabled={isLast}
-                      className={cn(
-                        "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border shadow-xs",
-                        isLast
-                          ? "bg-white/5 text-slate-600 border-transparent cursor-not-allowed opacity-40"
-                          : "bg-white/10 hover:bg-cyan-500 hover:text-slate-950 text-white border-white/15 active:scale-90"
-                      )}
-                      title="Mover para baixo (próxima)"
-                    >
-                      <ChevronDown size={16} className="stroke-[3]" />
-                    </button>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => movePageUp(page.id)}
+                        disabled={isFirst}
+                        className={cn(
+                          "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border",
+                          isFirst ? "opacity-20 pointer-events-none" : "bg-white text-stone-600 hover:bg-[#9b1526] hover:text-white border-[#d6ccbe]"
+                        )}
+                      >
+                        <ChevronUp size={14} strokeWidth={3} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => movePageDown(page.id)}
+                        disabled={isLast}
+                        className={cn(
+                          "w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border",
+                          isLast ? "opacity-20 pointer-events-none" : "bg-white text-stone-600 hover:bg-[#9b1526] hover:text-white border-[#d6ccbe]"
+                        )}
+                      >
+                        <ChevronDown size={14} strokeWidth={3} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Right Status & Toggle Button */}
-                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    {/* Delete button if custom */}
+                  <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
                     {page.isCustom && (
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomPage(page.id)}
-                        className="p-2 rounded-xl text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
-                        title="Excluir página personalizada"
+                        className="p-3 rounded-2xl text-stone-400 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Remover módulo personalizado"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                       </button>
                     )}
 
-                    {/* Big Interactive Toggle Switch Button */}
                     <button
                       type="button"
                       onClick={() => togglePageVisibility(page.id)}
                       className={cn(
-                        "px-3.5 py-2 rounded-xl font-mono font-black text-xs uppercase tracking-wider flex items-center gap-2 border transition-all shadow-md active:scale-95 cursor-pointer select-none",
+                        "px-6 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 border transition-all shadow-md active:scale-95 cursor-pointer select-none min-w-[120px] justify-center",
                         isVisible
-                          ? "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                          : "bg-red-950/80 hover:bg-red-900 text-red-300 border-red-500/50 shadow-[0_0_12px_rgba(255,42,75,0.3)]"
+                          ? "bg-emerald-600 text-white border-emerald-700"
+                          : "bg-white text-stone-400 border-stone-200"
                       )}
                     >
                       {isVisible ? (
                         <>
-                          <Eye size={15} />
-                          <span>Visível</span>
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+                          <Eye size={16} />
+                          <span>Ativo</span>
                         </>
                       ) : (
                         <>
-                          <EyeOff size={15} />
-                          <span>Oculta</span>
-                          <span className="w-2 h-2 rounded-full bg-red-400 ml-0.5" />
+                          <EyeOff size={16} />
+                          <span>Restrito</span>
                         </>
                       )}
                     </button>
@@ -768,57 +674,57 @@ export default function RestrictedPagesModal({
         </div>
 
         {/* FOOTER ACTIONS */}
-        <div className="mt-4 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 font-mono">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => applyPreset('default')}
-              className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-mono font-bold uppercase text-[11px] tracking-wider transition-colors border border-white/15 cursor-pointer flex items-center justify-center gap-1.5 w-full sm:w-auto"
-            >
-              <RotateCcw size={13} />
-              Restaurar Padrão
-            </button>
-          </div>
+        <div className="mt-8 pt-6 border-t border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+          <button
+            type="button"
+            onClick={handleResetOrder}
+            className="py-3 px-6 rounded-2xl bg-white hover:bg-stone-50 text-stone-500 font-black uppercase text-[10px] tracking-widest transition-all border border-[#d6ccbe] cursor-pointer flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
+            <RotateCcw size={14} />
+            Resetar Ordem Global
+          </button>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 sm:flex-initial py-2.5 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-mono font-bold uppercase text-xs tracking-wider transition-colors border border-white/15 cursor-pointer text-center"
+              className="flex-1 sm:flex-initial py-3 px-8 rounded-2xl bg-white hover:bg-stone-50 text-stone-500 font-black uppercase text-xs tracking-widest transition-colors border border-[#d6ccbe] cursor-pointer text-center"
             >
-              Cancelar
+              Voltar
             </button>
             <button
               type="button"
               onClick={handleSaveAndApply}
-              className="flex-1 sm:flex-initial py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-white font-mono font-black uppercase text-xs tracking-wider shadow-[0_0_15px_rgba(255,42,75,0.4)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 border border-red-500/40"
+              className="flex-1 sm:flex-initial py-4 px-10 rounded-[20px] bg-[#9b1526] hover:bg-[#831220] text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-3 border border-red-800"
             >
-              <Check size={16} className="stroke-[3]" />
-              Salvar & Aplicar
+              <Check size={18} strokeWidth={3} />
+              Aplicar Mudanças
             </button>
           </div>
         </div>
 
-        {/* Success Toast */}
+        {/* Success Toast Overlay */}
         <AnimatePresence>
           {saveSuccessToast && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 10 }}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md rounded-3xl flex items-center justify-center z-50 p-6"
+              initial={{ opacity: 0, backdropBlur: 0 }}
+              animate={{ opacity: 1, backdropBlur: '12px' }}
+              exit={{ opacity: 0, backdropBlur: 0 }}
+              className="absolute inset-0 bg-[#ede6dc]/80 backdrop-blur-md flex items-center justify-center z-50 p-10"
             >
-              <div className="bg-slate-900 border border-emerald-500/60 rounded-2xl p-6 text-center text-white shadow-2xl flex flex-col items-center gap-3 max-w-xs">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                  <Check size={26} className="stroke-[3]" />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white border border-[#d6ccbe] rounded-[48px] p-10 text-center text-stone-900 shadow-2xl flex flex-col items-center gap-5 max-w-sm"
+              >
+                <div className="w-20 h-20 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+                  <Check size={40} strokeWidth={3} />
                 </div>
-                <h3 className="font-heading font-black text-lg text-emerald-400 uppercase">
-                  Páginas Atualizadas!
-                </h3>
-                <p className="text-xs text-slate-400 font-mono">
-                  As configurações de visibilidade das páginas foram aplicadas com sucesso.
+                <h3 className="font-black text-2xl uppercase tracking-tighter">Sincronizado!</h3>
+                <p className="text-sm font-bold text-stone-500 leading-relaxed">
+                  As configurações de visibilidade foram aplicadas em toda a malha operacional.
                 </p>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

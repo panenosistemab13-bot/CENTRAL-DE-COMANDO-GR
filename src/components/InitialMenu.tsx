@@ -41,13 +41,11 @@ import { PremiumBarChart, PremiumDonutChart, PremiumChart } from './charts';
 import DashboardInicioFuturistic from './DashboardInicioFuturistic';
 
 // High-definition cinematic image assets matching the reference
-import heroLogistica from '../assets/images/cafe_tres_coracoes_terminal_hub_1790250325063.jpg';
+import rainyMorningBg from '../assets/images/rainy_morning_logistics_premium_1790324816019.jpg';
+import premiumIvoryBg from '../assets/images/premium_ivory_red_dashboard_bg_1790324520400.jpg';
 import cctvYard from '../assets/images/cctv_cinematic_yard_1790214986048.jpg';
 import sidebarTruck from '../assets/images/sidebar_truck_red_1790209039511.jpg';
 import avatarJefferson from '../assets/images/avatar_jefferson_dias_1790206857666.jpg';
-import truckHighwaySunset from '../assets/images/hero_truck_sunset_1789847050862.jpg';
-import tacticalMapPin from '../assets/images/wallpaper_tactical_satellite_1790202511817.jpg';
-import coffeeBeansBg from '../assets/images/coffee_beans_3d_1789847062486.jpg';
 
 interface InitialMenuProps {
   onSelect: (id: string) => void;
@@ -100,6 +98,16 @@ export default function InitialMenu({
     return `${day} ${month} ${year}`;
   }, [currentTime]);
 
+  const isMorning = useMemo(() => {
+    const hour = currentTime.getHours();
+    return hour >= 5 && hour < 12; // Morning between 5am and 12pm
+  }, [currentTime]);
+
+  const activeBackground = useMemo(() => {
+    if (activeNav !== 'menu') return null;
+    return isMorning ? rainyMorningBg : premiumIvoryBg;
+  }, [activeNav, isMorning]);
+
   // Sidebar navigation items matching reference exactly
   const sidebarItems = [
     { id: 'menu', label: 'Início', icon: Home, hasArrow: true },
@@ -139,27 +147,56 @@ export default function InitialMenu({
   };
 
   return (
-    <div className="w-full h-screen max-h-screen flex flex-col bg-[#ede6dc] text-stone-900 font-sans select-none overflow-hidden relative max-w-[1920px] mx-auto">
+    <div className="w-full h-screen max-h-screen flex flex-col bg-[#ede6dc] text-stone-950 font-sans select-none overflow-hidden relative max-w-[1920px] mx-auto">
       
-      {/* Cinematic ivory/champagne gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#f5eee3] via-[#ede6dc] to-[#e4dcd0] pointer-events-none z-0" />
+      {/* Dynamic Cinematic Background */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeBackground || 'default'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5 }}
+          className="absolute inset-0 z-0 pointer-events-none"
+        >
+          {activeBackground ? (
+            <>
+              <img
+                src={activeBackground}
+                alt="Background"
+                className={cn(
+                  "w-full h-full object-cover transition-all duration-1000",
+                  activeNav !== 'menu' ? "blur-xl scale-110 opacity-40 brightness-110" : "brightness-[0.98] contrast-[1.02]"
+                )}
+              />
+              <div className={cn(
+                "absolute inset-0 transition-colors duration-1000",
+                activeNav !== 'menu' ? "bg-white/40 backdrop-blur-3xl" : "bg-white/10 backdrop-blur-[1px]"
+              )} />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#f5eee3] via-[#ede6dc] to-[#e4dcd0]" />
+          )}
+          
+          {/* Subtle noise and texture */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-50" />
+        </motion.div>
+      </AnimatePresence>
 
       {/* ========================================================================= */}
       {/* 1. TOP HEADER BAR                                                         */}
       {/* ========================================================================= */}
-      <header className="w-full h-15 px-4 sm:px-6 bg-[#ede6dc]/95 backdrop-blur-md border-b border-[#ded5c6] flex items-center justify-between shrink-0 z-30 relative shadow-sm">
+      <header className="w-full h-16 px-4 sm:px-8 bg-white/80 backdrop-blur-2xl border-b border-[#9b1526]/10 flex items-center justify-between shrink-0 z-30 relative shadow-[0_4px_30px_rgba(155,21,38,0.05)]">
         
         {/* Left: Brand Identity with 3 Corações Heart Logo */}
         <div 
           onClick={() => handleItemClick('menu')}
-          className="flex items-center gap-3 cursor-pointer group shrink-0"
+          className="flex items-center gap-4 cursor-pointer group shrink-0"
         >
           {/* Official 3 Corações Red Circle Heart Emblem */}
-          <div className="w-10 h-10 rounded-full bg-[#9b1526] p-0.5 flex items-center justify-center shadow-md border-2 border-[#dfb15b] group-hover:scale-105 transition-transform duration-300 relative overflow-hidden">
-            <svg viewBox="0 0 100 100" className="w-7 h-7">
-              {/* Outer Glow */}
+          <div className="w-11 h-11 rounded-full bg-[#9b1526] p-0.5 flex items-center justify-center shadow-lg border-2 border-[#dfb15b] group-hover:scale-105 transition-all duration-500 relative overflow-hidden">
+            <svg viewBox="0 0 100 100" className="w-8 h-8">
               <circle cx="50" cy="50" r="46" fill="#9b1526" />
-              {/* Gold Heart Graphic */}
               <path 
                 d="M50 82 C50 82 20 60 20 38 C20 25 31 16 43 18 C47 19 50 22 50 22 C50 22 53 19 57 18 C69 16 80 25 80 38 C80 60 50 82 50 82 Z" 
                 fill="#dfb15b" 
@@ -168,7 +205,6 @@ export default function InitialMenu({
                 d="M50 72 C50 72 26 54 26 38 C26 28 35 22 43 24 C46 25 50 28 50 28 C50 28 54 25 57 24 C65 22 74 28 74 38 C74 54 50 72 50 72 Z" 
                 fill="#b81d2c" 
               />
-              {/* Center Mini Gold Hearts */}
               <path 
                 d="M44 48 C44 48 36 40 36 34 C36 30 39 27 42 28 C45 29 46 32 46 32 C46 32 47 29 50 28 C53 27 56 30 56 34 C56 40 48 48 44 48 Z" 
                 fill="#ffd27d" 
@@ -181,18 +217,18 @@ export default function InitialMenu({
           </div>
 
           <div className="flex flex-col pl-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-black tracking-wider text-stone-900 uppercase leading-none font-sans">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-lg font-black tracking-tighter text-stone-950 uppercase leading-none font-sans">
                 SISTEMA OPERACIONAL
               </h1>
-              <div className="flex items-center bg-[#9b1526] px-2.5 py-0.5 rounded-full border border-red-900/30 shadow-sm">
-                <span className="text-[8.5px] font-mono font-black text-white tracking-tight">
-                  1920x1080P + DUAL 4K
+              <div className="flex items-center bg-[#9b1526] px-3 py-1 rounded-full border border-red-900/10 shadow-sm">
+                <span className="text-[9px] font-mono font-black text-white tracking-widest uppercase">
+                  4K ULTRA • LIVE CORE
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-bold text-stone-500 tracking-[0.2em] uppercase mt-1 opacity-90">
-              CONTROLE TÁTICO • GESTÃO • RESULTADOS
+            <span className="text-[10px] font-black text-[#9b1526] tracking-[0.3em] uppercase mt-1 opacity-70 font-mono">
+              CONTROLE TÁTICO • GESTÃO IVORY • V4.0
             </span>
           </div>
         </div>
@@ -422,38 +458,42 @@ export default function InitialMenu({
           </main>
         ) : (
           <main className="flex-1 min-w-0 h-full flex flex-col overflow-hidden p-2.5">
-            <div className="bg-[#ede6dc] rounded-[32px] h-full overflow-hidden border border-white/20 shadow-2xl relative z-10">
+            <div className="bg-white/95 backdrop-blur-xl rounded-[40px] h-full overflow-hidden border border-white shadow-[0_20px_50px_rgba(155,21,38,0.05)] relative z-10">
               {renderActiveModuleContent()}
             </div>
           </main>
         )}
       </div>
 
-      {/* GLOBAL FOOTER (MATCHING REFERENCE IMAGE) */}
-      <footer className="w-full h-7 px-4 sm:px-6 bg-[#ede6dc]/95 backdrop-blur-md border-t border-[#ded5c6] flex items-center justify-between text-[10px] font-mono text-stone-600 shrink-0 relative z-30">
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-[#9b1526] flex items-center justify-center text-white text-[7px] font-black">
-            ☕
+      {/* GLOBAL FOOTER (FUTURISTIC IVORY VERSION) */}
+      <footer className="w-full h-8 px-4 sm:px-8 bg-white/90 backdrop-blur-xl border-t border-[#9b1526]/10 flex items-center justify-between text-[11px] font-mono text-stone-600 shrink-0 relative z-30 shadow-[0_-4px_20px_rgba(155,21,38,0.03)]">
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 rounded-full bg-[#9b1526] flex items-center justify-center text-white text-[8px] font-black shadow-md border border-white/20">
+            3C
           </div>
-          <span className="font-bold text-stone-900">Café Três Corações</span>
-          <span className="text-stone-400">|</span>
-          <span className="text-stone-600 font-medium">Sistema Operacional</span>
+          <span className="font-black text-stone-900 tracking-tight">CAFÉ TRÊS CORAÇÕES</span>
+          <span className="text-stone-200">|</span>
+          <span className="text-stone-400 font-bold uppercase tracking-[0.2em] text-[9px]">LOGÍSTICA HUB</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
-            <span className="font-bold text-stone-900">Sistema Online</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
+            <span className="font-black text-emerald-600 uppercase tracking-widest text-[10px]">Sistema Online</span>
           </div>
-          <span className="text-stone-400">v2.8.7</span>
+          <div className="text-stone-200">|</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-stone-400 font-bold">LATÊNCIA:</span>
+            <span className="text-[#9b1526] font-black font-mono">12MS</span>
+          </div>
           <button 
             type="button"
             onClick={onUnlockPresenceList}
-            className="flex items-center gap-1 hover:text-stone-900 transition-colors cursor-pointer text-stone-600"
+            className="flex items-center gap-2 hover:bg-[#9b1526] hover:text-white px-3 py-1 rounded-full transition-all cursor-pointer text-stone-500 font-black border border-transparent hover:border-[#9b1526]/20"
             title="Configurações"
           >
-            <Settings size={11} className="text-stone-500" />
-            <span>Configurações</span>
+            <Settings size={12} className="opacity-70" />
+            <span className="uppercase text-[10px] tracking-widest">Ajustes</span>
           </button>
         </div>
       </footer>
