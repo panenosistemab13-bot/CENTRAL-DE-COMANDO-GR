@@ -69,9 +69,9 @@ const StatusCard = ({ title, value, subValue, icon: Icon, color, delay = 0 }: St
   </motion.div>
 );
 
-export default function DashboardInicioFuturistic() {
+export default function DashboardInicioFuturistic({ id }: { id?: string }) {
   return (
-    <div className="w-full h-full flex flex-col gap-4 overflow-y-auto no-scrollbar pb-10">
+    <div id={id} className="w-full h-full flex flex-col gap-4 overflow-y-auto no-scrollbar pb-10">
       {/* 1. CINEMATIC 3D HERO SECTION */}
       <section className="relative w-full h-[380px] rounded-[32px] overflow-hidden border border-[#ded5c6] shadow-xl group shrink-0">
         <img

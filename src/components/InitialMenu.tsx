@@ -418,11 +418,11 @@ export default function InitialMenu({
         {/* ----------------------------------------------------------------------- */}
         {activeNav === 'menu' ? (
           <main className="flex-1 min-w-0 h-full flex flex-col overflow-hidden p-2.5">
-            <DashboardInicioFuturistic />
+            <DashboardInicioFuturistic id="main-scroll-container" />
           </main>
         ) : (
           <main className="flex-1 min-w-0 h-full flex flex-col overflow-hidden p-2.5">
-            <div className="bg-[#ede6dc] rounded-[32px] h-full overflow-hidden border border-white/20 shadow-2xl relative z-10">
+            <div id="main-scroll-container" className="bg-[#ede6dc] rounded-[32px] h-full overflow-y-auto border border-white/20 shadow-2xl relative z-10">
               {renderActiveModuleContent()}
             </div>
           </main>

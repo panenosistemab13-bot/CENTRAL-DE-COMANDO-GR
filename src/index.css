@@ -1,73 +1,56 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&family=Syncopate:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", "Space Grotesk", system-ui, sans-serif;
-  --font-heading: "Syncopate", "Space Grotesk", sans-serif;
+  --font-heading: "Playfair Display", "Space Grotesk", serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   
-  --color-primary: #00f2ff;
-  --color-secondary: #7000ff;
-  --color-accent: #ff0055;
-  --color-bg-deep: #020617;
-  --color-glass: rgba(15, 23, 42, 0.65);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #9b1526;
+  --color-secondary: #dfb15b;
+  --color-accent: #d63447;
+  --color-ivory: #fbf9f5;
+  --color-ivory-deep: #ede6dc;
 }
 
 @layer base {
   * {
-    border-color: var(--color-glass-border);
+    border-color: rgba(155, 21, 38, 0.08);
   }
   
   body {
-    background-color: var(--color-bg-deep);
-    color: #f8fafc;
+    background-color: var(--color-ivory-deep);
+    color: #1c1917;
     font-family: var(--font-sans);
     min-height: 100vh;
     overflow: hidden;
-    background-image: 
-      radial-gradient(circle at 0% 0%, rgba(0, 242, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, rgba(112, 0, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%);
   }
   
   html {
     min-height: 100%;
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 
 @layer components {
-  /* 4K 3D Glass Surface */
-  .glass-4k {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Premium Ivory Surface */
+  .premium-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 
-      0 8px 32px 0 rgba(0, 0, 0, 0.8),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      0 10px 40px -10px rgba(45, 28, 14, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.4);
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .glass-4k:hover {
-    border-color: rgba(0, 242, 255, 0.3);
+  .premium-card:hover {
+    border-color: rgba(155, 21, 38, 0.2);
     box-shadow: 
-      0 12px 48px 0 rgba(0, 242, 255, 0.15),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-  }
-
-  .neon-glow-cyan {
-    filter: drop-shadow(0 0 8px rgba(0, 242, 255, 0.5));
-  }
-  
-  .neon-glow-purple {
-    filter: drop-shadow(0 0 8px rgba(112, 0, 255, 0.5));
-  }
-
-  .text-neon {
-    text-shadow: 0 0 10px currentColor;
+      0 20px 60px -15px rgba(155, 21, 38, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    transform: translateY(-4px);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -79,12 +62,17 @@
     scrollbar-width: none;
   }
 
-  /* 3D Depth Utilities */
-  .depth-1 { transform: translateZ(10px); }
-  .depth-2 { transform: translateZ(20px); }
-  .depth-3 { transform: translateZ(40px); }
+  /* Custom Red Accents */
+  .text-red-accent {
+    color: #9b1526;
+    text-shadow: 0 0 20px rgba(155, 21, 38, 0.1);
+  }
 
-  .perspective-1000 {
-    perspective: 1000px;
+  .bg-red-accent {
+    background: linear-gradient(135deg, #9b1526 0%, #800609 100%);
+  }
+
+  .border-red-accent {
+    border-color: rgba(155, 21, 38, 0.15);
   }
 }
