@@ -46,8 +46,6 @@ import {
   Navigation,
   Compass,
   CheckSquare,
-  Zap,
-  Activity,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { rtdb as db } from "../firebase";
@@ -57,9 +55,9 @@ import heroRotas from "../assets/images/hero_cinematic_rotas_1790216246671.jpg";
 // Tech Corner Component
 function TechCorner({ className }: { className?: string }) {
   return (
-    <div className={cn("w-4 h-4 pointer-events-none select-none z-20", className)}>
-      <div className="w-full h-[3px] bg-[#9b1526] shadow-[0_0_10px_rgba(155,21,38,0.4)]" />
-      <div className="w-[3px] h-full bg-[#9b1526] shadow-[0_0_10px_rgba(155,21,38,0.4)]" />
+    <div className={cn("w-3.5 h-3.5 pointer-events-none select-none z-20", className)}>
+      <div className="w-full h-[2px] bg-gradient-to-r from-red-500 to-transparent" />
+      <div className="w-[2px] h-full bg-gradient-to-b from-red-500 to-transparent" />
     </div>
   );
 }
@@ -824,10 +822,10 @@ export default function Controle({ onBack }: ControleProps) {
   // Navigation Tabs: 'gerador', 'unidades' or 'placas'
   const [activeTab, setActiveTab] = useState<"gerador" | "placas" | "unidades">("gerador");
 
-  // PRE ALERTA GR Column View Mode: 'normal', 'minimized', 'maximized'
+  // PRE ALERTA GR Column View Mode: 'normal' (padrão), 'minimized' (recolhido), 'maximized' (largura total)
   const [preAlertaMode, setPreAlertaMode] = useState<"normal" | "minimized" | "maximized">("normal");
   // Zoom state for Formulário de Controle and Veículo & Carga when preAlertaMode === 'minimized'
-  const [colunasZoom, setColunasZoom] = useState<number>(1);
+  const [colunasZoom, setColunasZoom] = useState<number>(1.15);
 
   // --- UNIDADES TAB STATE ---
   const [unidadesPastedText, setUnidadesPastedText] = useState("");
@@ -2460,598 +2458,3213 @@ Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-6 p-4 md:p-6 lg:p-8 bg-[#fdfaf6] min-h-screen overflow-y-auto no-scrollbar font-sans text-stone-900">
-      {/* 1. PREMIUM HEADER SECTION */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 bg-white p-8 rounded-[40px] border border-stone-200/60 shadow-[0_20px_50px_rgba(155,21,38,0.04)]"
-      >
-        <div className="flex items-center gap-6">
-          <button
-            onClick={onBack}
-            className="p-4 rounded-[20px] bg-stone-50 border border-stone-100 text-stone-600 hover:bg-[#9b1526] hover:text-white hover:border-[#9b1526] transition-all shadow-sm active:scale-95 group"
-          >
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          </button>
+    <div className="w-full relative z-10 max-w-full mx-auto flex flex-col font-sans space-y-5 text-stone-900 min-h-screen">
+      
+      {/* 1. TOP HEADER (INTERFACE PAGINA ROTAS) */}
+      <div className="bg-white/70 backdrop-blur-xl rounded-[28px] p-4 sm:p-5 border border-white/40 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 border border-[#d6ccbe] cursor-pointer transition-all shrink-0 flex items-center justify-center shadow-xs"
+              title="Voltar"
+            >
+              <ArrowRight size={18} className="rotate-180" />
+            </button>
+          )}
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-8 h-[2px] bg-[#9b1526]" />
-              <h1 className="text-3xl font-black tracking-tighter uppercase italic text-stone-950">
-                PGR <span className="text-[#9b1526] not-italic">Control</span>
-              </h1>
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white border border-[#d6ccbe] text-stone-600 text-[10px] font-mono font-bold uppercase tracking-wider mb-1">
+              <span>// OPERACIONAL 3 CORAÇÕES</span>
             </div>
-            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] ml-11">
-              Gerador de Pré-Alertas e Monitoramento Tático
+            <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight font-heading flex items-center gap-2">
+              <Sliders size={22} className="text-[#831828]" />
+              Central de Controle PGR
+            </h1>
+            <p className="text-xs text-stone-500 font-sans">
+              Gerador inteligente de controle, pré-alerta, monitoramento e gestão de frota integrada.
             </p>
           </div>
         </div>
 
-        {/* TAB NAVIGATION - Premium Minimalist Style */}
-        <div className="flex bg-stone-50 p-2 rounded-[28px] border border-stone-100 shadow-inner">
-          {[
-            { id: "gerador", label: "Gerador", icon: Zap },
-            { id: "unidades", label: "Unidades", icon: Package },
-            { id: "placas", label: "Placas", icon: Layers },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={cn(
-                "flex items-center gap-2.5 px-8 py-3 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all duration-300 relative group",
-                activeTab === tab.id
-                  ? "bg-white text-[#9b1526] shadow-[0_10px_25px_rgba(155,21,38,0.1)] border border-stone-100"
-                  : "text-stone-400 hover:text-stone-600"
-              )}
-            >
-              <tab.icon size={16} className={cn("transition-transform group-hover:scale-110", activeTab === tab.id ? "text-[#9b1526]" : "text-stone-300")} />
-              {tab.label}
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#9b1526] rounded-full"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-      <AnimatePresence mode="wait">
-        {activeTab === "gerador" && (
-          <motion.div
-            key="gerador"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            className="grid grid-cols-1 xl:grid-cols-12 gap-8"
+        {/* Navigation Tabs */}
+        <div className="flex items-center bg-[#f1ebe1] p-1.5 rounded-2xl border border-[#d6ccbe] shadow-inner gap-1.5 flex-wrap sm:flex-nowrap">
+          <button
+            type="button"
+            onClick={() => setActiveTab("gerador")}
+            className={cn(
+              "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider transition-all cursor-pointer",
+              activeTab === "gerador"
+                ? "bg-[#1f1915] text-white shadow-md"
+                : "text-stone-700 hover:text-stone-950 hover:bg-white/60"
+            )}
           >
-            {/* LEFT COLUMN: CONTROL & VEHICLE FORMS */}
-            <div className={cn(
-              "xl:col-span-8 flex flex-col gap-8 transition-all duration-500",
-              preAlertaMode === "maximized" && "xl:col-span-12",
-              preAlertaMode === "minimized" && "xl:col-span-1 opacity-20 pointer-events-none scale-95 blur-sm"
-            )}>
-              {/* FORM CARD 1: FORMULÁRIO DE CONTROLE */}
-              <div className="bg-white rounded-[40px] border border-stone-200/60 shadow-[0_20px_50px_rgba(155,21,38,0.03)] overflow-hidden">
-                <div className="bg-[#9b1526] px-10 py-6 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-[14px] bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
-                      <FileText size={20} />
-                    </div>
-                    <div>
-                      <h2 className="text-[13px] font-black text-white uppercase tracking-[0.2em]">Formulário de Controle</h2>
-                      <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">Definições da Operação</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={handleClear}
-                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-black uppercase text-[10px] tracking-widest px-5 py-2.5 rounded-full border border-white/10 transition-all active:scale-95"
-                    >
-                      <Trash2 size={12} /> Limpar Tudo
-                    </button>
-                  </div>
-                </div>
+            <Sliders size={14} />
+            <span>PRE ALERTA GR</span>
+          </button>
 
-                <div className="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Origem Selector */}
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Origem</label>
-                    <div className="relative group">
-                      <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 group-focus-within:text-[#9b1526] transition-colors" />
-                      <select
-                        value={origem}
-                        onChange={(e) => setOrigem(e.target.value)}
-                        className="w-full bg-stone-50 border border-stone-100 rounded-[20px] pl-11 pr-4 py-4 text-[12px] font-bold text-stone-900 outline-none focus:ring-2 focus:ring-[#9b1526]/20 focus:border-[#9b1526] transition-all appearance-none cursor-pointer hover:bg-stone-100/50"
-                      >
-                        {ORIGEM_OPCOES.map((o) => (
-                          <option key={o} value={o}>{o}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("placas")}
+            className={cn(
+              "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "placas"
+                ? "bg-[#831828] text-white shadow-md shadow-red-950/20"
+                : "text-stone-700 hover:text-stone-950 hover:bg-white/60"
+            )}
+          >
+            <Truck size={14} />
+            <span>SANTA LUZIA / MG</span>
+            {parsedPlacas.length > 0 && (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-black font-mono shadow-xs",
+                  activeTab === "placas"
+                    ? "bg-white text-[#831828]"
+                    : "bg-[#831828] text-white"
+                )}
+              >
+                {parsedPlacas.length}
+              </span>
+            )}
+          </button>
 
-                  {/* Destino Final */}
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Destino Final</label>
-                    <div className="relative group">
-                      <Navigation size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 group-focus-within:text-[#9b1526] transition-colors" />
-                      <input
-                        type="text"
-                        value={destino}
-                        onChange={(e) => setDestino(e.target.value.toUpperCase())}
-                        className="w-full bg-stone-50 border border-stone-100 rounded-[20px] pl-11 pr-4 py-4 text-[12px] font-bold text-stone-900 outline-none focus:ring-2 focus:ring-[#9b1526]/20 focus:border-[#9b1526] transition-all hover:bg-stone-100/50"
-                        placeholder="EX: RECIFE/PE"
-                      />
-                    </div>
-                  </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("unidades")}
+            className={cn(
+              "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider transition-all cursor-pointer relative",
+              activeTab === "unidades"
+                ? "bg-[#1d4ed8] text-white shadow-md shadow-blue-950/20"
+                : "text-stone-700 hover:text-stone-950 hover:bg-white/60"
+            )}
+          >
+            <Compass size={14} />
+            <span>CUIABÁ / MT</span>
+            {parsedUnidades.carretas.length > 0 && (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-black font-mono shadow-xs",
+                  activeTab === "unidades"
+                    ? "bg-white text-[#1d4ed8]"
+                    : "bg-[#1d4ed8] text-white"
+                )}
+              >
+                {parsedUnidades.carretas.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
 
-                  {/* Rota (Auto-filled or manual) */}
-                  <div className="space-y-3 lg:col-span-1">
-                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Rota Operacional</label>
-                    <div className="relative group">
-                      <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 group-focus-within:text-[#9b1526] transition-colors" />
-                      <input
-                        type="text"
-                        value={rota1}
-                        onChange={(e) => setRota1(e.target.value)}
-                        className="w-full bg-stone-50 border border-stone-100 rounded-[20px] pl-11 pr-4 py-4 text-[12px] font-bold text-stone-900 outline-none focus:ring-2 focus:ring-[#9b1526]/20 focus:border-[#9b1526] transition-all hover:bg-stone-100/50"
-                        placeholder="Auto-preenchida ao importar"
-                      />
+
+
+      {/* Main Workspace Layout */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden pt-1 bg-canvas">
+        {/* TAB CONTENT: Placas (SANTA LUZIA / MG) */}
+        {activeTab === "placas" && (
+          <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
+            {/* Main Station Cockpit */}
+            <div className="bg-white rounded-3xl border border-[#D1E1EB] shadow-lg p-6 sm:p-8 flex flex-col gap-6 relative overflow-hidden">
+              {/* Decorative top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#B32025] via-red-600 to-amber-500" />
+
+              {/* Station Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B32025] to-[#7f1317] text-white p-3 shadow-md shadow-red-900/30 flex items-center justify-center shrink-0 border border-red-800">
+                    <Truck size={24} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-[#9b1526] border border-red-300">
+                        Hub Logístico
+                      </span>
+                      <span className="text-xs font-mono font-bold text-stone-400">
+                        SANTA LUZIA / MG
+                      </span>
                     </div>
+                    <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E293B] uppercase tracking-tight mt-1 flex items-center gap-2">
+                      Gestão & Importação de Viagens
+                    </h2>
                   </div>
                 </div>
               </div>
 
-              {/* FORM CARD 2: VEÍCULO & CARGA */}
-              <div className="bg-white rounded-[40px] border border-stone-200/60 shadow-[0_20px_50px_rgba(155,21,38,0.03)] overflow-hidden">
-                <div className="bg-stone-900 px-10 py-6 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-[14px] bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
-                      <Truck size={20} />
-                    </div>
-                    <div>
-                      <h2 className="text-[13px] font-black text-white uppercase tracking-[0.2em]">Veículo & Carga</h2>
-                      <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">Informações de Embarque</span>
-                    </div>
+              {/* Data Ingestion Deck */}
+              <div className="bg-stone-50 border-2 border-stone-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
+                {placasPastedData && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPlacasPastedData("");
+                        setPlacasFilter("");
+                      }}
+                      className="px-3 py-1 bg-white hover:bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-xs"
+                    >
+                      <Trash2 size={13} />
+                      <span>Limpar</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={handleClearVeiculo}
-                    className="text-[9px] font-black text-stone-400 hover:text-[#9b1526] uppercase tracking-[0.3em] transition-colors"
-                  >
-                    Limpar Seção
-                  </button>
-                </div>
+                )}
 
-                <div className="p-10 flex flex-col gap-10">
-                  {/* Plates Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Placa Cavalo</label>
-                      <input
-                        type="text"
-                        value={cavalo}
-                        onChange={(e) => setCavalo(e.target.value.toUpperCase())}
-                        className="w-full bg-[#fdfaf6] border border-stone-200 rounded-[24px] px-6 py-4 text-2xl font-black text-center tracking-tighter text-stone-950 focus:ring-4 focus:ring-[#9b1526]/5 focus:border-[#9b1526] transition-all outline-none shadow-sm"
-                        placeholder="ABC-1234"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Placa Carreta 1</label>
-                      <input
-                        type="text"
-                        value={carreta1}
-                        onChange={(e) => setCarreta1(e.target.value.toUpperCase())}
-                        className="w-full bg-[#fdfaf6] border border-stone-200 rounded-[24px] px-6 py-4 text-2xl font-black text-center tracking-tighter text-stone-950 focus:ring-4 focus:ring-[#9b1526]/5 focus:border-[#9b1526] transition-all outline-none shadow-sm"
-                        placeholder="XYZ-5678"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Placa Carreta 2</label>
-                      <input
-                        type="text"
-                        value={carreta2}
-                        disabled={numCarretas === 1}
-                        onChange={(e) => setCarreta2(e.target.value.toUpperCase())}
-                        className="w-full bg-[#fdfaf6] border border-stone-200 rounded-[24px] px-6 py-4 text-2xl font-black text-center tracking-tighter text-stone-950 focus:ring-4 focus:ring-[#9b1526]/5 focus:border-[#9b1526] transition-all outline-none shadow-sm disabled:opacity-30 disabled:grayscale"
-                        placeholder={numCarretas === 1 ? "INDISPONÍVEL" : "KJL-9012"}
-                      />
-                    </div>
-                  </div>
+                <textarea
+                  value={placasPastedData}
+                  onChange={(e) => setPlacasPastedData(e.target.value)}
+                  placeholder={`Cole aqui as linhas da planilha de Santa Luzia...\nExemplo de colunas suportadas:\nTRANSPORTADOR | CONDUTOR | CAVALO | CARRETA | CARRETA 2 | ORIGEM | DESTINO | VALOR NF | TECNOLOGIA`}
+                  className="w-full h-32 bg-white border-2 border-stone-300 focus:border-[#B32025] rounded-xl p-3.5 text-xs font-mono text-stone-900 outline-none transition-all placeholder:text-stone-400 shadow-inner resize-y leading-relaxed"
+                />
+              </div>
 
-                  {/* NF & Values Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] block pl-1">NF Início</label>
-                      <input
-                        type="text"
-                        value={nfInicio}
-                        onChange={(e) => setNfInicio(e.target.value)}
-                        className="w-full bg-stone-50 border border-stone-100 rounded-2xl px-5 py-3.5 text-xs font-black text-stone-900 focus:border-[#9b1526] outline-none transition-all"
-                      />
+              {/* Parsed Results Section */}
+              {parsedPlacas.length > 0 ? (
+                <div className="flex flex-col gap-4 pt-2">
+                  {/* Control Toolbar: Search, Filters, and View Switcher */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-[#1f1915] text-white p-4 rounded-2xl shadow-md">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-stone-300">
+                          Veículos Identificados:
+                        </span>
+                        <span className="bg-[#9b1526] text-white text-xs font-mono font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                          {filteredPlacas.length} de {parsedPlacas.length}
+                        </span>
+                      </div>
+
+                      {/* Quick Transporter Filter */}
+                      {santaLuziaStats.transps.length > 1 && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-stone-400 uppercase">
+                            Transportadora:
+                          </span>
+                          <select
+                            value={placasSelectedTransp}
+                            onChange={(e) => setPlacasSelectedTransp(e.target.value)}
+                            className="bg-[#2d241e] border border-stone-700 text-white rounded-lg text-xs font-bold px-2.5 py-1 outline-none cursor-pointer"
+                          >
+                            <option value="TODAS">Todas ({santaLuziaStats.transps.length})</option>
+                            {santaLuziaStats.transps.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] block pl-1">NF Fim</label>
-                      <input
-                        type="text"
-                        value={nfFim}
-                        onChange={(e) => setNfFim(e.target.value)}
-                        className="w-full bg-stone-50 border border-stone-100 rounded-2xl px-5 py-3.5 text-xs font-black text-stone-900 focus:border-[#9b1526] outline-none transition-all"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-[#dfb15b] uppercase tracking-[0.2em] block pl-1">Valor da Carga</label>
-                      <div className="relative">
-                        <DollarSign size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#dfb15b]" />
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Search Bar */}
+                      <div className="relative w-full sm:w-64">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                         <input
                           type="text"
-                          value={valorCarga}
-                          onChange={(e) => setValorCarga(e.target.value)}
-                          className="w-full bg-stone-50 border border-stone-100 rounded-2xl pl-10 pr-5 py-3.5 text-xs font-black text-stone-900 focus:border-[#dfb15b] outline-none transition-all"
-                          placeholder="R$ 0,00"
+                          value={placasFilter}
+                          onChange={(e) => setPlacasFilter(e.target.value)}
+                          placeholder="Buscar placa, condutor, destino..."
+                          className="w-full pl-9 pr-3 py-1.5 bg-[#2d241e] border border-stone-700 rounded-xl text-xs font-semibold text-white placeholder:text-stone-400 outline-none focus:border-red-500 transition-colors"
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] block pl-1">Motorista</label>
-                      <input
-                        type="text"
-                        value={motorista}
-                        onChange={(e) => setMotorista(e.target.value.toUpperCase())}
-                        className="w-full bg-stone-50 border border-stone-100 rounded-2xl px-5 py-3.5 text-xs font-black text-stone-900 focus:border-[#9b1526] outline-none transition-all truncate"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* RIGHT COLUMN: PRE-ALERTA PREVIEW */}
-            <div className={cn(
-              "xl:col-span-4 flex flex-col gap-6 transition-all duration-500",
-              preAlertaMode === "maximized" && "xl:col-span-12",
-              preAlertaMode === "minimized" && "xl:col-span-11"
-            )}>
-              <div className="sticky top-6">
-                <div className="bg-white rounded-[40px] border border-stone-200/60 shadow-[0_30px_60px_-15px_rgba(155,21,38,0.1)] overflow-hidden">
-                  <div className="bg-stone-50 px-8 py-5 border-b border-stone-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-[#9b1526] animate-pulse" />
-                      <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest">Pré-Alerta Preview</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => setPreAlertaMode(preAlertaMode === "maximized" ? "normal" : "maximized")}
-                        className="p-2 rounded-lg hover:bg-stone-200 text-stone-400 hover:text-stone-600 transition-colors"
-                        title={preAlertaMode === "maximized" ? "Reduzir" : "Expandir"}
-                      >
-                        {preAlertaMode === "maximized" ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-8">
-                    {/* EMAIL SUBJECT BOX */}
-                    <div className="mb-8 p-6 bg-stone-50 rounded-[24px] border border-stone-100 shadow-inner group">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Assunto do E-mail</span>
+                      {/* View Switcher: Cards vs Table */}
+                      <div className="flex items-center bg-[#2d241e] p-1 rounded-xl border border-stone-700">
                         <button
-                          onClick={() => {
-                            const subject = `PRE ALERTA DE ISCA EMBARCADA ${dataEnviada} - ${cavalo} - ${destino}`;
-                            navigator.clipboard.writeText(subject);
-                            setCopiedAssunto(true);
-                            setTimeout(() => setCopiedAssunto(false), 2000);
-                          }}
-                          className="flex items-center gap-2 text-[9px] font-black text-[#9b1526] hover:text-[#831220] transition-colors"
+                          type="button"
+                          onClick={() => setPlacasViewMode("cards")}
+                          className={cn(
+                            "px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                            placasViewMode === "cards"
+                              ? "bg-white text-stone-900 shadow-sm"
+                              : "text-stone-400 hover:text-white"
+                          )}
+                          title="Visualização em Cards Bento"
                         >
-                          {copiedAssunto ? <CheckCircle2 size={12} /> : <Copy size={12} />}
-                          {copiedAssunto ? "COPIADO" : "COPIAR"}
+                          <LayoutGrid size={13} />
+                          <span>Cards</span>
                         </button>
-                      </div>
-                      <p className="text-[13px] font-black text-stone-950 leading-tight uppercase tracking-tight">
-                        PRE ALERTA DE ISCA EMBARCADA {dataEnviada} - {cavalo || "___"} - {destino || "___"}
-                      </p>
-                    </div>
-
-                    {/* EMAIL CONTENT PREVIEW */}
-                    <div className="bg-[#fcfbf9] border border-stone-200 rounded-[32px] p-8 shadow-sm overflow-hidden relative group">
-                      <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button
-                          onClick={handleCopyToEmail}
-                          className="p-3 bg-[#9b1526] text-white rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
-                        >
-                          <Send size={18} />
-                        </button>
-                      </div>
-                      
-                      <div className="font-sans text-[12px] leading-relaxed text-stone-800">
-                        <div className="mb-4 font-black text-stone-950 text-sm">{saudacao}</div>
-                        
-                        <div className={cn(
-                          "inline-block px-4 py-2 rounded-xl mb-6 font-black text-[10px] uppercase tracking-wider text-white shadow-md",
-                          isCuiabaOrigem ? "bg-amber-500" : "bg-[#9b1526]"
-                        )}>
-                          {alertaResgate}
-                        </div>
-
-                        <div className="space-y-3 mb-8">
-                          <p className="font-black text-stone-950 text-[11px] uppercase tracking-widest">{infoAbaixo}</p>
-                          <div className="pl-4 border-l-4 border-stone-200 space-y-2">
-                            <p className="font-bold text-stone-700 italic">• {rota1}</p>
-                            <p className="font-bold text-stone-700 italic">• {instrucao1}</p>
-                          </div>
-                        </div>
-
-                        {/* DATA TABLE VISUALIZER */}
-                        <div className="border border-stone-200 rounded-[20px] overflow-hidden shadow-sm bg-white mb-6">
-                          <div className="grid grid-cols-2 bg-stone-900 text-white p-3 border-b border-stone-800">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-stone-400">Motorista</span>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-stone-400">Cavalo</span>
-                          </div>
-                          <div className="grid grid-cols-2 p-3 border-b border-stone-100">
-                            <span className="text-[11px] font-black truncate">{motorista || "---"}</span>
-                            <span className="text-[11px] font-black text-[#9b1526]">{cavalo || "---"}</span>
-                          </div>
-                          <div className="grid grid-cols-3 bg-stone-50 p-2 text-[9px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
-                            <span>Isca</span>
-                            <span>Produto</span>
-                            <span>Destino</span>
-                          </div>
-                          <div className="grid grid-cols-3 p-3">
-                            <span className="text-[10px] font-black text-[#9b1526]">{isca1 || "---"}</span>
-                            <span className="text-[10px] font-black">{produto1 || "---"}</span>
-                            <span className="text-[10px] font-black">{destino || "---"}</span>
-                          </div>
-                        </div>
-
                         <button
-                          onClick={handleCopyToEmail}
-                          className="w-full py-4 bg-stone-900 hover:bg-black text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
+                          type="button"
+                          onClick={() => setPlacasViewMode("table")}
+                          className={cn(
+                            "px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                            placasViewMode === "table"
+                              ? "bg-white text-stone-900 shadow-sm"
+                              : "text-stone-400 hover:text-white"
+                          )}
+                          title="Visualização em Planilha Corporativa"
                         >
-                          {copied ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Mail size={16} />}
-                          {copied ? "COPIADO PARA O E-MAIL" : "COPIAR PARA E-MAIL"}
+                          <List size={13} />
+                          <span>Tabela</span>
                         </button>
                       </div>
                     </div>
                   </div>
+
+                  {/* VIEW 1: BENTO CARDS */}
+                  {placasViewMode === "cards" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {filteredPlacas.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-white border-2 border-stone-200 hover:border-[#B32025] rounded-3xl p-5 flex flex-col justify-between gap-4 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
+                        >
+                          {/* Top Accent Header */}
+                          <div className="flex flex-col gap-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              {/* Mercosul Placa Style */}
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <div className="border border-stone-400 rounded-lg overflow-hidden shadow-xs">
+                                  <div className="bg-[#003399] text-white text-[7px] font-black uppercase px-2 py-0.2 tracking-widest text-center">
+                                    BRASIL
+                                  </div>
+                                  <div className="bg-white text-stone-900 font-mono font-black text-xs px-2 py-0.5 tracking-wider flex items-center gap-1">
+                                    <Truck size={12} className="text-[#9b1526]" />
+                                    {item.cavalo || "S/ CAVALO"}
+                                  </div>
+                                </div>
+
+                                {item.carreta1 && (
+                                  <span className="bg-stone-100 text-stone-800 border border-stone-300 text-[10px] font-black font-mono uppercase px-2 py-1 rounded-lg">
+                                    CR 1: {item.carreta1}
+                                  </span>
+                                )}
+                                {item.carreta2 && (
+                                  <span className="bg-stone-100 text-stone-800 border border-stone-300 text-[10px] font-black font-mono uppercase px-2 py-1 rounded-lg">
+                                    CR 2: {item.carreta2}
+                                  </span>
+                                )}
+                              </div>
+
+                              {item.rawRowsCount > 1 && (
+                                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase shrink-0">
+                                  {item.rawRowsCount} Linhas
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Destination Route Banner */}
+                            <div className="bg-gradient-to-r from-red-50 to-stone-50 border border-red-200/80 p-2.5 rounded-xl flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[#9b1526] flex items-center gap-1">
+                                <MapPin size={12} className="shrink-0" /> Destino:
+                              </span>
+                              <span className="text-xs font-black text-stone-900 uppercase truncate text-right">
+                                {item.destino || "NÃO INFORMADO"}
+                              </span>
+                            </div>
+
+                            {/* Vehicle Details */}
+                            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-stone-700">
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase text-stone-400 shrink-0 w-24 flex items-center gap-1">
+                                  <User size={11} /> Condutor:
+                                </span>
+                                <span className="font-bold text-stone-900 text-right truncate">
+                                  {item.condutor || "NÃO INFORMADO"}
+                                </span>
+                              </div>
+
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase text-stone-400 shrink-0 w-24 flex items-center gap-1">
+                                  <Building2 size={11} /> Empresa:
+                                </span>
+                                <span className="font-bold text-stone-900 text-right truncate">
+                                  {item.transportador || "NÃO INFORMADO"}
+                                </span>
+                              </div>
+
+                              {item.origem && (
+                                <div className="flex items-start justify-between gap-2 pt-1 border-t border-stone-200">
+                                  <span className="text-[10px] font-black uppercase text-stone-400 shrink-0 w-24">
+                                    Origem:
+                                  </span>
+                                  <span className="font-semibold text-stone-600 text-right truncate">
+                                    {item.origem}
+                                  </span>
+                                </div>
+                              )}
+
+                              {item.tecnologia && (
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[10px] font-black uppercase text-stone-400 shrink-0 w-24 flex items-center gap-1">
+                                    <Cpu size={11} /> Tecnologia:
+                                  </span>
+                                  <span className="font-semibold text-stone-700 text-right truncate">
+                                    {item.tecnologia}
+                                  </span>
+                                </div>
+                              )}
+
+                              {item.valorNf && (
+                                <div className="flex items-start justify-between gap-2 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 mt-1">
+                                  <span className="text-[10px] font-black uppercase text-emerald-800 shrink-0 w-24 flex items-center gap-1">
+                                    <DollarSign size={11} /> VALOR NF:
+                                  </span>
+                                  <span className="font-mono font-black text-emerald-700 text-right truncate text-xs">
+                                    {item.valorNf}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleImportPlacaItem(item)}
+                            className="w-full py-3 bg-[#1E293B] hover:bg-[#9b1526] text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-98"
+                          >
+                            <span>Importar para Gerador PGR</span>
+                            <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* VIEW 2: CORPORATE TABLE VIEW */
+                    <div className="bg-white border border-stone-200 rounded-3xl overflow-hidden shadow-sm">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs text-stone-700">
+                          <thead className="bg-stone-100 border-b border-stone-200 text-[10px] font-black uppercase tracking-wider text-stone-600">
+                            <tr>
+                              <th className="px-4 py-3">#</th>
+                              <th className="px-4 py-3">Cavalo</th>
+                              <th className="px-4 py-3">Carretas</th>
+                              <th className="px-4 py-3">Condutor</th>
+                              <th className="px-4 py-3">Transportadora</th>
+                              <th className="px-4 py-3">Destino</th>
+                              <th className="px-4 py-3">Valor NF</th>
+                              <th className="px-4 py-3 text-right">Ação</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-stone-200">
+                            {filteredPlacas.map((item, idx) => (
+                              <tr key={item.id} className="hover:bg-red-50/50 transition-colors">
+                                <td className="px-4 py-3 font-mono font-bold text-stone-400">
+                                  {idx + 1}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="font-mono font-black text-stone-900 bg-stone-100 border border-stone-300 px-2 py-0.5 rounded uppercase">
+                                    {item.cavalo || "S/ PLACA"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 font-mono font-bold text-stone-700">
+                                  {item.carreta1 || "---"}
+                                  {item.carreta2 && ` / ${item.carreta2}`}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-stone-900">
+                                  {item.condutor || "NÃO INFORMADO"}
+                                </td>
+                                <td className="px-4 py-3 font-medium text-stone-700">
+                                  {item.transportador || "NÃO INFORMADO"}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-[#9b1526]">
+                                  {item.destino || "NÃO INFORMADO"}
+                                </td>
+                                <td className="px-4 py-3 font-mono font-black text-emerald-700">
+                                  {item.valorNf || "---"}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleImportPlacaItem(item)}
+                                    className="px-3 py-1.5 bg-[#9b1526] hover:bg-red-700 text-white rounded-xl text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                                  >
+                                    <span>Importar</span>
+                                    <ArrowRight size={12} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                /* Empty State */
+                <div className="bg-stone-50 border-2 border-dashed border-stone-300 rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-white border border-stone-200 text-[#9b1526] flex items-center justify-center shadow-md">
+                    <Truck size={32} />
+                  </div>
+                  <div className="max-w-md">
+                    <h3 className="text-base font-black uppercase text-stone-900 tracking-wider">
+                      Nenhuma viagem carregada no momento
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-1">
+                      Copie as linhas da sua planilha Google Sheets ou Excel com as colunas de frotas e cole no campo acima, ou clique abaixo para testar com uma carga real.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPlacasPastedData(SAMPLE_PLACAS_SHEET_DATA)}
+                    className="px-4 py-2.5 bg-[#9b1526] hover:bg-red-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+                  >
+                    <Sparkles size={14} />
+                    <span>Carregar Carga de Exemplo de Santa Luzia</span>
+                  </button>
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
         )}
 
+        {/* TAB CONTENT: Unidades (CUIABÁ / MT) */}
         {activeTab === "unidades" && (
-          <motion.div
-            key="unidades"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="flex flex-col gap-8"
-          >
-            <div className="bg-white rounded-[40px] border border-stone-200/60 shadow-[0_20px_50px_rgba(155,21,38,0.03)] p-10">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-[#9b1526] flex items-center justify-center text-white">
-                  <Package size={24} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tight text-stone-950">Central de Unidades</h2>
-                  <p className="text-xs text-stone-400 font-bold uppercase tracking-widest">Processamento de Dados por Regional</p>
-                </div>
-              </div>
+          <div className="flex flex-col gap-6 max-w-full mx-auto w-full animate-fade-in">
+            {/* Main Station Cockpit */}
+            <div className="bg-white rounded-3xl border border-[#D1E1EB] shadow-lg p-6 sm:p-8 flex flex-col gap-6 relative overflow-hidden">
+              {/* Decorative top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-700 via-indigo-600 to-amber-500" />
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block pl-1">Área de Transferência</label>
-                  <textarea
-                    value={unidadesPastedText}
-                    onChange={(e) => setUnidadesPastedText(e.target.value)}
-                    className="w-full h-64 bg-stone-50 border border-stone-100 rounded-[32px] p-8 text-xs font-mono text-stone-700 outline-none focus:ring-4 focus:ring-[#9b1526]/5 focus:border-[#9b1526] transition-all resize-none shadow-inner"
-                    placeholder="Cole aqui os dados copiados da planilha de unidades..."
-                  />
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handlePasteClipboardUnidades}
-                      className="flex-1 py-5 bg-stone-900 hover:bg-black text-white rounded-[24px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3"
-                    >
-                      <ClipboardPaste size={16} /> Colar Dados
-                    </button>
-                    <button
-                      onClick={() => setUnidadesPastedText("")}
-                      className="px-10 py-5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-[24px] font-black text-[11px] uppercase tracking-[0.2em] transition-all"
-                    >
-                      Limpar
-                    </button>
+              {/* Station Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#E2E8F0]">
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 text-white p-3.5 shadow-md shadow-blue-900/30 flex items-center justify-center shrink-0 border border-blue-900">
+                    <Compass size={28} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-300">
+                        Terminal de Embarques
+                      </span>
+                      <span className="text-xs font-mono font-bold text-stone-400">
+                        CUIABÁ / MT
+                      </span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E293B] uppercase tracking-tight mt-1 flex items-center gap-2">
+                      Processador de Embarques & Iscas
+                    </h2>
+                    <p className="text-xs text-[#64748B] font-medium mt-0.5 max-w-2xl">
+                      Recepção de mensagens operacionais da Unidade Cuiabá com extração automatizada das 5 colunas de iscas e despacho direto ao Pré-Alerta PGR.
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-[#fcfbf9] rounded-[32px] border border-stone-200 p-8 flex flex-col gap-8">
-                  <h3 className="text-[11px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100 pb-4">Resultado do Processamento</h3>
-                  
-                  {parsedUnidades.carretas.length > 0 ? (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-5 bg-white rounded-2xl border border-stone-100 shadow-sm">
-                          <span className="text-[9px] font-black text-stone-400 uppercase block mb-1">Motorista</span>
-                          <p className="text-sm font-black text-stone-900 truncate uppercase">{parsedUnidades.motorista || "Não detectado"}</p>
-                        </div>
-                        <div className="p-5 bg-white rounded-2xl border border-stone-100 shadow-sm">
-                          <span className="text-[9px] font-black text-stone-400 uppercase block mb-1">Cavalo</span>
-                          <p className="text-sm font-black text-[#9b1526] uppercase">{parsedUnidades.cavalo || "Não detectado"}</p>
-                        </div>
-                      </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUnidadesPastedText(SAMPLE_UNIDADES_TEXT)}
+                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                    title="Carrega a mensagem exemplo recebida da unidade Cuiabá"
+                  >
+                    <Sparkles size={14} className="text-blue-600" />
+                    <span>Carregar Ficha Real Cuiabá</span>
+                  </button>
+                  {unidadesPastedText && (
+                    <button
+                      type="button"
+                      onClick={() => setUnidadesPastedText("")}
+                      className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                    >
+                      <Trash2 size={14} />
+                      <span>Limpar</span>
+                    </button>
+                  )}
+                </div>
+              </div>
 
-                      <div className="space-y-3">
-                         <span className="text-[9px] font-black text-stone-400 uppercase block pl-1">Carretas ({parsedUnidades.carretas.length})</span>
-                         {parsedUnidades.carretas.map((c, i) => (
-                           <div key={i} className="p-4 bg-white rounded-xl border border-stone-100 shadow-sm flex items-center justify-between">
-                             <div className="flex items-center gap-4">
-                               <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 font-black text-[10px]">{i+1}</div>
-                               <div>
-                                 <p className="text-xs font-black text-stone-900">{c.carreta}</p>
-                                 <p className="text-[10px] font-bold text-stone-400 uppercase">{c.isca}</p>
-                               </div>
-                             </div>
-                             <span className="text-[10px] font-black text-[#9b1526] bg-[#9b1526]/5 px-3 py-1 rounded-full">{c.produto}</span>
-                           </div>
-                         ))}
-                      </div>
-
+              {/* Dual-Pane Split Workspace */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* LEFT PANE: Input Console (5 cols) */}
+                <div className="lg:col-span-5 flex flex-col gap-4">
+                  <div className="bg-stone-50 border-2 border-stone-200 rounded-3xl p-5 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-black uppercase tracking-wider text-stone-900 flex items-center gap-1.5">
+                        <FileText size={16} className="text-blue-600" />
+                        Mensagem da Unidade Cuiabá:
+                      </label>
                       <button
-                        onClick={() => handleImportUnidadeData(parsedUnidades)}
-                        className="w-full py-5 bg-[#9b1526] hover:bg-[#831220] text-white rounded-[24px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-[0_20px_40px_rgba(155,21,38,0.2)] active:scale-95 mt-4"
+                        type="button"
+                        onClick={handlePasteClipboardUnidades}
+                        className="px-2.5 py-1 bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
                       >
-                        Importar para o Gerador →
+                        <ClipboardPaste size={12} className="text-blue-600" />
+                        <span>Colar WhatsApp</span>
+                      </button>
+                    </div>
+
+                    <textarea
+                      value={unidadesPastedText}
+                      onChange={(e) => setUnidadesPastedText(e.target.value)}
+                      placeholder={`Cole a mensagem enviada pelo time de Cuiabá...\n\nExemplo estruturado das 5 colunas:\nRBV2C89 - R100001239 - LADO DIREITO SUPERIOR BATIDO - 12211016 - 305124\n\nOu dados completos:\nData do embarque: 02/09/2026\nPlaca do cavalo: RFX9E81\nPlaca do Baú: RBV2C89 - R100001239 - 12211016 - LADO DIREITO SUPERIOR\nNF : 305124\nDestino: CAMPO GRANDE - MS\nMotorista: Diego Pereira\nTransportadora: Ledfran`}
+                      className="w-full h-72 bg-white border-2 border-stone-300 focus:border-blue-600 rounded-2xl p-4 text-xs font-mono text-stone-900 outline-none transition-all placeholder:text-stone-400 shadow-inner resize-y leading-relaxed"
+                    />
+
+                    {/* Live Parser Diagnostic Checklist */}
+                    <div className="bg-white border border-stone-200 rounded-2xl p-3.5 flex flex-col gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-stone-400 flex items-center justify-between">
+                        <span>Diagnóstico do Parser em Tempo Real:</span>
+                        <span className="text-blue-600 font-bold">Auto-Sync</span>
+                      </span>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.cavalo ? "text-emerald-600 font-bold" : "text-stone-400"}>
+                            {parsedUnidades.cavalo ? "✓" : "○"}
+                          </span>
+                          <span className="text-stone-600 truncate">
+                            Cavalo: <strong className="text-stone-900 font-mono">{parsedUnidades.cavalo || "Pendente"}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.motorista ? "text-emerald-600 font-bold" : "text-stone-400"}>
+                            {parsedUnidades.motorista ? "✓" : "○"}
+                          </span>
+                          <span className="text-stone-600 truncate">
+                            Condutor: <strong className="text-stone-900">{parsedUnidades.motorista || "Pendente"}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.destino ? "text-emerald-600 font-bold" : "text-stone-400"}>
+                            {parsedUnidades.destino ? "✓" : "○"}
+                          </span>
+                          <span className="text-stone-600 truncate">
+                            Destino: <strong className="text-stone-900">{parsedUnidades.destino || "Pendente"}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={parsedUnidades.carretas.length > 0 ? "text-emerald-600 font-bold" : "text-stone-400"}>
+                            {parsedUnidades.carretas.length > 0 ? "✓" : "○"}
+                          </span>
+                          <span className="text-stone-600 truncate">
+                            Carretas: <strong className="text-blue-700 font-mono">{parsedUnidades.carretas.length} Baú(s)</strong>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT PANE: Dispatch Cockpit & Live Preview (7 cols) */}
+                <div className="lg:col-span-7 flex flex-col gap-4">
+                  {parsedUnidades.cavalo || parsedUnidades.carretas.length > 0 || parsedUnidades.destino || parsedUnidades.motorista ? (
+                    <div className="bg-blue-50/40 border-2 border-blue-200 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 animate-fade-in">
+                      {/* Cockpit Header */}
+                      <div className="flex items-center justify-between border-b border-blue-200 pb-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <h3 className="text-xs font-black uppercase tracking-wider text-blue-950">
+                            Dados Reconhecidos & Prontos para o PGR
+                          </h3>
+                        </div>
+                        <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white shadow-xs">
+                          Origem: CUIABÁ / MT
+                        </span>
+                      </div>
+
+                      {/* General Vehicle & Driver HUD */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-stone-400 uppercase">
+                            Placa Cavalo
+                          </span>
+                          <span className="font-mono font-black text-sm text-stone-900">
+                            {parsedUnidades.cavalo || "S/ Placa"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-stone-400 uppercase">
+                            Motorista
+                          </span>
+                          <span className="font-bold text-xs text-stone-900 truncate">
+                            {parsedUnidades.motorista || "Não especificado"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-stone-400 uppercase">
+                            Transportadora
+                          </span>
+                          <span className="font-bold text-xs text-stone-900 truncate">
+                            {parsedUnidades.transportadora || "Não especificada"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white border border-blue-200 p-3 rounded-2xl flex flex-col gap-0.5 shadow-xs">
+                          <span className="text-[10px] font-extrabold text-stone-400 uppercase">
+                            Destino Final
+                          </span>
+                          <span className="font-bold text-xs text-[#9b1526] truncate">
+                            {parsedUnidades.destino || "Não especificado"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 5-Columns Trailer Cards */}
+                      {parsedUnidades.carretas.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                              <Truck size={14} className="text-blue-600" />
+                              Carretas & Mapeamento de Iscas ({parsedUnidades.carretas.length}):
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
+                              5 Colunas Validadas
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col gap-3">
+                            {parsedUnidades.carretas.map((cr, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-white border-2 border-blue-200/90 rounded-2xl p-4 flex flex-col gap-3 shadow-xs hover:border-blue-500 transition-colors"
+                              >
+                                <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-[#1f1915] text-white font-mono font-black text-xs px-2.5 py-1 rounded-lg uppercase flex items-center gap-1.5 shadow-xs">
+                                      <Truck size={13} className="text-blue-400" />
+                                      Carreta {idx + 1}: {cr.carreta || "S/ Placa"}
+                                    </span>
+                                    {cr.esquema && (
+                                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300">
+                                        {cr.esquema}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[11px] font-black text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-lg">
+                                      NF: <span className="font-mono text-blue-700">{cr.nf || "---"}</span>
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* 4 Quadrants Grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                  {/* Col 1: Placa */}
+                                  <div className="bg-stone-50 border border-stone-200 p-2.5 rounded-xl">
+                                    <span className="text-[9px] font-extrabold uppercase text-stone-400 block">
+                                      1. Placa
+                                    </span>
+                                    <span className="font-mono font-black text-stone-900 text-xs mt-0.5 block">
+                                      {cr.carreta || "---"}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 2: Isca */}
+                                  <div className="bg-red-50/70 border border-red-200 p-2.5 rounded-xl relative group">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[9px] font-extrabold uppercase text-red-700 block">
+                                        2. Isca PGR
+                                      </span>
+                                      {cr.isca && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopySingleIsca(`cr-${idx}`, cr.isca)}
+                                          className="text-[9px] text-red-700 hover:text-red-900 cursor-pointer font-bold"
+                                          title="Copiar isca"
+                                        >
+                                          {copiedIscaKey === `cr-${idx}` ? "✓" : <Copy size={11} />}
+                                        </button>
+                                      )}
+                                    </div>
+                                    <span className="font-mono font-black text-red-700 text-xs mt-0.5 block truncate">
+                                      {cr.isca || "---"}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 3: Produto */}
+                                  <div className="bg-stone-50 border border-stone-200 p-2.5 rounded-xl">
+                                    <span className="text-[9px] font-extrabold uppercase text-stone-400 block">
+                                      3. Produto
+                                    </span>
+                                    <span className="font-bold text-stone-900 text-xs mt-0.5 block truncate" title={cr.produto}>
+                                      {cr.produto || "---"}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 4: UMA */}
+                                  <div className="bg-stone-50 border border-stone-200 p-2.5 rounded-xl">
+                                    <span className="text-[9px] font-extrabold uppercase text-stone-400 block">
+                                      4. U.M.A
+                                    </span>
+                                    <span className="font-mono font-black text-blue-900 text-xs mt-0.5 block truncate">
+                                      {cr.uma || "---"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Primary Dispatch Action */}
+                      <button
+                        type="button"
+                        onClick={() => handleImportUnidadeData(parsedUnidades)}
+                        className="w-full py-4 bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-blue-900/20 cursor-pointer active:scale-98 mt-2"
+                      >
+                        <Send size={16} />
+                        <span>ENVIAR DADOS PARA O GERADOR PGR & GERAR PRÉ-ALERTA COMPLETO</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-stone-300 gap-4">
-                      <Search size={48} strokeWidth={1.5} />
-                      <p className="text-xs font-bold uppercase tracking-widest text-center max-w-[200px]">Nenhum dado processado. Cole o conteúdo da planilha ao lado.</p>
+                    /* Empty state for Cuiabá */
+                    <div className="bg-stone-50 border-2 border-dashed border-stone-300 rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4 h-full min-h-[360px]">
+                      <div className="w-16 h-16 rounded-2xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center shadow-md">
+                        <Compass size={32} />
+                      </div>
+                      <div className="max-w-md">
+                        <h3 className="text-base font-black uppercase text-stone-900 tracking-wider">
+                          Aguardando mensagem da Unidade Cuiabá
+                        </h3>
+                        <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                          Cole as informações do embarque recebidas da unidade na caixa à esquerda ou clique abaixo para carregar um exemplo real já formatado com as 5 colunas.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUnidadesPastedText(SAMPLE_UNIDADES_TEXT)}
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+                      >
+                        <Sparkles size={14} />
+                        <span>Testar com Ficha Real de Cuiabá</span>
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {activeTab === "placas" && (
-          <motion.div
-            key="placas"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="flex flex-col gap-8"
-          >
-             <div className="bg-white rounded-[40px] border border-stone-200/60 shadow-[0_20px_50px_rgba(155,21,38,0.03)] p-10">
-               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-10 border-b border-stone-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#9b1526] flex items-center justify-center text-white">
-                    <Layers size={24} />
+        {/* TAB CONTENT: Gerador PGR Workspace */}
+        {activeTab === "gerador" && (
+          <div className="flex flex-col gap-4 max-w-full mx-auto w-full animate-fade-in">
+            <div className={cn(
+              "grid gap-4 items-start w-full",
+              preAlertaMode === "minimized"
+                ? "grid-cols-1 xl:grid-cols-2"
+                : preAlertaMode === "maximized"
+                  ? "grid-cols-1 xl:grid-cols-2"
+                  : "grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px_280px] xl:grid-cols-[minmax(0,1fr)_290px_290px] 2xl:grid-cols-[minmax(0,1fr)_305px_305px]"
+            )}>
+        {/* LEFT AREA: Template Generator */}
+        <div className={cn(
+          "flex flex-col min-w-0",
+          preAlertaMode === "minimized" || preAlertaMode === "maximized"
+            ? "col-span-1 xl:col-span-2"
+            : "col-span-1 xl:col-span-1"
+        )}>
+          <div className="flex-1 rounded-2xl sm:rounded-3xl glass-card-3d bg-[#0a0a0a]/80 border border-white/10 shadow-xl relative overflow-hidden flex flex-col p-4 sm:p-6 text-stone-100">
+
+          {/* Module Title */}
+          <div className={cn(
+            "flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-5 gap-4",
+            preAlertaMode === "minimized" ? "mb-0" : "mb-6"
+          )}>
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "p-3 rounded-2xl shadow-md border transition-colors",
+                isVianaOrigem
+                  ? "bg-emerald-600/30 border-emerald-500/40 text-emerald-400"
+                  : isCuiabaOrigem
+                    ? "bg-amber-500/30 border-amber-500/40 text-amber-400"
+                    : "bg-rose-600/30 border-rose-500/40 text-rose-400"
+              )}>
+                <Sliders size={22} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white uppercase tracking-tight">
+                    PRE ALERTA GR
+                  </h2>
+                  {preAlertaMode === "minimized" && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-amber-950/80 text-amber-300 border border-amber-500/40">
+                      Minimizado
+                    </span>
+                  )}
+                  {preAlertaMode === "maximized" && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
+                      100% Largura
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-stone-400 font-mono uppercase tracking-widest mt-0.5">
+                  Gerador corporativo de pré-alerta e iscas
+                </p>
+              </div>
+            </div>
+
+            {/* A Opção de Minimizar e Maximizar (Tudo numa única opção) */}
+            <div className="flex items-center gap-3">
+              {preAlertaMode === "minimized" && (
+                <div className="hidden lg:flex items-center gap-2 bg-black border border-black px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-white shadow-xs">
+                  <span className="text-[9px] uppercase text-stone-300 font-bold">Assunto:</span>
+                  <span className="text-[11px] text-[#FFFF00] font-black max-w-[280px] truncate">
+                    PRÉ-ALERTA DE ISCA - {destino || "BRASÍLIA"} - {cavalo.replace(/-/g, "") || "TYQ6F51"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopySubject}
+                    title="Copiar Assunto do E-mail"
+                    className="p-1 hover:bg-white/20 rounded-lg text-white transition-colors cursor-pointer"
+                  >
+                    {copiedAssunto ? <Check size={13} className="text-[#FFFF00] stroke-[3]" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              )}
+
+              {/* Segmented Option Group */}
+              <div className="flex items-center bg-[#1f1915]/80 p-1 rounded-2xl border border-white/10 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setPreAlertaMode(preAlertaMode === "minimized" ? "normal" : "minimized")}
+                  title={preAlertaMode === "minimized" ? "Restaurar coluna" : "Minimizar coluna PRE ALERTA GR"}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95",
+                    preAlertaMode === "minimized"
+                      ? "bg-rose-600 text-white shadow-md shadow-rose-950/50"
+                      : "text-stone-400 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  <Minimize2 size={14} className="stroke-[2.5]" />
+                  <span>{preAlertaMode === "minimized" ? "Minimizado" : "Minimizar"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreAlertaMode(preAlertaMode === "maximized" ? "normal" : "maximized")}
+                  title={preAlertaMode === "maximized" ? "Restaurar tamanho normal" : "Maximizar coluna (100% largura)"}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95",
+                    preAlertaMode === "maximized"
+                      ? "bg-cyan-600 text-white shadow-md shadow-cyan-950/50"
+                      : "text-stone-400 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  <Maximize2 size={14} className="stroke-[2.5]" />
+                  <span>{preAlertaMode === "maximized" ? "Restaurar" : "Maximizar"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Informational Callout when Minimized */}
+          {preAlertaMode === "minimized" && (
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 bg-[#1f1915]/60 p-4 rounded-2xl border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-500/40 flex items-center justify-center shrink-0">
+                  <Info size={16} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-bold text-white uppercase">
+                      Coluna PRE ALERTA GR Minimizada
+                    </p>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-950 text-emerald-400 border border-emerald-500/40">
+                      Zoom Ativo: {Math.round(colunasZoom * 100)}%
+                    </span>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-black uppercase tracking-tight text-stone-950">Monitoramento Regional</h2>
-                    <p className="text-xs text-stone-400 font-bold uppercase tracking-widest">Gestão de Iscas e Frota em Tempo Real</p>
+                  <p className="text-[11px] text-stone-400 mt-0.5 font-sans">
+                    O <strong>Gerador corporativo de pré-alerta e iscas</strong> está recolhido e o <strong>Zoom das colunas</strong> foi aumentado.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
+                {/* Zoom presets */}
+                <div className="flex items-center gap-1 bg-[#0a0a0a] border border-white/10 px-2 py-1 rounded-xl text-[10px] font-bold shadow-sm">
+                  <span className="text-stone-500 uppercase text-[9px] mr-0.5">Zoom:</span>
+                  {[1.05, 1.10, 1.15, 1.20, 1.25].map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setColunasZoom(level)}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer active:scale-95",
+                        colunasZoom === level
+                          ? "bg-cyan-600 text-white shadow-xs"
+                          : "text-stone-400 hover:text-white hover:bg-white/10"
+                      )}
+                    >
+                      {Math.round(level * 100)}%
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCopySubject}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 border border-black",
+                    copiedAssunto
+                      ? "bg-black text-[#FFFF00]"
+                      : "bg-[#CCCCCC] hover:bg-[#b8b8b8] text-black"
+                  )}
+                >
+                  {copiedAssunto ? <Check size={13} className="text-[#FFFF00] stroke-[3]" /> : <Copy size={13} />}
+                  <span>Copiar Assunto</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreAlertaMode("normal")}
+                  className="px-3.5 py-1.5 bg-[#2d241e] hover:bg-stone-700 text-white rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 border border-white/10"
+                >
+                  <Maximize2 size={13} />
+                  <span>Maximizar Coluna</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Generator Workspace Form */}
+          {preAlertaMode !== "minimized" && (
+            <div className="flex flex-col gap-6">
+            {/* GREETING SELECTION (Menu Suspenso para Saudação) */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-[#1f1915]/60 border border-white/10 rounded-2xl p-4 shadow-inner">
+              <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 shrink-0">
+                Saudação:
+              </label>
+              <div className="relative flex-1 max-w-[200px]">
+                <select
+                  value={saudacao}
+                  onChange={(e) => setSaudacao(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-white/15 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none transition-all cursor-pointer shadow-sm"
+                >
+                  <option value="Boa tarde,">Boa tarde,</option>
+                  <option value="Bom dia,">Bom dia,</option>
+                  <option value="Boa noite,">Boa noite,</option>
+                </select>
+              </div>
+              <p className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">
+                Define a saudação inicial do pré-alerta
+              </p>
+            </div>
+
+            {/* EMAIL SUBJECT HEADER BLOCK - ESTILO DAS CORES EM ANEXO (PRETO, AMARELO #FFFF00, PRATA #CCCCCC) */}
+            <div className="border-2 border-black rounded-2xl overflow-hidden mb-2 shadow-sm">
+              {/* Faixa Superior Preta com Texto Branco (idêntica ao cabeçalho da referência) */}
+              <div className="bg-black text-white px-5 py-2.5 flex items-center justify-between border-b border-black">
+                <span className="text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-widest text-white block">
+                  Assunto do E-mail (Copiar separadamente)
+                </span>
+                <span className="text-[9px] font-mono font-bold text-stone-300 uppercase tracking-wider hidden sm:inline">
+                  PRÉ-ALERTA DE ISCA
+                </span>
+              </div>
+
+              {/* Faixa Inferior Amarela (#FFFF00) com Texto Preto e Botão Cinza/Prata (#CCCCCC) */}
+              <div className="bg-[#FFFF00] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-black">
+                <div className="flex-1">
+                  <h1 className="text-base sm:text-lg md:text-xl font-mono font-black text-black uppercase tracking-tight m-0 select-all leading-snug">
+                    PRÉ-ALERTA DE ISCA - {destino || "BRASÍLIA"} -{" "}
+                    {cavalo.replace(/-/g, "") || "TYQ6F51"}
+                  </h1>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopySubject}
+                  className={cn(
+                    "flex items-center gap-2 font-black uppercase text-[10px] tracking-wider px-5 py-3 rounded-xl shadow-xs transition-all cursor-pointer select-none active:scale-95 shrink-0 border border-black",
+                    copiedAssunto
+                      ? "bg-black text-[#FFFF00] border-black"
+                      : "bg-[#CCCCCC] hover:bg-[#b8b8b8] text-black border-black hover:shadow-sm"
+                  )}
+                >
+                  {copiedAssunto ? (
+                    <>
+                      <Check size={13} className="stroke-[3] text-[#FFFF00]" /> COPIADO!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={13} className="stroke-[2.5] text-black" /> COPIAR ASSUNTO
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* PREVIEW CONTAINER - CORPORATE EXECUTIVE OFFICE PREVIEW */}
+            <div className="bg-[#F4F8FA] border border-[#D1E1EB] rounded-[2rem] p-6 sm:p-7 shadow-sm overflow-x-auto relative">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#64748B] block mb-5 border-b border-[#D1E1EB] pb-2">
+                Visualização do Pré-Alerta (Template do E-mail)
+              </span>
+
+              <div className="min-w-[850px] font-sans text-xs text-[#3A2414]">
+                {/* 1. Greeting Output */}
+                <div className="mb-4 font-sans font-black text-sm text-[#3A2414] ml-0 pl-0">
+                  {saudacao}
+                </div>
+
+                {/* 2. Executive Alert Banner */}
+                <div className={cn(
+                  "mb-5 font-black text-xs uppercase px-4 py-2.5 tracking-wide shadow-md inline-flex items-center rounded-lg transition-all max-w-max ml-0",
+                  isGreenOrigem
+                    ? "bg-emerald-600 text-white border-emerald-700/40"
+                    : isPurpleOrigem
+                      ? "bg-purple-700 text-white border-purple-800/40"
+                      : isCuiabaOrigem
+                        ? "bg-amber-500 text-stone-950 border-amber-600/40"
+                        : "bg-[#DC2626] text-white"
+                )}>
+                  {alertaResgate.includes("\n") ? (
+                    <textarea
+                      rows={2}
+                      value={alertaResgate}
+                      onChange={(e) => setAlertaResgate(e.target.value)}
+                      className={cn(
+                        "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1 transition-all resize-none leading-snug tracking-wide w-[540px] max-w-full overflow-hidden",
+                        isCuiabaOrigem
+                          ? "text-stone-950 focus:ring-1 focus:ring-stone-950/40 hover:bg-black/10 placeholder:text-stone-800"
+                          : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
+                      )}
+                      placeholder="ALERTA RESGATE"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={alertaResgate}
+                      onChange={(e) => setAlertaResgate(e.target.value)}
+                      size={Math.max(28, alertaResgate.length + 1)}
+                      className={cn(
+                        "bg-transparent border-none outline-none font-black text-xs uppercase p-0.5 rounded px-1.5 transition-all min-w-[280px] max-w-full tracking-wide",
+                        isCuiabaOrigem
+                          ? "text-stone-950 focus:ring-1 focus:ring-stone-950/40 hover:bg-black/10 placeholder:text-stone-800"
+                          : "text-white focus:ring-1 focus:ring-white/40 hover:bg-white/10 placeholder:text-white/70"
+                      )}
+                      placeholder="ALERTA RESGATE"
+                    />
+                  )}
+                </div>
+
+                {/* 3. Atentar às informações */}
+                <div className="mb-3.5 font-black text-[#3A2414] text-[13px] ml-0 pl-0">
+                  <input
+                    type="text"
+                    value={infoAbaixo}
+                    onChange={(e) => setInfoAbaixo(e.target.value)}
+                    className="bg-transparent border-none outline-none hover:bg-[#3A2414]/5 focus:bg-[#3A2414]/10 rounded px-1.5 py-0.5 w-full font-black text-[#3A2414] transition-all"
+                  />
+                </div>
+
+                {/* 4. Routes and Instructions Selector Box with executive left highlight */}
+                <div className={cn(
+                  "border border-white/10 bg-[#1f1915]/80 p-4 mb-6 font-bold leading-relaxed max-w-xl rounded-2xl shadow-inner border-l-4 transition-all text-stone-100",
+                  isGreenOrigem ? "border-l-emerald-500" : isPurpleOrigem ? "border-l-purple-500" : isCuiabaOrigem ? "border-l-amber-500" : "border-l-rose-500"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <span className={isGreenOrigem ? "text-emerald-400 text-sm font-black" : isPurpleOrigem ? "text-purple-400 text-sm font-black" : isCuiabaOrigem ? "text-amber-400 text-sm font-black" : "text-rose-400 text-sm font-black"}>•</span>
+                    <input
+                      type="text"
+                      value={rota1}
+                      onChange={(e) => setRota1(e.target.value)}
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-white/5 focus:bg-white/10 rounded text-xs text-white transition-all"
+                      placeholder="· SANTA LUZIA/MG x GUARULHOS/SP;"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={isGreenOrigem ? "text-emerald-400 text-sm font-black" : isPurpleOrigem ? "text-purple-400 text-sm font-black" : isCuiabaOrigem ? "text-amber-400 text-sm font-black" : "text-rose-400 text-sm font-black"}>•</span>
+                    <input
+                      type="text"
+                      value={instrucao1}
+                      onChange={(e) => setInstrucao1(e.target.value)}
+                      className="bg-transparent border-none w-full outline-none font-bold py-0.5 px-1.5 hover:bg-white/5 focus:bg-white/10 rounded text-xs text-white transition-all"
+                      placeholder="· Favor, acusar o recebimento do pré-alerta;"
+                    />
+                  </div>
+                  {!pastePlanilha.trim() && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-rose-400 text-sm font-black">•</span>
+                      <span className="font-extrabold text-xs text-rose-300 uppercase tracking-wide py-0.5 px-1.5 rounded bg-rose-950/40 border border-rose-500/30 w-full">
+                        O site das iscas está temporariamente fora do ar.
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. BIG INTERACTIVE SPREADSHEET TABLE 1 */}
+                <div className="flex items-center justify-end gap-2 mb-2 bg-[#1f1915]/80 p-2 rounded-xl border border-white/10 shadow-sm">
+                  <div className="flex items-center gap-1.5">
+                    {numCarretas === 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNumCarretas(2);
+                          if (isca2 === "SEM ISCA") {
+                            setIsca2("");
+                            setProduto2("");
+                            setUma2("");
+                          }
+                        }}
+                        className={cn(
+                          "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                          isGreenOrigem
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            : isPurpleOrigem
+                              ? "bg-purple-700 hover:bg-purple-800 text-white"
+                              : isCuiabaOrigem
+                                ? "bg-amber-500 hover:bg-amber-600 text-stone-950 font-black"
+                                : "bg-[#9b1526] hover:bg-[#8c060a] text-white"
+                        )}
+                      >
+                        <Plus size={10} className="stroke-[3]" /> Adicionar
+                        Segunda Carreta
+                      </button>
+                    ) : (
+                      <>
+                        {isca2 === "SEM ISCA" ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsca2("");
+                              setProduto2("");
+                              setUma2("");
+                            }}
+                            className={cn(
+                              "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                              isGreenOrigem
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                : isPurpleOrigem
+                                  ? "bg-purple-700 hover:bg-purple-800 text-white"
+                                  : isCuiabaOrigem
+                                    ? "bg-amber-500 hover:bg-amber-600 text-stone-950 font-black"
+                                    : "bg-[#9b1526] hover:bg-[#8c060a] text-white"
+                            )}
+                          >
+                            <Plus size={10} className="stroke-[3]" /> Adicionar Isca
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsca2("SEM ISCA");
+                              setProduto2("---");
+                              setUma2("---");
+                              setNfFim("");
+                              if (!carreta2 && carreta1) {
+                                setCarreta2(carreta1);
+                              }
+                              setSidebarEmbarque2("none");
+                            }}
+                            className={cn(
+                              "flex items-center gap-1 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer select-none",
+                              isGreenOrigem
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                : isPurpleOrigem
+                                  ? "bg-purple-700 hover:bg-purple-800 text-white"
+                                  : isCuiabaOrigem
+                                    ? "bg-amber-500 hover:bg-amber-600 text-stone-950 font-black"
+                                    : "bg-[#9b1526] hover:bg-[#8c060a] text-white"
+                            )}
+                          >
+                            <Minus size={10} className="stroke-[3]" /> Sem Isca
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNumCarretas(1);
+                            setNfFim("");
+                            setSidebarEmbarque2("none");
+                          }}
+                          className="flex items-center gap-1 bg-[#2d241e] hover:bg-[#1f1915] text-white font-extrabold uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-md shadow-2xs transition-all cursor-pointer select-none"
+                        >
+                          <Minus size={10} className="stroke-[3]" /> Remover Segunda
+                          Carreta
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <table className="w-full border-collapse border border-stone-300 text-xs font-sans text-stone-900 table-fixed rounded-lg overflow-hidden shadow-2xs">
+                  <thead>
+                    {/* Row 1: NF and Transportadora */}
+                    <tr className="border-b border-stone-300">
+                      <th
+                        colSpan={2}
+                        className="bg-[#1f1915] border-r border-stone-700 text-white text-center font-extrabold p-2.5 uppercase text-[11px] align-middle w-[25%]"
+                      >
+                        NÚMERO DA NF:
+                      </th>
+                      <th
+                        colSpan={1}
+                        className="border-r border-stone-300 p-1.5 align-middle w-[15%] bg-stone-50"
+                      >
+                        <div className="flex flex-col items-center gap-0 w-full">
+                          <input
+                            type="text"
+                            value={nfInicio}
+                            onChange={(e) => setNfInicio(e.target.value.replace(/-/g, ""))}
+                            className="w-full text-center font-extrabold bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 text-[11px] text-stone-900 transition-all duration-200"
+                            placeholder="INÍCIO"
+                          />
+                          {numCarretas === 2 && isca2 !== "SEM ISCA" && (
+                            <input
+                              type="text"
+                              value={nfFim}
+                              onChange={(e) => setNfFim(e.target.value.replace(/-/g, ""))}
+                              className="w-full text-center font-extrabold bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 text-[11px] text-stone-900 transition-all duration-200"
+                              placeholder="FIM"
+                            />
+                          )}
+                        </div>
+                      </th>
+                      <th
+                        colSpan={1}
+                        className="bg-[#1f1915] border-r border-stone-700 text-white text-center font-extrabold p-2.5 uppercase text-[11px] align-middle w-[18%]"
+                      >
+                        TRANSPORTADORA:
+                      </th>
+                      <th
+                        colSpan={2}
+                        className="p-1.5 border-r border-stone-300 align-middle w-[25%] bg-stone-50"
+                      >
+                        <select
+                          value={transportadora}
+                          onChange={(e) =>
+                            handleTableTranspChange(e.target.value)
+                          }
+                          className="w-full text-center font-extrabold uppercase bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 text-xs cursor-pointer text-stone-900 transition-all duration-200"
+                        >
+                          <option value="">SELECIONE...</option>
+                          {allTransportadoras.map((t) => (
+                            <option
+                              key={t}
+                              value={t}
+                              className="text-stone-900 uppercase text-xs font-black"
+                            >
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </th>
+                      <th
+                        colSpan={2}
+                        className="w-[17%] bg-[#1f1915] border-b border-stone-700 p-1 text-center align-middle"
+                      >
+                        {valorCarga ? (
+                          <div className="flex flex-col items-center justify-center px-1">
+                            <span className="text-[8px] text-stone-400 font-extrabold uppercase tracking-wider leading-none mb-0.5">
+                              VALOR DA CARGA
+                            </span>
+                            <input
+                              type="text"
+                              value={valorCarga}
+                              onChange={(e) => setValorCarga(e.target.value)}
+                              className="w-full text-center font-black uppercase text-amber-300 hover:text-amber-200 bg-transparent border-none outline-none hover:bg-[#2d241e]/70 focus:bg-[#2d241e] rounded px-1 py-0.5 text-xs tracking-wide transition-all shadow-none cursor-text"
+                              title="Valor da Carga (VALOR NF importado da aba Santa Luzia)"
+                              placeholder="R$ 0,00"
+                            />
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={valorCarga}
+                            onChange={(e) => setValorCarga(e.target.value)}
+                            className="w-full text-center font-black uppercase text-amber-300 bg-transparent border-none outline-none hover:bg-[#2d241e]/70 focus:bg-[#2d241e] rounded px-1 py-0.5 text-[11px] tracking-wide transition-all placeholder:text-transparent hover:placeholder:text-stone-600 cursor-text"
+                            placeholder="VALOR CARGA"
+                            title="Espaço ao lado da transportadora (Valor da Carga)"
+                          />
+                        )}
+                      </th>
+                    </tr>
+
+                    {/* Row 2: Standard Columns Headings */}
+                    <tr className="border-b border-stone-300 bg-[#1f1915] text-white text-center font-extrabold uppercase text-[10px] h-[36px]">
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[22%]">
+                        MOTORISTA
+                      </th>
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[11%]">
+                        CAVALO
+                      </th>
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[11%]">
+                        CARRETAS
+                      </th>
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[13%]">
+                        N° ISCA
+                      </th>
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[14%]">
+                        PRODUTO EMBARCADO
+                      </th>
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[15%]">
+                        CÓDIGO U.M.A.
+                      </th>
+                      <th className="border-r border-stone-700 p-1.5 align-middle w-[11%]">
+                        DESTINO
+                      </th>
+                      <th className="p-1.5 align-middle w-[11%]">
+                        DATA PARTIDA
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Rows of data */}
+                    <tr className="border-b border-stone-300 text-center text-xs h-[42px] bg-white">
+                      {/* Motorista - Span rowspan */}
+                      <td
+                        rowSpan={numCarretas}
+                        className="border-r border-stone-300 p-1.5 font-bold uppercase text-[11px] align-middle"
+                      >
+                        <textarea
+                          value={motorista}
+                          onChange={(e) =>
+                            handleTableMotoristaChange(e.target.value)
+                          }
+                          className="w-full h-full min-h-[48px] text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded resize-none p-1 text-xs leading-snug text-stone-900 transition-all duration-200"
+                          placeholder="NOME MOTORISTA"
+                        />
+                      </td>
+
+                      {/* Cavalo - Span rowspan */}
+                      <td
+                        rowSpan={numCarretas}
+                        className="border-r border-stone-300 p-1.5 font-bold uppercase text-[11px] align-middle"
+                      >
+                        <input
+                          type="text"
+                          value={cavalo}
+                          onChange={(e) => setCavalo(e.target.value.replace(/-/g, ""))}
+                          className="w-full text-center font-extrabold uppercase bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 text-[14px] text-stone-900 transition-all duration-200"
+                          placeholder="PLACA"
+                        />
+                      </td>
+
+                      {/* Carreta Row 1 */}
+                      <td className="border-r border-stone-300 p-1.5 align-middle">
+                        <input
+                          type="text"
+                          value={carreta1}
+                          onChange={(e) => setCarreta1(e.target.value)}
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 uppercase font-bold text-xs text-stone-900 transition-all duration-200"
+                          placeholder="CARRETA 1"
+                        />
+                      </td>
+
+                      {/* N Iscas Row 1 */}
+                      <td className="border-r border-stone-300 p-1.5 align-middle">
+                        <input
+                          type="text"
+                          value={isca1}
+                          onChange={(e) => handleIsca1Change(e.target.value)}
+                          className={cn(
+                            "w-full text-center bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 uppercase font-black text-[13px] transition-all duration-200",
+                            isGreenOrigem
+                              ? "text-emerald-600"
+                              : isPurpleOrigem
+                                ? "text-purple-700"
+                                : isCuiabaOrigem
+                                  ? "text-amber-600"
+                                  : "text-red-600"
+                          )}
+                          placeholder="ISCA 1"
+                        />
+                      </td>
+
+                      {/* Produto Row 1 */}
+                      <td className="border-r border-stone-300 p-1.5 align-middle">
+                        <input
+                          type="text"
+                          value={produto1}
+                          onChange={(e) => setProduto1(e.target.value)}
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-stone-900 transition-all duration-200"
+                          placeholder="PROD 1"
+                        />
+                      </td>
+
+                      {/* UMA Row 1 */}
+                      <td className="border-r border-stone-300 p-1.5 align-middle">
+                        <input
+                          type="text"
+                          value={uma1}
+                          onChange={(e) => setUma1(formatUMA(e.target.value))}
+                          className="w-full text-center bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 uppercase font-bold text-[13px] text-stone-900 transition-all duration-200"
+                          placeholder="0XX.XXX.XXX.XXX"
+                        />
+                      </td>
+
+                      {/* Destino - Span rowspan */}
+                      <td
+                        rowSpan={numCarretas}
+                        className="border-r border-stone-300 p-1.5 font-bold uppercase text-[11px] align-middle"
+                      >
+                        <input
+                          type="text"
+                          value={destino}
+                          onChange={(e) => setDestino(e.target.value)}
+                          className="w-full text-center font-bold uppercase bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 text-xs text-stone-900 transition-all duration-200"
+                          placeholder="DESTINO"
+                        />
+                      </td>
+
+                      {/* Data Enviada - Span rowspan */}
+                      <td
+                        rowSpan={numCarretas}
+                        className="p-1.5 font-bold text-stone-900 text-xs align-middle"
+                      >
+                        <input
+                          type="text"
+                          value={dataEnviada}
+                          onChange={(e) => setDataEnviada(e.target.value)}
+                          className="w-full text-center font-bold bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 text-xs text-stone-900 transition-all duration-200"
+                          placeholder="DATA"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Second row of sub-items (Carreta 2, Isca 2, Prod 2, UMA 2) */}
+                    {numCarretas === 2 && (
+                      <tr className="border-b border-stone-300 text-center text-xs h-[42px] bg-stone-50">
+                        {/* Carreta Row 2 */}
+                        <td className="border-r border-stone-300 p-1.5 align-middle">
+                          <input
+                            type="text"
+                            value={carreta2}
+                            onChange={(e) => setCarreta2(e.target.value)}
+                            className="w-full text-center bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 uppercase font-bold text-xs text-stone-900 transition-all duration-200"
+                            placeholder="CARRETA 2"
+                          />
+                        </td>
+
+                        {/* Isca Row 2 */}
+                        <td className="border-r border-stone-300 p-1.5 align-middle">
+                          <input
+                            type="text"
+                            value={isca2}
+                            onChange={(e) => handleIsca2Change(e.target.value)}
+                            className={cn(
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 uppercase font-black text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA"
+                                ? "text-stone-400 font-bold"
+                                : isGreenOrigem
+                                  ? "text-emerald-600"
+                                  : isPurpleOrigem
+                                    ? "text-purple-700"
+                                    : isCuiabaOrigem
+                                      ? "text-amber-600"
+                                      : "text-red-600"
+                            )}
+                            placeholder="ISCA 2"
+                          />
+                        </td>
+
+                        {/* Produto Row 2 */}
+                        <td className="border-r border-stone-300 p-1.5 align-middle">
+                          <input
+                            type="text"
+                            value={produto2}
+                            onChange={(e) => setProduto2(e.target.value)}
+                            className={cn(
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-stone-400 font-bold" : "text-stone-900"
+                            )}
+                            placeholder="PROD 2"
+                          />
+                        </td>
+
+                        {/* UMA Row 2 */}
+                        <td className="border-r border-stone-300 p-1.5 align-middle">
+                          <input
+                            type="text"
+                            value={uma2}
+                            onChange={(e) => setUma2(formatUMA(e.target.value))}
+                            className={cn(
+                              "w-full text-center bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 uppercase font-bold text-[13px] transition-all duration-200",
+                              isca2 === "SEM ISCA" ? "text-stone-400 font-bold" : "text-stone-900"
+                            )}
+                            placeholder="0XX.XXX.XXX.XXX"
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+
+                {/* TABLE 2: PARAMETRIZAÇÃO DAS ISCAS */}
+                <table className="w-full border-collapse border border-stone-300 text-xs font-sans text-stone-900 table-fixed rounded-lg overflow-hidden shadow-2xs mt-0">
+                  <tbody>
+                    {/* Header bar */}
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="bg-[#1f1915] text-center font-extrabold text-white p-2.5 uppercase text-[11px] tracking-wide border-b border-stone-700"
+                      >
+                        <input
+                          type="text"
+                          value={parametrizacao}
+                          onChange={(e) => setParametrizacao(e.target.value)}
+                          className="w-full text-center font-extrabold bg-transparent border-none outline-none hover:bg-white/10 focus:bg-white/20 rounded px-1 py-0.5 text-[11px] uppercase text-white transition-all duration-200"
+                        />
+                      </td>
+                    </tr>
+                    {/* Subheaders Row */}
+                    <tr className="bg-[#2d241e] text-center font-extrabold text-white text-[10px] h-[34px] border-b border-stone-700">
+                      <td className="border-r border-stone-700 p-1 w-[25%] align-middle text-center">
+                        <div className="flex items-center bg-white border border-stone-300 rounded px-2 py-0.5 max-w-[150px] mx-auto shadow-2xs">
+                          <input
+                            type="text"
+                            value={
+                              numCarretas === 2 && isca2 !== "SEM ISCA" ? `${isca1} ${isca2}` : isca1
+                            }
+                            readOnly
+                            className="bg-transparent border-none text-stone-900 font-extrabold text-[9px] uppercase p-0 focus:ring-0 w-full text-center outline-none select-all"
+                          />
+                          <span className="text-stone-400 font-bold text-[8px] cursor-pointer ml-1 select-none">
+                            ⇅
+                          </span>
+                        </div>
+                      </td>
+                      <td className="border-r border-stone-700 p-1 w-[45%] uppercase tracking-wider text-white text-[10px] align-middle">
+                        🔍 ENDEREÇO APROXIMADO DA POSIÇÃO ⇅
+                      </td>
+                      <td className="border-r border-stone-700 p-1 w-[18%] uppercase tracking-wider text-white text-[10px] align-middle">
+                        🔍 DATA POSIÇÃO ⇅
+                      </td>
+                      <td className="p-1 w-[12%] uppercase tracking-wider text-white text-[10px] align-middle">
+                        🔍 BATERIA ISCA_RF ⇅
+                      </td>
+                    </tr>
+                    {/* Row 1 (Isca 2) */}
+                    {numCarretas === 2 && (
+                      <tr className="bg-stone-50 text-center font-semibold text-stone-900 h-[44px] border-b border-stone-300">
+                        <td className={cn(
+                          "border-r border-stone-300 p-1.5 font-extrabold uppercase text-[11px] text-center bg-stone-50 align-middle",
+                          isGreenOrigem
+                            ? "text-emerald-600"
+                            : isPurpleOrigem
+                              ? "text-purple-700"
+                              : isCuiabaOrigem
+                                ? "text-amber-600"
+                                : "text-red-600"
+                        )}>
+                          {isca2 === "SEM ISCA" ? "" : isca2}
+                        </td>
+                        <td className="border-r border-stone-300 p-1.5 text-left font-medium text-xs bg-stone-50 align-middle">
+                          <textarea
+                            value={isca2 === "SEM ISCA" ? "" : (isca2Endereco || (!pastePlanilha.trim() ? "O site das iscas está temporariamente fora do ar." : ""))}
+                            onChange={(e) => setIsca2Endereco(e.target.value)}
+                            disabled={isca2 === "SEM ISCA"}
+                            rows={1}
+                            className={cn(
+                              "w-full bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1.5 py-0.5 text-xs resize-y leading-tight font-bold transition-all duration-200 disabled:opacity-50",
+                              !pastePlanilha.trim() && !isca2Endereco ? "text-red-600 font-extrabold uppercase" : "text-stone-900"
+                            )}
+                            placeholder={isca2 === "SEM ISCA" ? "" : "Endereço da Isca 2..."}
+                          />
+                        </td>
+                        <td className="border-r border-stone-300 p-1.5 text-center font-bold text-xs bg-stone-50 align-middle">
+                          <input
+                            type="text"
+                            value={isca2 === "SEM ISCA" ? "" : isca2Data}
+                            onChange={(e) => setIsca2Data(e.target.value)}
+                            disabled={isca2 === "SEM ISCA"}
+                            className="w-full bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1.5 py-0.5 text-xs text-center text-stone-900 font-bold transition-all duration-200 disabled:opacity-50"
+                            placeholder={isca2 === "SEM ISCA" ? "" : "Data/Hora..."}
+                          />
+                        </td>
+                        <td className="p-1.5 text-center font-bold text-xs bg-stone-50 align-middle">
+                          <div className="flex items-center justify-center gap-1.5 mx-auto w-fit">
+                            <input
+                              type="text"
+                              value={isca2 === "SEM ISCA" ? "" : isca2Bateria}
+                              onChange={(e) => setIsca2Bateria(e.target.value)}
+                              disabled={isca2 === "SEM ISCA"}
+                              className="w-12 bg-transparent border-none outline-none hover:bg-stone-200/50 focus:bg-stone-200 rounded px-1 py-0.5 text-xs text-center text-stone-900 font-bold transition-all duration-200 disabled:opacity-50"
+                              placeholder={isca2 === "SEM ISCA" ? "" : "100%"}
+                            />
+                            <div className="relative flex items-center shrink-0">
+                              <Battery className="w-5 h-5 text-emerald-600 fill-emerald-600/20" />
+                              <div 
+                                className="absolute left-[3px] top-[6.5px] h-[7px] bg-emerald-500 rounded-[1px]"
+                                style={{ width: `${(isca2 === "SEM ISCA" ? 0 : Math.min(100, parseInt(isca2Bateria) || 100)) * 0.11}px` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {/* Row 2 (Isca 1) */}
+                    <tr className="bg-white text-center font-semibold text-stone-900 h-[44px] border-b border-stone-300">
+                      <td className={cn(
+                        "border-r border-stone-300 p-1.5 font-extrabold uppercase text-[11px] text-center bg-white align-middle",
+                        isGreenOrigem
+                          ? "text-emerald-600"
+                          : isPurpleOrigem
+                            ? "text-purple-700"
+                            : isCuiabaOrigem
+                              ? "text-amber-600"
+                              : "text-red-600"
+                      )}>
+                        {isca1}
+                      </td>
+                      <td className="border-r border-stone-300 p-1.5 text-left font-medium text-xs bg-white align-middle">
+                        <textarea
+                          value={isca1Endereco || (!pastePlanilha.trim() ? "O site das iscas está temporariamente fora do ar." : "")}
+                          onChange={(e) => setIsca1Endereco(e.target.value)}
+                          rows={1}
+                          className={cn(
+                            "w-full bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1.5 py-0.5 text-xs resize-y leading-tight font-bold transition-all duration-200",
+                            !pastePlanilha.trim() && !isca1Endereco ? "text-red-600 font-extrabold uppercase" : "text-stone-900"
+                          )}
+                          placeholder="Endereço da Isca 1..."
+                        />
+                      </td>
+                      <td className="border-r border-stone-300 p-1.5 text-center font-bold text-xs bg-white align-middle">
+                        <input
+                          type="text"
+                          value={isca1Data}
+                          onChange={(e) => setIsca1Data(e.target.value)}
+                          className="w-full bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1.5 py-0.5 text-xs text-center text-stone-900 font-bold transition-all duration-200"
+                          placeholder="Data/Hora..."
+                        />
+                      </td>
+                      <td className="p-1.5 text-center font-bold text-xs bg-white align-middle">
+                        <div className="flex items-center justify-center gap-1.5 mx-auto w-fit">
+                          <input
+                            type="text"
+                            value={isca1Bateria}
+                            onChange={(e) => setIsca1Bateria(e.target.value)}
+                            className="w-12 bg-transparent border-none outline-none hover:bg-stone-100 focus:bg-stone-200/70 rounded px-1 py-0.5 text-xs text-center text-stone-900 font-bold transition-all duration-200"
+                            placeholder="100%"
+                          />
+                          <div className="relative flex items-center shrink-0">
+                            <Battery className="w-5 h-5 text-emerald-600 fill-emerald-600/20" />
+                            <div 
+                              className="absolute left-[3px] top-[6.5px] h-[7px] bg-emerald-500 rounded-[1px]"
+                              style={{ width: `${Math.min(100, parseInt(isca1Bateria) || 100) * 0.11}px` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* 6. INTERACTIVE ESQUEMA DE EMBARQUE (LADDERS) */}
+                {!ocultarNotas && (
+                  <div className="mt-6 border-t border-stone-300/80 pt-5">
+                    <span className="text-[13px] font-extrabold uppercase block mt-[20px] mb-[15px] text-stone-900 font-sans border-b border-stone-200 pb-2">
+                      ESQUEMA DE EMBARQUE DAS ISCAS:
+                    </span>
+                    <p className="text-[10px] text-stone-500 font-extrabold uppercase tracking-wider mb-4">
+                      {sidebarEmbarque1 || sidebarEmbarque2
+                        ? "Imagem do esquema de embarque selecionada! Ela será incluída no e-mail."
+                        : 'Clique nas células para marcar/desmarcar a isca ("P"). Esse esquema será copiado visualmente para o e-mail!'}
+                    </p>
+
+                    <div className={cn(
+                      "flex flex-wrap justify-center items-start max-w-[720px] mx-auto transition-all duration-300",
+                      (!sidebarEmbarque1 && !sidebarEmbarque2) ? "gap-[10px]" : "gap-[30px]"
+                    )}>
+                      {/* Carreta 1 Section */}
+                      {sidebarEmbarque1 !== "none" && (
+                        <div className={cn(
+                          "flex flex-col items-center transition-all duration-300",
+                          sidebarEmbarque1 ? "w-[320px]" : "w-[100px]"
+                        )}>
+                          {sidebarEmbarque1 ? (
+                            <div className="w-full flex flex-col">
+                              <div className="bg-white border border-stone-300 p-2.5 text-center shadow-sm w-[320px] h-[420px] flex items-center justify-center box-border rounded-lg">
+                                <img
+                                  src={sidebarEmbarque1}
+                                  alt="Esquema"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    const fallback = getLocalFallbackImg(sidebarEmbarque1);
+                                    if (fallback && e.currentTarget.src !== fallback) {
+                                      e.currentTarget.src = fallback;
+                                    }
+                                  }}
+                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
+                                />
+                              </div>
+                              <div className="text-center mt-[15px]">
+                                <span className="text-[11px] font-black text-stone-900 uppercase">
+                                  CARRETA 1: {carreta1}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center w-full">
+                              <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
+                                <div className="bg-[#1f1915] text-white font-extrabold text-[8px] uppercase w-[50px] py-[3px] text-center border border-stone-900 tracking-normal rounded-t">
+                                  ESCALA 01
+                                </div>
+                                <div className="grid grid-cols-2 gap-0 border border-stone-400 bg-white w-[50px]">
+                                  {ladder1.map((row, rIndex) =>
+                                    row.map((cell, cIndex) => (
+                                      <button
+                                        key={`ladder1-${rIndex}-${cIndex}`}
+                                        onClick={() => {
+                                          const copy = [
+                                            ...ladder1.map((r) => [...r]),
+                                          ];
+                                          copy[rIndex][cIndex] =
+                                            copy[rIndex][cIndex] === "P" ? "" : "P";
+                                          setLadder1(copy);
+                                        }}
+                                        className={cn(
+                                          "w-full h-[12px] border-[0.5px] border-stone-400 font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
+                                          cell === "P"
+                                            ? isGreenOrigem
+                                              ? "bg-emerald-600 text-white"
+                                              : isPurpleOrigem
+                                                ? "bg-purple-700 text-white font-black"
+                                                : isCuiabaOrigem
+                                                  ? "bg-amber-500 text-stone-950 font-black"
+                                                  : "bg-red-600 text-white"
+                                            : "bg-white hover:bg-stone-100 text-stone-900",
+                                        )}
+                                      >
+                                        {cell}
+                                      </button>
+                                    )),
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-center mt-[10px]">
+                                <span className="text-[11px] font-black text-stone-900 uppercase">
+                                  CARRETA 1: {carreta1}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Carreta 2 Section */}
+                      {numCarretas === 2 && sidebarEmbarque2 !== "none" && (
+                        <div className={cn(
+                          "flex flex-col items-center transition-all duration-300",
+                          sidebarEmbarque2 ? "w-[320px]" : "w-[100px]"
+                        )}>
+                          {sidebarEmbarque2 ? (
+                            <div className="w-full flex flex-col">
+                              <div className="bg-white border border-stone-300 p-2.5 text-center shadow-sm w-[320px] h-[420px] flex items-center justify-center box-border rounded-lg">
+                                <img
+                                  src={sidebarEmbarque2}
+                                  alt="Esquema"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    const fallback = getLocalFallbackImg(sidebarEmbarque2);
+                                    if (fallback && e.currentTarget.src !== fallback) {
+                                      e.currentTarget.src = fallback;
+                                    }
+                                  }}
+                                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain bg-white mx-auto block border-0"
+                                />
+                              </div>
+                              <div className="text-center mt-[15px]">
+                                <span className="text-[11px] font-black text-stone-900 uppercase">
+                                  CARRETA 2: {carreta2}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center w-full">
+                              <div className="h-[350px] flex flex-col items-center justify-start pt-[15px]">
+                                <div className="bg-[#1f1915] text-white font-extrabold text-[9px] uppercase w-[75px] py-[5px] text-center border border-stone-900 tracking-normal rounded-t">
+                                  ESCALA 02
+                                </div>
+                                <div className="grid grid-cols-2 gap-0 border border-stone-400 bg-white w-[75px]">
+                                  {ladder2.map((row, rIndex) =>
+                                    row.map((cell, cIndex) => (
+                                      <button
+                                        key={`ladder2-${rIndex}-${cIndex}`}
+                                        onClick={() => {
+                                          const copy = [
+                                            ...ladder2.map((r) => [...r]),
+                                          ];
+                                          copy[rIndex][cIndex] =
+                                            copy[rIndex][cIndex] === "P" ? "" : "P";
+                                          setLadder2(copy);
+                                        }}
+                                        className={cn(
+                                          "w-full h-[12px] border-[0.5px] border-stone-400 font-black text-[8px] flex items-center justify-center transition-all cursor-pointer select-none",
+                                          cell === "P"
+                                            ? isGreenOrigem
+                                              ? "bg-emerald-600 text-white"
+                                              : isPurpleOrigem
+                                                ? "bg-purple-700 text-white font-black"
+                                                : isCuiabaOrigem
+                                                  ? "bg-amber-500 text-stone-950 font-black"
+                                                  : "bg-red-600 text-white"
+                                            : "bg-white hover:bg-stone-100 text-stone-900",
+                                        )}
+                                      >
+                                        {cell}
+                                      </button>
+                                    )),
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-center mt-[15px]">
+                                <span className="text-[11px] font-black text-stone-900 uppercase">
+                                  CARRETA 2: {carreta2}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes additional line (HIDDEN PER USER REQUEST) */}
+                <div className="hidden mt-5 max-w-xl mx-auto border-2 border-stone-800 rounded-2xl p-4 bg-[#FFFDFB] shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-black uppercase text-[#8c6b4e] tracking-wider block">
+                      Notas adicionais de embarque:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setOcultarNotas(!ocultarNotas)}
+                      className={cn(
+                        "flex items-center gap-1.5 font-black uppercase text-[9px] tracking-wider px-2.5 py-1 rounded-lg border-2 transition-all cursor-pointer select-none active:scale-95",
+                        ocultarNotas
+                          ? "bg-[#9b1526] hover:bg-[#8c060a] text-white border-transparent"
+                          : "bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-300",
+                      )}
+                    >
+                      {ocultarNotas ? (
+                        <>
+                          <EyeOff size={11} className="stroke-[3]" /> OCULTO NO
+                          E-MAIL
+                        </>
+                      ) : (
+                        <>
+                          <Eye size={11} className="stroke-[2.5]" /> OCULTAR NO
+                          E-MAIL
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {!ocultarNotas ? (
+                    <input
+                      type="text"
+                      value={esquemaEmbarque}
+                      onChange={(e) => setEsquemaEmbarque(e.target.value)}
+                      className="w-full bg-transparent border-b-2 border-stone-300 focus:border-[#B32025] py-1 text-xs outline-none uppercase font-mono font-bold text-[#3e2516]"
+                      placeholder="EX: CAVALO: ISCA NO PAINEL / CARRETA 1: ISCA NO MEIO..."
+                    />
+                  ) : (
+                    <p className="text-[10px] text-stone-500 font-semibold italic">
+                      O esquema e as notas de embarque estão ocultos e não serão
+                      incluídos no e-mail copiado.
+                    </p>
+                  )}
+                </div>
+
+                {/* 7. GERENCIAMENTO DE RISCO (OCULTO AUTOMATICAMENTE QUANDO PREFIXO FOR 30D10000) */}
+                {!isDescartavel && (
+                  <div className="mt-6 bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-xl text-left shadow-2xs">
+                    <p className="text-[11px] font-black text-[#0F172A] mb-2 uppercase tracking-wide">
+                      GERENCIAMENTO DE RISCO
+                    </p>
+                    <p className="text-[11px] text-[#334155] mb-1.5 font-medium leading-relaxed">
+                      • Ressalto a importância de encaminhar todas as iscas resgatadas para suas respectivas unidades de origem.
+                    </p>
+                    <p className="text-[11px] text-[#334155] mb-1.5 font-medium leading-relaxed">
+                      Agradeço antecipadamente pelo compromisso em assegurar que esses envios sejam efetuados via veículos dedicados ou postagem de maneira a evitar qualquer inconveniente em nossa operação.
+                    </p>
+                    <p className="text-[11px] text-[#334155] mb-1.5 font-medium leading-relaxed">
+                      A devolução dos rastreadores móveis é essencial, porém, muitos ainda não foram devolvidos prejudicando nossos processos. Por gentileza, devolvam as iscas o quanto antes para mantermos nossa excelência operacional.
+                    </p>
+                    <p className="text-[11px] text-[#334155] font-medium leading-relaxed">
+                      Desde já agradeço e ficamos no aguardo do retorno sobre as devoluções.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick action helper card inside main container */}
+            <div className="bg-[#FAF6ED] border border-[#e1ccb0] rounded-2xl p-4 flex gap-3 items-start mt-2">
+              <Info className={cn("shrink-0 mt-0.5", isGreenOrigem ? "text-emerald-600" : isPurpleOrigem ? "text-purple-700" : isCuiabaOrigem ? "text-amber-600" : "text-[#9b1526]")} size={16} />
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#5c3e29] uppercase tracking-wide">
+                  Dica do Gerador
+                </span>
+                <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
+                  Você pode clicar diretamente nos campos da tabela acima para
+                  preenchê-los manualmente de forma ágil, ou utilizar a coluna
+                  de preenchimento rápido ao lado para carregar dados
+                  corporativos específicos.
+                </p>
+              </div>
+            </div>
+          </div>
+          )}
+        </div>
+      </div>
+
+      {/* MIDDLE SIDEBAR: Fast Fill Column (fixed width) */}
+      <div
+        className={cn(
+          "col-span-1 xl:col-span-1 flex flex-col transition-all duration-300",
+          preAlertaMode === "minimized" && "origin-top"
+        )}
+        style={preAlertaMode === "minimized" ? { zoom: colunasZoom } : undefined}
+      >
+        <div className={cn(
+          "rounded-2xl bg-white border border-stone-200 shadow-md relative overflow-hidden flex flex-col p-4 sm:p-5 transition-all",
+          preAlertaMode === "minimized" && "border-amber-400/50 shadow-xl ring-1 ring-amber-400/20"
+        )}>
+          {/* Form Header */}
+          <div className="border-b border-stone-200 pb-4 mb-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-500 block">
+                Painel Lateral
+              </span>
+              {preAlertaMode === "minimized" && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                  Zoom {Math.round(colunasZoom * 100)}%
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <h3 className="text-base font-sans font-extrabold text-stone-900 uppercase tracking-tight flex items-center gap-2">
+                <Sliders size={18} className={isGreenOrigem ? "text-emerald-600" : isPurpleOrigem ? "text-purple-700" : isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Formulário de Controle
+              </h3>
+              <div className="flex items-center gap-1.5">
+                {preAlertaMode === "minimized" && (
+                  <div className="flex items-center bg-stone-100 border border-stone-300 rounded-lg p-0.5 text-[10px] font-black shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => setColunasZoom((z) => Math.max(1.0, parseFloat((z - 0.05).toFixed(2))))}
+                      title="Diminuir Zoom"
+                      className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-stone-700 active:scale-95 transition-colors cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <span className="px-1.5 font-mono text-stone-800">{Math.round(colunasZoom * 100)}%</span>
+                    <button
+                      type="button"
+                      onClick={() => setColunasZoom((z) => Math.min(1.35, parseFloat((z + 0.05).toFixed(2))))}
+                      title="Aumentar Zoom"
+                      className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-stone-700 active:scale-95 transition-colors cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                  title="Limpar formulário"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Form inputs */}
+          <div className="flex flex-col gap-4">
+            {/* ORIGEM (MENU SUSPENSO) */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <MapPin size={12} className="text-stone-500" /> ORIGEM
+              </label>
+              <select
+                value={origem}
+                onChange={(e) => {
+                  const newOrigem = e.target.value;
+                  setOrigem(newOrigem);
+                  if (rota1) {
+                    if (rota1.includes(" x ")) {
+                      const parts = rota1.split(/\s*x\s*/i);
+                      const firstPart = parts[0];
+                      const prefixMatch = firstPart.match(/^(\s*·?\s*)/);
+                      const prefix = prefixMatch ? prefixMatch[1] : "";
+                      const restOfRoute = parts.slice(1).join(" x ");
+                      setRota1(`${prefix}${newOrigem} x ${restOfRoute}`);
+                    }
+                  }
+                }}
+                className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+              >
+                {ORIGEM_OPCOES.map((opt) => (
+                  <option
+                    key={opt}
+                    value={opt}
+                    className="text-stone-900 uppercase text-xs font-bold"
+                  >
+                    {opt.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* SELECIONAR ROTA (MENU SUSPENSO) */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <MapPin size={12} className="text-stone-500" /> SELECIONAR ROTA (DESTINO)
+              </label>
+
+              {/* Search input for filtering */}
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search size={12} className="text-stone-400" />
+                </span>
+                <input
+                  type="text"
+                  value={searchRota}
+                  onChange={(e) => setSearchRota(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-300 rounded-lg pl-8 pr-3 py-1.5 text-xs font-bold uppercase text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs placeholder:text-stone-400"
+                  placeholder="PESQUISAR ROTA..."
+                />
+                {searchRota && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchRota("")}
+                    className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-[10px] font-black text-red-600 hover:text-red-700 uppercase cursor-pointer"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+
+              <select
+                value={rota1}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    setRota1(val);
+                    const parts = val.split(/\s*x\s*/i);
+                    const lastPart = parts[parts.length - 1]?.trim();
+                    if (lastPart) {
+                      setDestino(lastPart);
+                    }
+                  } else {
+                    setRota1("");
+                    setDestino("");
+                  }
+                }}
+                className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+              >
+                <option value="">
+                  {searchRota
+                    ? "RESULTADOS DA BUSCA..."
+                    : "SELECIONE A ROTA..."}
+                </option>
+                {rota1 &&
+                  !DESTINOS_OPCOES.some(
+                    (dest) =>
+                      dest.replace(/^SANTA LUZIA\/MG/i, origem).toUpperCase() ===
+                      rota1.toUpperCase()
+                  ) && (
+                    <option
+                      value={rota1}
+                      className="text-stone-900 uppercase text-xs font-bold"
+                    >
+                      {rota1.toUpperCase()}
+                    </option>
+                  )}
+                {DESTINOS_OPCOES.filter((dest) =>
+                  dest.toLowerCase().includes(searchRota.toLowerCase()),
+                ).map((dest) => {
+                  const displayDest = dest.replace(/^SANTA LUZIA\/MG/i, origem);
+                  return (
+                    <option
+                      key={dest}
+                      value={displayDest}
+                      className="text-stone-900 uppercase text-xs font-bold"
+                    >
+                      {displayDest.toUpperCase()}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* TRANSPORTADORA input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <Truck size={12} className="text-stone-500" /> TRANSPORTADORA
+              </label>
+              <select
+                value={sidebarTransportadora}
+                onChange={(e) => handleSidebarTranspChange(e.target.value)}
+                className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs cursor-pointer"
+              >
+                <option value="">SELECIONE...</option>
+                {allTransportadoras.map((t) => (
+                  <option
+                    key={t}
+                    value={t}
+                    className="text-stone-900 uppercase text-xs font-bold"
+                  >
+                    {t}
+                  </option>
+                ))}
+              </select>
+
+              {!isAddingTransp ? (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingTransp(true)}
+                  className="self-start text-[10px] font-extrabold text-red-600 hover:text-red-700 flex items-center gap-1 mt-0.5 transition-colors uppercase tracking-wider cursor-pointer"
+                >
+                  <Plus size={12} /> Adicionar Transportadora
+                </button>
+              ) : (
+                <div className="flex flex-col gap-1.5 p-2 bg-stone-100 rounded-lg border border-stone-200 mt-0.5 shadow-2xs">
+                  <input
+                    type="text"
+                    placeholder="NOME DA TRANSPORTADORA"
+                    value={newTranspName}
+                    onChange={(e) => setNewTranspName(e.target.value)}
+                    className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 focus:ring-1 focus:ring-red-600/20 outline-none transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomTransp();
+                      }
+                    }}
+                  />
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingTransp(false);
+                        setNewTranspName("");
+                      }}
+                      className="px-2 py-0.5 text-[10px] font-extrabold text-stone-600 hover:bg-stone-200 rounded uppercase transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomTransp}
+                      className="px-2.5 py-0.5 text-[10px] font-extrabold text-white bg-red-600 hover:bg-red-700 rounded uppercase shadow-2xs transition-colors cursor-pointer"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* COLAR DA PLANILHA (PARAMETRIZAÇÃO) textarea */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <FileText size={12} className="text-stone-500" /> COLAR DA PLANILHA (PARAMETRIZAÇÃO)
+              </label>
+              <textarea
+                value={pastePlanilha}
+                onChange={(e) => handlePastePlanilhaChange(e.target.value)}
+                rows={3}
+                className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3 py-2 text-xs font-bold text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs resize-none placeholder:text-stone-400"
+                placeholder="Cole as linhas da planilha de iscas aqui..."
+              />
+            </div>
+
+            {/* NOME MOTORISTA input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <User size={12} className="text-stone-500" /> NOME MOTORISTA
+              </label>
+              <input
+                type="text"
+                value={sidebarMotorista}
+                onChange={(e) => handleSidebarMotoristaChange(e.target.value)}
+                className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs"
+                placeholder="NOME COMPLETO"
+              />
+            </div>
+
+            {/* PREFIXOS & BATERIA ISCAS */}
+            <div className="flex flex-col gap-3 bg-stone-50 border border-stone-200 rounded-xl p-3 shadow-2xs">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-800 flex items-center gap-1">
+                  <Sliders size={12} className="text-stone-500" /> N° ISCAS (PREFIXOS & BATERIA)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleCopyIscasWithSpace}
+                  title="Copiar números das iscas com espaço (ex: R100002466 R100000876)"
+                  className={cn(
+                    "flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md transition-all cursor-pointer select-none shadow-2xs",
+                    copiedIscasSpace
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white hover:shadow-xs active:scale-95"
+                  )}
+                >
+                  {copiedIscasSpace ? (
+                    <>
+                      <Check size={11} className="stroke-[3]" />
+                      <span>Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={11} />
+                      <span>Copiar Iscas</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {/* ISCA 1 SECTION */}
+                <div className="border-b border-stone-200 pb-2.5">
+                  <span className="text-[9px] font-extrabold uppercase text-red-600 block mb-1">
+                    DISPOSITIVO ISCA 1:
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[8px] font-extrabold uppercase text-stone-500 block mb-0.5">
+                        PREFIXO:
+                      </span>
+                      <select
+                        value={iscaPrefix1}
+                        onChange={(e) => {
+                          const newPrefix = e.target.value;
+                          setIscaPrefix1(newPrefix);
+                          const newIsca1 = newPrefix + iscaSuffix1;
+                          setIsca1(newIsca1);
+                          if (isPrefix30D1(newPrefix, newIsca1)) {
+                            setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                          } else if (!isDispositivoDescartavel(newPrefix, iscaPrefix2, newIsca1, isca2, numCarretas)) {
+                            setAlertaResgate(FRASE_RESGATE_PADRAO);
+                          }
+                        }}
+                        className="w-full bg-white border border-stone-300 rounded-md px-1 py-1 text-[10px] font-extrabold text-stone-900 focus:border-red-600 outline-none cursor-pointer transition-all"
+                      >
+                        <option value="R100000">R100000</option>
+                        <option value="R10000">R10000</option>
+                        <option value="30D10000">30D10000</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span className="text-[8px] font-extrabold uppercase text-stone-500 block mb-0.5">
+                        RESTO:
+                      </span>
+                      <input
+                        type="text"
+                        value={iscaSuffix1}
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase();
+                          let newPrefix = iscaPrefix1;
+                          if (!iscaPrefix1.toLowerCase().startsWith("30d1")) {
+                            if (val.length === 3) newPrefix = "R100000";
+                            else if (val.length === 4) newPrefix = "R10000";
+                          }
+                          
+                          setIscaSuffix1(val);
+                          setIscaPrefix1(newPrefix);
+                          const newIsca1 = newPrefix + val;
+                          setIsca1(newIsca1);
+                          if (isPrefix30D1(newPrefix, newIsca1)) {
+                            setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                          } else if (!isDispositivoDescartavel(newPrefix, iscaPrefix2, newIsca1, isca2, numCarretas)) {
+                            setAlertaResgate(FRASE_RESGATE_PADRAO);
+                          }
+                        }}
+                        className="w-full bg-white border border-stone-300 rounded-md px-1.5 py-1 text-[10px] font-black text-stone-900 uppercase focus:border-red-600 outline-none transition-all"
+                        placeholder="RESTO..."
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                   <div className="relative">
-                    <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" />
+                {/* ISCA 2 SECTION */}
+                {numCarretas === 2 && (
+                  <div>
+                    <span className="text-[9px] font-extrabold uppercase text-red-600 block mb-1">
+                      DISPOSITIVO ISCA 2:
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[8px] font-extrabold uppercase text-stone-500 block mb-0.5">
+                          PREFIXO:
+                        </span>
+                        <select
+                          value={iscaPrefix2}
+                          onChange={(e) => {
+                            const newPrefix = e.target.value;
+                            setIscaPrefix2(newPrefix);
+                            const newIsca2 = newPrefix + iscaSuffix2;
+                            setIsca2(newIsca2);
+                            if (isPrefix30D1(newPrefix, newIsca2)) {
+                              setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                            } else if (!isDispositivoDescartavel(iscaPrefix1, newPrefix, isca1, newIsca2, numCarretas)) {
+                              setAlertaResgate(FRASE_RESGATE_PADRAO);
+                            }
+                          }}
+                          className="w-full bg-white border border-stone-300 rounded-md px-1 py-1 text-[10px] font-extrabold text-stone-900 focus:border-red-600 outline-none cursor-pointer transition-all"
+                        >
+                          <option value="R100000">R100000</option>
+                          <option value="R10000">R10000</option>
+                          <option value="30D10000">30D10000</option>
+                        </select>
+                      </div>
+                      <div>
+                        <span className="text-[8px] font-extrabold uppercase text-stone-500 block mb-0.5">
+                          RESTO:
+                        </span>
+                        <input
+                          type="text"
+                          value={iscaSuffix2}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase();
+                            let newPrefix = iscaPrefix2;
+                            if (!iscaPrefix2.toLowerCase().startsWith("30d1")) {
+                              if (val.length === 3) newPrefix = "R100000";
+                              else if (val.length === 4) newPrefix = "R10000";
+                            }
+                            
+                            setIscaSuffix2(val);
+                            setIscaPrefix2(newPrefix);
+                            const newIsca2 = newPrefix + val;
+                            setIsca2(newIsca2);
+                            if (isPrefix30D1(newPrefix, newIsca2)) {
+                              setAlertaResgate(FRASE_RESGATE_DESCARTAVEL);
+                            } else if (!isDispositivoDescartavel(iscaPrefix1, newPrefix, isca1, newIsca2, numCarretas)) {
+                              setAlertaResgate(FRASE_RESGATE_PADRAO);
+                            }
+                          }}
+                          className="w-full bg-white border border-stone-300 rounded-md px-1.5 py-1 text-[10px] font-black text-stone-900 uppercase focus:border-red-600 outline-none transition-all"
+                          placeholder="RESTO..."
+                        />
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+                {/* VISUAL PREVIEW & QUICK COPY BAR */}
+                {getIscasSpaceSeparated() ? (
+                  <div
+                    onClick={handleCopyIscasWithSpace}
+                    title="Clique para copiar com espaço"
+                    className="flex items-center justify-between bg-white border border-stone-300 hover:border-red-400 rounded-lg px-2.5 py-1.5 cursor-pointer transition-all group shadow-2xs"
+                  >
+                    <div className="flex items-center gap-1.5 overflow-hidden">
+                      <span className="text-[8px] font-extrabold uppercase text-stone-400 shrink-0">ISCAS:</span>
+                      <span className="text-[11px] font-mono font-black text-red-600 group-hover:text-red-700 tracking-wider truncate">
+                        {getIscasSpaceSeparated()}
+                      </span>
+                    </div>
+                    <div className="shrink-0 ml-1.5 flex items-center gap-1 text-[8px] font-black uppercase text-stone-400 group-hover:text-red-600 transition-colors">
+                      {copiedIscasSpace ? (
+                        <span className="text-emerald-600 font-black flex items-center gap-0.5">
+                          <Check size={11} className="stroke-[3]" /> Copiado
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-0.5">
+                          <Copy size={11} /> Copiar
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+
+
+            {/* EMBARQUE (CARRETA 1) */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-stone-200">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center justify-between">
+                <span>Embarque (carreta 1)</span>
+                {carreta1 && <span className="text-[9px] font-mono text-red-600 font-black">{carreta1}</span>}
+              </label>
+
+              <div className="grid grid-cols-2 gap-1.5">
+                {EMBARQUE_IMAGES.map((img) => {
+                  const isSelected = sidebarEmbarque1 === img.value;
+                  let displayLabel = img.label.toUpperCase();
+                  if (img.value === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF") {
+                    displayLabel = "EMBARQUE (PALETIZADO)";
+                  } else if (img.value === "none") {
+                    displayLabel = "SEM ISCA";
+                  }
+
+                  return (
+                    <button
+                      key={img.value}
+                      type="button"
+                      onClick={() => setSidebarEmbarque1(img.value)}
+                      className={cn(
+                        "px-1.5 py-2 rounded-lg text-[9px] font-black uppercase text-center transition-all cursor-pointer border leading-tight flex items-center justify-center min-h-[36px]",
+                        isSelected
+                          ? "bg-red-600 text-white border-red-600 shadow-xs"
+                          : "bg-white text-stone-700 border-stone-300 hover:bg-stone-100"
+                      )}
+                    >
+                      {displayLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Preview Box Carreta 1 */}
+              <div className="mt-1 bg-stone-50 border border-stone-200 rounded-xl p-2 flex flex-col items-center justify-center min-h-[95px]">
+                {sidebarEmbarque1 && sidebarEmbarque1 !== "none" ? (
+                  <div className="flex flex-col items-center w-full">
+                    <img
+                      src={sidebarEmbarque1}
+                      alt="Esquema Carreta 1"
+                      className="max-h-[80px] max-w-full object-contain rounded"
+                      onError={(e) => {
+                        const fallback = getLocalFallbackImg(sidebarEmbarque1);
+                        if (fallback && e.currentTarget.src !== fallback) {
+                          e.currentTarget.src = fallback;
+                        }
+                      }}
+                    />
+                    <span className="text-[9px] font-black text-stone-700 uppercase mt-1 text-center">
+                      CARRETA 1: {carreta1 || "S/ PLACA"}
+                    </span>
+                  </div>
+                ) : sidebarEmbarque1 === "" ? (
+                  <div className="text-center">
+                    <span className="text-[10px] font-extrabold text-stone-800 uppercase block">Grade Interativa Ativa</span>
+                    <span className="text-[9px] text-stone-500">Clique nas células no gerador.</span>
+                  </div>
+                ) : (
+                  <span className="text-[9px] font-extrabold text-stone-400 uppercase">SEM ISCA NA CARRETA 1</span>
+                )}
+              </div>
+            </div>
+
+            {/* EMBARQUE (CARRETA 2) */}
+            {numCarretas === 2 && (
+              <div className="flex flex-col gap-2 pt-2 border-t border-stone-200">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center justify-between">
+                  <span>Embarque (carreta 2)</span>
+                  {carreta2 && <span className="text-[9px] font-mono text-blue-600 font-black">{carreta2}</span>}
+                </label>
+
+                <div className="grid grid-cols-2 gap-1.5">
+                  {EMBARQUE_IMAGES.map((img) => {
+                    const isSelected = sidebarEmbarque2 === img.value;
+                    let displayLabel = img.label.toUpperCase();
+                    if (img.value === "https://lh3.googleusercontent.com/d/1Ra4uncQihpKaqQi18fu0pKPt1NkzDNyF") {
+                      displayLabel = "EMBARQUE (PALETIZADO)";
+                    } else if (img.value === "none") {
+                      displayLabel = "SEM ISCA";
+                    }
+
+                    return (
+                      <button
+                        key={img.value}
+                        type="button"
+                        onClick={() => setSidebarEmbarque2(img.value)}
+                        className={cn(
+                          "px-1.5 py-2 rounded-lg text-[9px] font-black uppercase text-center transition-all cursor-pointer border leading-tight flex items-center justify-center min-h-[36px]",
+                          isSelected
+                            ? "bg-red-600 text-white border-red-600 shadow-xs"
+                            : "bg-white text-stone-700 border-stone-300 hover:bg-stone-100"
+                        )}
+                      >
+                        {displayLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Preview Box Carreta 2 */}
+                <div className="mt-1 bg-stone-50 border border-stone-200 rounded-xl p-2 flex flex-col items-center justify-center min-h-[95px]">
+                  {sidebarEmbarque2 && sidebarEmbarque2 !== "none" ? (
+                    <div className="flex flex-col items-center w-full">
+                      <img
+                        src={sidebarEmbarque2}
+                        alt="Esquema Carreta 2"
+                        className="max-h-[80px] max-w-full object-contain rounded"
+                        onError={(e) => {
+                          const fallback = getLocalFallbackImg(sidebarEmbarque2);
+                          if (fallback && e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback;
+                          }
+                        }}
+                      />
+                      <span className="text-[9px] font-black text-stone-700 uppercase mt-1 text-center">
+                        CARRETA 2: {carreta2 || "S/ PLACA"}
+                      </span>
+                    </div>
+                  ) : sidebarEmbarque2 === "" ? (
+                    <div className="text-center">
+                      <span className="text-[10px] font-extrabold text-stone-800 uppercase block">Grade Interativa Ativa</span>
+                      <span className="text-[9px] text-stone-500">Clique nas células no gerador.</span>
+                    </div>
+                  ) : (
+                    <span className="text-[9px] font-extrabold text-stone-400 uppercase">SEM ISCA NA CARRETA 2</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Buttons area */}
+            <div className="flex flex-col gap-3 mt-2">
+              {/* COPIAR PARA EMAIL BUTTON */}
+              <button
+                onClick={handleCopyToEmail}
+                className={cn(
+                  "w-full text-[11px] font-extrabold uppercase tracking-widest py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98 cursor-pointer border border-transparent",
+                  copied
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                    : isGreenOrigem
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20 font-black"
+                      : isPurpleOrigem
+                        ? "bg-purple-700 hover:bg-purple-800 text-white shadow-purple-700/20 font-black"
+                        : isCuiabaOrigem
+                          ? "bg-amber-500 hover:bg-amber-600 text-stone-950 font-black shadow-amber-500/20"
+                          : "bg-red-600 hover:bg-red-700 text-white shadow-red-600/20",
+                )}
+              >
+                {copied ? (
+                  <>
+                    <Check size={14} className="stroke-[3]" /> COPIADO COM SUCESSO!
+                  </>
+                ) : (
+                  <>
+                    <Mail size={14} className="stroke-[2.5]" /> COPIAR PARA EMAIL
+                  </>
+                )}
+              </button>
+
+              {/* LIMPAR INFORMAÇÕES BUTTON */}
+              <button
+                onClick={handleClear}
+                className="w-full bg-[#2d241e] hover:bg-[#1f1915] text-stone-200 text-[11px] font-extrabold uppercase tracking-widest py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 border border-stone-700 transition-all active:scale-98 cursor-pointer"
+              >
+                <Trash2 size={14} className="stroke-[2.5]" /> LIMPAR INFORMAÇÕES
+              </button>
+            </div>
+
+            {/* DICA DE GESTÃO CARD */}
+            <div className="bg-[#1f1915] text-white rounded-xl p-3.5 border border-stone-800 shadow-sm mt-2">
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-sky-400 block mb-1">
+                Dica de Gestão PGR
+              </span>
+              <p className="text-[10px] font-medium text-stone-300 leading-relaxed">
+                Verifique os dados cuidadosamente antes de enviar. O pré-alerta
+                gerado deve estar 100% de acordo com a nota fiscal e a ordem de
+                coleta de iscas do pátio para mitigar sinistros.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT SIDEBAR: Vehicle & Cargo Column (fixed width) */}
+      <div
+        className={cn(
+          "col-span-1 xl:col-span-1 flex flex-col transition-all duration-300",
+          preAlertaMode === "minimized" && "origin-top"
+        )}
+        style={preAlertaMode === "minimized" ? { zoom: colunasZoom } : undefined}
+      >
+        <div className={cn(
+          "rounded-2xl bg-white border border-stone-200 shadow-md relative overflow-hidden flex flex-col p-4 sm:p-5 transition-all",
+          preAlertaMode === "minimized" && "border-amber-400/50 shadow-xl ring-1 ring-amber-400/20"
+        )}>
+          {/* Form Header */}
+          <div className="border-b border-stone-200 pb-4 mb-5 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-500 block">
+                  Painel de Viagem
+                </span>
+                {preAlertaMode === "minimized" && (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                    Zoom {Math.round(colunasZoom * 100)}%
+                  </span>
+                )}
+              </div>
+              <h3 className="text-base font-sans font-extrabold text-stone-900 uppercase tracking-tight mt-0.5 flex items-center gap-2">
+                <Truck size={18} className="text-red-600" /> Veículo & Carga
+              </h3>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {preAlertaMode === "minimized" && (
+                <div className="flex items-center bg-stone-100 border border-stone-300 rounded-lg p-0.5 text-[10px] font-black shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setColunasZoom((z) => Math.max(1.0, parseFloat((z - 0.05).toFixed(2))))}
+                    title="Diminuir Zoom"
+                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-stone-700 active:scale-95 transition-colors cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="px-1.5 font-mono text-stone-800">{Math.round(colunasZoom * 100)}%</span>
+                  <button
+                    type="button"
+                    onClick={() => setColunasZoom((z) => Math.min(1.35, parseFloat((z + 0.05).toFixed(2))))}
+                    title="Aumentar Zoom"
+                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-stone-700 active:scale-95 transition-colors cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleClearVeiculo}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                title="Limpar formulário de Veículo & Carga"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Form inputs */}
+          <div className="flex flex-col gap-4">
+            {/* CAVALO */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <Truck size={12} className="text-stone-500" /> Placa do Cavalo
+              </label>
+              <input
+                type="text"
+                value={cavalo}
+                onChange={(e) => setCavalo(e.target.value.replace(/-/g, "").toUpperCase())}
+                className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase text-stone-900 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 hover:bg-white outline-none transition-all shadow-2xs"
+                placeholder="PLACA DO CAVALO"
+              />
+            </div>
+
+            {/* CARRETA 1 GROUP */}
+            <div className="flex flex-col gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200 shadow-2xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                    <Truck size={10} className="text-stone-500" /> Carreta 1
+                  </label>
+                  <input
+                    type="text"
+                    value={carreta1}
+                    onChange={(e) => setCarreta1(e.target.value.toUpperCase())}
+                    className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    placeholder="CARRETA 1"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                    <Package size={10} className="text-stone-500" /> Produto 1
+                  </label>
+                  <input
+                    type="text"
+                    value={produto1}
+                    onChange={(e) => setProduto1(e.target.value.toUpperCase())}
+                    className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    placeholder="PRODUTO 1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                    <Hash size={10} className="text-stone-500" /> U.M.A. 1
+                  </label>
+                  <input
+                    type="text"
+                    value={uma1}
+                    onChange={(e) => setUma1(formatUMA(e.target.value))}
+                    className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    placeholder="0XX.XXX.XXX.XXX"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                    <FileText size={10} className="text-stone-500" /> NF Início
+                  </label>
+                  <input
+                    type="text"
+                    value={nfInicio}
+                    onChange={(e) => setNfInicio(e.target.value.replace(/-/g, "").toUpperCase())}
+                    className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                    placeholder="INÍCIO"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* CARRETA 2 GROUP */}
+            {numCarretas === 2 && (
+              <div className="flex flex-col gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200 shadow-2xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                      <Truck size={10} className="text-stone-500" /> Carreta 2
+                    </label>
                     <input
                       type="text"
-                      value={placasFilter}
-                      onChange={(e) => setPlacasFilter(e.target.value)}
-                      className="bg-stone-50 border border-stone-100 rounded-full pl-11 pr-6 py-3 text-xs font-bold text-stone-900 outline-none focus:ring-4 focus:ring-[#9b1526]/5 focus:border-[#9b1526] transition-all w-72 shadow-inner"
-                      placeholder="Pesquisar placa ou condutor..."
+                      value={carreta2}
+                      onChange={(e) => setCarreta2(e.target.value.toUpperCase())}
+                      className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                      placeholder="CARRETA 2"
                     />
                   </div>
-                  <button
-                    onClick={handlePasteClipboardPlacas}
-                    className="px-8 py-3.5 bg-stone-900 hover:bg-black text-white rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95"
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                      <Package size={10} className="text-stone-500" /> Produto 2
+                    </label>
+                    <input
+                      type="text"
+                      value={produto2}
+                      onChange={(e) => setProduto2(e.target.value.toUpperCase())}
+                      className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                      placeholder="PRODUTO 2"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className={isca2 === "SEM ISCA" ? "col-span-2 flex flex-col gap-1" : "flex flex-col gap-1"}>
+                    <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                      <Hash size={10} className="text-stone-500" /> U.M.A. 2
+                    </label>
+                    <input
+                      type="text"
+                      value={uma2}
+                      onChange={(e) => setUma2(formatUMA(e.target.value))}
+                      className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                      placeholder="0XX.XXX.XXX.XXX"
+                    />
+                  </div>
+                  {isca2 !== "SEM ISCA" && (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                        <FileText size={10} className="text-stone-500" /> NF Fim
+                      </label>
+                      <input
+                        type="text"
+                        value={nfFim}
+                        onChange={(e) => setNfFim(e.target.value.replace(/-/g, "").toUpperCase())}
+                        className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                        placeholder="FIM"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* QUICK ACTIONS BAR (SWAP CARRETAS) */}
+            <div className="bg-stone-100 border border-stone-200 rounded-xl p-2.5 flex flex-col gap-2 shadow-2xs">
+              <span className="text-[9px] font-black uppercase tracking-wider text-stone-700 flex items-center gap-1">
+                <Sliders size={11} className={isCuiabaOrigem ? "text-amber-600" : "text-red-600"} /> Trocar Placas:
+              </span>
+              <button
+                type="button"
+                onClick={handleSwapCarretas}
+                title="Inverter as placas das colunas Carreta 1 e Carreta 2"
+                className="w-full flex items-center justify-center gap-1 bg-white hover:bg-stone-200/80 text-stone-800 border border-stone-300 font-extrabold uppercase text-[9px] py-1.5 px-2 rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+              >
+                <ArrowUpDown size={11} className="text-blue-600 stroke-[2.5]" />
+                <span>Carreta 1 ⇄ 2</span>
+              </button>
+            </div>
+
+            {/* VALOR DA CARGA (SANTA LUZIA) */}
+            <div className="flex flex-col gap-1 p-2.5 bg-stone-50 rounded-xl border border-stone-200 shadow-2xs">
+              <label className="text-[9px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <DollarSign size={10} className="text-amber-600" /> Valor da Carga (NF)
+                </span>
+                {valorCarga && (
+                  <span className="text-[8px] bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black border border-amber-300/60">
+                    SANTA LUZIA
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                value={valorCarga}
+                onChange={(e) => setValorCarga(e.target.value)}
+                className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-stone-900 focus:border-red-600 outline-none transition-all shadow-2xs"
+                placeholder="R$ 0,00"
+                title="Importado da coluna VALOR NF na aba SANTA LUZIA"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      {/* SEÇÃO DE CÓPIA PARA PLANILHA GOOGLE (LINHAS DE ISCA) */}
+      <div className="w-full mt-8 bg-[#F4F8FA] border border-[#CBD5E1] rounded-3xl shadow-sm overflow-hidden flex flex-col p-5 sm:p-7">
+        {/* Header banner */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-[#CBD5E1]">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-[#0F172A] text-white rounded-2xl shadow-sm shrink-0">
+              <FileSpreadsheet size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B] bg-white px-2.5 py-0.5 rounded-md border border-[#CBD5E1]">
+                  Planilha Google / Excel
+                </span>
+              </div>
+              <h3 className="text-base font-sans font-extrabold text-[#0F172A] uppercase tracking-tight mt-1 flex items-center gap-2">
+                <FileSpreadsheet size={18} className="text-[#0F172A]" /> Copiar Linhas de Iscas para Planilha Google
+              </h3>
+              <p className="text-xs text-[#64748B] font-semibold mt-0.5">
+                Copie a frase de embarque das iscas, linhas individuais ou a tabela completa para colar no Google Sheets (Ctrl+V)
+              </p>
+            </div>
+          </div>
+
+          {/* Batch Copy Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={handleCopyFraseEmbarque}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border flex items-center gap-2 transition-all cursor-pointer active:scale-95",
+                copiedFraseEmbarque
+                  ? "bg-emerald-600 text-white border-emerald-500"
+                  : "bg-blue-600 hover:bg-blue-700 text-white border-blue-500"
+              )}
+              title="Copiar frase de embarque com dia/mês e destino do pré-alerta"
+            >
+              {copiedFraseEmbarque ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} />}
+              <span>{copiedFraseEmbarque ? "Frase Copiada!" : "Copiar Frase"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => copyAllIscaRowsToClipboard(false)}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border flex items-center gap-2 transition-all cursor-pointer active:scale-95",
+                copiedIscaDataOnly
+                  ? "bg-emerald-600 text-white border-emerald-500"
+                  : "bg-[#0F172A] hover:bg-[#2d241e] text-white border-stone-700"
+              )}
+              title="Copiar todas as linhas de iscas da tabela (Ctrl+V)"
+            >
+              {copiedIscaDataOnly ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} />}
+              <span>{copiedIscaDataOnly ? "Linhas Copiadas!" : "Copiar Todas as Linhas"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Spreadsheet Mock Preview Table */}
+        <div className="mt-5 w-full rounded-2xl border border-[#D1E1EB] overflow-x-auto shadow-sm bg-white">
+          <div className="min-w-[1000px]">
+            {/* Column Letters Bar A-H */}
+            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#F4F8FA] border-b border-[#D1E1EB] text-[10px] font-black text-[#64748B] text-center py-1 divide-x divide-[#D1E1EB]">
+              <div>A</div>
+              <div>B</div>
+              <div>C</div>
+              <div>D</div>
+              <div>E</div>
+              <div>F</div>
+              <div>G</div>
+              <div>H</div>
+              <div>AÇÃO</div>
+            </div>
+
+            {/* Header Row */}
+            <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] bg-[#0F172A] text-white text-[11px] font-black uppercase py-2.5 divide-x divide-[#CBD5E1] border-b border-[#CBD5E1] items-center">
+              <div className="px-2 text-center">ID ISCA</div>
+              <div className="px-2 text-center">DESTINO</div>
+              <div className="px-2 text-center">STATUS</div>
+              <div className="px-2 text-center">OBS 1</div>
+              <div className="px-2 text-center">DATA STATUS</div>
+              <div className="px-2 text-center">CARRETA</div>
+              <div className="px-2 text-center">CAVALO</div>
+              <div className="px-2 text-center">MOTORISTA</div>
+              <div className="px-2 text-center">AÇÃO</div>
+            </div>
+
+            {/* Data Rows */}
+            <div className="divide-y divide-[#CBD5E1] bg-white text-[#1E293B] font-sans">
+              {/* Row 1 (Isca 1) */}
+              <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] divide-x divide-[#CBD5E1] items-center hover:bg-[#F4F8FA] transition-colors">
+                {/* ID ISCA */}
+                <div className="p-2 font-black text-xs text-stone-900 text-center">
+                  <input
+                    type="text"
+                    value={isca1}
+                    onChange={(e) => handleIsca1Change(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-stone-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="R100000..."
+                  />
+                </div>
+
+                {/* DESTINO */}
+                <div className="p-2 font-black text-xs text-stone-900 text-center uppercase relative flex items-center justify-center">
+                  <select
+                    value={cleanDestinoForPlanilha(destino)}
+                    onChange={(e) => setDestino(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-2 py-0.5 border border-transparent focus:border-emerald-500 cursor-pointer appearance-none pr-4"
                   >
-                    Colar Dados
+                    <option value="" disabled className="text-stone-400 font-bold">SELECIONE</option>
+                    {cleanDestinoForPlanilha(destino) && !DESTINOS_PLANILHA_ISCAS.includes(cleanDestinoForPlanilha(destino)) && (
+                      <option value={cleanDestinoForPlanilha(destino)} className="text-stone-900 font-black">{cleanDestinoForPlanilha(destino)}</option>
+                    )}
+                    {DESTINOS_PLANILHA_ISCAS.map((dest) => (
+                      <option key={dest} value={dest} className="text-stone-900 font-black">
+                        {dest}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-600 text-[9px]">▼</span>
+                </div>
+
+                {/* STATUS */}
+                <div className="p-2 text-center font-black text-xs uppercase">
+                  <input
+                    type="text"
+                    value={statusIsca1}
+                    onChange={(e) => setStatusIsca1(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="EM ROTA(IDA)"
+                  />
+                </div>
+
+                {/* OBS 1 */}
+                <div className="p-2 text-center font-black text-xs uppercase">
+                  <input
+                    type="text"
+                    value={obs1Isca1}
+                    onChange={(e) => setObs1Isca1(e.target.value)}
+                    className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="PRÉ ALERTA OK"
+                  />
+                </div>
+
+                {/* DATA STATUS */}
+                <div className="p-2 text-center font-bold text-xs text-stone-900">
+                  <input
+                    type="text"
+                    value={dataStatusIsca1}
+                    onChange={(e) => setDataStatusIsca1(e.target.value)}
+                    className="w-full text-center bg-transparent font-bold text-xs text-stone-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="28.jul."
+                  />
+                </div>
+
+                {/* CARRETA */}
+                <div className="p-2 text-center font-black text-xs text-stone-900 uppercase">
+                  <input
+                    type="text"
+                    value={carreta1}
+                    onChange={(e) => setCarreta1(e.target.value.toUpperCase())}
+                    className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="CARRETA 1"
+                  />
+                </div>
+
+                {/* CAVALO */}
+                <div className="p-2 text-center font-black text-xs text-stone-900 uppercase">
+                  <input
+                    type="text"
+                    value={cavalo}
+                    onChange={(e) => setCavalo(e.target.value.toUpperCase())}
+                    className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="CAVALO"
+                  />
+                </div>
+
+                {/* MOTORISTA */}
+                <div className="p-2 font-black text-xs text-stone-900 uppercase">
+                  <input
+                    type="text"
+                    value={motorista || sidebarMotorista}
+                    onChange={(e) => handleTableMotoristaChange(e.target.value)}
+                    className="w-full bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                    placeholder="NOME MOTORISTA"
+                  />
+                </div>
+
+                {/* AÇÃO (COPIAR LINHA 1) */}
+                <div className="p-1.5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => copyIscaRowToClipboard(getIscaRows()[0], false, false)}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border flex items-center gap-1 transition-all cursor-pointer active:scale-95",
+                      copiedIscaRow1
+                        ? "bg-[#7F1D1D] text-white border-[#7F1D1D]"
+                        : "bg-[#B91C1C] border-[#B91C1C] hover:bg-[#991B1B] hover:border-[#991B1B] text-white"
+                    )}
+                    title="Copiar esta linha para colar no Google Sheets (Ctrl+V)"
+                  >
+                    {copiedIscaRow1 ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copiedIscaRow1 ? "Copiado!" : "Copiar"}</span>
                   </button>
                 </div>
               </div>
 
-              {parsedPlacas.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                  <div className="p-6 bg-[#fdfaf6] rounded-[24px] border border-stone-100 flex flex-col">
-                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Total Detectado</span>
-                    <span className="text-3xl font-black text-stone-950 tracking-tighter">{santaLuziaStats.total}</span>
+              {/* Row 2 (Isca 2, if 2 carretas and isca2 is set and not "SEM ISCA") */}
+              {numCarretas === 2 && isca2 && isca2 !== "SEM ISCA" && (
+                <div className="grid grid-cols-[130px_160px_140px_140px_110px_110px_110px_1fr_120px] divide-x divide-stone-300 items-center hover:bg-emerald-50 transition-colors">
+                  {/* ID ISCA */}
+                  <div className="p-2 font-black text-xs text-stone-900 text-center">
+                    <input
+                      type="text"
+                      value={isca2}
+                      onChange={(e) => handleIsca2Change(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-stone-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="R100000..."
+                    />
                   </div>
-                  <div className="p-6 bg-[#fdfaf6] rounded-[24px] border border-stone-100 flex flex-col">
-                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Bitrems/Rodotrems</span>
-                    <span className="text-3xl font-black text-[#9b1526] tracking-tighter">{santaLuziaStats.biTrems}</span>
+
+                  {/* DESTINO */}
+                  <div className="p-2 font-black text-xs text-stone-900 text-center uppercase relative flex items-center justify-center">
+                    <select
+                      value={cleanDestinoForPlanilha(destino)}
+                      onChange={(e) => setDestino(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-2 py-0.5 border border-transparent focus:border-emerald-500 cursor-pointer appearance-none pr-4"
+                    >
+                      <option value="" disabled className="text-stone-400 font-bold">SELECIONE</option>
+                      {cleanDestinoForPlanilha(destino) && !DESTINOS_PLANILHA_ISCAS.includes(cleanDestinoForPlanilha(destino)) && (
+                        <option value={cleanDestinoForPlanilha(destino)} className="text-stone-900 font-black">{cleanDestinoForPlanilha(destino)}</option>
+                      )}
+                      {DESTINOS_PLANILHA_ISCAS.map((dest) => (
+                        <option key={dest} value={dest} className="text-stone-900 font-black">
+                          {dest}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-600 text-[9px]">▼</span>
                   </div>
-                </div>
-              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredPlacas.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    whileHover={{ y: -6 }}
-                    className="bg-white border border-stone-100 rounded-[32px] p-6 shadow-sm hover:shadow-[0_20px_50px_rgba(155,21,38,0.08)] transition-all cursor-pointer group relative overflow-hidden"
-                    onClick={() => handleImportPlacaItem(item)}
-                  >
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <Truck size={64} className="text-[#9b1526] rotate-12" />
-                    </div>
+                  {/* STATUS */}
+                  <div className="p-2 text-center font-black text-xs uppercase">
+                    <input
+                      type="text"
+                      value={statusIsca2}
+                      onChange={(e) => setStatusIsca2(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="EM ROTA(IDA)"
+                    />
+                  </div>
 
-                    <div className="flex items-center justify-between mb-6 relative z-10">
-                      <span className="px-4 py-1.5 bg-[#9b1526]/5 text-[#9b1526] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#9b1526]/10">
-                        {item.transportador || "FROTA"}
-                      </span>
-                      <div className="flex items-center gap-1.5 text-[9px] font-black text-stone-400 uppercase tracking-widest">
-                        <MapPin size={12} /> {item.destino || "---"}
-                      </div>
-                    </div>
+                  {/* OBS 1 */}
+                  <div className="p-2 text-center font-black text-xs uppercase">
+                    <input
+                      type="text"
+                      value={obs1Isca2}
+                      onChange={(e) => setObs1Isca2(e.target.value)}
+                      className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="PRÉ ALERTA OK"
+                    />
+                  </div>
 
-                    <div className="mb-6 relative z-10">
-                      <h4 className="text-lg font-black text-stone-950 tracking-tighter uppercase mb-1 truncate leading-tight">{item.condutor || "CONDUTOR"}</h4>
-                      <div className="flex items-center gap-3">
-                         <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Placa:</p>
-                         <span className="text-sm font-black text-[#9b1526] tracking-widest">{item.cavalo}</span>
-                      </div>
-                    </div>
+                  {/* DATA STATUS */}
+                  <div className="p-2 text-center font-bold text-xs text-stone-900">
+                    <input
+                      type="text"
+                      value={dataStatusIsca2}
+                      onChange={(e) => setDataStatusIsca2(e.target.value)}
+                      className="w-full text-center bg-transparent font-bold text-xs text-stone-900 outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="28.jul."
+                    />
+                  </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-stone-50 relative z-10">
-                      <div className="flex gap-2">
-                        {item.carreta1 && <span className="text-[9px] font-black bg-stone-50 px-3 py-1 rounded-lg text-stone-600 border border-stone-100">{item.carreta1}</span>}
-                        {item.carreta2 && <span className="text-[9px] font-black bg-amber-50 px-3 py-1 rounded-lg text-amber-600 border border-amber-100">{item.carreta2}</span>}
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center group-hover:bg-[#9b1526] transition-colors">
-                        <ArrowRight size={16} />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                  {/* CARRETA */}
+                  <div className="p-2 text-center font-black text-xs text-stone-900 uppercase">
+                    <input
+                      type="text"
+                      value={carreta2}
+                      onChange={(e) => setCarreta2(e.target.value.toUpperCase())}
+                      className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="CARRETA 2"
+                    />
+                  </div>
 
-              {filteredPlacas.length === 0 && (
-                <div className="py-20 flex flex-col items-center justify-center text-stone-300 gap-4">
-                  <Activity size={48} strokeWidth={1} />
-                  <p className="text-xs font-black uppercase tracking-[0.2em]">Nenhum registro encontrado</p>
+                  {/* CAVALO */}
+                  <div className="p-2 text-center font-black text-xs text-stone-900 uppercase">
+                    <input
+                      type="text"
+                      value={cavalo}
+                      onChange={(e) => setCavalo(e.target.value.toUpperCase())}
+                      className="w-full text-center bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="CAVALO"
+                    />
+                  </div>
+
+                  {/* MOTORISTA */}
+                  <div className="p-2 font-black text-xs text-stone-900 uppercase">
+                    <input
+                      type="text"
+                      value={motorista || sidebarMotorista}
+                      onChange={(e) => handleTableMotoristaChange(e.target.value)}
+                      className="w-full bg-transparent font-black text-xs text-stone-900 uppercase outline-none hover:bg-white/80 focus:bg-white rounded px-1 py-0.5 border border-transparent focus:border-emerald-500"
+                      placeholder="NOME MOTORISTA"
+                    />
+                  </div>
+
+                  {/* AÇÃO (COPIAR LINHA 2) */}
+                  <div className="p-1.5 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const rows = getIscaRows();
+                        if (rows.length > 1) {
+                          copyIscaRowToClipboard(rows[1], false, true);
+                        }
+                      }}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border flex items-center gap-1 transition-all cursor-pointer active:scale-95",
+                        copiedIscaRow2
+                          ? "bg-[#7F1D1D] text-white border-[#7F1D1D]"
+                          : "bg-[#B91C1C] border-[#B91C1C] hover:bg-[#991B1B] hover:border-[#991B1B] text-white"
+                      )}
+                      title="Copiar esta linha para colar no Google Sheets (Ctrl+V)"
+                    >
+                      {copiedIscaRow2 ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedIscaRow2 ? "Copiado!" : "Copiar"}</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
 
-      {/* IMPORT CONFIRMATION BANNER */}
-      <AnimatePresence>
-        {importSuccessBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xl px-4"
-          >
-            <div className="bg-stone-900 text-white rounded-[32px] p-6 shadow-[0_30px_60px_rgba(155,21,38,0.2)] border border-white/10 flex items-center justify-between backdrop-blur-xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                  <CheckCircle2 size={24} />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-widest mb-0.5">Dados Integrados</h4>
-                  <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tight">
-                    {importSuccessBanner.motorista} • {importSuccessBanner.cavalo}
-                  </p>
-                </div>
+        {/* Card Dedicado com a Frase de Embarque das Iscas (POR ÚLTIMO NA PÁGINA) */}
+        <div className="mt-5 bg-gradient-to-r from-blue-50/80 via-white to-blue-50/50 border-2 border-blue-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-blue-600 text-white shadow-xs flex items-center justify-center shrink-0">
+              <Radio size={22} className="animate-pulse" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-800 bg-blue-100/90 px-2.5 py-0.5 rounded-md border border-blue-200">
+                  Frase de Embarque das Iscas
+                </span>
+                <span className="text-[10px] text-stone-500 font-bold">
+                  (Dia/Mês da Criação do Pré-Alerta + Destino)
+                </span>
               </div>
-              <button
-                onClick={() => setImportSuccessBanner(null)}
-                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all cursor-pointer"
+              <div 
+                onClick={handleCopyFraseEmbarque}
+                title="Clique para copiar a frase"
+                className="text-xs sm:text-sm md:text-base font-mono font-black text-stone-950 tracking-tight select-all bg-white border border-blue-200 hover:border-blue-400 rounded-xl px-3.5 py-2 inline-flex items-center gap-2 cursor-pointer shadow-xs transition-all hover:bg-blue-50/40 max-w-full"
               >
-                Fechar
-              </button>
+                <span className="text-blue-600 font-extrabold text-[11px] uppercase tracking-wider shrink-0 font-sans">FRASE:</span>
+                <span className="truncate">"{getFraseEmbarqueIsca()}"</span>
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopyFraseEmbarque}
+            className={cn(
+              "w-full md:w-auto px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shrink-0 select-none",
+              copiedFraseEmbarque
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500"
+                : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:shadow-md"
+            )}
+            title="Copiar texto da frase de embarque"
+          >
+            {copiedFraseEmbarque ? (
+              <>
+                <Check size={16} className="stroke-[3]" /> COPIADO!
+              </>
+            ) : (
+              <>
+                <Copy size={16} className="stroke-[2.5]" /> COPIAR FRASE
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+      </div>
+      )}
+      </div>
+      </div>
   );
 }

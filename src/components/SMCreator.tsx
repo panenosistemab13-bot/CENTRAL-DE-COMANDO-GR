@@ -1192,7 +1192,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   };
 
   return (
-    <div className="w-full relative pb-10" style={{ zoom: '0.85' }}>
+    <div className="w-full relative pb-10">
       {view === 'codes' ? (
         <div className="relative z-10 bg-white p-6 rounded-3xl border border-[#d6ccbe] shadow-xs text-stone-900">{renderCodesTable()}</div>
       ) : (
@@ -1301,7 +1301,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs border",
                         subjectIdaCopied 
                           ? "bg-emerald-600 text-white border-emerald-700" 
-                          : "bg-[#9b1526] hover:bg-[#831221] text-white border-red-900/50"
+                          : "bg-[#0B2545] hover:bg-[#14325c] text-white border-blue-950/50"
                       )}
                       title="Copiar assunto do e-mail da Rota Ida"
                     >
@@ -1310,7 +1310,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     </button>
                     <button 
                       onClick={() => addNewRow('ida')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#9b1526] hover:bg-[#831221] text-white font-mono font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-red-700"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#0B2545] hover:bg-[#14325c] text-white font-mono font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-blue-700"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -1330,7 +1330,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                           "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs border",
                           idaCopied 
                             ? "bg-emerald-600 text-white border-emerald-700" 
-                            : "bg-[#9b1526] hover:bg-[#831221] text-white border-red-900/50"
+                            : "bg-[#0B2545] hover:bg-[#14325c] text-white border-blue-950/50"
                         )}
                       >
                         {idaCopied ? <Check size={12} /> : <Copy size={12} />}
@@ -1355,7 +1355,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                         />
                         <button 
                           onClick={() => addNewRow('ida')}
-                          className="w-full py-2.5 bg-[#9b1526] hover:bg-[#831221] text-white rounded-xl text-xs font-mono font-bold uppercase transition-colors cursor-pointer shadow-sm"
+                          className="w-full py-2.5 bg-[#0B2545] hover:bg-[#14325c] text-white rounded-xl text-xs font-mono font-bold uppercase transition-colors cursor-pointer shadow-sm"
                         >
                           <Plus size={14} className="inline mr-1" /> Adicionar linha manualmente
                         </button>
@@ -1365,7 +1365,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <div className="overflow-x-auto rounded-lg border border-[#0B2545]/20 shadow-xs">
                       <table className="w-full text-left border-collapse font-sans">
                         <thead>
-                          <tr className="bg-[#9b1526] border-b border-red-900 text-white text-[11px] uppercase font-mono font-bold tracking-wider h-10">
+                          <tr className="bg-[#0B2545] border-b border-blue-950 text-white text-[11px] uppercase font-mono font-bold tracking-wider h-10">
                             <th className="px-2 py-2 w-8 text-center text-white">#</th>
                             <th className="px-2 py-2 w-10 text-center text-white">OK</th>
                             <th className="px-2 py-2 w-28 text-center text-white">DATA</th>

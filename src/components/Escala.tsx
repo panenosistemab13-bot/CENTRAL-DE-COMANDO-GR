@@ -1604,7 +1604,7 @@ export default function Escala({ onBack }: EscalaProps) {
   const uniqueDestinations = Array.from(new Set(editableRows.map(r => r.destino).filter(Boolean)));
 
   return (
-    <div className="w-full max-w-full mx-auto p-2 sm:p-3 md:p-4 space-y-5 cinema-container-2160p" style={{ zoom: '0.90' }}>
+    <div className="w-full max-w-full mx-auto p-2 sm:p-3 md:p-4 space-y-5 cinema-container-2160p">
       {/* 1. FAIXA DE TÍTULO PRINCIPAL (Premium Cinematic Header) */}
       <div className="bg-[#fbf9f5] rounded-3xl p-6 shadow-sm border border-[#d6ccbe] relative overflow-hidden text-stone-900">
         {/* Subtle decorative background detail */}

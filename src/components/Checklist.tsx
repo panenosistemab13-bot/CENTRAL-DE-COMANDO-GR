@@ -34,9 +34,6 @@ import { cn } from '../lib/utils';
 import { rtdb } from '../firebase';
 import { ref, onValue, set, remove, update } from 'firebase/database';
 import { format, differenceInCalendarDays, startOfDay, addDays } from 'date-fns';
-import MasterModulePage, { MasterRecord } from './MasterModulePage';
-import heroChecklist from '../assets/images/hero_cinematic_hub_1790214946110.jpg';
-import cardChecklist from '../assets/images/card_cinematic_check_1790214967098.jpg';
 
 // 3D Neon Status Sensor
 function TechCorner({ className }: { className?: string }) {
@@ -729,64 +726,8 @@ export default function Checklist() {
   const totalEmDia = totalVeiculos - totalVencidos;
   const totalOsPendentes = items.filter(i => (i.osStatus || 'PENDENTE') === 'PENDENTE').length;
 
-  const masterRecords: MasterRecord[] = useMemo(() => {
-    return items.slice(0, 8).map(i => {
-      const st = getStatus(i);
-      const isConcluido = st.label === 'APROVADO';
-      const isAtrasado = st.label === 'VENCIDO' || st.label === 'NEGATIVADO' || st.label === 'REPROVADO';
-      return {
-        id: i.id,
-        itemImage: cardChecklist,
-        itemTitle: `Cavalo ${i.cavalo}`,
-        itemSubtitle: i.carretas ? `Carretas: ${i.carretas}` : 'Sem carreta vinculada',
-        plate: i.cavalo,
-        secondaryPlate: i.carretas || undefined,
-        personName: i.periferico || 'Vistoria Geral',
-        personRole: i.manutencaoOs ? `O.S: ${i.manutencaoOs}` : 'Conformidade PGR',
-        categoryTag: st.label,
-        progressValue: isConcluido ? 100 : isAtrasado ? 20 : 65,
-        progressText: st.label,
-        status: isConcluido ? 'concluido' : isAtrasado ? 'em_atraso' : 'pendente',
-        statusLabel: st.label,
-        timestamp: i.dataVencimento ? `Venc: ${i.dataVencimento}` : '—'
-      };
-    });
-  }, [items]);
-
   return (
-    <div className="w-full flex flex-col min-h-screen relative p-1 sm:p-3 md:p-4 pb-16 font-sans space-y-6" style={{ zoom: '0.75' }}>
-      
-      {/* 1. MASTER MODULE BANNER (Matching Home/Dashboard Master Design System) */}
-      <MasterModulePage
-        moduleKey="checklist"
-        titleKicker="// CONFORMIDADE & SEGURANÇA VEICULAR"
-        headline="Checklist Operacional & Vistoria Preventiva"
-        subtext="Supervisão contínua de periféricos, testes de telemetria, sensores de porta e ordens de serviço."
-        heroImage={heroChecklist}
-        primaryCtaLabel="+ Novo Checklist"
-        onPrimaryCta={() => setIsAdding(true)}
-        metrics={{
-          total: totalVeiculos,
-          completed: totalEmDia,
-          pending: totalOsPendentes,
-          delayed: totalVencidos
-        }}
-        donutData={{
-          score: totalVeiculos > 0 ? Math.round((totalEmDia / totalVeiculos) * 100) : 100,
-          scoreLabel: "Conformidade",
-          legend: {
-            completed: totalEmDia,
-            pending: totalOsPendentes,
-            delayed: totalVencidos,
-            total: totalVeiculos
-          }
-        }}
-        records={masterRecords}
-        onViewRecord={(record) => {
-          const item = items.find(it => it.id === record.id);
-          if (item) setEditingItem(item);
-        }}
-      />
+    <div className="w-full flex flex-col min-h-screen relative p-1 sm:p-3 md:p-4 pb-16 font-sans space-y-6">
 
       {/* Toast de Notificação */}
       {notification.show && (

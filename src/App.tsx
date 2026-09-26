@@ -241,16 +241,24 @@ export default function App() {
 
       // Arrow Up/Down for smooth main page scrolling
       if (e.key === 'ArrowDown') {
-        const scrollContainer = document.getElementById('main-scroll-container');
-        if (scrollContainer) {
+        const scrollContainer = document.getElementById('main-scroll-container') || 
+                                document.getElementById('main-scroll-container-menu') ||
+                                document.querySelector('.overflow-y-auto');
+        if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
           e.preventDefault();
           scrollContainer.scrollBy({ top: 180, behavior: 'smooth' });
+        } else {
+          window.scrollBy({ top: 180, behavior: 'smooth' });
         }
       } else if (e.key === 'ArrowUp') {
-        const scrollContainer = document.getElementById('main-scroll-container');
-        if (scrollContainer) {
+        const scrollContainer = document.getElementById('main-scroll-container') || 
+                                document.getElementById('main-scroll-container-menu') ||
+                                document.querySelector('.overflow-y-auto');
+        if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
           e.preventDefault();
           scrollContainer.scrollBy({ top: -180, behavior: 'smooth' });
+        } else {
+          window.scrollBy({ top: -180, behavior: 'smooth' });
         }
       }
 
@@ -399,9 +407,9 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen max-h-screen w-screen max-w-screen overflow-hidden flex bg-[#ede6dc] text-stone-950 font-sans relative flex-col select-none">
+    <div className="min-h-screen h-auto w-full flex bg-gradient-to-br from-[#e7dfd2] to-[#f6f1e8] text-[#171717] font-sans relative flex-col overflow-y-auto">
       
-      {/* GLOBAL CINEMATIC OPERATIONAL CONTAINER (1920x1080) */}
+      {/* GLOBAL CINEMATIC OPERATIONAL CONTAINER */}
       <InitialMenu
         activeTab={activeTab}
         onSelect={(id) => setActiveTab(id as Tab)}

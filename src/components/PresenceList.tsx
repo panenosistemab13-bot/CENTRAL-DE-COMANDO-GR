@@ -513,7 +513,7 @@ export default function PresenceList({ onBack }: PresenceListProps) {
     });
 
   return (
-    <div className="w-full relative pb-8 space-y-4 text-stone-900 font-sans animate-fade-in" style={{ zoom: '0.88' }}>
+    <div className="w-full relative pb-8 space-y-4 text-stone-900 font-sans animate-fade-in">
       
       {/* ================= TOP MODULE HEADER ================= */}
       <div className="bg-[#fbf9f5] border border-[#d6ccbe] rounded-2xl p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -12,21 +12,29 @@
     <link rel="apple-touch-icon" href="/logo-pgr.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
-    <title>A&B CAFÉ - Sistema PGR</title>
-    <meta name="description" content="Sistema A&B CAFÉ - Operação & Inteligência em Tempo Real, Rastreamento 3D de Frota, Pátio e Indicadores 4K." />
-    <meta property="og:title" content="A&B CAFÉ - Sistema PGR" />
-    <meta property="og:description" content="Sistema A&B CAFÉ - Operação & Inteligência em Tempo Real, Rastreamento 3D de Frota, Pátio e Indicadores 4K." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Cinzel:wght@500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Sistema Operacional — Café Três Corações</title>
+    <meta name="description" content="Sistema Operacional Café Três Corações — Segurança, Logística e Resultados. Rastreamento e Gestão Tática." />
+    <meta property="og:title" content="Sistema Operacional — Café Três Corações" />
+    <meta property="og:description" content="Sistema Operacional Café Três Corações — Segurança, Logística e Resultados. Rastreamento e Gestão Tática." />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Clear any stale Service Workers and caches to guarantee latest updates
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then((reg) => console.log('Service Worker registrado com sucesso:', reg.scope))
-            .catch((err) => console.error('Erro ao registrar Service Worker:', err));
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          for (const name of names) {
+            caches.delete(name);
+          }
         });
       }
     </script>

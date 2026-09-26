@@ -26,31 +26,33 @@ export default function PremiumStatChart({
   className
 }: PremiumStatChartProps) {
   const badgeClasses = {
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    danger: 'bg-rose-50 text-rose-700 border-rose-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    neutral: 'bg-stone-100 text-stone-700 border-stone-200'
+    success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]',
+    danger: 'bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_8px_rgba(239,68,68,0.2)]',
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.2)]',
+    neutral: 'bg-white/5 text-[#faeed7] border-white/10'
   };
 
   return (
-    <div className={cn("bg-[#fbf9f5] border border-[#d6ccbe] rounded-2xl p-3.5 sm:p-4 shadow-xs flex flex-col justify-between overflow-hidden relative group hover:shadow-sm transition-all", className)}>
+    <div className={cn("bg-[#131118]/70 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-xl flex flex-col justify-between overflow-hidden relative group hover:shadow-[0_15px_30px_rgba(0,0,0,0.4)] transition-all", className)}>
+      <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-500 block">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 block">
             {title}
           </span>
-          <div className="text-xl sm:text-2xl font-mono font-black text-stone-900 leading-none tracking-tight">
+          <div className="text-xl sm:text-2xl font-mono font-black text-white leading-none tracking-tight">
             {value}
           </div>
         </div>
 
         {Icon && (
           <div 
-            className="w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
+            className="w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 shadow-md group-hover:scale-105 transition-transform"
             style={{ 
-              backgroundColor: `${iconColor}15`, 
-              borderColor: `${iconColor}30`,
-              color: iconColor 
+              backgroundColor: `${iconColor}20`, 
+              borderColor: `${iconColor}40`,
+              color: iconColor,
+              filter: `drop-shadow(0 0 6px ${iconColor}40)`
             }}
           >
             <Icon size={18} />
@@ -59,9 +61,9 @@ export default function PremiumStatChart({
       </div>
 
       {(subtitle || badgeText || progress !== undefined) && (
-        <div className="mt-3 pt-2 border-t border-[#e7dac9] flex items-center justify-between gap-2">
+        <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between gap-2">
           {subtitle && (
-            <span className="text-[10px] font-sans font-medium text-stone-500 truncate">
+            <span className="text-[10px] font-sans font-medium text-stone-400 truncate">
               {subtitle}
             </span>
           )}
@@ -74,13 +76,13 @@ export default function PremiumStatChart({
 
           {progress !== undefined && (
             <div className="w-full flex items-center gap-2 mt-1">
-              <div className="flex-1 bg-stone-200 h-1.5 rounded-full overflow-hidden">
+              <div className="flex-1 bg-white/5 border border-white/5 h-1.5 rounded-full overflow-hidden p-[1px]">
                 <div 
-                  className="h-full rounded-full transition-all duration-1000"
+                  className="h-full rounded-full transition-all duration-1000 shadow-[0_0_6px_rgba(255,255,255,0.4)]"
                   style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: iconColor }}
                 />
               </div>
-              <span className="text-[9px] font-mono font-bold text-stone-600">{progress}%</span>
+              <span className="text-[9px] font-mono font-bold text-stone-400">{progress}%</span>
             </div>
           )}
         </div>

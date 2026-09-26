@@ -36,7 +36,9 @@ body {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   color: var(--text);
   background: #ede6dc;
+  min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
 }
 
