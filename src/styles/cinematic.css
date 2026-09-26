@@ -36,40 +36,7 @@ RESET
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background:
-    radial-gradient(
-      circle at 80% 0%,
-      rgba(255, 211, 126, 0.35),
-      transparent 35%
-    ),
-    linear-gradient(
-      135deg,
-      #f8f6f1 0%,
-      #eee9df 50%,
-      #f8f4ec 100%
-    );
-  color: var(--text);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  overflow-x: hidden;
-}
+/* Global root and body styles handled in index.css */
 
 /* =========================================================
 APP

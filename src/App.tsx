@@ -407,7 +407,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen h-auto w-full flex bg-gradient-to-br from-[#e7dfd2] to-[#f6f1e8] text-[#171717] font-sans relative flex-col overflow-y-auto">
+    <div className="w-full min-h-screen overflow-y-auto flex flex-col bg-[#f4ede1] text-[#171717] font-sans relative">
       
       {/* GLOBAL CINEMATIC OPERATIONAL CONTAINER */}
       <InitialMenu
