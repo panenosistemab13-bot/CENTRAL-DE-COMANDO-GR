@@ -30,7 +30,7 @@ export default function UpdateTopBanner({ className }: UpdateTopBannerProps) {
     <div
       id="top-update-banner"
       className={cn(
-        "w-full z-50 sticky top-0 bg-slate-950/80 backdrop-blur-md text-slate-200 border-b border-white/10 shadow-lg select-none transition-all duration-300",
+        "w-full z-50 sticky top-0 bg-gradient-to-r from-[#140a04] via-[#241309] to-[#140a04] text-[#f5ebd7] border-b border-[#8c6039]/40 shadow-md backdrop-blur-md select-none transition-all duration-300",
         className
       )}
     >
@@ -45,10 +45,10 @@ export default function UpdateTopBanner({ className }: UpdateTopBannerProps) {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 truncate">
-            <span className="font-sans font-bold uppercase text-[10px] sm:text-xs tracking-wider text-slate-400 shrink-0">
-              Última sincronização:
+            <span className="font-sans font-black uppercase text-[10px] sm:text-xs tracking-wider text-[#d4af37] shrink-0">
+              Última atualização:
             </span>
-            <span className="font-mono font-bold text-[11px] sm:text-xs text-cyan-300 bg-slate-900/90 px-2 py-0.5 rounded-md border border-white/10 tracking-wide truncate">
+            <span className="font-mono font-bold text-[11px] sm:text-xs text-white bg-black/40 px-2 py-0.5 rounded-md border border-white/10 tracking-wide truncate">
               {lastUpdateDate}
             </span>
           </div>

@@ -16,72 +16,24 @@ import {
   Plus,
   Trash2,
   AlertCircle,
-  X,
-  Eye,
-  MoreVertical,
-  SlidersHorizontal
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { rtdb as db } from '../firebase';
 import { ref, onValue, set, update } from 'firebase/database';
-import heroPresence from '../assets/images/hero_cinematic_presence_1790216237869.jpg';
-import cardChecklist from '../assets/images/card_cinematic_check_1790214967098.jpg';
-import MasterModulePage, { MasterRecord, MercosulPlate } from './MasterModulePage';
 
-const DEFAULT_PRESENCE_RECORDS: MasterRecord[] = [
-  {
-    id: 'pres-1',
-    itemImage: cardChecklist,
-    itemTitle: 'Cleber Ribeiro',
-    itemSubtitle: 'Turno A (06:00 - 18:00)',
-    plate: 'POD-4461',
-    secondaryPlate: 'SBM-1234',
-    personName: 'Cleber Ribeiro',
-    personRole: 'Motorista Líder 3C',
-    categoryTag: 'Presente',
-    progressValue: 100,
-    progressText: 'No Pátio',
-    status: 'concluido',
-    statusLabel: 'Presente',
-    timestamp: '23/09/2026 05:48'
-  },
-  {
-    id: 'pres-2',
-    itemImage: cardChecklist,
-    itemTitle: 'Guilherme Santos',
-    itemSubtitle: 'Turno B (14:00 - 22:00)',
-    plate: 'QWK6A22',
-    secondaryPlate: 'OLN7307',
-    personName: 'Guilherme Santos',
-    personRole: 'Motorista Frota',
-    categoryTag: 'Presente',
-    progressValue: 100,
-    progressText: 'No Pátio',
-    status: 'concluido',
-    statusLabel: 'Presente',
-    timestamp: '23/09/2026 13:52'
-  },
-  {
-    id: 'pres-3',
-    itemImage: cardChecklist,
-    itemTitle: 'Marcelo Castro',
-    itemSubtitle: 'Turno C (22:00 - 06:00)',
-    plate: 'POD-8255',
-    secondaryPlate: 'FIW0188',
-    personName: 'Marcelo Castro',
-    personRole: 'Motorista Substituto',
-    categoryTag: 'Aguardando',
-    progressValue: 0,
-    progressText: 'A Caminho',
-    status: 'pendente',
-    statusLabel: 'Pendente',
-    timestamp: '23/09/2026 --:--'
-  }
-];
-
-function TechCorner({ className }: { className?: string }) {
-  return null;
+function Screw({ className }: { className?: string }) {
+  return (
+    <div 
+      className={cn(
+        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+        className
+      )}
+    >
+      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
+    </div>
+  );
 }
 
 interface Appointment {
@@ -133,8 +85,6 @@ export default function PresenceList({ onBack }: PresenceListProps) {
   const [newAppTime, setNewAppTime] = useState('12:00');
   const [newAppType, setNewAppType] = useState<'pessoal' | 'corporativo'>('corporativo');
   const [showAllAppsDropdown, setShowAllAppsDropdown] = useState(false);
-  const [listSearchTerm, setListSearchTerm] = useState('');
-  const [listFilter, setListFilter] = useState<'all' | 'concluido' | 'pendente' | 'em_atraso'>('all');
 
   // Mobile navigation state
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
@@ -513,628 +463,1378 @@ export default function PresenceList({ onBack }: PresenceListProps) {
     });
 
   return (
-    <div className="w-full relative pb-8 space-y-4 text-stone-900 font-sans animate-fade-in">
+    <div className="w-full relative z-10 max-w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch font-sans">
       
-      {/* ================= TOP MODULE HEADER ================= */}
-      <div className="bg-[#fbf9f5] border border-[#d6ccbe] rounded-2xl p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#9b1526] text-white rounded-xl shadow-xs shrink-0">
-            <Users size={22} className="stroke-[2.5]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#9b1526]">
-                // ESCALA 12x36 & CONTROLE DE PONTO
-              </span>
-              <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Tempo Real
-              </span>
+      {/* Left Column (Card) */}
+      <div className="hidden">
+        <div className="rounded-3xl bg-[#1d1008] border border-[#a27a5d]/30 shadow-2xl overflow-hidden relative flex flex-col h-full ring-4 ring-[#1d1008]/50 outline outline-1 outline-[#a27a5d]/20">
+          
+          {/* Inner padded container for top content */}
+          <div className="p-6 pb-4">
+            {/* Header: Logo & Title */}
+            <div className="hidden items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-[#B32025] border-2 border-[#D4AF37] flex items-center justify-center shrink-0 relative shadow-lg">
+                {/* Simulated 3 Corações Logo */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Heart size={24} className="text-[#D4AF37] fill-[#D4AF37]" />
+                </div>
+                <div className="absolute inset-1 border-[1px] border-dashed border-[#D4AF37]/50 rounded-full" />
+                <span className="absolute bottom-2 text-[6px] font-bold text-[#D4AF37] tracking-widest mt-4">3 CORAÇÕES</span>
+              </div>
+              <div>
+                <h2 className="text-white font-serif text-2xl tracking-wide font-bold">LISTA DE PRESENÇA</h2>
+              </div>
             </div>
-            <h2 className="text-lg font-black text-stone-900 tracking-tight uppercase leading-tight mt-0.5">
-              Lista de Presença & Banco de Horas
-            </h2>
-          </div>
-        </div>
 
-        {/* Month Navigator & Quick KPIs */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Month Switcher */}
-          <div className="flex items-center bg-white border border-[#d6ccbe] rounded-xl p-1 shadow-2xs">
-            <button
-              onClick={handlePrevMonth}
-              className="p-1.5 hover:bg-stone-100 text-stone-600 rounded-lg transition-colors cursor-pointer"
-              title="Mês Anterior"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="px-3 text-xs font-mono font-bold uppercase tracking-wider text-stone-900 min-w-[150px] text-center">
-              {currentMonthLabel}
-            </span>
-            <button
-              onClick={handleNextMonth}
-              className="p-1.5 hover:bg-stone-100 text-stone-600 rounded-lg transition-colors cursor-pointer"
-              title="Próximo Mês"
-            >
-              <ChevronRight size={16} />
-            </button>
+            {/* Gold Ribbon Label */}
+            <div className="mt-6 bg-gradient-to-r from-[#996b42] to-[#bfa16a] text-white py-3 px-4 rounded-xl text-center shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-[#e4c28c]/40 font-semibold tracking-widest text-[11px] uppercase">
+              Café 3 Corações Edição Rústica Sofisticada
+            </div>
           </div>
 
-          {/* KPI Badges */}
-          <div className="flex items-center gap-2">
-            <div className="bg-white border border-[#d6ccbe] px-3 py-1.5 rounded-xl shadow-2xs text-center">
-              <span className="text-[9px] font-mono font-bold text-stone-500 uppercase block leading-none">Dias Trabalhados</span>
-              <span className="text-xs font-mono font-black text-emerald-700 mt-0.5 block">{presentes} dias</span>
+          {/* Representative Center Image scaled down to match user photo size */}
+          <div className="py-4 flex justify-center bg-[#1d1008]">
+             <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-[#a27a5d]/40 shadow-lg relative group bg-[#e2cfb9] shrink-0">
+               <img 
+                 src="/images/top.jpg" 
+                 alt="Grãos de Café" 
+                 className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+               />
+               <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+             </div>
+          </div>
+
+          {/* Bottom Info Section */}
+          <div className="p-6 pt-2 bg-[#1d1008] z-10 flex flex-col justify-end">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-[#8c6b4e] text-xs font-mono font-bold tracking-widest uppercase">Lote #3708B</span>
+              <span className="text-[#a27a5d] font-handwritten text-xl opacity-90 hidden sm:block font-serif italic">Qualidade Premium</span>
             </div>
-            <div className="bg-white border border-[#d6ccbe] px-3 py-1.5 rounded-xl shadow-2xs text-center">
-              <span className="text-[9px] font-mono font-bold text-stone-500 uppercase block leading-none">Faltas</span>
-              <span className="text-xs font-mono font-black text-rose-700 mt-0.5 block">{faltas} dias</span>
-            </div>
-            <div className={cn(
-              "border px-3 py-1.5 rounded-xl shadow-2xs text-center",
-              totalBankOfHours >= 0 
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-                : "bg-rose-50 border-rose-200 text-rose-800"
-            )}>
-              <span className="text-[9px] font-mono font-bold opacity-80 uppercase block leading-none">Saldo Banco</span>
-              <span className="text-xs font-mono font-black mt-0.5 block">{formatBalanceMinutes(totalBankOfHours)}</span>
+            
+            <h3 className="text-white text-2xl font-bold font-serif mb-3 tracking-wide">SACO DE JUTA</h3>
+            <p className="text-stone-400 text-xs leading-relaxed max-w-[90%] mb-6 font-light">
+              Uma edição especial e limitada, aprimorada naturalmente, torrada com maestria para momentos que pedem presença.
+            </p>
+
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-3 mt-auto">
+              <button className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[10px] font-bold uppercase tracking-wider py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg outline-none cursor-pointer">
+                <Coffee size={14} className="fill-current" />
+                SÓ BOAS VIBRAÇÕES
+              </button>
+              <button className="bg-[#593d2b] hover:bg-[#4a3222] text-[#e8dbcc] border border-[#7a5b44] text-[10px] font-bold uppercase tracking-wider py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg outline-none cursor-pointer">
+                <Coffee size={14} />
+                DETALHES DO CAFÉ
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ================= MAIN 2-COLUMN OPERATIONAL GRID ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        
-        {/* ================= LEFT COLUMN: CALENDAR & DIÁRIO (8 COLS) ================= */}
-        <div className="lg:col-span-8 space-y-4">
+      {/* Right Column (Main App Panel) */}
+      <div className="col-span-1 lg:col-span-12 flex flex-col">
+        <div className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col"
+             style={{
+               backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+             }}
+        >
+          {/* Inner border trim */}
+          <div className="absolute inset-1.5 rounded-[1.35rem] border border-[#a6866b]/40 pointer-events-none z-0" />
           
-          {/* ================= CALENDAR CARD (MATCHING REFERENCE EXACTLY) ================= */}
-          <div className="bg-[#fffcf7] border border-[#e4d7c5] rounded-3xl shadow-md overflow-hidden font-sans">
+          {/* Main Padding Container */}
+          <div className="p-4 sm:p-6 relative z-10 flex flex-col h-full gap-5">
             
-            {/* Dark Espresso Brown Header */}
-            <div className="bg-[#221712] px-6 py-4 flex items-center justify-between text-white select-none">
+            {/* Top Area: Splitted into Left (Profile) and Right (Image + Titles) */}
+            <div className="flex flex-col md:flex-row gap-5">
+              
+              {/* Left Col: Profile Image card */}
+              <div className="w-24 h-24 md:w-[30%] md:h-auto rounded-full md:rounded-xl mx-auto md:mx-0 relative group border-2 border-[#5c3e29] overflow-hidden shrink-0 shadow-md bg-[#e2cfb9]">
+                <img 
+                  src={profileImage}
+                  alt="Perfil" 
+                  className="w-full h-full md:h-auto object-cover block"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {/* Upload Overlay */}
+                <label className="absolute inset-0 bg-[#3A2414]/60 flex-col items-center justify-center gap-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex text-[#e2cfb9]">
+                  <Camera size={24} />
+                  <span className="text-[10px] font-bold tracking-wider uppercase">Alterar Foto</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          if (event.target && typeof event.target.result === 'string') {
+                            updateProfileImage(event.target.result);
+                          }
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }} 
+                  />
+                </label>
+              </div>
+
+              {/* Right Col: Banner Image + Headers */}
+              <div className="flex-1 flex flex-col justify-between pt-0.5">
+                
+                {/* 4K Image Banner (Aesthetic from Initial Menu) */}
+                <div className="w-full flex-1 max-h-[160px] min-h-[100px] mb-2 rounded-xl overflow-hidden border-2 border-[#5c3e29]/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative group hidden md:block">
+                  <img 
+                    src="/images/banner_coffee.jpg"
+                    alt="Coffee Aesthetic Header"
+                    className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 filter sepia-[20%] contrast-[1.1] brightness-90 relative z-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 shadow-[inset_0_0_25px_rgba(0,0,0,0.5)] pointer-events-none z-10" />
+                </div>
+
+                {/* Inspirational Phrase */}
+                <p className="w-full text-[#3d2415] font-serif italic text-sm text-center mb-4 leading-snug px-4">
+                  "Seja inquieto, curioso e criativo. Transforme necessidades em oportunidades. Teste e aprenda rápido, gerando e adaptando ideias. Empreenda a fim de gerar valor para o negócio. Seja um agente de transformação!"
+                </p>
+
+                {/* Bottom of Right Col: Texts + Black Tag */}
+                <div className="flex items-end justify-between">
+                  {/* Title texts */}
+                  <div className="pb-1">
+                    <span className="text-[#5c3e29] font-bold text-[11px] tracking-widest uppercase block mb-1">
+                      Lista Ativa de Atendimento
+                    </span>
+                    <h1 className="text-3xl font-black text-[#3A2414] font-serif uppercase tracking-tight">
+                      ESCALA: <span className="text-[#B32025]">{selectedDate.split('-').reverse().join('/')}</span>
+                    </h1>
+                  </div>
+
+                  {/* Black tag: Feito com paixão */}
+                  <div className="hidden md:flex bg-[#18110b] border-[3px] border-[#5c3e29] rounded-2xl p-4 px-6 items-center justify-center gap-5 shadow-[0_4px_10px_rgba(0,0,0,0.4)] relative">
+                    {/* Screw holes */}
+                    <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                    
+                    <div className="w-10 h-10 rounded-xl bg-transparent border border-[#cfab84]/50 flex items-center justify-center">
+                      <Coffee className="text-[#cfab84]" size={20} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-handwritten text-[#e5d5c1] text-xl font-bold leading-none mb-1">Feito com paixão.</span>
+                      <span className="font-handwritten text-[#e5d5c1]/70 text-sm font-medium leading-none">Para quem entrega.</span>
+                      <div className="flex gap-1.5 mt-2">
+                        <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                        <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                        <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Input Filter & Ribbon row */}
+            <div className="flex flex-col gap-2">
+              <div className="relative w-full">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                <input 
+                  type="text"
+                  placeholder="Filtrar colaboradores..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-[#d6be9c] rounded-xl py-3 pl-12 pr-4 text-sm text-[#3A2414] placeholder-stone-400 outline-none focus:border-[#B32025] shadow-inner font-medium"
+                />
+              </div>
+
+              {/* Status Ribbon (Feriado Nacional / Time) */}
+              <div className="flex items-center justify-between bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl px-4 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2">
+                  {isHoliday ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#8b5a2b]" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">{currentHoliday.name}</span>
+                    </>
+                  ) : currentStatus === 'trabalhei' ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#B32025]" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">Dia de Trabalho (12x36)</span>
+                    </>
+                  ) : currentStatus === 'falta' ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-600" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">Falta Registrada</span>
+                    </>
+                  ) : currentStatus === 'folga' ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600" />
+                      <span className="text-xs font-bold text-[#5c3e29] uppercase tracking-wide">Dia de Folga</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-stone-300" />
+                      <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Aguardando Registro</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 text-[#9a785c]">
+                  <div className="flex items-center gap-1.5 bg-[#e1ccb0]/50 px-2.5 py-1 rounded text-[10px] font-bold">
+                    ESCALA 12x36
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} />
+                    <span className="text-xs font-mono font-bold">18:00 - 06:00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Segmented Switcher */}
+            <div className="flex md:hidden w-full bg-[#3d2516]/90 p-1 border-2 border-[#5c3e29] rounded-2xl shadow-md gap-1.5 shrink-0">
               <button
-                onClick={handlePrevMonth}
-                className="p-1 text-stone-300 hover:text-white transition-colors cursor-pointer rounded-lg"
-                title="Mês Anterior"
+                type="button"
+                onClick={() => setMobileTab('calendario')}
+                className={cn(
+                  "flex-1 py-2.5 text-[10px] font-serif font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                  mobileTab === 'calendario'
+                    ? "bg-gradient-to-b from-[#B32025] to-[#780d11] text-white shadow-md border border-white/20"
+                    : "text-[#d4bc96] hover:bg-white/5"
+                )}
               >
-                <ChevronLeft size={20} className="stroke-[2.5]" />
+                <Calendar size={14} />
+                <span>Calendário & Escala</span>
               </button>
-              
-              <h3 className="text-sm sm:text-base font-black tracking-[0.18em] uppercase font-sans text-white">
-                {currentMonthLabel}
-              </h3>
-              
               <button
-                onClick={handleNextMonth}
-                className="p-1 text-stone-300 hover:text-white transition-colors cursor-pointer rounded-lg"
-                title="Próximo Mês"
+                type="button"
+                onClick={() => setMobileTab('agenda')}
+                className={cn(
+                  "flex-1 py-2.5 text-[10px] font-serif font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                  mobileTab === 'agenda'
+                    ? "bg-gradient-to-b from-[#B32025] to-[#780d11] text-white shadow-md border border-white/20"
+                    : "text-[#d4bc96] hover:bg-white/5"
+                )}
               >
-                <ChevronRight size={20} className="stroke-[2.5]" />
+                <Clock size={14} />
+                <span>Agenda ({(Object.values(appointments || {}) as Appointment[]).filter(a => a && a.date === selectedDate).length})</span>
               </button>
             </div>
 
-            {/* Calendar Body */}
-            <div className="p-4 sm:p-6 select-none">
+            {/* Bottom 2-Panel Area */}
+            <div className="flex flex-col md:flex-row gap-5 flex-1 min-h-0 pt-2">
               
-              {/* Day of Week Headers (Caramel / Warm Golden Brown) */}
-              <div className="grid grid-cols-7 text-center mb-4">
-                {daysOfWeek.map((dayName, idx) => (
-                  <div 
-                    key={idx} 
-                    className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#a87442]"
-                  >
-                    {dayName}
-                  </div>
-                ))}
-              </div>
+              {/* Left Inner: Calendar */}
+              <div className={cn(
+                "w-full md:w-[48%] md:max-w-[340px] md:self-start flex flex-col shrink-0 rounded-3xl overflow-hidden border border-[#eedecb] shadow-xl bg-gradient-to-b from-[#fffbf7] to-[#FAF6ED]",
+                mobileTab === 'calendario' ? "flex" : "hidden md:flex"
+              )}>
+                
+                {/* Calendar Header with premium brand look */}
+                <div className="bg-[#1c1008] text-white flex items-center justify-between py-3 px-4 select-none shadow-sm relative">
+                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-[#dfc2a1]/20" />
+                  <button onClick={handlePrevMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1 rounded-full hover:bg-white/10"><ChevronLeft size={18} /></button>
+                  <span className="text-xs sm:text-sm font-black tracking-[0.15em] uppercase font-sans text-white">{currentMonthLabel}</span>
+                  <button onClick={handleNextMonth} className="text-[#dfc2a1] hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer p-1 rounded-full hover:bg-white/10"><ChevronRight size={18} /></button>
+                </div>
 
-              {/* Calendar Weeks & Days Grid */}
-              <div className="space-y-3 sm:space-y-4">
-                {calendarDays.map((week, weekIdx) => (
-                  <div key={weekIdx} className="grid grid-cols-7 text-center items-center">
-                    {week.map((dayObj, dayIdx) => {
-                      const isSelected = dayObj.dateStr === selectedDate;
-                      const status = dayStatuses[dayObj.dateStr] || (isAutomaticWorkDay(dayObj.dateStr) ? 'trabalhei' : 'folga');
-                      const holiday = getHolidayForDate(dayObj.dateStr);
-                      const dayApps = (Object.values(appointments || {}) as Appointment[]).filter(a => a && a.date === dayObj.dateStr);
-                      const isWorkDay = status === 'trabalhei';
-                      const isFalta = status === 'falta';
+                {/* Calendar Grid Container */}
+                <div className="p-4 py-3 flex flex-col">
+                  {/* Days of week header with refined spacing */}
+                  <div className="grid grid-cols-7 mb-3 py-1">
+                    {daysOfWeek.map(d => (
+                       <div key={d} className="text-center text-[10px] font-black tracking-wider text-[#a27a5d] uppercase">{d}</div>
+                    ))}
+                  </div>
+                  
+                  {/* Days cells with premium minimalist circular aesthetic */}
+                  <div className="grid grid-cols-7 gap-y-1.5 gap-x-1 py-1">
+                    {calendarDays.map((week, wIdx) => (
+                      week.map((d, dIdx) => {
+                        const isSelected = selectedDate === d.dateStr;
+                        const status = dayStatuses[d.dateStr] || '';
+                        const isAutoWork = !d.inactive && isAutomaticWorkDay(d.dateStr);
+                        const isAutoRest = !d.inactive && escalaConfig.enabled && !isAutoWork;
+                        
+                        // Setup premium minimalist circular classes
+                        let cellStyle = 'relative flex flex-col items-center justify-center cursor-pointer select-none aspect-square rounded-full transition-all duration-200 w-9 h-9 md:w-10 md:h-10 mx-auto';
+                        let fontStyle = 'font-sans text-xs sm:text-sm font-bold';
+
+                        if (isSelected && !d.inactive) {
+                          cellStyle += ' border-2 border-[#b8956c] bg-transparent';
+                          fontStyle += ' text-[#3e2516]';
+                        } else if (d.inactive) {
+                          fontStyle += ' text-stone-300 opacity-40 pointer-events-none';
+                        } else {
+                          cellStyle += ' hover:bg-[#f4ebdc]/50';
+                          fontStyle += ' text-[#4e341f]';
+                        }
+
+                        const showWorkLine = !d.inactive && (status === 'trabalhei' || (status === '' && isAutoWork));
+                        const showFaltaLine = !d.inactive && status === 'falta';
+                        const showFolgaLine = !d.inactive && (status === 'folga' || (status === '' && isAutoRest));
+
+                        return (
+                          <div 
+                            key={`${wIdx}-${dIdx}`} 
+                            onClick={() => {
+                              setSelectedDate(d.dateStr);
+                              if (d.inactive) {
+                                setViewDate(new Date(d.dateStr));
+                              }
+                              setShowDayReminderModal(true);
+                            }}
+                            className="flex items-center justify-center py-0.5 cursor-pointer group"
+                            title={`Clique para ver ou agendar lembrete em ${d.dateStr.split('-').reverse().join('/')}`}
+                          >
+                            <div className={cellStyle}>
+                              <span className={fontStyle}>
+                                {d.day}
+                              </span>
+                              
+                              {/* Indicadores de compromisso (pontinhos coloridos) */}
+                              {!d.inactive && (() => {
+                                const dayApps = (Object.values(appointments || {}) as Appointment[]).filter(app => app && app.date === d.dateStr);
+                                const hasPersonal = dayApps.some(app => app && app.type === 'pessoal');
+                                const hasCorporate = dayApps.some(app => app && app.type === 'corporativo');
+                                if (dayApps.length === 0) return null;
+                                return (
+                                  <div className="absolute top-1 right-1 flex gap-0.5">
+                                    {hasPersonal && (
+                                      <span className="w-1.5 h-1.5 bg-amber-600 rounded-full" title="Compromisso Pessoal" />
+                                    )}
+                                    {hasCorporate && (
+                                      <span className="w-1.5 h-1.5 bg-[#B32025] rounded-full" title="Compromisso Corporativo" />
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                              
+                              {/* Horizontal green line indicator for work days, red for absence, gold for rest */}
+                              {showWorkLine && (
+                                <div className="absolute bottom-[2.5px] w-4.5 h-[3.5px] bg-[#10b981] rounded-full animate-pulse" title="Dia Trabalhado" />
+                              )}
+                              {showFaltaLine && (
+                                <div className="absolute bottom-[2.5px] w-4.5 h-[3.5px] bg-red-500 rounded-full" title="Falta" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ))}
+                  </div> {/* Days cells */}
+                </div> {/* Calendar Grid */}
+
+                {/* Mobile Day Status Quick Actions (when viewing calendar on mobile) */}
+                <div className="flex md:hidden flex-col gap-2.5 p-3.5 bg-[#FAF6ED] border-t border-[#eedecb]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-serif font-bold uppercase text-[#3e2516]">
+                      {formatLocalDate(selectedDate)}
+                    </span>
+                    <span className="text-[9px] font-mono text-[#8c6b4e] font-bold">18:00 - 06:00</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, 'trabalhei')}
+                      className={cn(
+                        "py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 shadow-sm",
+                        dayStatuses[selectedDate] === 'trabalhei'
+                          ? "bg-emerald-700 text-white border-emerald-800 font-black"
+                          : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50"
+                      )}
+                    >
+                      🟢 Trabalhei
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, 'folga')}
+                      className={cn(
+                        "py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 shadow-sm",
+                        dayStatuses[selectedDate] === 'folga'
+                          ? "bg-amber-700 text-white border-amber-800 font-black"
+                          : "bg-white text-amber-800 border-amber-200 hover:bg-amber-50"
+                      )}
+                    >
+                      🟡 Folga
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, 'falta')}
+                      className={cn(
+                        "py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 shadow-sm",
+                        dayStatuses[selectedDate] === 'falta'
+                          ? "bg-red-700 text-white border-red-800 font-black"
+                          : "bg-white text-red-800 border-red-200 hover:bg-red-50"
+                      )}
+                    >
+                      🔴 Falta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(selectedDate, '')}
+                      className="py-2 px-1 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border text-center cursor-pointer active:scale-95 bg-white text-stone-600 border-stone-300 hover:bg-stone-100 shadow-sm"
+                    >
+                      ⚪ Limpar
+                    </button>
+                  </div>
+                </div>
+
+              </div> {/* Left Inner: Calendar */}
+
+              {/* Right Inner: Stats & Interactive Controls */}
+              <div className={cn(
+                "flex flex-col flex-1 gap-4 relative min-h-[300px] w-full",
+                mobileTab === 'agenda' ? "flex" : "hidden md:flex"
+              )}>
+                
+                {/* AGENDA DE COMPROMISSOS (Novo Módulo Solicitado) */}
+                <div className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+                  
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="bg-[#B32025] text-white p-2 rounded-xl shadow-md">
+                        <Calendar size={18} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-[#3e2516] uppercase tracking-widest leading-tight">Agenda de Compromissos</h3>
+                        <p className="text-[11px] text-[#8c6b4e] font-mono leading-none mt-0.5">
+                          Visualizando: <strong className="text-[#3e2516]">{selectedDate.split('-').reverse().join('/')}</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold bg-[#5c3e29] text-[#efdfc6] px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                      Diário
+                    </span>
+                  </div>
+
+                  {/* Form to Add Appointment */}
+                  <div className="bg-[#fcfaf4] border border-[#d6be9c]/75 rounded-xl p-3.5 flex flex-col gap-3">
+                    <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">Novo Compromisso</span>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                      
+                      {/* Name/Title Input */}
+                      <div className="sm:col-span-6">
+                        <input
+                          type="text"
+                          placeholder="Ex: Reunião com gerência, Café, Almoço..."
+                          value={newAppTitle}
+                          onChange={(e) => setNewAppTitle(e.target.value)}
+                          className="w-full bg-white border border-[#dac0a3] text-xs font-semibold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner placeholder-stone-400"
+                        />
+                      </div>
+
+                      {/* Time Input */}
+                      <div className="sm:col-span-3">
+                        <input
+                          type="time"
+                          value={newAppTime}
+                          onChange={(e) => setNewAppTime(e.target.value)}
+                          className="w-full bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                        />
+                      </div>
+
+                      {/* Add Button for mobile/desktop layout flexibility */}
+                      <div className="sm:col-span-3">
+                        <button
+                          onClick={() => addAppointment(newAppTime, newAppTitle, newAppType)}
+                          disabled={!newAppTitle.trim()}
+                          className={`w-full text-[10px] font-black uppercase py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-md transition-all
+                            ${newAppTitle.trim() 
+                              ? 'bg-[#B32025] hover:bg-[#8c060a] text-white active:scale-97 cursor-pointer' 
+                              : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
+                            }`}
+                        >
+                          <Plus size={14} />
+                          Salvar
+                        </button>
+                      </div>
+
+                    </div>
+
+                    {/* Selector for Type: Pessoal vs Corporativo */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1 border-t border-[#f4ebdc]">
+                      <span className="text-[9.5px] font-bold text-[#8c6b4e] uppercase tracking-wider">Tipo do Compromisso:</span>
+                      
+                      <div className="flex gap-2">
+                        {/* Pessoal Button */}
+                        <button
+                          onClick={() => setNewAppType('pessoal')}
+                          type="button"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border
+                            ${newAppType === 'pessoal'
+                              ? 'bg-[#d97706] text-white border-[#d97706] shadow-sm'
+                              : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                            }`}
+                        >
+                          <User size={13} />
+                          <span>Pessoal</span>
+                        </button>
+
+                        {/* Corporativo Button */}
+                        <button
+                          onClick={() => setNewAppType('corporativo')}
+                          type="button"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border
+                            ${newAppType === 'corporativo'
+                              ? 'bg-[#B32025] text-white border-[#B32025] shadow-sm'
+                              : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                            }`}
+                        >
+                          <Briefcase size={13} />
+                          <span>Corporativo</span>
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Appointments List for Selected Date */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">Compromissos Agendados</span>
+                    
+                    {(() => {
+                      const dayApps = (Object.values(appointments || {}) as Appointment[])
+                        .filter(app => app && app.date === selectedDate)
+                        .sort((a, b) => a.time.localeCompare(b.time));
+
+                      if (dayApps.length === 0) {
+                        return (
+                          <div className="bg-[#fcfcf9]/50 border border-dashed border-[#d6be9c]/60 rounded-xl p-6 text-center flex flex-col items-center justify-center gap-2">
+                            <Clock size={24} className="text-[#a27a5d] opacity-50" />
+                            <p className="text-xs font-medium text-stone-500">
+                              Nenhum compromisso agendado para hoje.
+                            </p>
+                          </div>
+                        );
+                      }
 
                       return (
-                        <div
-                          key={dayIdx}
-                          onClick={() => setSelectedDate(dayObj.dateStr)}
-                          onDoubleClick={() => {
-                            setSelectedDate(dayObj.dateStr);
-                            setShowDayReminderModal(true);
-                          }}
-                          className="flex flex-col items-center justify-center cursor-pointer group relative py-1"
-                        >
-                          {/* Day Number inside Circle (if selected) or standalone */}
-                          <div className={cn(
-                            "w-9 h-9 sm:w-10 sm:h-10 flex flex-col items-center justify-center rounded-full transition-all relative",
-                            isSelected
-                              ? "border-2 border-[#bfa074] bg-[#f8f2e6]/60 shadow-xs"
-                              : "hover:bg-[#f5ecdd]/50"
-                          )}>
-                            <span className={cn(
-                              "text-sm sm:text-base leading-none font-bold",
-                              dayObj.inactive 
-                                ? "text-stone-300 font-normal" 
-                                : isSelected 
-                                  ? "text-[#221712] font-black" 
-                                  : "text-[#221712]"
-                            )}>
-                              {dayObj.day}
-                            </span>
+                        <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                          {dayApps.map((app) => (
+                            <div 
+                              key={app.id} 
+                              className="bg-white border border-[#e1ccb0]/80 rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-200 group"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                {/* Time Badge */}
+                                <div className="bg-[#FAF6ED] border border-[#d6be9c] rounded-lg px-2 py-1 flex items-center gap-1 shrink-0 font-mono text-xs font-bold text-[#3e2516]">
+                                  <Clock size={12} className="text-[#8c6b4e]" />
+                                  {app.time}
+                                </div>
 
-                            {/* Green Turquoise Underline for Plantão / 12x36 Work Day */}
-                            {!dayObj.inactive && (
-                              <div className="h-[4px] mt-0.5 flex items-center justify-center">
-                                {isWorkDay && (
-                                  <span className="w-4 sm:w-5 h-[3px] bg-[#10b981] rounded-full shadow-2xs" />
-                                )}
-                                {isFalta && (
-                                  <span className="w-4 sm:w-5 h-[3px] bg-[#ef4444] rounded-full shadow-2xs" />
-                                )}
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <span className="text-xs font-bold text-[#3e2516] break-words leading-snug">
+                                    {app.title}
+                                  </span>
+                                  {/* Type tag */}
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    {app.type === 'pessoal' ? (
+                                      <span className="text-[8.5px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50 flex items-center gap-1">
+                                        <User size={9} />
+                                        Pessoal
+                                      </span>
+                                    ) : (
+                                      <span className="text-[8.5px] font-bold uppercase tracking-wider text-[#B32025] bg-red-50 px-1.5 py-0.5 rounded border border-red-200/50 flex items-center gap-1">
+                                        <Briefcase size={9} />
+                                        Corporativo
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            )}
 
-                            {/* Indicator dot for appointment / holiday */}
-                            {!dayObj.inactive && (dayApps.length > 0 || holiday) && (
-                              <span className={cn(
-                                "absolute -top-0.5 right-1 w-1.5 h-1.5 rounded-full",
-                                holiday ? "bg-blue-600" : "bg-[#9b1526]"
-                              )} />
-                            )}
-                          </div>
+                              {/* Delete Action */}
+                              <button
+                                onClick={() => deleteAppointment(app.id)}
+                                className="text-stone-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-all cursor-pointer opacity-80 group-hover:opacity-100 shrink-0"
+                                title="Excluir compromisso"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       );
-                    })}
+                    })()}
                   </div>
-                ))}
-              </div>
 
-              {/* Subtle Legend Bar at bottom */}
-              <div className="mt-6 pt-4 border-t border-[#ede3d3] flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono font-bold text-stone-600">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5 text-stone-700">
-                    <span className="w-4 h-[3px] bg-[#10b981] rounded-full inline-block" /> Plantão 12x36
-                  </span>
-                  <span className="flex items-center gap-1.5 text-stone-700">
-                    <span className="w-3 h-3 rounded-full border-2 border-[#bfa074] inline-block" /> Dia Selecionado
-                  </span>
                 </div>
-                <span className="text-stone-400">
-                  Clique para registrar • Duplo clique para lembrete
-                </span>
-              </div>
+                
+                {/* 3 Stat Boxes Top row */}
+                {false && (
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#2e7d32] uppercase mb-1">Presentes</span>
+                    <span className="text-xl sm:text-2xl font-black text-[#2e7d32] leading-none mb-1">{presentes}</span>
+                    <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">este mês</span>
+                  </div>
+                  <div className="bg-[#fdfbf7] rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-[#c62828] uppercase mb-1">Faltas</span>
+                    <span className="text-xl sm:text-2xl font-black text-[#c62828] leading-none mb-1">{faltas}</span>
+                    <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">registradas</span>
+                  </div>
+                  {isEditingBankCard ? (
+                    <div className="bg-[#fcf8f2] rounded-xl border-2 border-[#B32025] flex flex-col items-center justify-between p-1.5 shadow-md text-center">
+                      <span className="text-[8.5px] font-black tracking-wider text-[#B32025] uppercase mb-1 leading-none">Ajustar Saldo</span>
+                      
+                      {/* Compact Inputs For Hours and Minutes */}
+                      <div className="flex items-center justify-center gap-1 mb-1.5">
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            placeholder="H"
+                            value={tempHours}
+                            onChange={(e) => setTempHours(e.target.value)}
+                            className="w-10 bg-white border border-[#dac0a3] text-[9.5px] font-mono font-bold rounded py-0.5 text-center text-[#3e2516] outline-none shadow-inner"
+                            title="Ex: 10 ou -5"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-[#8c6b4e]">:</span>
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            placeholder="M"
+                            value={tempMins}
+                            onChange={(e) => setTempMins(e.target.value)}
+                            className="w-7 bg-white border border-[#dac0a3] text-[9.5px] font-mono font-bold rounded py-0.5 text-center text-[#3e2516] outline-none shadow-inner"
+                            title="Ex: 30"
+                          />
+                        </div>
+                      </div>
 
-            </div>
-          </div>
+                      <div className="flex items-center gap-1 justify-center w-full">
+                        <button
+                          onClick={() => {
+                            const hrs = parseInt(tempHours) || 0;
+                            const mins = parseInt(tempMins) || 0;
+                            
+                            // Check sign of input
+                            const hasMinus = tempHours.includes('-') || tempMins.includes('-');
+                            const totalMinsInput = (hasMinus ? -1 : 1) * (Math.abs(hrs) * 60 + Math.abs(mins));
 
-          {/* Selected Date Work & Time Details Card */}
-          <div className="bg-white border border-[#d6ccbe] rounded-2xl p-4 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-stone-200">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#fbf9f5] border border-[#d6ccbe] text-stone-900 rounded-xl">
-                  <Clock size={16} />
+                            // Calculate original automatic balance
+                            let currentAutoBalance = 0;
+                            Object.keys(dayStatuses).forEach(dateStr => {
+                              if (dayStatuses[dateStr] === 'trabalhei') {
+                                const times = dayTimes[dateStr] || { entrada: '18:00', saida: '06:00' };
+                                const bal = calculateDayBalance(dateStr, 'trabalhei', times.entrada, times.saida);
+                                currentAutoBalance += bal.total;
+                              }
+                            });
+
+                            updateBancoHorasManual(totalMinsInput - currentAutoBalance);
+                            setIsEditingBankCard(false);
+                          }}
+                          className="bg-[#10b981] hover:bg-emerald-600 text-white text-[7px] font-black uppercase px-2 py-0.5 rounded transition-all cursor-pointer shadow-sm"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => setIsEditingBankCard(false)}
+                          className="bg-stone-55 hover:bg-stone-100 text-stone-600 text-[7px] font-black uppercase px-2 py-0.5 border border-[#dac0a3] rounded transition-all cursor-pointer"
+                        >
+                          Sair
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => {
+                        const hrs = Math.trunc(totalBankOfHours / 60);
+                        const mins = Math.abs(totalBankOfHours % 60);
+                        setTempHours(String(hrs));
+                        setTempMins(String(mins).padStart(2, '0'));
+                        setIsEditingBankCard(true);
+                      }}
+                      className="bg-[#fdfbf7] hover:bg-[#FAF6ED] active:scale-95 transition-all duration-300 rounded-xl border border-[#d6be9c] flex flex-col items-center justify-center py-2.5 sm:py-3 shadow-sm text-center relative cursor-pointer group"
+                      title="Clique para editar o saldo do Banco de Horas"
+                    >
+                      <span className="text-[8px] sm:text-[9.5px] font-bold tracking-wider text-[#8c7462] uppercase mb-1 flex items-center justify-center gap-0.5">
+                        Banco Horas 
+                        <span className="opacity-70 group-hover:opacity-100 transition-opacity text-[#b8956c] text-[8px] sm:text-[10px]">✏️</span>
+                      </span>
+                      <span className={`text-sm sm:text-lg font-black leading-none mb-1 ${totalBankOfHours >= 0 ? 'text-[#10b981]' : 'text-[#B32025]'}`}>
+                        {formatBalanceMinutes(totalBankOfHours)}
+                      </span>
+                      <span className="text-[7px] sm:text-[8px] font-medium text-stone-500 uppercase">saldo (editar)</span>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h4 className="text-xs font-mono font-black uppercase tracking-wider text-stone-900">
-                    Registro do Dia: {formatLocalDate(selectedDate)}
-                  </h4>
-                  <p className="text-[11px] text-stone-500 font-medium">
-                    Gerencie o status de trabalho, horário de entrada/saída e banco de horas
+                )}
+
+                {/* Painel do Dia Selecionado: Entrada, Saída e Status */}
+                {false && (
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#B32025] text-white p-1.5 rounded-lg">
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black text-[#3e2516] uppercase tracking-widest leading-none mb-1">Editor de Jornada</h3>
+                        <p className="text-[10px] text-[#8c6b4e] font-mono leading-none">{formatLocalDate(selectedDate)}</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold bg-[#4e341f] text-white px-2 py-0.5 rounded uppercase tracking-wide">Minha Hora</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Status do Dia */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">Status de Presença:</label>
+                      <select
+                        value={dayStatuses[selectedDate] || ''}
+                        onChange={(e) => {
+                          const val = e.target.value as 'trabalhei' | 'falta' | 'folga' | '';
+                          updateStatus(selectedDate, val);
+                        }}
+                        className={`w-full text-xs font-bold border rounded-lg p-2.5 cursor-pointer outline-none transition-all shadow-inner
+                          ${dayStatuses[selectedDate] === 'trabalhei' ? 'border-green-600 bg-green-50 text-green-800' : ''}
+                          ${dayStatuses[selectedDate] === 'falta' ? 'border-red-600 bg-red-50 text-red-800' : ''}
+                          ${dayStatuses[selectedDate] === 'folga' ? 'border-amber-600 bg-amber-50 text-amber-800' : ''}
+                          ${!(dayStatuses[selectedDate]) ? 'border-[#dac0a3] bg-white text-stone-800' : ''}
+                        `}
+                      >
+                        <option value="">Selecione status...</option>
+                        <option value="trabalhei">Fui trabalhar (Trabalhei)</option>
+                        <option value="falta">Falta (Não fui)</option>
+                        <option value="folga">Folga oficial</option>
+                      </select>
+                    </div>
+
+                    {/* Escala padrão label */}
+                    <div className="flex flex-col justify-center bg-[#f8f1e5] border border-[#e1ccb0] rounded-xl p-3 text-center sm:text-left shadow-inner">
+                      <span className="text-[9px] font-bold text-[#8c6b4e] uppercase tracking-wider block">Escala Padrão Noturna</span>
+                      <span className="text-sm font-mono font-bold text-[#4e341f] block mt-0.5">18:00 às 06:00 (12h)</span>
+                    </div>
+                  </div>
+
+                  {escalaConfig.enabled && !dayStatuses[selectedDate] && (
+                    <div className={`p-4 rounded-xl border flex flex-col sm:flex-row items-stretch sm:items-center justify-between text-xs gap-3 ${
+                      isAutomaticWorkDay(selectedDate)
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-950"
+                        : "bg-amber-500/5 border-amber-500/20 text-[#5c3e29]"
+                    }`}>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#B32025]">PREVISÃO DE JORNADA</span>
+                        <span className="font-semibold text-[11px] sm:text-xs">
+                          Dia previsto na escala como <strong>{isAutomaticWorkDay(selectedDate) ? "TRABALHO (12x36)" : "FOLGA"}</strong>.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          updateStatus(selectedDate, isAutomaticWorkDay(selectedDate) ? 'trabalhei' : 'folga');
+                        }}
+                        className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[9.5px] font-bold uppercase tracking-wider py-2 px-3.5 rounded-xl transition-all shadow-sm hover:scale-102 active:scale-98 cursor-pointer shrink-0 text-center"
+                      >
+                        Confirmar {isAutomaticWorkDay(selectedDate) ? 'TRABALHO' : 'FOLGA'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Se for dia Trabalhado, mostrar opções de horário de Entrada e Saída */}
+                  {(dayStatuses[selectedDate] === 'trabalhei') ? (
+                    <div className="bg-[#fffefb] border border-[#e1ccb0] rounded-xl p-4 flex flex-col gap-3.5 shadow-inner">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9px] font-bold text-[#3e2516] uppercase tracking-wider flex items-center gap-1">
+                            <span>ENTRADA DE TRABALHO</span>
+                          </label>
+                          <input
+                            type="time"
+                            value={dayTimes[selectedDate]?.entrada || '18:00'}
+                            onChange={(e) => {
+                              const existing = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
+                              updateTime(selectedDate, { ...existing, entrada: e.target.value });
+                            }}
+                            className="bg-white border border-[#dac0a3] text-sm font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9px] font-bold text-[#3e2516] uppercase tracking-wider flex items-center gap-1">
+                            <span>SAÍDA DE TRABALHO</span>
+                          </label>
+                          <input
+                            type="time"
+                            value={dayTimes[selectedDate]?.saida || '06:00'}
+                            onChange={(e) => {
+                              const existing = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
+                              updateTime(selectedDate, { ...existing, saida: e.target.value });
+                            }}
+                            className="bg-white border border-[#dac0a3] text-sm font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Banco de horas do dia */}
+                      {(() => {
+                        const times = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
+                        const balance = calculateDayBalance(selectedDate, 'trabalhei', times.entrada, times.saida);
+                        
+                        return (
+                          <div className="border-t border-[#e1ccb0] pt-3 flex flex-col gap-2">
+                            <div className="flex items-center justify-between bg-[#fcf8f2] p-2.5 rounded-lg border border-[#e1ccb0]">
+                              <span className="text-[10px] font-bold text-[#5c3e29] uppercase tracking-wider">Saldo Deste Dia:</span>
+                              <span className={`text-sm font-mono font-black ${balance.total >= 0 ? 'text-[#2e7d32]' : 'text-[#B32025]'}`}>
+                                {formatBalanceMinutes(balance.total)}
+                              </span>
+                            </div>
+
+                            {/* Detalhamento dos Gatilhos do Banco de Horas */}
+                            <div className="flex flex-col gap-1.5 pt-1 text-[11px] text-stone-700 font-medium">
+                              {/* Regras da Entrada */}
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs mt-0.5">{balance.entradaStatus === 'positivo' ? '🟢' : '🔴'}</span>
+                                <div>
+                                  <span className="font-bold text-[#4e341f]">Entrada às {times.entrada}: </span>
+                                  {balance.entradaStatus === 'positivo' ? (
+                                    <span className="text-green-700">Gatilho de Entrada antes de 17:54 ativado (Banco Positivo {formatBalanceMinutes(balance.entradaDiff)})</span>
+                                  ) : (
+                                    <span className="text-[#B32025]">Gatilho de Entrada antes de 18:06 ativado (Banco Negativo {formatBalanceMinutes(balance.entradaDiff)})</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Regras de Saída */}
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs mt-0.5">{balance.saidaStatus === 'positivo' ? '🟢' : '🔴'}</span>
+                                <div>
+                                  <span className="font-bold text-[#4e341f]">Saída às {times.saida}: </span>
+                                  {balance.saidaStatus === 'positivo' ? (
+                                    <span className="text-green-700">Gatilho de Saída antes de 06:06 ativado (Banco Positivo {formatBalanceMinutes(balance.saidaDiff)})</span>
+                                  ) : (
+                                    <span className="text-[#B32025]">Gatilho de Saída antes de 05:56 ativado (Banco Negativo {formatBalanceMinutes(balance.saidaDiff)})</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="bg-[#f8f1e5]/50 border border-dashed border-[#d6be9c] rounded-xl p-6 text-center text-stone-400 text-xs">
+                      Não há compensação de banco de horas para faltas ou folgas. Selecione "Fui trabalhar (Trabalhei)" para registrar horários e acumular créditos ou débitos.
+                    </div>
+                  )}
+                </div>
+                )}
+
+                {/* Configuração da Escala 12x36 */}
+                {false && (
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
+                        <Calendar size={14} />
+                      </div>
+                      <h3 className="text-xs font-black text-[#3e2516] uppercase tracking-widest leading-none">Escala Automática 12x36</h3>
+                    </div>
+                    {/* Status Toggle Badge */}
+                    <button
+                      onClick={() => updateEscalaConfig({ ...escalaConfig, enabled: !escalaConfig.enabled })}
+                      className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer border ${
+                        escalaConfig.enabled
+                          ? "bg-green-600 text-white border-green-700 hover:bg-green-700 shadow-sm"
+                          : "bg-[#e1ccb0]/30 text-[#8c6b4e] border-[#eedecb] hover:bg-[#e1ccb0]/55"
+                      }`}
+                    >
+                      {escalaConfig.enabled ? "Ativada" : "Desativada"}
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-[#5c3e29] leading-relaxed">
+                    Marque os dias da sua jornada 12x36 de forma automatizada no calendário. Informe abaixo um dia de referência em que você trabalhou:
                   </p>
-                </div>
-              </div>
 
-              {/* Status Switcher Buttons */}
-              <div className="flex items-center gap-1 bg-[#fbf9f5] border border-[#d6ccbe] p-1 rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="flex-1 flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-[#5c3e29] uppercase tracking-wider">Último dia de trabalho (Referência):</label>
+                      <input
+                        type="date"
+                        value={escalaConfig.startDate || getTodayStr()}
+                        onChange={(e) => updateEscalaConfig({ ...escalaConfig, startDate: e.target.value })}
+                        disabled={!escalaConfig.enabled}
+                        className="bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+                )}
+
+                {/* Configuração do Banco de Horas */}
+                {false && (
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
+                  <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
+                        <Clock size={14} />
+                      </div>
+                      <h3 className="text-xs font-black text-[#3e2516] uppercase tracking-widest leading-none">Ajuste de Banco de Horas</h3>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-[#5c3e29] leading-relaxed">
+                    Você pode adicionar um saldo inicial ou fazer um ajuste manual de horas para o seu banco. Valores positivos adicionam créditos e valores negativos adicionam débitos.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-[#5c3e29] uppercase tracking-wider">Ajuste Manual (Horas):</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 5 ou -10"
+                        value={Math.trunc(bancoHorasManual / 60) || ""}
+                        onChange={(e) => {
+                          const hrs = parseInt(e.target.value) || 0;
+                          const currentMins = bancoHorasManual % 60;
+                          updateBancoHorasManual(hrs * 60 + currentMins);
+                        }}
+                        className="bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-[#5c3e29] uppercase tracking-wider">Ajuste Manual (Minutos):</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 30 ou -45"
+                        min="-59"
+                        max="59"
+                        value={bancoHorasManual % 60 || ""}
+                        onChange={(e) => {
+                          const mins = parseInt(e.target.value) || 0;
+                          const currentHrs = Math.trunc(bancoHorasManual / 60);
+                          updateBancoHorasManual(currentHrs * 60 + mins);
+                        }}
+                        className="bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-lg p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-1 pt-1.5 border-t border-[#f4ebdc]">
+                    <div className="text-[10px] text-[#8c6b4e] font-mono">
+                      Ajuste manual configurado: <strong className={bancoHorasManual >= 0 ? "text-green-700 font-bold" : "text-red-700 font-bold"}>{formatBalanceMinutes(bancoHorasManual)}</strong>
+                    </div>
+                    {bancoHorasManual !== 0 && (
+                      <button
+                        onClick={() => updateBancoHorasManual(0)}
+                        className="text-[9px] font-black uppercase text-[#B32025] hover:underline cursor-pointer"
+                      >
+                        Limpar Ajuste
+                      </button>
+                    )}
+                  </div>
+                </div>
+                )}
+
+                {/* Quadro explicativo definitivo de Banco de Horas */}
+                {false && (
+                <div className="bg-[#fdfbf7] border border-[#d6be9c] rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-[#4e341f] p-1.5 rounded-lg text-[#dfc2a1]">
+                      <Calendar size={14} />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#3e2516] tracking-widest uppercase">Manual de Regras do Banco</span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 text-xs text-stone-700 leading-relaxed">
+                    <div className="flex items-start gap-2 p-1.5 bg-red-500/5 rounded border border-red-500/10">
+                      <span className="text-[#B32025] font-black">🔴</span>
+                      <div>
+                        <strong className="text-red-900 block">DÉBITO (Banco Negativo):</strong>
+                        <ul className="list-disc pl-4 mt-0.5 space-y-0.5 text-[11px] text-red-800">
+                          <li>Entrada antes de <strong>18:06</strong> (entre 17:54 e 18:05)</li>
+                          <li>Saída antes de <strong>05:56</strong> (ex: saída às 05:50)</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 p-1.5 bg-green-500/5 rounded border border-green-500/10">
+                      <span className="text-green-600 font-black">🟢</span>
+                      <div>
+                        <strong className="text-green-900 block">CRÉDITO (Banco Positivo):</strong>
+                        <ul className="list-disc pl-4 mt-0.5 space-y-0.5 text-[11px] text-green-800">
+                          <li>Entrada antes de <strong>17:54</strong> (ex: chegada às 17:50)</li>
+                          <li>Saída antes de <strong>06:06</strong> (ou após 05:56, ex: saída às 06:05)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                )}
+
+              </div> {/* Close Right Inner */}
+
+            </div> {/* Close Bottom 2-Panel Area */}
+            
+            {/* Very Bottom Text / Return top link inside main container */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-auto opacity-90 pt-4 border-t border-[#e1ccb0]/50 relative">
+              <span className="text-xs font-bold text-[#5c3e29] font-mono">Hoje: {getTodayStr().split('-').reverse().join('/')}</span>
+              
+              <div className="flex flex-wrap items-center gap-3 relative">
+                
+                {/* Botão para Toggle do Dropdown */}
                 <button
-                  type="button"
-                  onClick={() => updateStatus(selectedDate, 'trabalhei')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center gap-1",
-                    (dayStatuses[selectedDate] === 'trabalhei' || (!dayStatuses[selectedDate] && isAutomaticWorkDay(selectedDate)))
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "text-stone-600 hover:text-stone-900"
-                  )}
+                  onClick={() => setShowAllAppsDropdown(true)}
+                  className="text-[9px] font-bold uppercase tracking-wider py-1.5 px-3 rounded-lg flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 border bg-white text-stone-700 border-stone-300 hover:bg-stone-50"
                 >
-                  Trabalhei
+                  <Calendar size={12} className="text-stone-500" />
+                  Todos Compromissos ({allAppointments.length})
                 </button>
-                <button
-                  type="button"
-                  onClick={() => updateStatus(selectedDate, 'folga')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center gap-1",
-                    (dayStatuses[selectedDate] === 'folga' || (!dayStatuses[selectedDate] && !isAutomaticWorkDay(selectedDate)))
-                      ? "bg-amber-500 text-white shadow-xs"
-                      : "text-stone-600 hover:text-stone-900"
-                  )}
+
+                <button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="bg-[#B32025] hover:bg-[#8c060a] text-white text-[9px] font-bold uppercase tracking-wider py-1.5 px-4 rounded-lg flex items-center gap-1 shadow-sm transition-colors cursor-pointer active:scale-95"
                 >
-                  Folga
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateStatus(selectedDate, 'falta')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center gap-1",
-                    dayStatuses[selectedDate] === 'falta'
-                      ? "bg-rose-600 text-white shadow-xs"
-                      : "text-stone-600 hover:text-stone-900"
-                  )}
-                >
-                  Falta
+                  Voltar ao topo <ChevronUp size={12} />
                 </button>
               </div>
             </div>
 
-            {/* Time Entries and Daily Calculation */}
-            {isSelectedWorkDay || (!dayStatuses[selectedDate] && isAutomaticWorkDay(selectedDate)) ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center bg-[#fbf9f5] border border-[#d6ccbe] p-3.5 rounded-xl">
-                <div>
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 block mb-1">
-                    Horário Entrada
+          </div>
+        </div>
+      </div>
+
+      {/* MODAL DE TODOS OS COMPROMISSOS */}
+      <AnimatePresence>
+        {showAllAppsDropdown && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAllAppsDropdown(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+            />
+            
+            {/* Modal Container */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-3xl w-full max-w-lg shadow-[0_25px_60px_rgba(0,0,0,0.55)] p-6 relative flex flex-col gap-4 z-50"
+            >
+              {/* Corner vintage brass screws */}
+              <Screw className="absolute -top-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -top-1.5 -right-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -right-1.5 w-3 h-3" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#B32025] text-white p-2 rounded-xl shadow-md">
+                    <Calendar size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-[#3e2516] font-serif">Todos os Compromissos</h3>
+                    <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-0.5">Total cadastrado: {allAppointments.length}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowAllAppsDropdown(false)}
+                  className="p-1.5 rounded-lg hover:bg-[#5c3e29]/10 text-[#5c3e29]/75 hover:text-[#B32025] transition-all cursor-pointer"
+                  title="Fechar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* List Content */}
+              <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1">
+                {allAppointments.length === 0 ? (
+                  <div className="text-center py-12 text-stone-500 text-xs font-semibold uppercase tracking-wider flex flex-col items-center gap-2">
+                    <Calendar size={32} className="opacity-30 stroke-[1.5]" />
+                    Nenhum compromisso cadastrado.
+                  </div>
+                ) : (
+                  allAppointments.map((app) => (
+                    <div 
+                      key={app.id} 
+                      className="bg-white border-2 border-[#e1ccb0]/60 rounded-2xl p-3 flex items-center justify-between gap-4 shadow-sm hover:shadow-md hover:border-[#dac0a3] transition-all group"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Date & Time Badge */}
+                        <div className="bg-[#FAF6ED] border-2 border-[#d6be9c]/80 rounded-xl px-2.5 py-1.5 flex flex-col items-center justify-center shrink-0 min-w-[80px] shadow-sm">
+                          <span className="text-[10px] font-black text-[#5c3e29] font-mono leading-none tracking-wide">{app.date.split('-').reverse().slice(0, 2).join('/')}</span>
+                          <span className="text-xs font-black text-[#3e2516] font-mono mt-1 tracking-tight">{app.time}</span>
+                        </div>
+
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <span className="text-xs sm:text-sm font-extrabold text-[#3e2516] break-words leading-snug">
+                            {app.title}
+                          </span>
+                          
+                          {app.type === 'pessoal' ? (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/50 flex items-center gap-1 w-max shadow-2xs">
+                              <User size={10} className="stroke-[2.5]" />
+                              Pessoal
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-[#B32025] bg-red-50 px-2 py-0.5 rounded-lg border border-red-200/50 flex items-center gap-1 w-max shadow-2xs">
+                              <Briefcase size={10} className="stroke-[2.5]" />
+                              Corporativo
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={() => deleteAppointment(app.id)}
+                        className="text-stone-400 hover:text-white hover:bg-red-600 p-2 rounded-xl transition-all cursor-pointer shrink-0 opacity-40 group-hover:opacity-100 hover:scale-105 active:scale-95 border border-transparent hover:border-red-700 shadow-2xs"
+                        title="Excluir compromisso"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Footer info/close */}
+              <div className="border-t border-[#e1ccb0] pt-3.5 flex items-center justify-end gap-2.5">
+                <button
+                  onClick={() => setShowAllAppsDropdown(false)}
+                  className="bg-[#5c3e29] hover:bg-[#3e2516] text-[#efdfc6] text-[10px] font-black uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer active:scale-97"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL DE AGENDAR LEMBRETE AO CLICAR NO DIA DO CALENDÁRIO */}
+      <AnimatePresence>
+        {showDayReminderModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDayReminderModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+            />
+            
+            {/* Modal Container */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-[#fdfbf7] border-2 border-[#5c3e29] rounded-3xl w-full max-w-lg shadow-[0_25px_60px_rgba(0,0,0,0.55)] p-6 relative flex flex-col gap-4 z-50"
+            >
+              {/* Screws */}
+              <Screw className="absolute -top-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -top-1.5 -right-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -left-1.5 w-3 h-3" />
+              <Screw className="absolute -bottom-1.5 -right-1.5 w-3 h-3" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#e1ccb0] pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#B32025] text-white p-2.5 rounded-2xl shadow-md">
+                    <Calendar size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black uppercase tracking-wider text-[#3e2516] font-serif">
+                      Agendar Lembrete / Acontecimento
+                    </h3>
+                    <p className="text-xs text-[#8c6b4e] font-mono font-bold mt-0.5">
+                      {formatLocalDate(selectedDate)}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowDayReminderModal(false)}
+                  className="p-1.5 rounded-lg hover:bg-[#5c3e29]/10 text-[#5c3e29]/75 hover:text-[#B32025] transition-all cursor-pointer"
+                  title="Fechar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Quick Add Form */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!reminderTitle.trim()) return;
+                  addAppointmentForTargetDate(selectedDate, reminderTime, reminderTitle, reminderType);
+                  setReminderTitle('');
+                }}
+                className="bg-[#fcfaf4] border border-[#d6be9c] rounded-2xl p-4 flex flex-col gap-3.5 shadow-xs"
+              >
+                <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">
+                  ➕ Cadastrar Novo Lembrete para Esta Data
+                </span>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-[#8c6b4e] uppercase tracking-wider">
+                    Descrição do Lembrete / Acontecimento:
                   </label>
                   <input
-                    type="time"
-                    value={dayTimes[selectedDate]?.entrada || '18:00'}
-                    onChange={(e) => updateTime(selectedDate, {
-                      entrada: e.target.value,
-                      saida: dayTimes[selectedDate]?.saida || '06:00'
-                    })}
-                    className="w-full bg-white border border-[#d6ccbe] rounded-lg px-3 py-2 text-xs font-mono font-bold text-stone-900 outline-none focus:border-stone-600 shadow-2xs"
+                    type="text"
+                    placeholder="Ex: Treinamento de segurança, Reunião, Entrega de EPI..."
+                    value={reminderTitle}
+                    onChange={(e) => setReminderTitle(e.target.value)}
+                    className="w-full bg-white border border-[#dac0a3] text-xs font-bold rounded-xl p-3 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner placeholder-stone-400"
+                    autoFocus
                   />
-                  <span className="text-[9px] text-stone-400 font-mono mt-0.5 block">Alvo oficial: 18:00</span>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 block mb-1">
-                    Horário Saída
-                  </label>
-                  <input
-                    type="time"
-                    value={dayTimes[selectedDate]?.saida || '06:00'}
-                    onChange={(e) => updateTime(selectedDate, {
-                      entrada: dayTimes[selectedDate]?.entrada || '18:00',
-                      saida: e.target.value
-                    })}
-                    className="w-full bg-white border border-[#d6ccbe] rounded-lg px-3 py-2 text-xs font-mono font-bold text-stone-900 outline-none focus:border-stone-600 shadow-2xs"
-                  />
-                  <span className="text-[9px] text-stone-400 font-mono mt-0.5 block">Alvo oficial: 06:00</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-[#8c6b4e] uppercase tracking-wider">
+                      Horário Previsto:
+                    </label>
+                    <input
+                      type="time"
+                      value={reminderTime}
+                      onChange={(e) => setReminderTime(e.target.value)}
+                      className="w-full bg-white border border-[#dac0a3] text-xs font-mono font-bold rounded-xl p-2.5 outline-none text-[#3e2516] focus:border-[#B32025] shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-[#8c6b4e] uppercase tracking-wider">
+                      Tipo de Compromisso:
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setReminderType('pessoal')}
+                        className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          reminderType === 'pessoal'
+                            ? 'bg-[#d97706] text-white border-[#d97706] shadow-sm'
+                            : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                        }`}
+                      >
+                        <User size={12} />
+                        <span>Pessoal</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReminderType('corporativo')}
+                        className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          reminderType === 'corporativo'
+                            ? 'bg-[#B32025] text-white border-[#B32025] shadow-sm'
+                            : 'bg-white text-stone-600 border-[#d6be9c] hover:bg-stone-50'
+                        }`}
+                      >
+                        <Briefcase size={12} />
+                        <span>Corp.</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Day Balance Summary */}
+                <button
+                  type="submit"
+                  disabled={!reminderTitle.trim()}
+                  className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all ${
+                    reminderTitle.trim()
+                      ? 'bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e52229] hover:to-[#a9080d] text-white cursor-pointer active:scale-98'
+                      : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  <Plus size={16} className="stroke-[3]" />
+                  <span>Salvar Lembrete</span>
+                </button>
+              </form>
+
+              {/* Existing Reminders for selectedDate */}
+              <div className="flex flex-col gap-2 mt-1">
+                <span className="text-[10px] font-black text-[#5c3e29] uppercase tracking-wider block">
+                  📋 Lembretes Agendados para Este Dia
+                </span>
+
                 {(() => {
-                  const times = dayTimes[selectedDate] || { entrada: '18:00', saida: '06:00' };
-                  const dayBal = calculateDayBalance(selectedDate, 'trabalhei', times.entrada, times.saida);
+                  const dayApps = (Object.values(appointments || {}) as Appointment[])
+                    .filter(app => app && app.date === selectedDate)
+                    .sort((a, b) => a.time.localeCompare(b.time));
+
+                  if (dayApps.length === 0) {
+                    return (
+                      <div className="bg-[#fcfcf9]/60 border border-dashed border-[#d6be9c]/70 rounded-2xl p-5 text-center flex flex-col items-center justify-center gap-1.5">
+                        <Clock size={20} className="text-[#a27a5d] opacity-50" />
+                        <p className="text-xs font-semibold text-stone-500">
+                          Nenhum lembrete agendado para {selectedDate.split('-').reverse().join('/')}.
+                        </p>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div className="bg-white border border-[#d6ccbe] p-3 rounded-lg text-center shadow-2xs">
-                      <span className="text-[9px] font-mono font-bold text-stone-500 uppercase block leading-none">
-                        Impacto no Banco do Dia
-                      </span>
-                      <span className={cn(
-                        "text-base font-mono font-black mt-1 block",
-                        dayBal.total >= 0 ? "text-emerald-700" : "text-rose-700"
-                      )}>
-                        {formatBalanceMinutes(dayBal.total)}
-                      </span>
-                      <span className="text-[8.5px] font-mono text-stone-400 block mt-0.5">
-                        Entrada: {dayBal.entradaDiff >= 0 ? `+${dayBal.entradaDiff}m` : `${dayBal.entradaDiff}m`} | Saída: {dayBal.saidaDiff >= 0 ? `+${dayBal.saidaDiff}m` : `${dayBal.saidaDiff}m`}
-                      </span>
+                    <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                      {dayApps.map((app) => (
+                        <div
+                          key={app.id}
+                          className="bg-white border-2 border-[#e1ccb0]/80 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs hover:border-[#dac0a3] transition-all"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="bg-[#FAF6ED] border border-[#d6be9c] rounded-lg px-2.5 py-1.5 font-mono text-xs font-bold text-[#3e2516] shrink-0">
+                              {app.time}
+                            </div>
+
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="text-xs font-bold text-[#3e2516] break-words">
+                                {app.title}
+                              </span>
+                              <div>
+                                {app.type === 'pessoal' ? (
+                                  <span className="text-[8.5px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50 inline-flex items-center gap-1">
+                                    <User size={9} />
+                                    Pessoal
+                                  </span>
+                                ) : (
+                                  <span className="text-[8.5px] font-black uppercase tracking-wider text-[#B32025] bg-red-50 px-1.5 py-0.5 rounded border border-red-200/50 inline-flex items-center gap-1">
+                                    <Briefcase size={9} />
+                                    Corporativo
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteAppointment(app.id)}
+                            className="text-stone-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all cursor-pointer shrink-0"
+                            title="Excluir lembrete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   );
                 })()}
               </div>
-            ) : (
-              <div className="p-4 bg-[#fbf9f5] border border-dashed border-[#d6ccbe] rounded-xl text-center">
-                <p className="text-xs font-mono font-bold text-stone-600">
-                  {dayStatuses[selectedDate] === 'falta' ? 'Dia marcado como FALTA.' : 'Dia de FOLGA na escala 12x36.'}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* ================= RIGHT COLUMN: BANCO DE HORAS & AGENDA (4 COLS) ================= */}
-        <div className="lg:col-span-4 space-y-4">
-          
-          {/* Card Banco de Horas Consolidado */}
-          <div className="bg-white border border-[#d6ccbe] p-4 rounded-2xl shadow-xs space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-              <h3 className="text-xs font-mono font-black uppercase tracking-wider text-stone-900 flex items-center gap-2">
-                <Clock size={15} className="text-[#9b1526]" />
-                Banco de Horas Geral
-              </h3>
-              <button
-                onClick={() => setIsEditingBankCard(!isEditingBankCard)}
-                className="text-[10px] font-mono font-bold text-[#9b1526] hover:underline uppercase cursor-pointer"
-              >
-                {isEditingBankCard ? 'Fechar' : 'Ajustar'}
-              </button>
-            </div>
-
-            {/* Total Display */}
-            <div className={cn(
-              "p-4 rounded-xl border text-center relative overflow-hidden",
-              totalBankOfHours >= 0
-                ? "bg-emerald-50/60 border-emerald-200 text-emerald-900"
-                : "bg-rose-50/60 border-rose-200 text-rose-900"
-            )}>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-stone-500 block mb-0.5">
-                Saldo Acumulado Atual
-              </span>
-              <h4 className="text-3xl font-mono font-black tracking-tight">
-                {formatBalanceMinutes(totalBankOfHours)}
-              </h4>
-              <p className="text-[10px] font-mono text-stone-500 mt-1">
-                Calculado com regras automáticas de tolerância e apontamento
-              </p>
-            </div>
-
-            {/* Manual Balance Adjustment Form */}
-            {isEditingBankCard && (
-              <div className="bg-[#fbf9f5] border border-[#d6ccbe] p-3 rounded-xl space-y-2 animate-fade-in">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-700 block">
-                  Ajuste Manual Inicial (Minutos)
-                </span>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Minutos (+ ou -)"
-                    value={tempMins || bancoHorasManual.toString()}
-                    onChange={(e) => setTempMins(e.target.value)}
-                    className="flex-1 bg-white border border-[#d6ccbe] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold outline-none"
-                  />
-                  <button
-                    onClick={() => {
-                      const mins = parseInt(tempMins, 10);
-                      if (!isNaN(mins)) {
-                        updateBancoHorasManual(mins);
-                        setIsEditingBankCard(false);
-                      }
-                    }}
-                    className="px-3 py-1.5 bg-[#9b1526] hover:bg-[#831220] text-white rounded-lg text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
-                  >
-                    Salvar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Escala 12x36 Config Trigger */}
-            <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-[10px] font-mono text-stone-600">
-              <span>Escala base: <strong>{escalaConfig.startDate || '2026-06-14'}</strong></span>
-              <span className="text-emerald-700 font-bold">12x36 Ativa</span>
-            </div>
-          </div>
-
-          {/* Card Agenda & Compromissos */}
-          <div className="bg-white border border-[#d6ccbe] p-4 rounded-2xl shadow-xs space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-              <h3 className="text-xs font-mono font-black uppercase tracking-wider text-stone-900 flex items-center gap-2">
-                <Calendar size={15} className="text-[#9b1526]" />
-                Compromissos ({formatLocalDate(selectedDate).split(' - ')[0]})
-              </h3>
-              <button
-                onClick={() => setShowDayReminderModal(true)}
-                className="p-1 bg-red-50 hover:bg-red-100 text-[#9b1526] rounded-lg transition-colors cursor-pointer"
-                title="Novo Compromisso"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
-
-            {/* List of Appointments for Selected Date */}
-            {(() => {
-              const dayApps = (Object.values(appointments || {}) as Appointment[]).filter(a => a && a.date === selectedDate);
-              if (dayApps.length === 0) {
-                return (
-                  <div className="py-6 text-center text-stone-400 bg-[#fbf9f5] border border-dashed border-[#d6ccbe] rounded-xl">
-                    <p className="text-xs font-mono font-bold">Nenhum compromisso neste dia.</p>
-                    <button
-                      onClick={() => setShowDayReminderModal(true)}
-                      className="mt-2 text-[10px] font-mono font-bold text-[#9b1526] hover:underline uppercase cursor-pointer"
-                    >
-                      + Adicionar Lembrete
-                    </button>
-                  </div>
-                );
-              }
-              return (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {dayApps.map((app) => (
-                    <div
-                      key={app.id}
-                      className="p-2.5 bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl flex items-center justify-between gap-2 shadow-2xs"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-stone-900 text-white">
-                            {app.time}
-                          </span>
-                          <span className={cn(
-                            "text-[8.5px] font-mono font-bold uppercase px-1.5 py-0.2 rounded",
-                            app.type === 'corporativo' ? "bg-red-100 text-[#9b1526]" : "bg-blue-100 text-blue-800"
-                          )}>
-                            {app.type}
-                          </span>
-                        </div>
-                        <p className="text-xs font-bold text-stone-900 truncate" title={app.title}>
-                          {app.title}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => deleteAppointment(app.id)}
-                        className="p-1.5 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
-                        title="Excluir"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-
-            {/* Quick Add Form */}
-            <div className="pt-2 border-t border-stone-100 space-y-2">
-              <input
-                type="text"
-                placeholder="Novo compromisso ou tarefa..."
-                value={newAppTitle}
-                onChange={(e) => setNewAppTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    addAppointment(newAppTime, newAppTitle, newAppType);
-                  }
-                }}
-                className="w-full bg-[#fbf9f5] border border-[#d6ccbe] rounded-lg px-2.5 py-1.5 text-xs text-stone-900 font-medium placeholder:text-stone-400 outline-none focus:border-stone-500"
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  value={newAppTime}
-                  onChange={(e) => setNewAppTime(e.target.value)}
-                  className="w-24 bg-[#fbf9f5] border border-[#d6ccbe] rounded-lg px-2 py-1 text-xs font-mono font-bold text-stone-900 outline-none"
-                />
-                <select
-                  value={newAppType}
-                  onChange={(e) => setNewAppType(e.target.value as any)}
-                  className="flex-1 bg-[#fbf9f5] border border-[#d6ccbe] rounded-lg px-2 py-1 text-xs font-mono font-bold text-stone-700 outline-none"
-                >
-                  <option value="corporativo">Corporativo</option>
-                  <option value="pessoal">Pessoal</option>
-                </select>
+              {/* Footer Close Button */}
+              <div className="border-t border-[#e1ccb0] pt-3 flex justify-end">
                 <button
-                  onClick={() => addAppointment(newAppTime, newAppTitle, newAppType)}
-                  disabled={!newAppTitle.trim()}
-                  className="px-3 py-1.5 bg-[#9b1526] hover:bg-[#831220] disabled:opacity-40 text-white rounded-lg text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+                  type="button"
+                  onClick={() => setShowDayReminderModal(false)}
+                  className="bg-[#5c3e29] hover:bg-[#3e2516] text-[#efdfc6] text-[10px] font-black uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer active:scale-97"
                 >
-                  Salvar
+                  Concluído
                 </button>
               </div>
-            </div>
+            </motion.div>
           </div>
-
-          {/* Card Feriados do Mês */}
-          <div className="bg-white border border-[#d6ccbe] p-4 rounded-2xl shadow-xs space-y-2.5">
-            <h3 className="text-xs font-mono font-black uppercase tracking-wider text-stone-900 flex items-center gap-2 pb-2 border-b border-stone-200">
-              <Calendar size={15} className="text-[#9b1526]" />
-              Feriados em {monthNames[viewDate.getMonth()]}
-            </h3>
-            <div className="space-y-1.5">
-              {activeHolidaysList.map((h, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-[#fbf9f5] border border-[#d6ccbe] rounded-lg text-xs">
-                  <span className="font-bold text-stone-800">{h.name}</span>
-                  <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    {h.date.split('-').reverse().join('/')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ================= MODAL AGENDAR COMPROMISSO ================= */}
-      {showDayReminderModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in font-sans">
-          <div className="bg-white border border-[#d6ccbe] rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col text-stone-900">
-            <div className="bg-[#fbf9f5] p-4 border-b border-[#e7dac9] flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-red-50 text-[#9b1526] rounded-xl border border-red-200">
-                  <Calendar size={18} />
-                </div>
-                <div>
-                  <h3 className="text-xs font-mono font-bold uppercase text-stone-900">
-                    Adicionar Compromisso
-                  </h3>
-                  <p className="text-[10px] text-stone-500 font-mono">
-                    {formatLocalDate(selectedDate)}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowDayReminderModal(false)}
-                className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 block mb-1">
-                  Título do Lembrete
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Reunião Operacional / Treinamento"
-                  value={reminderTitle}
-                  onChange={(e) => setReminderTitle(e.target.value)}
-                  className="w-full bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl p-2.5 text-xs text-stone-900 font-bold outline-none focus:border-stone-600"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 block mb-1">
-                    Horário
-                  </label>
-                  <input
-                    type="time"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
-                    className="w-full bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl p-2 text-xs font-mono font-bold text-stone-900 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 block mb-1">
-                    Categoria
-                  </label>
-                  <select
-                    value={reminderType}
-                    onChange={(e) => setReminderType(e.target.value as any)}
-                    className="w-full bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl p-2 text-xs font-mono font-bold text-stone-900 outline-none"
-                  >
-                    <option value="corporativo">Corporativo</option>
-                    <option value="pessoal">Pessoal</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#fbf9f5] p-4 border-t border-[#e7dac9] flex items-center justify-end gap-2">
-              <button
-                onClick={() => setShowDayReminderModal(false)}
-                className="px-4 py-2 bg-white border border-[#d6ccbe] text-stone-700 font-mono font-bold text-xs rounded-xl uppercase hover:bg-stone-50 transition-colors cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  if (reminderTitle.trim()) {
-                    addAppointmentForTargetDate(selectedDate, reminderTime, reminderTitle.trim(), reminderType);
-                    setReminderTitle('');
-                    setShowDayReminderModal(false);
-                  }
-                }}
-                disabled={!reminderTitle.trim()}
-                className="px-4 py-2 bg-[#9b1526] hover:bg-[#831220] disabled:opacity-40 text-white font-mono font-bold text-xs rounded-xl uppercase transition-colors cursor-pointer shadow-xs"
-              >
-                Salvar Compromisso
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+        )}
+      </AnimatePresence>
     </div>
   );
 }

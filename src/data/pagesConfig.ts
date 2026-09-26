@@ -12,12 +12,11 @@ import {
   ShieldAlert, 
   Activity, 
   Truck, 
-  Radio, 
-  FileSpreadsheet, 
-  Building2, 
-  Lock, 
-  LayoutGrid,
-  Trophy
+  Radio,
+  FileSpreadsheet,
+  Building2,
+  Lock,
+  LayoutGrid
 } from 'lucide-react';
 
 import { rtdb } from '../firebase';
@@ -53,11 +52,21 @@ export const ICON_MAP: Record<string, React.ElementType> = {
   Radio,
   FileSpreadsheet,
   Building2,
-  LayoutGrid,
-  Trophy
+  LayoutGrid
 };
 
 export const DEFAULT_PAGES: PageDefinition[] = [
+  { 
+    id: 'patio', 
+    label: 'Pátio', 
+    buttonLabel: 'Logística', 
+    category: 'Operacional & Frota',
+    iconName: 'Container',
+    description: 'Gestão inteligente de entrada, saída, disponibilidade e vistorias de veículos no pátio.',
+    isDefaultVisible: true,
+    isRestrictedByDefault: false,
+    badge: 'Logística'
+  },
   { 
     id: 'checklist', 
     label: 'Checklist', 
@@ -134,6 +143,17 @@ export const DEFAULT_PAGES: PageDefinition[] = [
     isDefaultVisible: false,
     isRestrictedByDefault: true,
     badge: 'Trajetos'
+  },
+  { 
+    id: 'slides', 
+    label: 'Slides 4K HUD', 
+    buttonLabel: 'Command Center 4K', 
+    category: 'Painel Executivo',
+    iconName: 'Globe',
+    description: 'Dashboard executivo 4K com mapa-múndi holográfico 3D, status de viagens e unidades.',
+    isDefaultVisible: false,
+    isRestrictedByDefault: true,
+    badge: '4K HUD 3D'
   }
 ];
 
@@ -247,6 +267,9 @@ export function loadPageVisibility(): Record<string, boolean> {
 
     const showRotas = localStorage.getItem('show_rotas_page');
     if (showRotas !== null) visibility.rotas = showRotas === 'true';
+
+    const showSlides = localStorage.getItem('show_slides');
+    if (showSlides !== null) visibility.slides = showSlides === 'true';
   } catch (e) {
     // Ignore
   }
@@ -264,6 +287,9 @@ export function savePageVisibility(visibility: Record<string, boolean>) {
     }
     if (visibility.rotas !== undefined) {
       localStorage.setItem('show_rotas_page', String(visibility.rotas));
+    }
+    if (visibility.slides !== undefined) {
+      localStorage.setItem('show_slides', String(visibility.slides));
     }
   } catch (err) {
     console.error('Erro ao salvar visibilidade:', err);

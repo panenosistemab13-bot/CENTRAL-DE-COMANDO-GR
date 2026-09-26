@@ -15,14 +15,6 @@ async function startServer() {
   // Increase the payload size limit for base64 images
   app.use(express.json({ limit: '50mb' }));
 
-  // Prevent browser caching of applet code and assets
-  app.use((req, res, next) => {
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-    next();
-  });
-
   // API routes go here FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

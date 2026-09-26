@@ -844,50 +844,50 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   };
 
   const renderCodesTable = () => (
-    <div className="bg-white border border-[#d6ccbe] rounded-[40px] overflow-hidden shadow-[0_20px_50px_rgba(155,21,38,0.04)]">
-      <div className="bg-gradient-to-r from-[#9b1526] via-[#851221] to-[#9b1526] p-5 text-center border-b border-[#9b1526]/10">
-        <h3 className="text-white font-black uppercase tracking-[0.2em] text-sm">Solicitação de Monitoramento</h3>
-        <p className="text-white/70 text-[9px] font-mono font-bold uppercase mt-1 tracking-widest">Trafegus • Códigos Padronizados</p>
+    <div className="report-card overflow-hidden">
+      <div className="bg-[#4d0c24] p-3 text-center">
+        <h3 className="text-white font-bold uppercase tracking-widest text-lg">Solicitação de Monitoramento</h3>
+        <p className="text-[#fce783] text-xs font-bold uppercase">Trafegus</p>
       </div>
-      <div className="overflow-x-auto p-4">
-        <table className="w-full border-collapse font-mono text-center text-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse font-bold uppercase text-center text-xs">
           <thead>
-            <tr className="bg-slate-900 text-slate-300 border-b border-white/10">
-              <th className="p-3 text-left w-1/3 text-slate-400 font-bold uppercase">Assunto</th>
-              <th className="p-3 w-1/4 text-cyan-400 font-bold uppercase">Códigos</th>
-              <th className="p-3 text-slate-200 font-bold uppercase">Descrição</th>
+            <tr className="bg-[#002d3d] text-white">
+              <th className="border border-zinc-700 p-3 w-1/3">Assunto</th>
+              <th className="border border-zinc-700 p-3 w-1/4">Códigos</th>
+              <th className="border border-slate-700 p-3">Descrição</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
-            <tr className="hover:bg-white/5 transition-colors">
-              <td className="p-3 text-left font-bold text-slate-300">Tipo de Transporte</td>
-              <td className="p-3 font-bold text-rose-400">1</td>
-              <td className="p-3 text-slate-200">Transferência</td>
+          <tbody>
+            <tr>
+              <td className="bg-[#f4b084] border border-slate-700 p-3 text-slate-900">Tipo de Transporte</td>
+              <td className="bg-[#bdd7ee] border border-slate-700 p-3 text-red-600">1</td>
+              <td className="bg-[#1f384c] border border-slate-700 p-3 text-slate-100">Transferencia</td>
             </tr>
-            <tr className="hover:bg-white/5 transition-colors">
-              <td className="p-3 text-left font-bold text-slate-300">Tipos de Operação</td>
-              <td className="p-3 font-bold text-rose-400">2</td>
-              <td className="p-3 text-slate-300 italic">Dedicados</td>
+            <tr>
+              <td className="bg-[#f4b084] border border-slate-700 p-3 text-slate-900">Tipos de Operação</td>
+              <td className="bg-[#bdd7ee] border border-slate-700 p-3 text-red-600">2</td>
+              <td className="bg-[#1f384c] border border-slate-700 p-3 text-slate-100 italic opacity-80">Dedicados</td>
             </tr>
-            <tr className="hover:bg-white/5 transition-colors">
-              <td className="p-3 text-left font-bold text-slate-300">Embarcador</td>
-              <td className="p-3 font-bold text-rose-400">913</td>
-              <td className="p-3 text-slate-200 font-bold">Três Corações Alimentos</td>
+            <tr>
+              <td className="bg-[#f4b084] border border-slate-700 p-3 text-slate-900">Embarcador</td>
+              <td className="bg-[#bdd7ee] border border-slate-700 p-3 text-red-600">913</td>
+              <td className="bg-[#1f384c] border border-slate-700 p-3 text-slate-100">Tres Corações Alimentos</td>
             </tr>
-            <tr className="hover:bg-white/5 transition-colors">
-              <td className="p-3 text-left font-bold text-slate-300">Transportador</td>
-              <td className="p-3 font-bold text-rose-400">87</td>
-              <td className="p-3 text-slate-200">3C Santa Luzia Dedicados</td>
+            <tr>
+              <td className="bg-[#f4b084] border border-slate-700 p-3 text-slate-900">Transportador</td>
+              <td className="bg-[#bdd7ee] border border-slate-700 p-3 text-red-600">87</td>
+              <td className="bg-[#1f384c] border border-slate-700 p-3 text-slate-100">3C Santa Luzia Dedicados</td>
             </tr>
-            <tr className="hover:bg-white/5 transition-colors">
-              <td className="p-3 text-left font-bold text-slate-300">Valor Mercadoria Específica</td>
-              <td className="p-3 font-bold text-cyan-400">126</td>
-              <td className="p-3 text-cyan-300 font-bold">Acima de 900 Mil</td>
+            <tr>
+              <td className="bg-[#f4b084] border border-slate-700 p-3 text-slate-900">Valor Mercadoria Especifica</td>
+              <td className="bg-[#bdd7ee] border border-slate-700 p-3 text-red-600">126</td>
+              <td className="bg-[#1f384c] border border-slate-700 p-3 text-slate-100">Acima de 900 Mil</td>
             </tr>
-            <tr className="hover:bg-white/5 transition-colors">
-              <td className="p-3 text-left font-bold text-slate-300">Valor Mercadoria Específica</td>
-              <td className="p-3 font-bold text-cyan-400">42</td>
-              <td className="p-3 text-slate-300">Abaixo de 900 Mil</td>
+            <tr>
+              <td className="bg-[#f4b084] border border-slate-700 p-3 text-slate-900">Valor Mercadoria Especifica</td>
+              <td className="bg-[#bdd7ee] border border-slate-700 p-3 text-red-600">42</td>
+              <td className="bg-[#1f384c] border border-slate-700 p-3 text-slate-100">Abaixo de 900 Mil</td>
             </tr>
           </tbody>
         </table>
@@ -1192,32 +1192,53 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
   };
 
   return (
-    <div className="w-full relative pb-10">
+    <>
+      {/* ================= HEADER AREA ================= */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-end gap-6 max-w-full mx-auto mt-2 mb-6 px-4 sm:px-6 font-sans">
+        
+        {/* Global actions */}
+        <div className="flex items-center gap-3 ml-auto">
+          <button 
+            onClick={handleUndo}
+            disabled={historyCount === 0}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm border",
+              historyCount > 0 
+                ? "bg-amber-600 hover:bg-amber-700 text-white border-amber-700 cursor-pointer" 
+                : "bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-60"
+            )}
+            title="Restaurar informação modificada (Ctrl + Z)"
+          >
+            <RotateCcw size={16} /> Desfazer (Ctrl+Z)
+          </button>
+        </div>
+      </div>
+
       {view === 'codes' ? (
-        <div className="relative z-10 bg-white p-6 rounded-3xl border border-[#d6ccbe] shadow-xs text-stone-900">{renderCodesTable()}</div>
+        <div className="relative z-10 bg-[#fdfcf9] p-6 rounded-xl border-4 border-[#3A2414] shadow-2xl">{renderCodesTable()}</div>
       ) : (
-        <div className="relative z-10 space-y-4 animate-fade-in">
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
+        <div className="relative z-10 space-y-8 animate-fade-in">
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
             {/* Main Work Area */}
-            <div className="xl:col-span-3 space-y-4">
+            <div className="xl:col-span-3 space-y-6">
               
               {/* ASSUNTOS DE E-MAIL CARD */}
-              <div className="bg-white border border-[#d6ccbe] rounded-2xl p-4 shadow-xs font-sans space-y-3.5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-stone-200">
+              <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm font-sans space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-[#0F2D59] text-white rounded-xl shadow-xs shrink-0">
+                    <div className="p-2 bg-slate-900 text-amber-400 rounded-xl shadow-xs shrink-0">
                       <Mail size={18} className="stroke-[2.5]" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-mono font-black uppercase tracking-wider text-stone-900">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
                           Assuntos do E-mail Padronizados
                         </h4>
-                        <span className="text-[9px] font-mono font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          Automático
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          Automatico
                         </span>
                       </div>
-                      <p className="text-[11px] text-stone-500 font-medium mt-0.5">
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                         Formatados automaticamente com base na data da escala para envio imediato
                       </p>
                     </div>
@@ -1225,25 +1246,25 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  {/* Assunto Ida (Azul) */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#CBD5E1] rounded-xl p-3 gap-3 shadow-xs hover:border-blue-400 transition-all">
+                  {/* Assunto Ida */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gradient-to-r from-blue-50/90 via-slate-50 to-white border border-blue-200/80 rounded-xl p-3 gap-3 shadow-2xs hover:border-blue-300 transition-all">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#0F2D59] text-white shrink-0 shadow-xs">
-                        IDA
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#0F2D59] text-white shrink-0 shadow-2xs">
+                        Ida
                       </span>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-blue-700">Assunto Rota Ida</span>
-                        <span className="text-xs font-mono font-bold text-stone-900 truncate select-all">{getSubjectIda()}</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-blue-800/80">Assunto Rota Ida</span>
+                        <span className="text-xs font-mono font-black text-slate-900 truncate select-all">{getSubjectIda()}</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={copySubjectIda}
                       className={cn(
-                        "px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border shadow-xs shrink-0 active:scale-95",
+                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border shadow-2xs shrink-0 active:scale-95",
                         subjectIdaCopied
-                          ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
-                          : "bg-[#0F2D59] hover:bg-[#153e77] text-white border-blue-900 shadow-xs"
+                          ? "bg-emerald-600 text-white border-emerald-700 shadow-emerald-600/20"
+                          : "bg-[#0F2D59] hover:bg-[#0B2347] text-white border-blue-900 shadow-blue-900/10"
                       )}
                       title="Copiar assunto da Rota Ida"
                     >
@@ -1252,25 +1273,25 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     </button>
                   </div>
 
-                  {/* Assunto Volta (Vermelho) */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#CBD5E1] rounded-xl p-3 gap-3 shadow-xs hover:border-red-400 transition-all">
+                  {/* Assunto Volta */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gradient-to-r from-rose-50/90 via-slate-50 to-white border border-rose-200/80 rounded-xl p-3 gap-3 shadow-2xs hover:border-rose-300 transition-all">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#801414] text-white shrink-0 shadow-xs">
-                        VOLTA
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#801414] text-white shrink-0 shadow-2xs">
+                        Volta
                       </span>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-red-700">Assunto Rota Volta</span>
-                        <span className="text-xs font-mono font-bold text-stone-900 truncate select-all">{getSubjectVolta()}</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-rose-800/80">Assunto Rota Volta</span>
+                        <span className="text-xs font-mono font-black text-slate-900 truncate select-all">{getSubjectVolta()}</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={copySubjectVolta}
                       className={cn(
-                        "px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border shadow-xs shrink-0 active:scale-95",
+                        "px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border shadow-2xs shrink-0 active:scale-95",
                         subjectVoltaCopied
-                          ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
-                          : "bg-[#801414] hover:bg-[#9a1a1a] text-white border-red-900 shadow-xs"
+                          ? "bg-emerald-600 text-white border-emerald-700 shadow-emerald-600/20"
+                          : "bg-[#801414] hover:bg-[#661010] text-white border-rose-900 shadow-rose-900/10"
                       )}
                       title="Copiar assunto da Rota Volta"
                     >
@@ -1281,15 +1302,15 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                 </div>
               </div>
 
-              {/* ROTA IDA (Azul) */}
+              {/* ROTA IDA (Blue Theme) */}
               <section className="space-y-3 font-sans">
-                <div className="flex items-center justify-between bg-stone-900 text-white p-3.5 rounded-xl shadow-md border border-stone-800">
+                <div className="flex items-center justify-between bg-slate-900 text-white p-3.5 rounded-xl shadow-sm border border-slate-800">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse" />
-                    <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-blue-500 animate-pulse" />
+                    <h3 className="text-sm font-extrabold text-white font-sans uppercase tracking-wider flex items-center gap-2">
                       <TrendingUp size={16} className="text-blue-400" /> Rota Ida
                     </h3>
-                    <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-xs">
+                    <span className="text-[10px] font-extrabold bg-blue-950/80 text-blue-200 px-2.5 py-0.5 rounded-md border border-blue-800">
                       AZUL
                     </span>
                   </div>
@@ -1298,10 +1319,10 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <button 
                       onClick={copySubjectIda}
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs border",
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
                         subjectIdaCopied 
                           ? "bg-emerald-600 text-white border-emerald-700" 
-                          : "bg-[#0B2545] hover:bg-[#14325c] text-white border-blue-950/50"
+                          : "bg-blue-900 hover:bg-blue-950 text-blue-100 border-blue-700"
                       )}
                       title="Copiar assunto do e-mail da Rota Ida"
                     >
@@ -1310,14 +1331,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     </button>
                     <button 
                       onClick={() => addNewRow('ida')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#0B2545] hover:bg-[#14325c] text-white font-mono font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-blue-700"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#0F2D59] hover:bg-[#0B2347] text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-blue-400/30"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
                     {idaRows.length > 0 && (
                       <button 
                         onClick={copyIdaToVolta}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-emerald-700"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-emerald-500/30"
                         title="Enviar dados da Ida para Volta (Invertendo Trecho)"
                       >
                         <ArrowRightLeft size={12} /> Enviar para Volta
@@ -1327,56 +1348,65 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       <button 
                         onClick={() => copySection(idaRows, 'ROTA IDA', setIdaCopied)}
                         className={cn(
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs border",
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
                           idaCopied 
                             ? "bg-emerald-600 text-white border-emerald-700" 
-                            : "bg-[#0B2545] hover:bg-[#14325c] text-white border-blue-950/50"
+                            : "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
                         )}
                       >
                         {idaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {idaCopied ? 'Copiado!' : 'Copiar Ida'}
                       </button>
                     )}
-                    <button onClick={() => saveIda([], true)} className="text-[10px] font-mono font-bold text-red-400 hover:text-red-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
+                    <button onClick={() => saveIda([], true)} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
                   </div>
                 </div>
 
+                {/* Email Header Preview Box */}
+                <div className="hidden bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans text-xs text-slate-800 shadow-2xs">
+                  <p className="font-extrabold text-[#0F2D59] text-sm mb-0.5">--- ROTA IDA ---</p>
+                  <p className="font-medium text-slate-700">Boa noite,</p>
+                  <p className="font-medium text-slate-700 mt-0.5">
+                    Seguem em anexo as solicitações de monitoramento para as escalas de viagem para o dia: <span className="font-extrabold text-slate-900">{getJourneyDate(idaRows)}</span>!
+                  </p>
+                </div>
+
                 {/* Styled Table Frame */}
-                <div className="bg-white border border-[#d6ccbe] rounded-2xl p-2 shadow-xs overflow-hidden relative">
+                <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-xs overflow-hidden relative">
                   {idaRows.length === 0 ? (
-                    <div className="p-8 flex flex-col items-center justify-center text-center bg-[#fbf9f5] border border-dashed border-[#d6ccbe] rounded-xl">
-                      <Clipboard className="text-stone-400 w-8 h-8 mb-2" />
-                      <p className="text-xs text-stone-600 mb-3 font-bold font-mono">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
+                    <div className="p-8 flex flex-col items-center justify-center text-center bg-slate-50 border border-dashed border-slate-300 rounded-xl">
+                      <Clipboard className="text-slate-400 w-8 h-8 mb-2" />
+                      <p className="text-xs text-slate-600 mb-3 font-bold font-sans">Cole aqui as informações da Rota Ida ou adicione manualmente</p>
                       <div className="flex flex-col gap-2.5 w-full max-w-md">
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'ida')}
                           placeholder="Ctrl+V aqui para colar escala..."
-                          className="w-full h-20 bg-white border border-[#d6ccbe] rounded-xl p-3 text-xs font-mono text-stone-800 font-bold outline-none placeholder:text-stone-400 focus:border-blue-500 resize-none"
+                          className="w-full h-20 bg-white border border-slate-300 rounded-xl p-3 text-xs font-mono text-slate-800 font-bold outline-none placeholder:text-slate-400 focus:border-[#0F2D59] resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('ida')}
-                          className="w-full py-2.5 bg-[#0B2545] hover:bg-[#14325c] text-white rounded-xl text-xs font-mono font-bold uppercase transition-colors cursor-pointer shadow-sm"
+                          className="w-full py-2.5 bg-[#0F2D59] hover:bg-[#0B2347] text-white rounded-xl text-xs font-bold uppercase transition-colors cursor-pointer"
                         >
                           <Plus size={14} className="inline mr-1" /> Adicionar linha manualmente
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded-lg border border-[#0B2545]/20 shadow-xs">
+                    <div className="overflow-x-auto rounded-lg border border-slate-200">
                       <table className="w-full text-left border-collapse font-sans">
                         <thead>
-                          <tr className="bg-[#0B2545] border-b border-blue-950 text-white text-[11px] uppercase font-mono font-bold tracking-wider h-10">
-                            <th className="px-2 py-2 w-8 text-center text-white">#</th>
-                            <th className="px-2 py-2 w-10 text-center text-white">OK</th>
-                            <th className="px-2 py-2 w-28 text-center text-white">DATA</th>
-                            <th className="px-2 py-2 text-white">MOTORISTA</th>
-                            <th className="px-2 py-2 w-28 text-center text-white">PLACA</th>
-                            <th className="px-2 py-2 w-24 text-center text-white">BAÚ 1</th>
-                            <th className="px-2 py-2 w-24 text-center text-white">BAÚ 2</th>
-                            <th className="px-2 py-2 text-center text-white">TRECHO</th>
-                            <th className="px-2 py-2 w-20 text-center text-white">ROTAS</th>
-                            <th className="px-2 py-2 w-32 text-right text-white">VALOR NF</th>
-                            <th className="px-2 py-2 w-12 text-center text-white">AÇÕES</th>
+                          <tr className="bg-[#0F2D59] text-white text-[11px] uppercase font-extrabold tracking-wider h-10">
+                            <th className="px-2 py-2 w-8 text-center">#</th>
+                            <th className="px-2 py-2 w-10 text-center">OK</th>
+                            <th className="px-2 py-2 w-28 text-center">DATA</th>
+                            <th className="px-2 py-2">MOTORISTA</th>
+                            <th className="px-2 py-2 w-28 text-center">PLACA</th>
+                            <th className="px-2 py-2 w-24 text-center">BAÚ 1</th>
+                            <th className="px-2 py-2 w-24 text-center">BAÚ 2</th>
+                            <th className="px-2 py-2 text-center">TRECHO</th>
+                            <th className="px-2 py-2 w-20 text-center">ROTAS</th>
+                            <th className="px-2 py-2 w-32 text-right">VALOR NF</th>
+                            <th className="px-2 py-2 w-12 text-center">AÇÕES</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white">
@@ -1530,15 +1560,15 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                 </div>
               </section>
 
-              {/* ROTA VOLTA (Vermelha) */}
+              {/* ROTA VOLTA (Red Theme) */}
               <section className="space-y-3 font-sans animate-fade-in">
-                <div className="flex items-center justify-between bg-[#0B1E36] text-white p-3.5 rounded-xl shadow-md border border-slate-700/60">
+                <div className="flex items-center justify-between bg-slate-900 text-white p-3.5 rounded-xl shadow-sm border border-slate-800">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                    <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                      <Download size={16} className="rotate-180 text-red-400" /> Rota Volta
+                    <span className="w-3 h-3 rounded-full bg-rose-500 animate-pulse" />
+                    <h3 className="text-sm font-extrabold text-white font-sans uppercase tracking-wider flex items-center gap-2">
+                      <Download size={16} className="rotate-180 text-rose-400" /> Rota Volta
                     </h3>
-                    <span className="text-[10px] font-mono font-bold bg-[#DC2626] text-white px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-xs">
+                    <span className="text-[10px] font-extrabold bg-rose-950/80 text-rose-200 px-2.5 py-0.5 rounded-md border border-rose-800">
                       VERMELHA
                     </span>
                   </div>
@@ -1547,10 +1577,10 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <button 
                       onClick={copySubjectVolta}
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs border",
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
                         subjectVoltaCopied 
                           ? "bg-emerald-600 text-white border-emerald-700" 
-                          : "bg-[#801414] hover:bg-[#9a1a1a] text-white border-red-900/50"
+                          : "bg-rose-900 hover:bg-rose-950 text-rose-100 border-rose-700"
                       )}
                       title="Copiar assunto do e-mail da Rota Volta"
                     >
@@ -1559,14 +1589,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     </button>
                     <button 
                       onClick={() => openPdfModal('volta')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#DC2626] hover:bg-[#B91C1C] text-white font-mono font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-red-500"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
                       title="Importar várias NFs em PDF para Rota Volta"
                     >
                       <FileText size={12} /> PDF Volta
                     </button>
                     <button 
                       onClick={() => addNewRow('volta')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-mono font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-red-800"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] bg-[#801414] hover:bg-[#661010] text-white font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-rose-400/30"
                     >
                       <Plus size={12} /> Add Linha
                     </button>
@@ -1574,56 +1604,65 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       <button 
                         onClick={() => copySection(voltaRows, 'ROTA VOLTA', setVoltaCopied)}
                         className={cn(
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs border",
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm border",
                           voltaCopied 
                             ? "bg-emerald-600 text-white border-emerald-700" 
-                            : "bg-[#1E293B] hover:bg-[#334155] text-white border-slate-700"
+                            : "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
                         )}
                       >
                         {voltaCopied ? <Check size={12} /> : <Copy size={12} />}
                         {voltaCopied ? 'Copiado!' : 'Copiar Volta'}
                       </button>
                     )}
-                    <button onClick={() => saveVolta([], true)} className="text-[10px] font-mono font-bold text-red-400 hover:text-red-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
+                    <button onClick={() => saveVolta([], true)} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-tight cursor-pointer pl-2">Limpar</button>
                   </div>
                 </div>
 
+                {/* Email Header Preview Box */}
+                <div className="hidden bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans text-xs text-slate-800 shadow-2xs">
+                  <p className="font-extrabold text-[#801414] text-sm mb-0.5">--- ROTA VOLTA ---</p>
+                  <p className="font-medium text-slate-700">Boa noite,</p>
+                  <p className="font-medium text-slate-700 mt-0.5">
+                    Seguem em anexo as solicitações de monitoramento rota de volta para as escalas de viagem para o dia: <span className="font-extrabold text-slate-900">{getJourneyDate(voltaRows)}</span>!
+                  </p>
+                </div>
+
                 {/* Styled Table Frame */}
-                <div className="bg-white border border-[#d6ccbe] rounded-2xl p-2 shadow-xs overflow-hidden relative">
+                <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-xs overflow-hidden relative">
                   {voltaRows.length === 0 ? (
-                    <div className="p-8 flex flex-col items-center justify-center text-center bg-[#fbf9f5] border border-dashed border-[#d6ccbe] rounded-xl">
-                      <Clipboard className="text-stone-400 w-8 h-8 mb-2" />
-                      <p className="text-xs text-stone-600 mb-3 font-bold font-mono">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
+                    <div className="p-8 flex flex-col items-center justify-center text-center bg-slate-50 border border-dashed border-slate-300 rounded-xl">
+                      <Clipboard className="text-slate-400 w-8 h-8 mb-2" />
+                      <p className="text-xs text-slate-600 mb-3 font-bold font-sans">Cole aqui as informações da Rota Volta ou adicione manualmente</p>
                       <div className="flex flex-col gap-2.5 w-full max-w-md">
                         <textarea 
                           onPaste={(e) => handlePaste(e, 'volta')}
                           placeholder="Ctrl+V aqui para colar escala..."
-                          className="w-full h-20 bg-white border border-[#d6ccbe] rounded-xl p-3 text-xs font-mono text-stone-800 font-bold outline-none placeholder:text-stone-400 focus:border-red-500 resize-none"
+                          className="w-full h-20 bg-white border border-slate-300 rounded-xl p-3 text-xs font-mono text-slate-800 font-bold outline-none placeholder:text-slate-400 focus:border-[#801414] resize-none"
                         />
                         <button 
                           onClick={() => addNewRow('volta')}
-                          className="w-full py-2.5 bg-[#9b1526] hover:bg-[#831221] text-white rounded-xl text-xs font-mono font-bold uppercase transition-colors cursor-pointer shadow-sm"
+                          className="w-full py-2.5 bg-[#801414] hover:bg-[#661010] text-white rounded-xl text-xs font-bold uppercase transition-colors cursor-pointer"
                         >
                           <Plus size={14} className="inline mr-1" /> Adicionar linha manualmente
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded-lg border border-[#9b1526]/20 shadow-xs">
+                    <div className="overflow-x-auto rounded-lg border border-slate-200">
                       <table className="w-full text-left border-collapse font-sans">
                         <thead>
-                          <tr className="bg-[#9b1526] border-b border-red-900 text-white text-[11px] uppercase font-mono font-bold tracking-wider h-10">
-                            <th className="px-2 py-2 w-8 text-center text-white">#</th>
-                            <th className="px-2 py-2 w-10 text-center text-white">OK</th>
-                            <th className="px-2 py-2 w-28 text-center text-white">DATA</th>
-                            <th className="px-2 py-2 text-white">MOTORISTA</th>
-                            <th className="px-2 py-2 w-28 text-center text-white">PLACA</th>
-                            <th className="px-2 py-2 w-24 text-center text-white">BAÚ 1</th>
-                            <th className="px-2 py-2 w-24 text-center text-white">BAÚ 2</th>
-                            <th className="px-2 py-2 text-center text-white">TRECHO</th>
-                            <th className="px-2 py-2 w-20 text-center text-white">ROTAS</th>
-                            <th className="px-2 py-2 w-32 text-right text-white">VALOR NF</th>
-                            <th className="px-2 py-2 w-12 text-center text-white">AÇÕES</th>
+                          <tr className="bg-[#801414] text-white text-[11px] uppercase font-extrabold tracking-wider h-10">
+                            <th className="px-2 py-2 w-8 text-center">#</th>
+                            <th className="px-2 py-2 w-10 text-center">OK</th>
+                            <th className="px-2 py-2 w-28 text-center">DATA</th>
+                            <th className="px-2 py-2">MOTORISTA</th>
+                            <th className="px-2 py-2 w-28 text-center">PLACA</th>
+                            <th className="px-2 py-2 w-24 text-center">BAÚ 1</th>
+                            <th className="px-2 py-2 w-24 text-center">BAÚ 2</th>
+                            <th className="px-2 py-2 text-center">TRECHO</th>
+                            <th className="px-2 py-2 w-20 text-center">ROTAS</th>
+                            <th className="px-2 py-2 w-32 text-right">VALOR NF</th>
+                            <th className="px-2 py-2 w-12 text-center">AÇÕES</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white">
@@ -1652,7 +1691,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.dataSaida}
                                   onChange={(e) => updateRowValue(i, 'dataSaida', e.target.value, 'volta')}
-                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all uppercase text-xs"
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#801414] focus:ring-2 focus:ring-[#801414]/20 outline-none transition-all uppercase text-xs"
                                 />
                               </td>
                               <td className="p-1.5 group/cell">
@@ -1661,11 +1700,11 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.motorista}
                                     onChange={(e) => updateRowValue(i, 'motorista', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2.5 focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all uppercase text-xs"
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2.5 focus:bg-white focus:border-[#801414] focus:ring-2 focus:ring-[#801414]/20 outline-none transition-all uppercase text-xs"
                                   />
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.motorista)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-rose-600/10 hover:bg-rose-600/20 rounded text-[#9b1526] transition-all shrink-0 cursor-pointer"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-rose-600/10 hover:bg-rose-600/20 rounded text-[#801414] transition-all shrink-0 cursor-pointer"
                                     title="Copiar Motorista"
                                   >
                                     <Copy size={12} />
@@ -1685,7 +1724,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.bau1}
                                   onChange={(e) => updateRowValue(i, 'bau1', e.target.value, 'volta')}
-                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all uppercase text-xs"
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#801414] focus:ring-2 focus:ring-[#801414]/20 outline-none transition-all uppercase text-xs"
                                 />
                               </td>
                               <td className="p-1.5 text-center">
@@ -1693,7 +1732,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                   type="text"
                                   value={row.bau2}
                                   onChange={(e) => updateRowValue(i, 'bau2', e.target.value, 'volta')}
-                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all uppercase text-xs"
+                                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#801414] focus:ring-2 focus:ring-[#801414]/20 outline-none transition-all uppercase text-xs"
                                 />
                               </td>
                               <td className="p-1.5 text-center">
@@ -1702,7 +1741,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.trecho}
                                     onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all uppercase text-xs"
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#801414] focus:ring-2 focus:ring-[#801414]/20 outline-none transition-all uppercase text-xs"
                                   />
                                   <button 
                                     onClick={() => {
@@ -1725,14 +1764,14 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                 <div className="flex items-center justify-end gap-1">
                                   <button 
                                     onClick={() => openPdfModal('volta', i)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-[#9b1526]/10 hover:bg-[#9b1526]/25 rounded text-[#9b1526] transition-all shrink-0 cursor-pointer"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-[#801414]/10 hover:bg-[#801414]/25 rounded text-[#801414] transition-all shrink-0 cursor-pointer"
                                     title="Importar PDFs de NFs para esta linha"
                                   >
                                     <FileText size={12} />
                                   </button>
                                   <button 
                                     onClick={() => navigator.clipboard.writeText(row.valorNf)}
-                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-rose-600/10 hover:bg-rose-600/20 rounded text-[#9b1526] transition-all shrink-0 cursor-pointer"
+                                    className="opacity-0 group-hover/cell:opacity-100 p-1.5 bg-rose-600/10 hover:bg-rose-600/20 rounded text-[#801414] transition-all shrink-0 cursor-pointer"
                                     title="Copiar Valor"
                                   >
                                     <Copy size={12} />
@@ -1741,7 +1780,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.valorNf}
                                     onChange={(e) => updateRowValue(i, 'valorNf', e.target.value, 'volta')}
-                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-right focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all text-xs"
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-right focus:bg-white focus:border-[#801414] focus:ring-2 focus:ring-[#801414]/20 outline-none transition-all text-xs"
                                   />
                                 </div>
                               </td>
@@ -1793,12 +1832,12 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
               <section className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden font-sans transition-all">
                 <div className="bg-emerald-50/50 p-4 border-b border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#9b1526] text-white rounded-xl shadow-sm">
+                    <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-sm">
                       <Truck size={18} />
                     </div>
                     <div>
                       <h2 className="text-sm font-black text-slate-800 uppercase tracking-tight">Rota Vespasiano</h2>
-                      <p className="text-[10px] text-[#9b1526] font-bold uppercase tracking-widest">Controle de Saída</p>
+                      <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Controle de Saída</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1845,7 +1884,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       <div className="lg:col-span-3 flex items-end justify-start gap-3">
                         <button 
                           onClick={() => addNewRow('vespasiano')}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-[#9b1526] hover:bg-[#831221] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-red-100 cursor-pointer"
+                          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-emerald-100 cursor-pointer"
                         >
                           <Plus size={16} /> Adicionar Linha
                         </button>
@@ -1858,20 +1897,20 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto rounded-xl border border-[#d6ccbe] shadow-xs">
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-xs">
                       <table className="w-full border-collapse min-w-[1000px]">
                         <thead>
-                          <tr className="bg-[#fbf9f5] border-b border-[#e7dac9] text-stone-700 text-[10px] uppercase font-mono tracking-widest font-bold">
-                            <th className="p-3 text-center border-r border-[#e7dac9] w-8">#</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9] w-10">OK</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9]">Data</th>
-                            <th className="p-3 text-left border-r border-[#e7dac9]">Motorista</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9]">Placa</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9]">Baú 1</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9]">Baú 2</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9]">Trecho</th>
-                            <th className="p-3 text-center border-r border-[#e7dac9]">Code</th>
-                            <th className="p-3 text-right border-r border-[#e7dac9]">Valor NF</th>
+                          <tr className="bg-slate-900 text-white text-[10px] uppercase tracking-widest font-black">
+                            <th className="p-3 text-center border-r border-slate-800 w-8">#</th>
+                            <th className="p-3 text-center border-r border-slate-800 w-10">OK</th>
+                            <th className="p-3 text-center border-r border-slate-800">Data</th>
+                            <th className="p-3 text-left border-r border-slate-800">Motorista</th>
+                            <th className="p-3 text-center border-r border-slate-800">Placa</th>
+                            <th className="p-3 text-center border-r border-slate-800">Baú 1</th>
+                            <th className="p-3 text-center border-r border-slate-800">Baú 2</th>
+                            <th className="p-3 text-center border-r border-slate-800">Trecho</th>
+                            <th className="p-3 text-center border-r border-slate-800">Code</th>
+                            <th className="p-3 text-right border-r border-slate-800">Valor NF</th>
                             <th className="p-3 text-center">Ações</th>
                           </tr>
                         </thead>
@@ -1950,7 +1989,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                                     type="text"
                                     value={row.trecho}
                                     onChange={(e) => updateRowValue(i, 'trecho', e.target.value, 'vespasiano')}
-                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-[#9b1526] focus:ring-2 focus:ring-[#9b1526]/20 outline-none transition-all uppercase text-xs"
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-extrabold rounded-md py-1.5 px-2 text-center focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition-all uppercase text-xs"
                                   />
                                 </div>
                               </td>
@@ -2047,18 +2086,18 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   </div>
                 </div>
 
-                <div className="bg-[#fbf9f5] border border-[#d6ccbe] rounded-xl p-4 mb-4 text-center relative group/total text-stone-900 shadow-xs">
-                  <p className="text-[10px] font-mono font-bold text-stone-500 uppercase tracking-widest mb-1">Total Consolidado</p>
-                  <h4 className="text-2xl font-mono font-black tracking-tight text-[#9b1526]">
-                    <span className="text-stone-400 mr-1 text-sm font-semibold">R$</span>
+                <div className="bg-slate-900 rounded-xl p-4 mb-4 text-center relative group/total text-white shadow-xs">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-sans">Total Consolidado</p>
+                  <h4 className="text-2xl font-black tracking-tight font-sans">
+                    <span className="text-slate-400 mr-1 text-sm font-semibold">R$</span>
                     {calculateTotal()}
                   </h4>
                   <div className="absolute top-2.5 right-2.5">
                     <button 
                       onClick={copyTotalRaw}
                       className={cn(
-                        "p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer border",
-                        totalRawCopied ? "bg-emerald-600 border-emerald-700 text-white" : "bg-white border-[#d6ccbe] text-stone-600 hover:bg-stone-50"
+                        "p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer",
+                        totalRawCopied ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                       )}
                       title="Copiar Valor"
                     >
@@ -2140,29 +2179,29 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         </div>
       )}
 
-      {/* ================= PDF IMPORT MODAL (Master Light) ================= */}
+      {/* ================= PDF IMPORT MODAL ================= */}
       {isPdfModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white border border-[#d6ccbe] rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] text-stone-900 relative">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#fdfcf9] border-4 border-[#3A2414] rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
             
             {/* Modal Header */}
-            <div className="bg-[#fbf9f5] p-5 text-stone-900 flex items-center justify-between border-b border-[#e7dac9]">
+            <div className="bg-gradient-to-r from-[#3A2414] to-[#25150a] p-5 text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-red-50 border border-red-200 text-[#9b1526] rounded-xl shadow-xs">
+                <div className="p-2.5 bg-[#B32025] rounded-xl text-white shadow-md">
                   <FileText size={22} />
                 </div>
                 <div>
-                  <h3 className="font-mono font-bold uppercase text-base tracking-wide text-stone-900">
+                  <h3 className="font-serif font-black uppercase text-base tracking-wide text-amber-100">
                     Importar Várias Notas Fiscais (PDF)
                   </h3>
-                  <p className="text-xs text-stone-500 font-sans">
+                  <p className="text-xs text-amber-200/80 font-sans">
                     Extração automática do valor total das NFs e cálculo da soma total
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsPdfModalOpen(false)}
-                className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-xl transition-all cursor-pointer"
+                className="p-2 text-amber-200/60 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -2172,7 +2211,7 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
               
               {/* File Upload Dropzone */}
-              <div className="relative border-2 border-dashed border-red-200 hover:border-red-400 bg-red-50/40 hover:bg-red-50/70 rounded-2xl p-6 transition-all text-center flex flex-col items-center justify-center cursor-pointer group">
+              <div className="relative border-2 border-dashed border-[#B32025]/40 hover:border-[#B32025] bg-[#B32025]/5 hover:bg-[#B32025]/10 rounded-2xl p-6 transition-all text-center flex flex-col items-center justify-center cursor-pointer group">
                 <input 
                   type="file" 
                   multiple 
@@ -2181,21 +2220,21 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   disabled={isProcessingPdf}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-                <div className="p-4 bg-red-100 text-[#9b1526] rounded-full shadow-xs group-hover:scale-105 transition-transform mb-3 border border-red-200">
+                <div className="p-4 bg-white rounded-full text-[#B32025] shadow-md group-hover:scale-110 transition-transform mb-3 border border-[#B32025]/20">
                   <Upload size={28} />
                 </div>
-                <p className="text-sm font-mono font-bold text-stone-900 uppercase tracking-wide">
+                <p className="text-sm font-bold text-[#3A2414] uppercase tracking-wide">
                   Clique para Selecionar ou Arraste os PDFs das NFs
                 </p>
-                <p className="text-xs text-stone-500 mt-1">
+                <p className="text-xs text-[#3A2414]/60 mt-1">
                   Você pode selecionar várias notas fiscais em PDF simultaneamente (DANFE / NF-e)
                 </p>
               </div>
 
               {/* Processing Loader */}
               {isProcessingPdf && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-center gap-3 text-amber-900 font-bold text-sm animate-pulse">
-                  <Loader2 size={20} className="animate-spin text-[#9b1526]" />
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 text-amber-900 font-bold text-sm animate-pulse">
+                  <Loader2 size={20} className="animate-spin text-[#B32025]" />
                   Processando e lendo o valor das NFs em PDF...
                 </div>
               )}
@@ -2204,13 +2243,13 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
               {parsedPdfItems.length > 0 && (
                 <div className="space-y-4">
                   {/* Total Banner */}
-                  <div className="bg-[#9b1526] p-5 rounded-2xl text-white shadow-xs relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 border border-red-700">
+                  <div className="bg-gradient-to-r from-[#B32025] via-[#8c060d] to-[#590206] p-5 rounded-2xl text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <p className="text-[11px] font-mono font-bold uppercase tracking-widest text-red-200">
+                      <p className="text-[11px] font-black uppercase tracking-widest text-amber-200/90 font-serif">
                         Valor Total Somado ({parsedPdfItems.length} NFs)
                       </p>
-                      <h4 className="text-3xl font-extrabold text-white font-mono tracking-tight mt-0.5">
-                        <span className="text-red-200 text-xl font-normal mr-1.5">R$</span>
+                      <h4 className="text-3xl font-black text-white font-serif tracking-tight mt-0.5">
+                        <span className="text-amber-300 text-xl font-normal mr-1.5">R$</span>
                         {pdfTotalSomadoFormatado}
                       </h4>
                     </div>
@@ -2218,10 +2257,10 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                     <button 
                       onClick={copyPdfTotal}
                       className={cn(
-                        "px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs cursor-pointer border",
+                        "px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md cursor-pointer border",
                         pdfCopied 
-                          ? "bg-emerald-600 border-emerald-400 text-white" 
-                          : "bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                          ? "bg-green-600 border-green-400 text-white" 
+                          : "bg-white/20 hover:bg-white/30 border-white/30 text-white"
                       )}
                     >
                       {pdfCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -2230,9 +2269,9 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                   </div>
 
                   {/* List of imported PDFs */}
-                  <div className="border border-[#d6ccbe] rounded-2xl overflow-hidden bg-white shadow-xs">
-                    <div className="bg-[#fbf9f5] p-3 border-b border-[#e7dac9] flex items-center justify-between">
-                      <span className="text-xs font-mono font-bold uppercase text-stone-700 tracking-wider">
+                  <div className="border border-[#3A2414]/15 rounded-2xl overflow-hidden bg-white shadow-sm">
+                    <div className="bg-[#3A2414]/5 p-3 border-b border-[#3A2414]/15 flex items-center justify-between">
+                      <span className="text-xs font-black uppercase text-[#3A2414] tracking-wider font-serif">
                         Notas Importadas ({parsedPdfItems.length})
                       </span>
                       <button 
@@ -2241,40 +2280,40 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                           setPdfTotalSomado(0);
                           setPdfTotalSomadoFormatado('0,00');
                         }}
-                        className="text-[10px] font-mono font-bold text-red-700 hover:underline uppercase tracking-wider cursor-pointer"
+                        className="text-[10px] font-bold text-[#B32025] hover:underline uppercase tracking-wider cursor-pointer"
                       >
                         Limpar Lista
                       </button>
                     </div>
 
-                    <div className="divide-y divide-stone-100 max-h-56 overflow-y-auto">
+                    <div className="divide-y divide-[#3A2414]/10 max-h-56 overflow-y-auto">
                       {parsedPdfItems.map((item, idx) => (
                         <div key={idx} className="p-3 flex items-center justify-between gap-3 text-xs hover:bg-stone-50 transition-colors">
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <div className={cn("p-1.5 rounded-lg shrink-0", item.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200")}>
+                            <div className={cn("p-1.5 rounded-lg shrink-0", item.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
                               {item.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="font-bold text-stone-900 truncate" title={item.fileName}>
+                              <p className="font-bold text-[#2D1A10] truncate" title={item.fileName}>
                                 {item.fileName}
                               </p>
-                              <p className="text-[10px] text-stone-500 font-mono">
+                              <p className="text-[10px] text-stone-500">
                                 {item.numeroNf !== '---' ? `NF Nº ${item.numeroNf}` : item.error || 'Valor extraído do PDF'}
                               </p>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-stone-500 font-bold text-[10px]">R$</span>
+                            <span className="text-stone-400 font-bold text-[10px]">R$</span>
                             <input 
                               type="text" 
                               value={item.valorFormatado}
                               onChange={(e) => updateParsedPdfItemValue(idx, e.target.value)}
-                              className="w-28 bg-[#fbf9f5] border border-[#d6ccbe] rounded-lg py-1 px-2 text-right font-mono text-xs font-bold text-stone-900 outline-none focus:border-stone-500"
+                              className="w-28 bg-[#d2c2b2]/40 border border-[#c0a892] rounded-lg py-1 px-2 text-right font-mono text-xs font-bold text-[#3A2414] outline-none focus:border-[#B32025]"
                             />
                             <button 
                               onClick={() => removeParsedPdfItem(idx)}
-                              className="p-1.5 text-red-700 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                               title="Remover Nota"
                             >
                               <Trash2 size={14} />
@@ -2289,12 +2328,12 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
             </div>
 
             {/* Modal Actions Footer */}
-            <div className="bg-[#fbf9f5] p-5 border-t border-[#e7dac9] flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-xs text-stone-600 font-mono text-center sm:text-left">
+            <div className="bg-[#3A2414]/5 p-5 border-t border-[#3A2414]/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-[#3A2414]/70 font-serif font-bold text-center sm:text-left">
                 {pdfTargetRowIndex !== null ? (
                   <span>Aplicando na linha #{pdfTargetRowIndex + 1} ({pdfTargetSection === 'ida' ? 'Rota Ida' : pdfTargetSection === 'volta' ? 'Rota Volta' : 'Rota Vespasiano'})</span>
                 ) : (
-                  <span>Selecione onde aplicar o valor somado (R$ {pdfTotalSomadoFormatado})</span>
+                  <span>Selecione onde aplicar o valor total somado (R$ {pdfTotalSomadoFormatado})</span>
                 )}
               </div>
 
@@ -2302,33 +2341,33 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
                 <button 
                   onClick={() => applyPdfTotalToTarget('ida')}
                   disabled={parsedPdfItems.length === 0}
-                  className="px-3.5 py-2 bg-stone-800 hover:bg-stone-900 disabled:opacity-40 text-white font-mono font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-stone-700"
+                  className="px-3.5 py-2 bg-[#14325c] hover:bg-[#0f2a4a] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
                 >
-                  Preencher Ida
+                  Preencher Rota Ida
                 </button>
 
                 <button 
                   onClick={() => applyPdfTotalToTarget('volta')}
                   disabled={parsedPdfItems.length === 0}
-                  className="px-3.5 py-2 bg-[#9b1526] hover:bg-[#831220] disabled:opacity-40 text-white font-mono font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-red-700"
+                  className="px-3.5 py-2 bg-[#7f1d1d] hover:bg-[#991b1b] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
                 >
-                  Preencher Volta
+                  Preencher Rota Volta
                 </button>
 
                 <button 
                   onClick={() => applyPdfTotalToTarget('vespasiano')}
                   disabled={parsedPdfItems.length === 0}
-                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-40 text-white font-mono font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-emerald-800"
+                  className="px-3.5 py-2 bg-[#166534] hover:bg-[#14532d] disabled:opacity-50 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
                 >
-                  Preencher Vespasiano
+                  Preencher Rota Vespasiano
                 </button>
 
                 <button 
                   onClick={() => applyPdfTotalToTarget('calc')}
                   disabled={parsedPdfItems.length === 0}
-                  className="px-3.5 py-2 bg-white hover:bg-stone-50 disabled:opacity-40 text-stone-800 font-mono font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-xs cursor-pointer border border-[#d6ccbe]"
+                  className="px-3.5 py-2 bg-[#3A2414] hover:bg-[#2A1408] disabled:opacity-50 text-[#fbdba5] font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer border border-black/20"
                 >
-                  Lançar Calculadora
+                  Lançar na Calculadora
                 </button>
               </div>
             </div>
@@ -2444,24 +2483,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
         )}
       </AnimatePresence>
 
-      {/* Floating Action Bar - Undo Action */}
-      <div className="fixed bottom-4 right-6 z-40">
-        <button 
-          onClick={handleUndo}
-          disabled={historyCount === 0}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-lg border cursor-pointer",
-            historyCount > 0 
-              ? "bg-amber-600 hover:bg-amber-700 text-white border-amber-500 shadow-amber-900/30 active:scale-95" 
-              : "bg-stone-800/90 text-stone-400 border-stone-700 backdrop-blur-md opacity-80"
-          )}
-          title="Restaurar informação modificada (Ctrl + Z)"
-        >
-          <RotateCcw size={13} className={historyCount > 0 ? "text-amber-200" : "text-stone-400"} />
-          <span>Desfazer (Ctrl+Z)</span>
-        </button>
-      </div>
-
       {/* Toast feedback when Ctrl+Z is activated */}
       <AnimatePresence>
         {showUndoToast && (
@@ -2479,6 +2500,6 @@ export default function SMCreator({ view = 'generator', onBack }: SMCreatorProps
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

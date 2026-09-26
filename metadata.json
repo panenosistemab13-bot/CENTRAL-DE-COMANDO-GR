@@ -1,6 +1,6 @@
 {
-  "name": "A&B CAFÉ - Sistema PGR",
-  "description": "Sistema A&B CAFÉ - Operação & Inteligência em Tempo Real, Rastreamento 3D de Frota, Pátio e Indicadores 4K.",
+  "name": "Sistema PGR",
+  "description": "Sistema PGR - Dashboard Executivo Slides 4K HUD Command Center, Controle de Pátio e Gerenciamento de Risco.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

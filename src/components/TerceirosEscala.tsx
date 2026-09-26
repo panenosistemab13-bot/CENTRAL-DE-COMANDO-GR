@@ -35,14 +35,16 @@ import { DEFAULT_TRANSPORTADORAS, findClosestTransportador } from '../data/trans
 // Configuração do Worker do PDF.js (100% no navegador)
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
-// Canto angular cibernético HUD para quinas 4K
-function TechCorner({ className }: { className?: string }) {
+// Parafuso de latão/bronze decorativo para as quinas da prancheta
+function Screw({ className }: { className?: string }) {
   return (
-    <div className={cn("w-4 h-4 pointer-events-none select-none z-20", className)}>
-      <svg viewBox="0 0 16 16" fill="none" className="w-full h-full text-cyan-400/80 drop-shadow-[0_0_4px_rgba(6,182,212,0.6)]">
-        <path d="M1 9V3C1 1.89543 1.89543 1 3 1H9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        <circle cx="3" cy="3" r="1.2" fill="currentColor" />
-      </svg>
+    <div 
+      className={cn(
+        "w-4 h-4 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-[1px_2px_2px_rgba(0,0,0,0.65),inset_0.5px_0.5px_1px_rgba(255,255,255,0.25)] relative flex items-center justify-center select-none shrink-0",
+        className
+      )}
+    >
+      <div className="w-2.5 h-[1.5px] bg-[#311b09]/80 rotate-[35deg] rounded-sm shadow-inner" />
     </div>
   );
 }
@@ -1089,323 +1091,339 @@ export default function TerceirosEscala({
         </div>
       )}
 
-      {/* Main 4K Cyber HUD Panel */}
-      <div className="glass-card-3d border border-white/10 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col p-4 sm:p-6 md:p-8 space-y-6 text-white">
-        {/* Decorative corner accents */}
-        <TechCorner className="absolute top-3 left-3" />
-        <TechCorner className="absolute top-3 right-3 rotate-90" />
-        <TechCorner className="absolute bottom-3 left-3 -rotate-90" />
-        <TechCorner className="absolute bottom-3 right-3 rotate-180" />
+      {/* Main Parchment Panel identical to Lista de Presença */}
+      <div 
+        className="flex-1 rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-visible flex flex-col"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+        }}
+      >
+        {/* Inner border trim */}
+        <div className="absolute inset-1.5 rounded-[1.35rem] border border-[#a6866b]/40 pointer-events-none z-0" />
 
-        {/* Top Area: Splitted into Left (Holo Emblem Badge) and Right (Banner + Header + HUD Tag) */}
-        <div className="flex flex-col md:flex-row gap-5 items-stretch relative z-10">
-          
-          {/* Left Col: Cyber Emblem Card */}
-          <div className="w-full md:w-[26%] md:min-w-[210px] md:max-w-[240px] rounded-2xl relative group border border-white/15 overflow-hidden shrink-0 shadow-[0_0_25px_rgba(6,182,212,0.15)] bg-slate-950/90 flex flex-col items-center justify-center p-5 text-center">
-            {/* Holographic inner border */}
-            <div className="absolute inset-1.5 rounded-xl border border-cyan-500/20 pointer-events-none" />
+        {/* Decorative corner screws */}
+        <Screw className="absolute top-3 left-3 z-20" />
+        <Screw className="absolute top-3 right-3 z-20" />
+        <Screw className="absolute bottom-3 left-3 z-20" />
+        <Screw className="absolute bottom-3 right-3 z-20" />
+
+        {/* Main Padding Container */}
+        <div className="p-4 sm:p-6 md:p-8 relative z-10 flex flex-col h-full gap-5">
+
+          {/* Top Area: Splitted into Left (Emblem Badge) and Right (Banner + Header + Black Tag) */}
+          <div className="flex flex-col md:flex-row gap-5 items-stretch">
             
-            {/* Logo Emblem with 3D Cyan Pulse */}
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border-2 border-cyan-400 text-cyan-300 flex items-center justify-center relative shadow-[0_0_20px_rgba(6,182,212,0.4)] mb-3 group-hover:scale-105 transition-transform">
-              <FileText size={28} className="drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-              <div className="absolute inset-1 border border-dashed border-cyan-400/50 rounded-xl" />
-            </div>
+            {/* Left Col: Emblem Card matching Profile Image in PresenceList */}
+            <div className="w-28 h-28 md:w-[26%] md:min-w-[210px] md:max-w-[240px] md:h-auto rounded-2xl mx-auto md:mx-0 relative group border-2 border-[#5c3e29] overflow-hidden shrink-0 shadow-md bg-gradient-to-b from-[#2a170d] to-[#150a04] flex flex-col items-center justify-center p-4 text-center">
+              {/* Gold border accent inside */}
+              <div className="absolute inset-1.5 rounded-xl border border-[#D4AF37]/30 pointer-events-none" />
+              
+              {/* Logo Emblem */}
+              <div className="w-16 h-16 rounded-full bg-[#B32025] border-2 border-[#D4AF37] flex items-center justify-center relative shadow-lg mb-2 group-hover:scale-105 transition-transform">
+                <FileText size={26} className="text-[#D4AF37]" />
+                <div className="absolute inset-1 border border-dashed border-[#D4AF37]/50 rounded-full" />
+              </div>
 
-            <span className="text-white font-heading font-black text-xs uppercase tracking-widest leading-tight">
-              Ordem de Serviço
-            </span>
-            <span className="text-[10px] text-cyan-400 font-mono font-bold mt-0.5 tracking-wider uppercase">
-              Terceiros & Agregados
-            </span>
+              <span className="text-[#e2cfb9] font-serif font-black text-xs uppercase tracking-widest leading-tight">
+                Ordem de Serviço
+              </span>
+              <span className="text-[10px] text-[#D4AF37] font-mono font-bold mt-0.5 tracking-wider uppercase">
+                Terceiros & Agregados
+              </span>
 
-            <div className="mt-3 bg-cyan-950/80 border border-cyan-500/40 rounded-lg px-2.5 py-1 text-[9px] font-mono font-bold text-cyan-300 uppercase tracking-wider shadow-[0_0_10px_rgba(6,182,212,0.2)]">
-              PDF • DOCX • NAVEGADOR
-            </div>
-          </div>
-
-          {/* Right Col: 4K Logistics Banner + Header + HUD Tag */}
-          <div className="flex-1 flex flex-col justify-between pt-0.5 gap-3">
-            
-            {/* 4K Aesthetic Logistics Banner */}
-            <div className="w-full h-24 md:h-28 rounded-2xl overflow-hidden border border-white/20 shadow-[0_0_30px_rgba(0,0,0,0.6)] relative group hidden sm:block">
-              <img 
-                src="/images/banner_coffee.jpg"
-                alt="Logistics Banner"
-                className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 contrast-[1.15] brightness-90 relative z-0"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80 pointer-events-none z-10" />
-              <div className="absolute inset-0 border border-white/10 pointer-events-none z-10" />
-              <div className="absolute bottom-2.5 left-4 z-20 flex items-center gap-2">
-                <span className="bg-[#B32025] text-white text-[9px] font-mono font-black uppercase px-2.5 py-0.5 rounded shadow-[0_0_10px_rgba(179,32,37,0.5)] border border-red-500/40">
-                  LOGÍSTICA & DISTRIBUIÇÃO 4K
-                </span>
-                <span className="text-cyan-300 font-mono text-[10px] font-semibold drop-shadow-md">
-                  Terminal Santa Luzia / MG — Brasil
-                </span>
+              <div className="mt-3 bg-[#D4AF37]/15 border border-[#D4AF37]/40 rounded-lg px-2.5 py-1 text-[9px] font-bold text-[#f5ebd7] uppercase tracking-wider">
+                PDF • DOCX • NAVEGADOR
               </div>
             </div>
 
-            {/* Inspirational Quote / HUD Subtitle */}
-            <p className="w-full text-slate-300 font-mono text-xs sm:text-xs text-center leading-snug px-2 italic">
-              "Transforme dados brutos em decisões operacionais ágeis. Gestão de pátio em tempo real com precisão absoluta."
-            </p>
-
-            {/* Bottom Row: Titles & Cyber HUD Tag */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              {/* Title and category */}
-              <div className="pb-1">
-                <span className="text-cyan-400 font-mono font-bold text-[11px] tracking-widest uppercase block mb-1">
-                  Módulo de Extração Inteligente // Terceiros
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-black text-white font-heading uppercase tracking-tight">
-                  TERCEIROS: <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-red-500 drop-shadow-[0_0_15px_rgba(255,42,75,0.4)]">{rows.length} ORDENS IMPORTADAS</span>
-                </h1>
-              </div>
-
-              {/* Cyber Telemetry Status Tag */}
-              <div className="hidden lg:flex bg-slate-950/90 border border-white/15 rounded-2xl p-3 px-5 items-center justify-center gap-3.5 shadow-[0_0_20px_rgba(0,0,0,0.6)] relative shrink-0">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
-                  <ShieldCheck size={18} />
+            {/* Right Col: Banner Image + Motivational Quote + Title + Black Tag */}
+            <div className="flex-1 flex flex-col justify-between pt-0.5 gap-3">
+              
+              {/* 4K Aesthetic Banner matching PresenceList */}
+              <div className="w-full h-24 md:h-28 rounded-xl overflow-hidden border-2 border-[#5c3e29]/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative group hidden sm:block">
+                <img 
+                  src="/images/banner_coffee.jpg"
+                  alt="Aesthetic Banner"
+                  className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 filter sepia-[20%] contrast-[1.1] brightness-90 relative z-0"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 shadow-[inset_0_0_25px_rgba(0,0,0,0.5)] pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none z-10" />
+                <div className="absolute bottom-2 left-4 z-20 flex items-center gap-2">
+                  <span className="bg-[#B32025] text-white text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded shadow">
+                    LOGÍSTICA & DISTRIBUIÇÃO
+                  </span>
+                  <span className="text-white text-[10px] font-semibold drop-shadow-md">
+                    Santa Luzia / MG — Brasil
+                  </span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-mono text-white text-xs font-black uppercase tracking-wider">HUD OPERACIONAL</span>
-                  <span className="font-mono text-cyan-400 text-[10px] font-bold">100% Client-Side Engine</span>
-                  <div className="flex gap-1.5 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              </div>
+
+              {/* Inspirational Quote */}
+              <p className="w-full text-[#3d2415] font-serif italic text-xs sm:text-sm text-center leading-snug px-2">
+                "Seja inquieto, curioso e criativo. Transforme necessidades em oportunidades. Empreenda a fim de gerar valor para o negócio. Seja um agente de transformação!"
+              </p>
+
+              {/* Bottom Row: Titles & Signature Black Passion Tag */}
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                {/* Title and category */}
+                <div className="pb-1">
+                  <span className="text-[#5c3e29] font-bold text-[11px] tracking-widest uppercase block mb-1">
+                    Importação e Estruturação de Ordens de Serviço (Terceiros)
+                  </span>
+                  <h1 className="text-2xl sm:text-3xl font-black text-[#3A2414] font-serif uppercase tracking-tight">
+                    TERCEIROS: <span className="text-[#B32025]">{rows.length} ORDENS IMPORTADAS</span>
+                  </h1>
+                </div>
+
+                {/* Signature Black Tag: Feito com paixão */}
+                <div className="hidden lg:flex bg-[#18110b] border-[3px] border-[#5c3e29] rounded-2xl p-3.5 px-5 items-center justify-center gap-4 shadow-[0_4px_10px_rgba(0,0,0,0.4)] relative shrink-0">
+                  <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-stone-500/50 border border-black/80" />
+                  
+                  <div className="w-9 h-9 rounded-xl bg-transparent border border-[#cfab84]/50 flex items-center justify-center">
+                    <Coffee className="text-[#cfab84]" size={18} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-handwritten text-[#e5d5c1] text-lg font-bold leading-none mb-1">Feito com paixão.</span>
+                    <span className="font-handwritten text-[#e5d5c1]/70 text-xs font-medium leading-none">Para quem entrega.</span>
+                    <div className="flex gap-1 mt-1.5">
+                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                      <span className="w-1 h-1 rounded-full bg-[#bf9663]" />
+                    </div>
                   </div>
                 </div>
+
               </div>
 
             </div>
 
           </div>
 
-        </div>
+          {/* Action Buttons Toolbar in PresenceList Aesthetic */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+                className="hidden"
+                id="terceiros-pdf-docx-input"
+              />
 
-        {/* Action Buttons Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 relative z-10">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Hidden File Input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
-              className="hidden"
-              id="terceiros-pdf-docx-input"
-            />
-
-            {/* Botão Importar PDF / DOCX */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-              className="bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-white text-xs font-mono font-black uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-[0_0_15px_rgba(255,42,75,0.4)] transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-red-500/40 disabled:opacity-50"
-            >
-              <Upload size={14} className="stroke-[2.5]" />
-              <span>{isProcessing ? 'Processando...' : 'Importar PDF / DOCX'}</span>
-            </button>
-
-            {/* Botão Colar Texto / Ordem de Serviço */}
-            <button
-              type="button"
-              onClick={() => setIsPasteModalOpen(true)}
-              disabled={isProcessing}
-              className="bg-white/5 hover:bg-white/10 text-white border border-white/15 text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97 hover:border-cyan-400/50"
-              title="Colar texto extraído da Ordem de Serviço ou planilha"
-            >
-              <FileText size={14} className="text-cyan-400" />
-              <span>Colar Texto / OS</span>
-            </button>
-
-            {/* Botão Novo Registro Manual */}
-            <button
-              type="button"
-              onClick={handleOpenAddModal}
-              className="bg-white/5 hover:bg-white/10 text-white border border-white/15 text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97 hover:border-cyan-400/50"
-            >
-              <Plus size={14} className="text-cyan-400" />
-              <span>Novo Registro</span>
-            </button>
-
-            {/* Carregar Exemplo */}
-            <button
-              type="button"
-              onClick={handleLoadSample}
-              className="bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
-              title="Carregar exemplo de Ordem de Serviço"
-            >
-              <FileSpreadsheet size={14} className="text-amber-400" />
-              <span>Exemplo</span>
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Baixar XLSX */}
-            {filteredRows.length > 0 && (
+              {/* Botão Importar PDF / DOCX */}
               <button
                 type="button"
-                onClick={handleDownloadXLSX}
-                className="bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
-                title="Exportar para arquivo Microsoft Excel (.xlsx)"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessing}
+                className="bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:from-[#e52229] hover:to-[#a9080d] text-white text-xs font-black uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20 disabled:opacity-50"
               >
-                <Download size={14} />
-                <span>Excel (.xlsx)</span>
+                <Upload size={14} className="stroke-[2.5]" />
+                <span>{isProcessing ? 'Processando...' : 'Importar PDF / DOCX'}</span>
               </button>
-            )}
 
-            {/* Copiar Dados para Planilha */}
-            <button
-              type="button"
-              onClick={handleCopyTableToClipboard}
-              disabled={filteredRows.length === 0}
-              className={cn(
-                "text-xs font-mono font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border disabled:opacity-40",
-                copiedStatus
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-                  : "bg-cyan-950/90 hover:bg-cyan-900 text-cyan-300 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+              {/* Botão Colar Texto / Ordem de Serviço */}
+              <button
+                type="button"
+                onClick={() => setIsPasteModalOpen(true)}
+                disabled={isProcessing}
+                className="bg-[#FAF6ED] hover:bg-white text-[#3A2414] border border-[#d6be9c] text-xs font-bold uppercase tracking-wider py-2.5 px-3 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
+                title="Colar texto extraído da Ordem de Serviço ou planilha"
+              >
+                <FileText size={14} className="text-[#B32025]" />
+                <span>Colar Texto / OS</span>
+              </button>
+
+              {/* Botão Novo Registro Manual */}
+              <button
+                type="button"
+                onClick={handleOpenAddModal}
+                className="bg-[#FAF6ED] hover:bg-white text-[#3A2414] border border-[#d6be9c] text-xs font-bold uppercase tracking-wider py-2.5 px-3 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
+              >
+                <Plus size={14} className="text-[#B32025]" />
+                <span>Novo Registro</span>
+              </button>
+
+              {/* Carregar Exemplo */}
+              <button
+                type="button"
+                onClick={handleLoadSample}
+                className="bg-[#FAF6ED] hover:bg-white text-[#5c3e29] border border-[#d6be9c] text-xs font-bold uppercase tracking-wider py-2.5 px-3 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
+                title="Carregar exemplo de Ordem de Serviço"
+              >
+                <FileSpreadsheet size={14} className="text-[#5c3e29]" />
+                <span>Exemplo</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Baixar XLSX */}
+              {filteredRows.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDownloadXLSX}
+                  className="bg-[#FAF6ED] hover:bg-white text-[#1f4e24] border border-[#a8c9aa] text-xs font-bold uppercase tracking-wider py-2.5 px-3 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
+                  title="Exportar para arquivo Microsoft Excel (.xlsx)"
+                >
+                  <Download size={14} />
+                  <span>Excel (.xlsx)</span>
+                </button>
               )}
-              title="Copiar linhas formatadas sem cabeçalho para colar na planilha do app"
-            >
-              {copiedStatus ? <Check size={15} className="stroke-[3]" /> : <Copy size={15} />}
-              <span>{copiedStatus ? 'Copiado c/ Sucesso!' : 'Copiar p/ Planilha'}</span>
-            </button>
 
-            {/* Limpar Tudo */}
-            {rows.length > 0 && (
+              {/* Copiar Dados para Planilha */}
               <button
                 type="button"
-                onClick={handleClearAll}
-                className="bg-white/5 hover:bg-rose-950/40 text-rose-400 border border-rose-500/30 text-xs font-mono font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
-                title="Limpar todos os registros importados"
+                onClick={handleCopyTableToClipboard}
+                disabled={filteredRows.length === 0}
+                className={cn(
+                  "text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-97 border border-white/20 disabled:opacity-40",
+                  copiedStatus
+                    ? "bg-[#2e7d32] text-white"
+                    : "bg-gradient-to-b from-[#3A2414] to-[#1f1208] hover:from-[#4d321d] hover:to-[#2b190c] text-[#f5ebd7]"
+                )}
+                title="Copiar linhas formatadas sem cabeçalho para colar na planilha do app"
               >
-                <Trash2 size={14} />
-                <span>Limpar</span>
+                {copiedStatus ? <Check size={15} className="stroke-[3]" /> : <Copy size={15} />}
+                <span>{copiedStatus ? 'Copiado c/ Sucesso!' : 'Copiar p/ Planilha'}</span>
               </button>
-            )}
-          </div>
-        </div>
 
-        {/* Processing Status Banner */}
-        {isProcessing && (
-          <div className="p-4 bg-slate-950/90 rounded-2xl border border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.2)] flex items-center gap-3 text-xs font-mono font-bold text-cyan-300 animate-pulse relative z-10">
-            <RefreshCw size={18} className="animate-spin text-cyan-400 shrink-0" />
-            <span>{statusMessage || 'Processando arquivo diretamente no seu navegador...'}</span>
+              {/* Limpar Tudo */}
+              {rows.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="bg-[#FAF6ED] hover:bg-rose-50 text-rose-800 border border-rose-300 text-xs font-bold uppercase tracking-wider py-2.5 px-3 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-97"
+                  title="Limpar todos os registros importados"
+                >
+                  <Trash2 size={14} />
+                  <span>Limpar</span>
+                </button>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* Upload Dropzone Box (Cyber HUD) */}
-        {showUploadArea && (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-3xl border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 bg-slate-950/80 hover:bg-slate-950 p-6 sm:p-8 text-center cursor-pointer transition-all shadow-[0_0_30px_rgba(6,182,212,0.1)] group relative z-10"
-          >
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setShowUploadArea(false); }}
-              className="absolute top-3 right-3 text-slate-400 hover:text-white p-1 cursor-pointer"
+          {/* Processing Status Banner */}
+          {isProcessing && (
+            <div className="p-4 bg-[#FAF6ED] rounded-2xl border-2 border-[#d6be9c] shadow-md flex items-center gap-3 text-xs font-bold text-[#3A2414] animate-pulse">
+              <RefreshCw size={18} className="animate-spin text-[#B32025] shrink-0" />
+              <span>{statusMessage || 'Processando arquivo diretamente no seu navegador...'}</span>
+            </div>
+          )}
+
+          {/* Upload Dropzone Box (Parchment Styled) */}
+          {showUploadArea && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-2xl border-2 border-dashed border-[#a6866b] bg-[#FAF6ED] hover:bg-white p-6 sm:p-8 text-center cursor-pointer transition-all shadow-inner group relative"
             >
-              <X size={16} />
-            </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setShowUploadArea(false); }}
+                className="absolute top-3 right-3 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
 
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              <Upload size={24} />
+              <div className="w-12 h-12 rounded-2xl bg-[#B32025]/10 text-[#B32025] mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Upload size={24} />
+              </div>
+              <h3 className="text-sm font-black text-[#3A2414] uppercase tracking-wide">
+                Clique aqui para selecionar a Ordem de Serviço
+              </h3>
+              <p className="text-xs text-[#7a5b44] mt-1">
+                Suporta documentos em formato <strong>PDF (.pdf)</strong> ou <strong>Microsoft Word (.docx)</strong>
+              </p>
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <span className="text-[10px] font-mono font-bold bg-[#e8dbcc] text-[#3A2414] px-2.5 py-1 rounded-md">
+                  Status Automático: REALIZAR IMPRESSÃO
+                </span>
+                <span className="text-[10px] font-mono font-bold bg-[#e8dbcc] text-[#3A2414] px-2.5 py-1 rounded-md">
+                  Origem Padrão: SANTA LUZIA|MG
+                </span>
+              </div>
             </div>
-            <h3 className="text-sm font-heading font-black text-white uppercase tracking-wide">
-              Clique aqui para selecionar a Ordem de Serviço
-            </h3>
-            <p className="text-xs text-slate-400 font-mono mt-1">
-              Suporta documentos em formato <strong className="text-cyan-300">PDF (.pdf)</strong> ou <strong className="text-cyan-300">Microsoft Word (.docx)</strong>
-            </p>
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 text-cyan-300 px-2.5 py-1 rounded-md">
-                Status Automático: REALIZAR IMPRESSÃO
-              </span>
-              <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 text-slate-300 px-2.5 py-1 rounded-md">
-                Origem Padrão: SANTA LUZIA|MG
-              </span>
-            </div>
-          </div>
-        )}
+          )}
 
           {/* Active File Banner */}
           {uploadedFileName && !isProcessing && (
-            <div className="p-3 bg-cyan-950/40 rounded-xl border border-cyan-500/30 flex items-center justify-between text-xs font-mono text-cyan-300 relative z-10 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+            <div className="p-3 bg-[#FAF6ED] rounded-xl border border-[#d6be9c] flex items-center justify-between text-xs text-[#5c3e29]">
               <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-cyan-400 shrink-0" />
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                 <span>
-                  Último arquivo processado: <strong className="text-white">{uploadedFileName}</strong> ({rows.length} registros extraídos)
+                  Último arquivo processado: <strong className="text-[#3A2414]">{uploadedFileName}</strong> ({rows.length} registros extraídos)
                 </span>
               </div>
-              <span className="text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold px-2 py-0.5 rounded shadow-2xs">
+              <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
                 Pronto para cópia
               </span>
             </div>
           )}
 
-          {/* 4K Cyber Table */}
-          <div className="rounded-2xl border border-white/10 overflow-hidden bg-slate-950/80 shadow-2xl relative z-10 backdrop-blur-md">
+          {/* Parchment Ledger Table */}
+          <div className="rounded-2xl border border-[#d6be9c] overflow-hidden bg-white shadow-md">
             <div className="overflow-x-auto max-h-[640px]">
-              <table className="w-full text-left text-xs border-collapse font-mono">
-                {/* Header in obsidian glass with cyan neon lettering */}
+              <table className="w-full text-left text-xs border-collapse">
+                {/* Header in deep espresso with gold lettering */}
                 <thead className="sticky top-0 z-20">
-                  <tr className="bg-slate-950 text-cyan-400 border-b border-white/10">
+                  <tr className="bg-[#1c1008] text-[#e8dbcc] border-b-2 border-[#5c3e29]">
                     <th className="py-3 px-3 text-center w-10">
                       <input
                         type="checkbox"
                         checked={selectedIds.size === filteredRows.length && filteredRows.length > 0}
                         onChange={handleSelectAll}
-                        className="rounded border-white/20 text-[#B32025] focus:ring-0 cursor-pointer accent-[#B32025]"
+                        className="rounded border-[#a6866b] text-[#B32025] focus:ring-0 cursor-pointer"
                       />
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Cavalo (Mercosul)
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Carreta
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Transportador
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Motorista / Condutor
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Destino
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300 text-center">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-center">
                       Status
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Modelo
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Data / Hora
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1]">
                       Telefone
                     </th>
-                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-cyan-300 text-right pr-4">
+                    <th className="py-3 px-3 font-mono font-bold uppercase tracking-wider text-[11px] text-[#dfc2a1] text-right pr-4">
                       Ações
                     </th>
                   </tr>
                 </thead>
 
                 {/* Table Body */}
-                <tbody className="divide-y divide-white/5 bg-slate-900/60 font-mono">
+                <tbody className="divide-y divide-[#ebd9c1]">
                   {paginatedRows.length === 0 ? (
                     <tr>
-                      <td colSpan={11} className="py-14 text-center text-slate-400 font-medium">
+                      <td colSpan={11} className="py-14 text-center text-stone-400 font-medium">
                         <div className="flex flex-col items-center justify-center gap-3">
-                          <FileSpreadsheet size={40} className="text-cyan-400/50" />
-                          <p className="font-bold text-white text-sm">
+                          <FileSpreadsheet size={40} className="text-[#d6be9c]" />
+                          <p className="font-bold text-[#3A2414] text-sm">
                             Nenhum registro de Terceiro importado até o momento
                           </p>
-                          <p className="text-xs text-slate-400 max-w-md">
-                            Clique em <strong className="text-cyan-300">"Importar PDF / DOCX"</strong> acima para carregar a Ordem de Serviço ou clique em <strong className="text-cyan-300">"Carregar Exemplo"</strong> para testar a conversão.
+                          <p className="text-xs text-[#7a5b44] max-w-md">
+                            Clique em <strong>"Importar PDF / DOCX"</strong> acima para carregar a Ordem de Serviço ou clique em <strong>"Carregar Exemplo"</strong> para testar a conversão.
                           </p>
                         </div>
                       </td>
@@ -1420,8 +1438,10 @@ export default function TerceirosEscala({
                           className={cn(
                             "transition-colors group",
                             isSelected
-                              ? "bg-cyan-950/60 border-y border-cyan-500/30"
-                              : "hover:bg-white/5"
+                              ? "bg-[#f5e6d0]"
+                              : index % 2 === 0
+                                ? "bg-white hover:bg-[#FAF6ED]"
+                                : "bg-[#FAF6ED]/60 hover:bg-[#FAF6ED]"
                           )}
                         >
                           {/* Selection Checkbox */}
@@ -1430,7 +1450,7 @@ export default function TerceirosEscala({
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => handleToggleSelectRow(row.id)}
-                              className="rounded border-white/20 text-[#B32025] focus:ring-0 cursor-pointer accent-[#B32025]"
+                              className="rounded border-[#a6866b] text-[#B32025] focus:ring-0 cursor-pointer"
                             />
                           </td>
 
@@ -1440,20 +1460,20 @@ export default function TerceirosEscala({
                           </td>
 
                           {/* Carreta */}
-                          <td className="py-2 px-3 font-mono font-bold text-amber-300 align-middle">
+                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] align-middle">
                             {row.carreta ? (
-                              <span className="bg-white/5 text-amber-300 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10 shadow-xs">
+                              <span className="bg-[#f0e2cf] text-[#4a301e] px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#d6be9c]/60 shadow-xs">
                                 {row.carreta}
                               </span>
                             ) : (
-                              <span className="text-slate-500 italic text-[10px] font-bold uppercase tracking-wider">-</span>
+                              <span className="text-stone-300 italic text-[10px] font-bold uppercase tracking-wider">-</span>
                             )}
                           </td>
 
                           {/* Transportador Editable Select */}
-                          <td className="py-2 px-3 font-bold text-slate-200 text-[10px] uppercase tracking-wider align-middle">
+                          <td className="py-2 px-3 font-bold text-[#3A2414] text-[10px] uppercase tracking-wider align-middle">
                             <div className="flex items-center gap-1.5">
-                              <Truck size={14} className="text-cyan-400 shrink-0" />
+                              <Truck size={14} className="text-[#8c5a2b] shrink-0" />
                               <select
                                 value={row.transportador}
                                 onChange={(e) => {
@@ -1462,57 +1482,57 @@ export default function TerceirosEscala({
                                     prev.map(r => (r.id === row.id ? { ...r, transportador: val } : r))
                                   );
                                 }}
-                                className="bg-slate-900 border border-white/20 text-white rounded-lg px-2 py-1 text-[10px] font-mono focus:outline-none focus:border-cyan-400 cursor-pointer max-w-[160px] shadow-inner uppercase"
+                                className="bg-[#FAF6ED] border border-[#d6be9c] text-[#3A2414] rounded-lg px-2 py-1 text-[10px] font-bold focus:outline-none focus:border-[#B32025] cursor-pointer max-w-[160px] shadow-inner uppercase"
                                 title="Transportador associado (Clique para alterar)"
                               >
                                 {transportadoras.map(t => (
-                                  <option key={t} value={t} className="bg-slate-900 text-white">{t}</option>
+                                  <option key={t} value={t}>{t}</option>
                                 ))}
                               </select>
                             </div>
                           </td>
 
                           {/* Motorista */}
-                          <td className="py-2 px-3 font-bold text-white text-[10px] uppercase tracking-wider max-w-[200px] truncate align-middle" title={row.conductor}>
+                          <td className="py-2 px-3 font-bold text-[#4a301e] text-[10px] uppercase tracking-wider max-w-[200px] truncate align-middle" title={row.conductor}>
                             {row.conductor ? (
                               <div className="flex items-center gap-1.5">
-                                <User size={14} className="text-slate-400 shrink-0" />
+                                <User size={14} className="text-[#a6866b] shrink-0" />
                                 <span className="truncate">{row.conductor}</span>
                               </div>
                             ) : (
-                              <span className="text-slate-500 italic text-[10px] font-bold uppercase tracking-wider">-</span>
+                              <span className="text-stone-300 italic text-[10px] font-bold uppercase tracking-wider">-</span>
                             )}
                           </td>
 
                           {/* Destino */}
-                          <td className="py-2 px-3 font-mono font-bold text-red-400 text-[10px] uppercase tracking-wider align-middle">
+                          <td className="py-2 px-3 font-mono font-bold text-[#B32025] text-[10px] uppercase tracking-wider align-middle">
                             {row.destino}
                           </td>
 
                           {/* Status Rigoroso */}
                           <td className="py-2 px-3 text-center align-middle">
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border inline-block shadow-xs bg-emerald-950/80 text-emerald-300 border-emerald-500/40 whitespace-nowrap">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border inline-block shadow-xs bg-emerald-50 text-emerald-800 border-emerald-300 whitespace-nowrap">
                               {row.status}
                             </span>
                           </td>
 
                           {/* Modelo */}
-                          <td className="py-2 px-3 font-mono font-bold text-slate-300 text-[10px] uppercase tracking-wider align-middle whitespace-nowrap">
+                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] text-[10px] uppercase tracking-wider align-middle whitespace-nowrap">
                             {row.modeloCarreta}
                           </td>
 
                           {/* Data e Hora */}
-                          <td className="py-2 px-3 font-mono font-bold text-slate-300 text-[10px] uppercase tracking-wider align-middle whitespace-nowrap">
+                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] text-[10px] uppercase tracking-wider align-middle whitespace-nowrap">
                             <span>{row.data}</span>
                             {row.contatoWhats && (
-                              <span className="text-slate-400 text-[9px] block">
+                              <span className="text-[#a6866b] text-[9px] block">
                                 {row.contatoWhats}
                               </span>
                             )}
                           </td>
 
                           {/* Telefone */}
-                          <td className="py-2 px-3 font-mono font-bold text-slate-300 text-[10px] uppercase tracking-wider align-middle whitespace-nowrap">
+                          <td className="py-2 px-3 font-mono font-bold text-[#5c3e29] text-[10px] uppercase tracking-wider align-middle whitespace-nowrap">
                             {row.telefone || '-'}
                           </td>
 
@@ -1522,7 +1542,7 @@ export default function TerceirosEscala({
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(row)}
-                                className="p-1.5 text-slate-400 hover:text-cyan-300 bg-white/5 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                                className="p-1 text-stone-400 hover:text-[#5c3e29] hover:bg-[#ebd9c1]/50 rounded transition-colors cursor-pointer"
                                 title="Editar registro"
                               >
                                 <Edit2 size={13} />
@@ -1530,7 +1550,7 @@ export default function TerceirosEscala({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteRow(row.id, row.cavalo)}
-                                className="p-1.5 text-slate-400 hover:text-rose-400 bg-white/5 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                                className="p-1 text-stone-400 hover:text-[#B32025] hover:bg-rose-100 rounded transition-colors cursor-pointer"
                                 title="Remover registro de terceiro"
                               >
                                 <Trash2 size={13} />
@@ -1547,7 +1567,7 @@ export default function TerceirosEscala({
 
             {/* Pagination footer */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 bg-slate-950/90 border-t border-white/10 text-xs font-mono font-bold text-slate-300">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#FAF6ED] border-t border-[#d6be9c] text-xs font-bold text-[#5c3e29]">
                 <span>
                   Página {currentPage} de {totalPages}
                 </span>
@@ -1557,12 +1577,12 @@ export default function TerceirosEscala({
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-white disabled:opacity-30 cursor-pointer hover:bg-white/10"
+                    className="p-1.5 rounded-lg border border-[#d6be9c] bg-white text-[#3A2414] disabled:opacity-30 cursor-pointer"
                   >
                     <ChevronLeft size={14} />
                   </button>
 
-                  <span className="px-2 py-1 font-mono text-[11px] text-cyan-400">
+                  <span className="px-2 py-1 font-mono text-[11px]">
                     {currentPage} / {totalPages}
                   </span>
 
@@ -1570,7 +1590,7 @@ export default function TerceirosEscala({
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-white disabled:opacity-30 cursor-pointer hover:bg-white/10"
+                    className="p-1.5 rounded-lg border border-[#d6be9c] bg-white text-[#3A2414] disabled:opacity-30 cursor-pointer"
                   >
                     <ChevronRight size={14} />
                   </button>
@@ -1580,26 +1600,32 @@ export default function TerceirosEscala({
           </div>
 
         </div>
+      </div>
 
       {/* Modal: Adicionar / Editar Registro Manual */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-xl rounded-3xl bg-slate-950 border border-white/20 shadow-2xl relative overflow-hidden flex flex-col p-6 text-white">
-            <TechCorner className="absolute top-3 left-3" />
-            <TechCorner className="absolute top-3 right-3 rotate-90" />
-            <TechCorner className="absolute bottom-3 left-3 -rotate-90" />
-            <TechCorner className="absolute bottom-3 right-3 rotate-180" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div 
+            className="w-full max-w-xl rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-hidden flex flex-col p-6 text-[#3A2414]"
+            style={{
+              backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+            }}
+          >
+            <Screw className="absolute top-3 left-3 z-20" />
+            <Screw className="absolute top-3 right-3 z-20" />
+            <Screw className="absolute bottom-3 left-3 z-20" />
+            <Screw className="absolute bottom-3 right-3 z-20" />
 
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 flex items-center justify-center shadow-[0_0_15px_rgba(255,42,75,0.3)]">
-                  <Truck size={18} />
+            <div className="flex items-center justify-between border-b border-[#d6be9c] pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#B32025] text-white flex items-center justify-center shadow-md">
+                  <Truck size={16} />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-base text-white uppercase tracking-wide">
+                  <h3 className="font-serif font-black text-base text-[#3A2414] uppercase tracking-wide">
                     {editingRow ? 'Editar Registro de Terceiro' : 'Novo Registro de Terceiro'}
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-mono block">
+                  <span className="text-[10px] text-[#7a5b44] font-medium block">
                     Status fixo padronizado: AGUARDANDO CONTATO
                   </span>
                 </div>
@@ -1608,21 +1634,21 @@ export default function TerceirosEscala({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 cursor-pointer"
+                className="text-stone-500 hover:text-stone-800 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveModal} className="space-y-3.5 text-xs font-mono font-bold text-white">
+            <form onSubmit={handleSaveModal} className="space-y-3.5 text-xs font-bold text-[#3A2414]">
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider">
+                    <label className="text-[11px] text-[#5c3e29] uppercase tracking-wider">
                       Placa Cavalo *
                     </label>
                     {modalForm.cavalo.trim() && (
-                      <span className="text-[9px] text-cyan-400 font-black uppercase tracking-wider">
+                      <span className="text-[9px] text-[#003399] font-black uppercase tracking-wider">
                         Mercosul
                       </span>
                     )}
@@ -1634,7 +1660,7 @@ export default function TerceirosEscala({
                       value={modalForm.cavalo}
                       onChange={(e) => setModalForm({ ...modalForm, cavalo: e.target.value })}
                       placeholder="Ex: QWK-6A22"
-                      className="flex-1 px-3 py-2 bg-slate-900 border border-white/20 rounded-xl font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 uppercase shadow-inner text-xs font-bold"
+                      className="flex-1 px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner text-xs font-bold"
                     />
                     {modalForm.cavalo.trim() && (
                       <MercosulPlate plate={modalForm.cavalo} className="scale-90 origin-right" />
@@ -1643,7 +1669,7 @@ export default function TerceirosEscala({
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Placa Carreta
                   </label>
                   <input
@@ -1651,29 +1677,29 @@ export default function TerceirosEscala({
                     value={modalForm.carreta}
                     onChange={(e) => setModalForm({ ...modalForm, carreta: e.target.value })}
                     placeholder="Ex: OLN7307"
-                    className="w-full px-3 py-2 bg-slate-900 border border-white/20 rounded-xl font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 uppercase shadow-inner text-xs font-bold"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner text-xs font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Transportador
                   </label>
                   <select
                     value={modalForm.transportador}
                     onChange={(e) => setModalForm({ ...modalForm, transportador: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-white/20 rounded-xl text-white focus:outline-none focus:border-cyan-400 shadow-inner text-xs font-bold cursor-pointer uppercase"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] focus:outline-none focus:border-[#B32025] shadow-inner text-xs font-bold cursor-pointer uppercase"
                   >
                     {transportadoras.map(t => (
-                      <option key={t} value={t} className="bg-slate-900 text-white">{t}</option>
+                      <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Destino (Filial de Destino)
                   </label>
                   <input
@@ -1681,14 +1707,14 @@ export default function TerceirosEscala({
                     value={modalForm.destino}
                     onChange={(e) => setModalForm({ ...modalForm, destino: e.target.value })}
                     placeholder="Ex: LONDRINA"
-                    className="w-full px-3 py-2 bg-slate-900 border border-white/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 uppercase shadow-inner text-xs font-bold font-mono"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner text-xs font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Motorista / Condutor (Nome)
                   </label>
                   <input
@@ -1696,12 +1722,12 @@ export default function TerceirosEscala({
                     value={modalForm.conductor}
                     onChange={(e) => setModalForm({ ...modalForm, conductor: e.target.value })}
                     placeholder="Nome completo do motorista"
-                    className="w-full px-3 py-2 bg-slate-900 border border-white/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 uppercase shadow-inner text-xs font-bold font-mono"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] uppercase shadow-inner text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Telefone (Celular)
                   </label>
                   <input
@@ -1709,20 +1735,20 @@ export default function TerceirosEscala({
                     value={modalForm.telefone}
                     onChange={(e) => setModalForm({ ...modalForm, telefone: e.target.value })}
                     placeholder="Ex: 31 99999-9999"
-                    className="w-full px-3 py-2 bg-slate-900 border border-white/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 shadow-inner text-xs font-bold font-mono"
+                    className="w-full px-3 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] shadow-inner text-xs font-bold font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Categoria (Vínculo)
                   </label>
                   <select
                     value={modalForm.categoria || 'TERCEIRO'}
                     onChange={(e) => setModalForm({ ...modalForm, categoria: e.target.value })}
-                    className="w-full px-2 py-2 bg-slate-900 border border-white/20 rounded-xl text-white focus:outline-none focus:border-cyan-400 shadow-inner text-xs font-bold cursor-pointer font-mono"
+                    className="w-full px-2 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] focus:outline-none focus:border-[#B32025] shadow-inner text-xs font-bold cursor-pointer"
                   >
                     <option value="TERCEIRO">TERCEIRO</option>
                     <option value="FROTA">FROTA</option>
@@ -1732,13 +1758,13 @@ export default function TerceirosEscala({
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Modelo Carreta
                   </label>
                   <select
                     value={modalForm.modeloCarreta}
                     onChange={(e) => setModalForm({ ...modalForm, modeloCarreta: e.target.value })}
-                    className="w-full px-2 py-2 bg-slate-900 border border-white/20 rounded-xl text-white focus:outline-none focus:border-cyan-400 shadow-inner text-xs font-bold cursor-pointer font-mono"
+                    className="w-full px-2 py-2 bg-white border border-[#d6be9c] rounded-xl text-[#3A2414] focus:outline-none focus:border-[#B32025] shadow-inner text-xs font-bold cursor-pointer"
                   >
                     <option value="BAÚ">BAÚ</option>
                     <option value="SIDER">SIDER</option>
@@ -1748,7 +1774,7 @@ export default function TerceirosEscala({
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Data (Dia Atual)
                   </label>
                   <input
@@ -1756,12 +1782,12 @@ export default function TerceirosEscala({
                     value={modalForm.data}
                     onChange={(e) => setModalForm({ ...modalForm, data: e.target.value })}
                     placeholder="DD/MM/AAAA"
-                    className="w-full px-2 py-2 bg-slate-900 border border-white/20 rounded-xl font-mono text-white focus:outline-none focus:border-cyan-400 shadow-inner text-xs font-bold"
+                    className="w-full px-2 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] focus:outline-none focus:border-[#B32025] shadow-inner text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-[11px] text-slate-400 uppercase tracking-wider">
+                  <label className="block mb-1 text-[11px] text-[#5c3e29] uppercase tracking-wider">
                     Capacidade / Ton
                   </label>
                   <input
@@ -1769,22 +1795,22 @@ export default function TerceirosEscala({
                     value={modalForm.ton || modalForm.pallets}
                     onChange={(e) => setModalForm({ ...modalForm, ton: e.target.value, pallets: e.target.value })}
                     placeholder="Ex: 30"
-                    className="w-full px-2 py-2 bg-slate-900 border border-white/20 rounded-xl font-mono text-white focus:outline-none focus:border-cyan-400 shadow-inner text-xs font-bold"
+                    className="w-full px-2 py-2 bg-white border border-[#d6be9c] rounded-xl font-mono text-[#3A2414] focus:outline-none focus:border-[#B32025] shadow-inner text-xs font-bold"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#d6be9c]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-white/5 border border-white/15 hover:bg-white/10 text-slate-300 text-xs font-mono font-bold uppercase rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-white border border-[#d6be9c] hover:bg-[#FAF6ED] text-[#3A2414] text-xs font-bold uppercase rounded-xl transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-white text-xs font-mono font-black uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(255,42,75,0.4)] transition-all cursor-pointer border border-red-500/40"
+                  className="px-5 py-2 bg-gradient-to-b from-[#B32025] to-[#780d11] hover:from-[#c9252a] hover:to-[#8c0e13] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer border border-white/20"
                 >
                   {editingRow ? 'Salvar Alterações' : 'Cadastrar Terceiro'}
                 </button>
@@ -1796,23 +1822,28 @@ export default function TerceirosEscala({
 
       {/* Modal: Colar Texto / Ordem de Serviço */}
       {isPasteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-3xl bg-slate-950 border border-cyan-500/40 shadow-2xl relative overflow-hidden flex flex-col p-6 text-white">
-            <TechCorner className="absolute top-3 left-3" />
-            <TechCorner className="absolute top-3 right-3 rotate-90" />
-            <TechCorner className="absolute bottom-3 left-3 -rotate-90" />
-            <TechCorner className="absolute bottom-3 right-3 rotate-180" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div 
+            className="w-full max-w-2xl rounded-3xl bg-[#efdfc6] border-2 border-[#5c3e29] shadow-2xl relative overflow-hidden flex flex-col p-6 text-[#3A2414]"
+            style={{
+              backgroundImage: 'linear-gradient(135deg, rgba(239, 223, 198, 1) 0%, rgba(226, 207, 178, 1) 100%)',
+            }}
+          >
+            <Screw className="absolute top-3 left-3 z-20" />
+            <Screw className="absolute top-3 right-3 z-20" />
+            <Screw className="absolute bottom-3 left-3 z-20" />
+            <Screw className="absolute bottom-3 right-3 z-20" />
 
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                  <FileText size={18} />
+            <div className="flex items-center justify-between border-b border-[#d6be9c] pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#B32025] text-white flex items-center justify-center shadow-md">
+                  <FileText size={16} />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-base text-white uppercase tracking-wide">
+                  <h3 className="font-serif font-black text-base text-[#3A2414] uppercase tracking-wide">
                     Colar Texto da Ordem de Serviço
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-mono block">
+                  <span className="text-[10px] text-[#7a5b44] font-medium block">
                     Reconhecimento automático: Filial de Destino, Vínculo Motorista, Nome, Capacidade Toneladas, Celular, etc.
                   </span>
                 </div>
@@ -1821,7 +1852,7 @@ export default function TerceirosEscala({
               <button
                 type="button"
                 onClick={() => setIsPasteModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 cursor-pointer"
+                className="text-stone-500 hover:text-stone-800 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1833,14 +1864,14 @@ export default function TerceirosEscala({
                 onChange={(e) => setPastedText(e.target.value)}
                 placeholder="Cole aqui o texto copiado do documento PDF, Word ou tabela de Ordem de Serviço..."
                 rows={9}
-                className="w-full p-3.5 bg-slate-900 border border-white/20 focus:border-cyan-400 rounded-2xl font-mono text-xs text-white placeholder-slate-500 shadow-inner resize-none focus:outline-none"
+                className="w-full p-3 bg-white border border-[#d6be9c] rounded-2xl font-mono text-xs text-[#3A2414] placeholder-stone-400 focus:outline-none focus:border-[#B32025] shadow-inner resize-none"
               />
 
-              <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between pt-2 border-t border-[#d6be9c]">
                 <button
                   type="button"
                   onClick={() => { setPastedText(''); setIsPasteModalOpen(false); }}
-                  className="px-4 py-2 bg-white/5 border border-white/15 hover:bg-white/10 text-slate-300 text-xs font-mono font-bold uppercase rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-white border border-[#d6be9c] hover:bg-[#FAF6ED] text-[#3A2414] text-xs font-bold uppercase rounded-xl transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1848,7 +1879,7 @@ export default function TerceirosEscala({
                   type="button"
                   onClick={handleProcessPastedText}
                   disabled={!pastedText.trim()}
-                  className="px-5 py-2 bg-gradient-to-r from-[#ff2a4b] to-[#b32025] hover:brightness-110 text-white text-xs font-mono font-black uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(255,42,75,0.4)] transition-all cursor-pointer border border-red-500/40 disabled:opacity-40"
+                  className="px-5 py-2 bg-gradient-to-b from-[#B32025] to-[#780d11] hover:from-[#c9252a] hover:to-[#8c0e13] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer border border-white/20 disabled:opacity-40"
                 >
                   Converter & Inserir
                 </button>

@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { 
   ShieldAlert, 
   Target, 
+  ShieldCheck, 
   Lock, 
   Camera,
   Server,
   Network,
+  Info,
+  ChevronRight,
+  TrendingDown,
+  AlertTriangle,
+  Zap,
   Activity
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { GlassPanel3D } from './3d/GlassPanel3D';
-import { MetricCard3D } from './3d/MetricCard3D';
-import { HUDPanel } from './3d/HUDPanel';
-import { StatusIndicator3D } from './3d/StatusIndicator3D';
-import { Gauge3D } from './3d/Gauge3D';
 
 const CHART_DATA = [
   { time: '08:00', created: 12, integrated: 10 },
@@ -36,130 +38,147 @@ export default function RiskAnalysis() {
   useEffect(() => {
     const storedCalc = localStorage.getItem('sm_creator_calc');
     if (storedCalc) {
-      try {
-        const vals = JSON.parse(storedCalc);
-        const sum = vals.reduce((acc: number, curr: string) => {
-          const val = parseFloat(curr.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
-          return isNaN(val) ? acc : acc + val;
-        }, 0);
-        setTotalValue(sum);
-      } catch (e) {
-        console.warn("Calc parse error:", e);
-      }
+      const vals = JSON.parse(storedCalc);
+      const sum = vals.reduce((acc: number, curr: string) => {
+        const val = parseFloat(curr.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+        return isNaN(val) ? acc : acc + val;
+      }, 0);
+      setTotalValue(sum);
     }
   }, []);
 
+  const matrixDots = [
+    { id: 1, top: '80%', left: '10%', color: 'border-green-500 bg-green-500/20' },
+    { id: 2, top: '70%', left: '20%', color: 'border-green-500 bg-green-500/20' },
+    { id: 3, top: '60%', left: '30%', color: 'border-yellow-500 bg-yellow-500/20' },
+    { id: 4, top: '40%', left: '40%', color: 'border-yellow-500 bg-yellow-500/20' },
+    { id: 5, top: '30%', left: '70%', color: 'border-red-500 bg-red-500/20' },
+  ];
+
   const securityNodes = [
     { id: 'cam-01', name: 'Perímetro Norte', status: 'OK', integrity: 98, icon: Camera },
-    { id: 'srv-alpha', name: 'Datacenter PGR', status: 'Atenção', integrity: 76, icon: Server },
-    { id: 'net-mesh', name: 'Rede Telemetria', status: 'OK', integrity: 99, icon: Network },
-    { id: 'gate-primary', name: 'Controle de Pátio', status: 'Privado', integrity: 100, icon: Lock },
+    { id: 'srv-alpha', name: 'Datacenter', status: 'Atenção', integrity: 76, icon: Server },
+    { id: 'net-mesh', name: 'Rede Local', status: 'OK', integrity: 99, icon: Network },
+    { id: 'gate-primary', name: 'Controle de Acesso', status: 'Privado', integrity: 100, icon: Lock },
   ];
 
   return (
-    <div className="w-full flex flex-col gap-6 text-slate-100 font-sans">
-      
-      {/* HEADER BAR */}
-      <GlassPanel3D className="p-5 flex items-center justify-between" variant="glow">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="led-status led-status-red animate-pulse" />
-            <span className="text-[10px] font-mono font-black uppercase tracking-widest text-sky-400">
-              PGR COMMAND CENTER 3D • ANÁLISE DE RISCO & MATRIZ
-            </span>
-          </div>
-          <h1 className="text-2xl font-mono font-black uppercase tracking-tight text-white flex items-center gap-2">
-            <ShieldAlert size={24} className="text-sky-400" />
-            MATRIZ DE RISCOS E TELEMETRIA OPERACIONAL
-          </h1>
-        </div>
-      </GlassPanel3D>
+    <div className="space-y-6">
+      {/* Node Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {securityNodes.map((node) => (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            key={node.id} 
+            className="bg-zinc-900/50 border border-zinc-800 p-5 rounded-2xl hover:border-primary/30 transition-all cursor-default relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-slate-800 text-primary rounded-lg border border-slate-700">
+                <node.icon size={18} />
+              </div>
+              <span className={cn(
+                "text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border",
+                node.status === 'OK' ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : 
+                node.status === 'Atenção' ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-primary bg-primary/10 border-primary/20"
+              )}>
+                {node.status}
+              </span>
+            </div>
 
-      {/* METRICS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <MetricCard3D
-          title="Valor Total Sob Risco"
-          value={`R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          subtitle="Cargas em Trânsito"
-          icon={ShieldAlert}
-          status="warning"
-        />
-        <MetricCard3D
-          title="SMs Ativas"
-          value={5}
-          subtitle="Monitoramento em Tempo Real"
-          icon={Activity}
-          status="info"
-        />
-        <GlassPanel3D className="p-4 flex items-center justify-center" variant="metallic">
-          <Gauge3D value={98.4} label="Eficiência de Transmissão" size={130} status="normal" />
-        </GlassPanel3D>
+            <h3 className="text-sm font-semibold text-slate-200 mb-1">{node.name}</h3>
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 mb-3 uppercase tracking-tighter">
+              <span>{node.id}</span>
+              <span className="font-bold text-slate-300">{node.integrity}%</span>
+            </div>
+
+            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${node.integrity}%` }}
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  node.integrity > 90 ? "bg-primary shadow-[0_0_10px_rgba(59,130,246,0.3)]" : "bg-amber-500"
+                )} 
+              />
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* NODES GRID */}
-      <HUDPanel title="Nós de Segurança e Telemetria de Campo" badge="HARDWARE INFRA">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {securityNodes.map((node) => (
-            <GlassPanel3D key={node.id} className="p-4 flex flex-col justify-between gap-3" variant="metallic">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-sky-500/10 rounded-xl border border-sky-500/30 text-sky-400">
-                  <node.icon size={18} />
-                </div>
-                <StatusIndicator3D
-                  status={node.status === 'OK' ? 'normal' : 'warning'}
-                  label={node.status}
-                  size="sm"
-                />
-              </div>
-
-              <div>
-                <h4 className="font-mono font-bold text-white text-sm">{node.name}</h4>
-                <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
-                  <span>ID: {node.id}</span>
-                  <span className="font-bold text-sky-400">{node.integrity}% Integro</span>
-                </div>
-              </div>
-            </GlassPanel3D>
-          ))}
+        {/* KPI METRICS PANEL */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+               <span className="text-[10px] text-slate-400 font-bold uppercase mb-2 block tracking-widest">Valor Total Sob Risco</span>
+               <span className="text-2xl font-black text-white">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+           </motion.div>
+           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+               <span className="text-[10px] text-slate-400 font-bold uppercase mb-2 block tracking-widest">SMs Pendentes</span>
+               <span className="text-2xl font-black text-primary">05 SMs</span>
+           </motion.div>
+           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+               <span className="text-[10px] text-slate-400 font-bold uppercase mb-2 block tracking-widest">Eficiência de Transmissão</span>
+               <span className="text-2xl font-black text-emerald-400">98.4%</span>
+           </motion.div>
         </div>
-      </HUDPanel>
 
-      {/* CHART & LOGS ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HUDPanel title="Fluxo de Monitoramento (SMs Criadas vs Integradas)" badge="TELEMETRIA">
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={CHART_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="time" stroke="#64748b" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                <YAxis stroke="#64748b" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }} />
-                <Line type="monotone" dataKey="created" stroke="#38bdf8" strokeWidth={3} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="integrated" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </HUDPanel>
-
-        <HUDPanel title="Log de Eventos e Telemetria Crítica" badge="REALTIME LOGS">
-          <div className="space-y-3 font-mono text-xs">
-            {EVENTS_LOG.map((evt, idx) => (
-              <GlassPanel3D key={idx} className="p-3 flex items-center justify-between" variant="metallic">
-                <div className="flex items-center gap-3">
-                  <span className="text-slate-400 text-[10px] font-bold">{evt.time}</span>
-                  <span className="text-white font-medium">{evt.msg}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Matrix Card */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+                <h2 className="text-sm font-bold text-slate-100 mb-6 flex items-center gap-2">
+                    <Target size={16} className="text-primary" />
+                    Matriz de Riscos Ativos
+                </h2>
+                <div className="aspect-square w-full max-w-[300px] mx-auto border-l border-b border-slate-700 relative flex items-center justify-center bg-slate-950/50 rounded-bl-xl">
+                    <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 opacity-10">
+                        <div className="border-r border-b border-slate-600 bg-red-500" />
+                        <div className="border-b border-slate-600 bg-amber-500" />
+                        <div className="border-r border-slate-600 bg-amber-500" />
+                        <div className="bg-emerald-500" />
+                    </div>
+                    {matrixDots.map(dot => (
+                        <motion.div key={dot.id} className={cn("absolute w-3 h-3 rounded-full border-2", dot.color, dot.id === 5 ? 'animate-pulse' : '')} style={{ top: dot.top, left: dot.left }} />
+                    ))}
                 </div>
-                <StatusIndicator3D
-                  status={evt.status === 'CRIT' ? 'critical' : evt.status === 'WARN' ? 'warning' : 'normal'}
-                  label={evt.status}
-                  size="sm"
-                />
-              </GlassPanel3D>
-            ))}
-          </div>
-        </HUDPanel>
-      </div>
+            </motion.div>
 
-    </div>
+            {/* Volume Chart */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+                <h2 className="text-sm font-bold text-slate-100 mb-6 flex items-center gap-2">
+                    <Activity size={16} className="text-primary" />
+                    Fluxo de SMs (Criadas vs Integradas)
+                </h2>
+                <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={CHART_DATA}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="time" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }} />
+                            <Line type="monotone" dataKey="created" stroke="#3b82f6" strokeWidth={3} dot={{ strokeWidth: 2 }} />
+                            <Line type="monotone" dataKey="integrated" stroke="#10b981" strokeWidth={3} dot={{ strokeWidth: 2 }} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </motion.div>
+
+            {/* Event Log */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl lg:col-span-2">
+                <h2 className="text-sm font-bold text-slate-100 mb-6 flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-amber-500" />
+                    Feed de Ocorrências Prioritárias
+                </h2>
+                <div className="space-y-2">
+                    {EVENTS_LOG.map((log, i) => (
+                        <div key={i} className="flex items-center p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                            <span className="font-mono text-[10px] text-slate-500 w-16">{log.time}</span>
+                            <span className="text-xs text-slate-300 flex-1">{log.msg}</span>
+                            <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", log.status === 'CRIT' ? 'bg-red-500/20 text-red-500 border border-red-500/20' : 'bg-slate-800 text-slate-400')}>{log.status}</span>
+                        </div>
+                    ))}
+                </div>
+            </motion.div>
+        </div>
+      </div>
   );
 }

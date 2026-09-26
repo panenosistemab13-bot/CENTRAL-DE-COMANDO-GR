@@ -26,12 +26,14 @@ import { PageDefinition } from '../../data/pagesConfig';
 
 import MobileMenu from '../MobileMenu';
 import MobileEscala from './MobileEscala';
+import MobilePatio from './MobilePatio';
 import MobileChecklist from './MobileChecklist';
 import MobilePresence from './MobilePresence';
 import MobileAverbacao from './MobileAverbacao';
 import MobileSMCreator from './MobileSMCreator';
 import MobileControle from './MobileControle';
 import MobileRotas from './MobileRotas';
+import MobileSlides from './MobileSlides';
 
 interface MobileAppProps {
   activeTab: Tab;
@@ -57,12 +59,14 @@ export default function MobileApp({
   const getPageTitle = (tab: Tab) => {
     switch (tab) {
       case 'escala': return 'Escala & Terceiros';
+      case 'patio': return 'Pátio de Veículos';
       case 'checklist': return 'Checklist da Frota';
       case 'presence': return 'Presença & 12x36';
       case 'averbacao': return 'Averbação de Carga';
       case 'sm_creator': return 'Criador de S.M.';
       case 'controle': return 'Controle de Iscas';
       case 'rotas': return 'Rotas & PGR';
+      case 'slides': return 'Painel Executivo';
       default: return 'Três Corações';
     }
   };
@@ -79,7 +83,8 @@ export default function MobileApp({
     { id: 'averbacao' as Tab, label: 'Averbação de Carga', icon: FileCheck2, desc: 'Apólices de seguro Porto Seguro e protocolos' },
     { id: 'sm_creator' as Tab, label: 'Criador de S.M.', icon: CalendarDays, desc: 'Solicitação de monitoramento para PGR' },
     { id: 'controle' as Tab, label: 'Controle de Iscas', icon: Radio, desc: 'Baterias e posições de telemetria' },
-    { id: 'rotas' as Tab, label: 'Rotas & Pontos de Parada', icon: Route, desc: 'Distâncias, pedágios e credenciados' }
+    { id: 'rotas' as Tab, label: 'Rotas & Pontos de Parada', icon: Route, desc: 'Distâncias, pedágios e credenciados' },
+    { id: 'slides' as Tab, label: 'Painel Executivo', icon: Activity, desc: 'Métricas gerais e conformidade' }
   ];
 
   const navigateTo = (tab: Tab) => {
@@ -168,12 +173,14 @@ export default function MobileApp({
         )}
 
         {activeTab === 'escala' && <MobileEscala onBack={() => navigateTo('menu')} />}
+        {activeTab === 'patio' && <MobilePatio onBack={() => navigateTo('menu')} />}
         {activeTab === 'checklist' && <MobileChecklist onBack={() => navigateTo('menu')} />}
         {activeTab === 'presence' && <MobilePresence onBack={() => navigateTo('menu')} />}
         {activeTab === 'averbacao' && <MobileAverbacao onBack={() => navigateTo('menu')} />}
         {activeTab === 'sm_creator' && <MobileSMCreator onBack={() => navigateTo('menu')} />}
         {activeTab === 'controle' && <MobileControle onBack={() => navigateTo('menu')} />}
         {activeTab === 'rotas' && <MobileRotas onBack={() => navigateTo('menu')} />}
+        {activeTab === 'slides' && <MobileSlides onBack={() => navigateTo('menu')} />}
       </main>
 
       {/* BOTTOM NAVIGATION BAR */}

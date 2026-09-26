@@ -1,54 +1,89 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "tailwindcss";
 
-:root {
-  --design-width: 1930px;
-  --design-height: 815px;
-  --wine: #8e0b18;
-  --wine2: #a91625;
-  --cream: #eee7dc;
-  --ivory: #f7f3eb;
-  --card: #fffdfa;
-  --ink: #171717;
-  --muted: #827b70;
-  --line: #ded5c6;
-  --green: #10b981;
-  --gold: #dfb15b;
-}
-
 @theme {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-heading: "Manrope", "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Montserrat", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-heading: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+  --font-serif-display: "Cinzel", "Playfair Display", Georgia, serif;
   
-  --color-primary: #8e0b18;
-  --color-secondary: #dfb15b;
-  --color-accent: #a91625;
-  --color-ivory: #f7f3eb;
-  --color-ivory-deep: #eee7dc;
+  --color-primary: #B32025; /* Institutional Red */
+  --color-primary-dark: #8c060a;
+  --color-canvas: #f8f6f0; /* Executive Office Warm Linen */
+  --color-card: #ffffff; /* Crisp Executive White */
+  --color-border-dark: rgba(43, 24, 13, 0.15);
 }
 
 @layer base {
-  * {
-    box-sizing: border-box;
+  body {
+    @apply bg-canvas text-[#1f1610] antialiased selection:bg-[#B32025]/20 selection:text-[#B32025];
+    font-family: var(--font-sans);
+    min-height: 100%;
   }
   
-  html, body, #root {
-    min-height: 100vh;
-    height: auto !important;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: 'Inter', sans-serif;
-    color: var(--ink);
-    background: linear-gradient(135deg, #e8dfd2 0%, #f6f1e8 50%, #ede5d8 100%);
-    overflow-y: auto !important;
-    overflow-x: hidden;
+  html {
+    min-height: 100%;
   }
 
-  button {
-    font: inherit;
-    border: 0;
-    cursor: pointer;
+  #root {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (min-width: 768px) {
+    html, body, #root {
+      height: 100%;
+      overflow: hidden;
+    }
+  }
+}
+
+@layer components {
+  .logo-text {
+    @apply text-sm font-black text-white tracking-[0.2em] uppercase leading-tight text-nowrap font-heading;
+  }
+
+  .report-card {
+    @apply bg-white border-2 border-[#3A2414]/15 rounded-2xl shadow-lg transition-all duration-300 hover:border-[#B32025]/50 hover:shadow-xl;
+  }
+  
+  .toolbar-button {
+    @apply flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-[#3A2414] hover:text-[#B32025] hover:bg-[#3A2414]/5 rounded-xl transition-all border border-[#3A2414]/10 hover:border-[#3A2414]/30 shadow-2xs;
+  }
+
+  .toolbar-button-active {
+    @apply text-white bg-[#B32025] border-[#8c060a] shadow-[0_4px_12px_rgba(179,32,37,0.3)];
+  }
+  
+  .canvas-grid {
+    background-color: #f8f6f0;
+    background-image: 
+      radial-gradient(circle at center, rgba(179, 32, 37, 0.03) 0%, rgba(58, 36, 20, 0.05) 100%);
+    background-attachment: fixed;
+  }
+
+  .executive-panel {
+    @apply bg-white border-2 border-[#3A2414]/20 rounded-[2rem] shadow-xl p-6 sm:p-8 backdrop-blur-md;
+  }
+
+  .executive-header {
+    @apply font-heading font-black tracking-tight text-[#2B180D] uppercase;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  :focus-visible {
+    outline: none !important;
+    border-color: #B32025 !important;
+    box-shadow: 0 0 0 3px rgba(179, 32, 37, 0.15) !important;
+    transition: all 0.2s ease;
   }
 }

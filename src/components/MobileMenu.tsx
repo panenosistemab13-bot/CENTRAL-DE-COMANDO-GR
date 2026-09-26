@@ -9,7 +9,7 @@ import {
   Sparkles, 
   LogOut, 
   Clock, 
-  Calendar as CalendarIcon, 
+  Calendar, 
   Truck, 
   ChevronRight,
   Activity,
@@ -227,7 +227,7 @@ export default function MobileMenu({
               className="bg-[#120703]/90 rounded-2xl p-3 border border-white/10 flex items-center gap-3 cursor-pointer"
             >
               <div className="w-9 h-9 rounded-xl bg-[#d4a373]/20 flex items-center justify-center text-[#e6c29b] shrink-0">
-                <CalendarIcon size={18} />
+                <Calendar size={18} />
               </div>
               <div className="min-w-0">
                 <div className="text-[9px] font-mono uppercase text-[#c2a67e] truncate">Agendamentos</div>

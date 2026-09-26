@@ -47,9 +47,11 @@ import Dashboard from './components/Dashboard';
 import Averbacao from './components/Averbacao';
 import SMCreator from './components/SMCreator';
 import Rotas from './components/Rotas';
+import Patio from './components/Patio';
 import Checklist from './components/Checklist';
 import Controle from './components/Controle';
 import Escala from './components/Escala';
+import Slides from './components/Slides';
 import LoginScreen from './components/LoginScreen';
 import RestrictedPagesModal from './components/RestrictedPagesModal';
 import UpdateTopBanner from './components/UpdateTopBanner';
@@ -58,7 +60,7 @@ import {
   getAllAvailablePages, 
   loadPageVisibility, 
   savePageVisibility, 
-  saveStoredCustomPages, 
+  saveStoredCustomPages,
   saveStoredPageOrder,
   getStoredCustomPages,
   getStoredPageOrder,
@@ -67,27 +69,29 @@ import {
 } from './data/pagesConfig';
 import { useCurrentPrinciple, PRINCIPLES_OF_LEADERSHIP } from './utils/principles';
 import { toAbsoluteUrl } from './utils/url';
-import hudBg from './assets/images/wallpaper_hud_command_center_1790202488063.jpg';
-import patioBg from './assets/images/wallpaper_patio_logistics_1790202500274.jpg';
-import satelliteBg from './assets/images/wallpaper_tactical_satellite_1790202511817.jpg';
+import coffeeBg from './assets/images/coffee_rustic_bg_1780760486326.png';
 import { Globe, Database, FileSpreadsheet } from 'lucide-react';
 
-export type Tab = 'menu' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'checklist' | 'controle' | 'escala';
+export type Tab = 'menu' | 'slides' | 'presence' | 'risk' | 'averbacao' | 'sm_creator' | 'rotas' | 'patio' | 'checklist' | 'controle' | 'escala';
 
 const backgroundImages: Record<Tab, string> = {
-  menu: hudBg,
-  presence: satelliteBg,
-  risk: satelliteBg,
-  averbacao: satelliteBg,
-  sm_creator: satelliteBg,
-  rotas: satelliteBg,
-  checklist: patioBg,
-  controle: patioBg,
-  escala: patioBg
+  menu: '', // Empty for pure dark background
+  slides: '',
+  presence: '/images/bg_presence.jpg', // Notebook and coffee on rustic wood table
+  risk: '/images/bg_risk.jpg',
+  averbacao: '',
+  sm_creator: '/images/bg_sm_creator.jpg', // Quality checker analyzing coffee beans
+  rotas: '/images/bg_rotas.jpg', // Scenic coffee plantation rows winding through green hills
+  patio: '/images/bg_patio.jpg', // Manual vintage grinder and mug on rustic dark background (matches attached design)
+  checklist: '/images/bg_checklist.jpg', // Vintage rustic coffee preparation mockup
+  controle: '/images/bg_presence.jpg',
+  escala: '/images/bg_patio.jpg'
 };
 
 const allTabs = [
   { id: 'menu', label: 'Início', icon: LayoutGrid },
+  { id: 'slides', label: 'Slides 4K HUD', icon: Globe },
+  { id: 'patio', label: 'Pátio', icon: Container },
   { id: 'checklist', label: 'Checklist', icon: ClipboardCheck },
   { id: 'averbacao', label: 'Averbação', icon: FileCheck2 },
   { id: 'sm_creator', label: 'SM', icon: CalendarDays },
@@ -96,6 +100,46 @@ const allTabs = [
   { id: 'presence', label: 'Lista de Presença', icon: Users2 },
   { id: 'rotas', label: 'Rotas', icon: Route },
 ];
+
+function Screw({ className }: { className?: string }) {
+  return (
+    <div 
+      className={cn(
+        "w-3.5 h-3.5 bg-gradient-to-br from-[#e8cfb3] via-[#a37243] to-[#381f0b] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.8),inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)] border border-[#c49a6c]/40 relative flex items-center justify-center select-none shrink-0",
+        className
+      )}
+    >
+      <div className="w-2 h-[1.5px] bg-[#241306]/90 rotate-[38deg] rounded-sm shadow-inner" />
+    </div>
+  );
+}
+
+function NavCornerScrew({ position }: { position: 'tl' | 'bl' | 'tr' | 'br' }) {
+  const posClasses = {
+    tl: "top-1.5 left-2",
+    bl: "bottom-1.5 left-2",
+    tr: "top-1.5 right-2",
+    br: "bottom-1.5 right-2"
+  }[position];
+
+  const slotRotation = {
+    tl: "rotate-[35deg]",
+    bl: "rotate-[55deg]",
+    tr: "rotate-[-40deg]",
+    br: "rotate-[25deg]"
+  }[position];
+
+  return (
+    <div 
+      className={cn(
+        "absolute w-3 h-3 bg-gradient-to-br from-[#ebcca8] via-[#9e6d3c] to-[#361d09] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.9),inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)] border border-[#c49a6c]/40 flex items-center justify-center select-none pointer-events-none transition-all z-20",
+        posClasses
+      )}
+    >
+      <div className={cn("w-1.5 h-[1.2px] bg-[#241306]/90 rounded-sm shadow-inner", slotRotation)} />
+    </div>
+  );
+}
 
 export default function App() {
   const principle = useCurrentPrinciple();
@@ -241,24 +285,16 @@ export default function App() {
 
       // Arrow Up/Down for smooth main page scrolling
       if (e.key === 'ArrowDown') {
-        const scrollContainer = document.getElementById('main-scroll-container') || 
-                                document.getElementById('main-scroll-container-menu') ||
-                                document.querySelector('.overflow-y-auto');
-        if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+        const scrollContainer = document.getElementById('main-scroll-container');
+        if (scrollContainer) {
           e.preventDefault();
           scrollContainer.scrollBy({ top: 180, behavior: 'smooth' });
-        } else {
-          window.scrollBy({ top: 180, behavior: 'smooth' });
         }
       } else if (e.key === 'ArrowUp') {
-        const scrollContainer = document.getElementById('main-scroll-container') || 
-                                document.getElementById('main-scroll-container-menu') ||
-                                document.querySelector('.overflow-y-auto');
-        if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+        const scrollContainer = document.getElementById('main-scroll-container');
+        if (scrollContainer) {
           e.preventDefault();
           scrollContainer.scrollBy({ top: -180, behavior: 'smooth' });
-        } else {
-          window.scrollBy({ top: -180, behavior: 'smooth' });
         }
       }
 
@@ -321,6 +357,8 @@ export default function App() {
             onUnlockPresenceList={handleOpenPageSelector}
           />
         );
+      case 'slides':
+        return <Slides />;
       case 'presence':
         return <PresenceList onBack={() => setActiveTab('menu')} />;
       case 'averbacao':
@@ -329,6 +367,8 @@ export default function App() {
         return <SMCreator view={smCreatorView} onBack={() => setActiveTab('menu')} />;
       case 'rotas':
         return <Rotas onBack={() => setActiveTab('menu')} />;
+      case 'patio':
+        return <Patio onBack={() => setActiveTab('menu')} />;
       case 'checklist':
         return <Checklist />;
       case 'controle':
@@ -407,44 +447,439 @@ export default function App() {
   };
 
   return (
-    <div className="w-full min-h-screen overflow-y-auto flex flex-col bg-[#f4ede1] text-[#171717] font-sans relative">
+    <div className="min-h-screen md:h-screen flex bg-[#F2E4CC] text-[#2D1A10] md:overflow-hidden font-sans relative flex-col">
+      {/* Top Banner: Última Atualização + Data (Aparece exclusivamente no Menu Inicial) */}
+      {activeTab === 'menu' && <UpdateTopBanner />}
       
-      {/* GLOBAL CINEMATIC OPERATIONAL CONTAINER */}
-      <InitialMenu
-        activeTab={activeTab}
-        onSelect={(id) => setActiveTab(id as Tab)}
-        onUnlockPresenceList={handleOpenPageSelector}
-        onLogout={() => console.log('logout')}
-        averbacaoView={averbacaoView}
-        smCreatorView={smCreatorView}
-        showPresenceList={Boolean(pageVisibility['presence'])}
-        showRotasPage={Boolean(pageVisibility['rotas'])}
-        pageVisibility={pageVisibility}
-        availablePages={availablePages}
-      />
+      {/* Immersive Background Image / Radial glow */}
+      {(activeTab === 'menu' || activeTab === 'checklist') ? (
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+           <img
+             src={toAbsoluteUrl(coffeeBg)}
+             className="w-full h-full object-cover select-none brightness-105 saturate-110"
+             alt="Dashboard Coffee Background"
+             referrerPolicy="no-referrer"
+           />
+           {/* Cinematic warm light glow overlays */}
+           <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, rgba(181, 138, 76, 0.15) 0%, rgba(242, 228, 204, 0.45) 100%)' }} />
+        </div>
+      ) : (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <AnimatePresence mode="wait">
+            {backgroundImages[activeTab] && (
+              <motion.img
+                key={activeTab}
+                src={backgroundImages[activeTab]}
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 0.92, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                transition={{ duration: 1.5 }}
+                className="w-full h-full object-cover select-none"
+                referrerPolicy="no-referrer"
+              />
+            )}
+          </AnimatePresence>
+          {/* Immersive warm chocolate/dark vignette to integrate the page element contrast beautifully */}
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, transparent 20%, rgba(45, 26, 16, 0.4) 100%)' }} />
+        </div>
+      )}
 
-      {/* Global Password Modal Overlay - 3D Cyber Security Clearance Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-[#ede6dc]/90 backdrop-blur-xl z-[999] flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ scale: 0.92, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 relative border border-[#d6ccbe] text-stone-900 shadow-[0_32px_64px_rgba(45,28,14,0.15)]"
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 md:overflow-hidden relative z-10 min-h-screen md:h-full">
+        
+        {/* Desktop Top Header (Always on active modules) */}
+        {activeTab !== 'menu' && (
+          <header className="flex py-3 shrink-0 items-center justify-center px-2 sm:px-8 z-50 relative pointer-events-none w-full">
+            {/* Centered Navigation Dock */}
+            <div className="flex items-center justify-center pointer-events-auto max-w-full overflow-x-auto no-scrollbar py-1">
+              <AnimatePresence>
+                <motion.nav 
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  className={cn(
+                    "flex items-center gap-1.5 sm:gap-2 px-5 py-2.5 rounded-full relative select-none transition-all duration-300",
+                    activeTab === 'slides'
+                      ? "bg-[#020617]/95 border-2 border-cyan-500/50 shadow-[0_0_35px_rgba(0,240,255,0.25)] backdrop-blur-2xl"
+                      : "bg-gradient-to-r from-[#1a0e07] via-[#26150d] to-[#1a0e07] border-[2.5px] border-[#4a2e1b] shadow-[0_16px_36px_rgba(0,0,0,0.92),inset_0_1px_1.5px_rgba(255,255,255,0.12)]"
+                  )}
+                >
+                  {/* Decorative corner authentic brass slotted screws */}
+                  <NavCornerScrew position="tl" />
+                  <NavCornerScrew position="bl" />
+                  <NavCornerScrew position="tr" />
+                  <NavCornerScrew position="br" />
+
+                  {/* First button: Início (Home) inside distinctive squircle container */}
+                  <motion.button
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => setActiveTab('menu')}
+                    className={cn(
+                      "p-3 rounded-2xl transition-all duration-200 relative group flex items-center justify-center cursor-pointer",
+                      (activeTab as string) === 'menu'
+                        ? "bg-gradient-to-b from-[#d62329] to-[#9c1419] text-white shadow-[0_0_24px_rgba(214,35,41,0.9),0_4px_12px_rgba(0,0,0,0.5)] border border-[#ff6b6b]/40 font-black"
+                        : activeTab === 'slides'
+                          ? "bg-slate-900/80 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 border border-cyan-500/30"
+                          : "bg-[#331e12] text-[#dfba87] hover:bg-[#432918] hover:text-[#fae5c7] border border-[#4e301c] shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_2px_6px_rgba(0,0,0,0.4)]"
+                    )}
+                  >
+                    <LayoutGrid size={22} strokeWidth={(activeTab as string) === 'menu' ? 2.5 : 2.2} />
+                    {/* Tooltip */}
+                    <div className={cn(
+                      "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
+                      activeTab === 'slides'
+                        ? "bg-slate-950 border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                        : "bg-[#24160E] border-[#543b28] text-[#fdefd1]"
+                    )}>
+                      Início
+                    </div>
+                  </motion.button>
+                  
+                  {/* Vertical Divider in brass/bronze */}
+                  <div className={cn(
+                    "w-[1px] h-7 mx-1.5 shrink-0 transition-all",
+                    activeTab === 'slides' ? "bg-cyan-500/40" : "bg-gradient-to-b from-transparent via-[#5a3a24] to-transparent"
+                  )} />
+
+                  {/* Module Icons */}
+                  {visibleTabs.filter(t => t.id !== 'menu').map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <motion.button
+                        key={tab.id}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => setActiveTab(tab.id as Tab)}
+                        className={cn(
+                          "relative p-3 rounded-2xl transition-all duration-200 group flex items-center justify-center cursor-pointer",
+                          isActive
+                            ? activeTab === 'slides'
+                              ? "bg-cyan-500 text-slate-950 shadow-[0_0_20px_#00f0ff] border border-cyan-300 font-black"
+                              : "bg-gradient-to-b from-[#d62329] to-[#9c1419] text-white shadow-[0_0_24px_rgba(214,35,41,0.9),0_4px_12px_rgba(0,0,0,0.5)] border border-[#ff6b6b]/40 font-black" 
+                            : activeTab === 'slides'
+                              ? "bg-transparent text-cyan-400/70 hover:bg-cyan-500/10 hover:text-cyan-200"
+                              : "bg-transparent text-[#dfba87] hover:bg-[#331e12]/60 hover:text-[#fae5c7]"
+                        )}
+                      >
+                        <tab.icon size={22} strokeWidth={isActive ? 2.6 : 2} className={isActive ? "text-white" : "text-[#dfba87] group-hover:text-[#fae5c7]"} />
+                        
+                        {/* Tooltip */}
+                        <div className={cn(
+                          "absolute top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap border",
+                          activeTab === 'slides'
+                            ? "bg-slate-950 border-cyan-500/40 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                            : "bg-[#24160E] border-[#543b28] text-[#fdefd1]"
+                        )}>
+                          {tab.label}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </motion.nav>
+              </AnimatePresence>
+            </div>
+
+            {/* Right side widgets hidden per user request */}
+          </header>
+        )}
+
+        {/* ALERTA DE COMPROMISSOS GLOBAL */}
+        {activeTodayApps.length > 0 && !isAlertDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: -25 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -25 }}
+            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+            className={cn(
+              "mx-4 sm:mx-8 md:mx-12 mt-4 relative rounded-2xl border-2 shadow-2xl p-4.5 flex flex-col sm:flex-row items-center justify-between gap-4 z-40 transition-all duration-300",
+              maxUrgencyScore === 3
+                ? "bg-gradient-to-r from-[#800609] via-[#B32025] to-[#800609] text-white border-[#ffd880] shadow-[0_0_25px_rgba(179,32,37,0.55)]"
+                : maxUrgencyScore === 2
+                  ? "bg-gradient-to-r from-[#d97706] to-[#b45309] text-white border-[#fbd38d] shadow-[0_10px_20px_rgba(217,119,6,0.25)]"
+                  : "bg-[#fdfbf7] border-[#5c3e29] text-[#3e2516] shadow-[0_8px_16px_rgba(0,0,0,0.1)]"
+            )}
           >
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff2a4b] to-[#800609] flex items-center justify-center mb-4 border border-red-400/40 text-white shadow-[0_0_25px_rgba(255,42,75,0.4)]">
-                <Lock size={26} className="stroke-[2.5]" />
+            {/* Vintage brass flat-head screws on corners */}
+            <Screw className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5" />
+            <Screw className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5" />
+            <Screw className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5" />
+            <Screw className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5" />
+
+            {/* Content left */}
+            <div className="flex items-center gap-4.5 flex-1 min-w-0">
+              <div className={cn(
+                "w-12 h-12 rounded-xl shrink-0 flex items-center justify-center shadow-lg relative overflow-hidden",
+                maxUrgencyScore === 3
+                  ? "bg-amber-400 text-[#800609] animate-bounce"
+                  : maxUrgencyScore === 2
+                    ? "bg-[#3A2414] text-amber-400 animate-pulse"
+                    : "bg-[#B32025] text-white"
+              )}>
+                {maxUrgencyScore === 3 ? (
+                  <ShieldAlert size={24} className="stroke-[2.5]" />
+                ) : (
+                  <BellRing size={22} className="stroke-[2]" />
+                )}
+                
+                {/* Visual pulse rings for critical status */}
+                {maxUrgencyScore === 3 && (
+                  <span className="absolute inset-0 bg-amber-300/30 animate-ping rounded-full pointer-events-none" />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={cn(
+                    "text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm border",
+                    maxUrgencyScore === 3
+                      ? "bg-[#ffeb3b] text-[#800609] border-[#ffeb3b]"
+                      : maxUrgencyScore === 2
+                        ? "bg-[#3A2414] text-amber-400 border-amber-400/20"
+                        : "bg-[#5c3e29] text-[#fdefd1] border-[#5c3e29]"
+                  )}>
+                    {maxUrgencyScore === 3 
+                      ? "⚡ COMPROMISSO IMINENTE / EM ANDAMENTO" 
+                      : maxUrgencyScore === 2 
+                        ? "⏰ COMPROMISSO PRÓXIMO" 
+                        : "📅 COMPROMISSO HOJE"}
+                  </span>
+
+                  {maxUrgencyApp.diff > 0 && (
+                    <span className={cn(
+                      "text-[10px] font-mono font-bold px-2 py-0.5 rounded",
+                      maxUrgencyScore === 3
+                        ? "bg-black/25 text-[#ffe082]"
+                        : maxUrgencyScore === 2
+                          ? "bg-black/15 text-white"
+                          : "bg-[#e1ccb0] text-[#3e2516]"
+                    )}>
+                      {maxUrgencyApp.diff <= 60 
+                        ? `Começa em ${maxUrgencyApp.diff} min` 
+                        : `Começa em ${Math.floor(maxUrgencyApp.diff / 60)}h${maxUrgencyApp.diff % 60}m`}
+                    </span>
+                  )}
+
+                  {maxUrgencyApp.diff <= 0 && maxUrgencyApp.diff >= -15 && (
+                    <span className="text-[10px] font-black uppercase bg-green-500 text-white px-2 py-0.5 rounded animate-pulse shadow-sm">
+                      Acontecendo Agora
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-0.5">
+                  <h3 className={cn(
+                    "text-sm font-black tracking-tight truncate font-serif uppercase",
+                    maxUrgencyScore === 3 ? "text-white text-base font-black" : "text-[#3e2516]"
+                  )}>
+                    {maxUrgencyApp.title}
+                  </h3>
+                  <span className={cn(
+                    "hidden sm:inline opacity-40",
+                    maxUrgencyScore === 3 ? "text-white" : "text-[#5c3e29]"
+                  )}>•</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={cn(
+                      "text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 flex items-center gap-1",
+                      maxUrgencyScore === 3 ? "text-amber-200" : "text-[#5c3e29] bg-[#f2e4cc]/40"
+                    )}>
+                      <Clock size={11} />
+                      {maxUrgencyApp.time}
+                    </span>
+                    
+                    {maxUrgencyApp.type === 'pessoal' ? (
+                      <span className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border flex items-center gap-1",
+                        maxUrgencyScore === 3 
+                          ? "bg-amber-400/20 text-amber-200 border-amber-400/30" 
+                          : maxUrgencyScore === 2
+                            ? "bg-amber-100/10 text-amber-200 border-amber-200/20"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                      )}>
+                        <User size={10} />
+                        Pessoal
+                      </span>
+                    ) : (
+                      <span className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border flex items-center gap-1",
+                        maxUrgencyScore === 3 
+                          ? "bg-red-950/40 text-red-100 border-red-200/30" 
+                          : maxUrgencyScore === 2
+                            ? "bg-red-100/10 text-red-200 border-red-200/20"
+                            : "bg-red-50 text-[#B32025] border-red-200"
+                      )}>
+                        <Briefcase size={10} />
+                        Corporativo
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions (Close / Manage) */}
+            <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto justify-end">
+              <button
+                onClick={() => {
+                  setActiveTab('presence');
+                  setTimeout(() => {
+                    const agendaSection = document.getElementById('main-scroll-container');
+                    agendaSection?.scrollTo({ top: 300, behavior: 'smooth' });
+                  }, 400);
+                }}
+                className={cn(
+                  "text-[10px] font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer shadow-md active:scale-97 flex items-center gap-1.5",
+                  maxUrgencyScore === 3
+                    ? "bg-[#ffeb3b] hover:bg-yellow-300 text-[#800609] border-[#ffeb3b]"
+                    : maxUrgencyScore === 2
+                      ? "bg-white hover:bg-stone-50 text-stone-800 border-stone-200"
+                      : "bg-[#B32025] hover:bg-[#8c060a] text-white border-[#B32025]"
+                )}
+              >
+                <Calendar size={13} />
+                Ver Agenda
+                <ChevronRight size={13} />
+              </button>
+              
+              <button
+                onClick={() => setIsAlertDismissed(true)}
+                className={cn(
+                  "p-2.5 rounded-xl transition-colors cursor-pointer",
+                  maxUrgencyScore >= 2
+                    ? "text-white/70 hover:text-white hover:bg-white/10"
+                    : "text-[#5c3e29]/70 hover:text-[#5c3e29] hover:bg-[#5c3e29]/10"
+                )}
+                title="Dispensar alerta temporariamente"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Scrollable Canvas */}
+        <main id="main-scroll-container" className={cn(
+          "flex-1 relative",
+          activeTab === 'menu' ? "overflow-hidden" : "overflow-y-visible md:overflow-y-auto pb-4 md:pb-8"
+        )}>
+          <div className={cn(
+            "w-full max-w-full mx-auto relative z-10 flex flex-col transition-all duration-500",
+            activeTab === 'menu' ? "h-full p-0" : "min-h-full p-2.5 sm:p-5 md:p-6 pb-28 md:pb-8"
+          )}>
+
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className={cn(
+                  activeTab === 'menu' ? "h-full" : "w-full transition-all duration-300"
+                )}
+              >
+                {renderContent()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+
+        {/* Floating trigger widget when dismissed */}
+        {activeTodayApps.length > 0 && isAlertDismissed && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={() => setIsAlertDismissed(false)}
+            className={cn(
+              "fixed bottom-22 right-6 z-50 p-4.5 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.55)] cursor-pointer flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-2",
+              maxUrgencyScore === 3
+                ? "bg-[#B32025] text-white border-amber-300 shadow-[0_0_20px_rgba(179,32,37,0.6)]"
+                : maxUrgencyScore === 2
+                  ? "bg-amber-600 text-white border-[#fbd38d] shadow-[0_0_15px_rgba(217,119,6,0.5)]"
+                  : "bg-[#5c3e29] text-[#efdfc6] border-[#dac0a3]"
+            )}
+            title={`Você possui ${activeTodayApps.length} compromisso(s) pendente(s) hoje. Clique para abrir.`}
+          >
+            <div className="relative">
+              <BellRing size={24} className={cn("stroke-[2]", maxUrgencyScore === 3 ? "animate-pulse" : "")} />
+              <span className="absolute -top-2.5 -right-2.5 bg-yellow-400 text-[#800609] text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                {activeTodayApps.length}
+              </span>
+            </div>
+          </motion.button>
+        )}
+
+        {/* System Footer (Only on active modules) */}
+        {activeTab !== 'menu' && activeTab !== 'patio' && (
+          <footer className="shrink-0 py-2 px-6 flex flex-row items-center justify-between gap-4 relative z-50 text-[10px] font-mono font-bold text-[#c7a482] bg-gradient-to-b from-[#1a0f08] to-[#0a0502] border-t border-[#4a2e1b]/50 shadow-[0_-4px_15px_rgba(0,0,0,0.5)]">
+            <span className="opacity-80 flex-1 hidden sm:block">
+              © 2026 <strong className="text-[#e2c19e]">Sistema PGR</strong>
+            </span>
+            <div className="flex flex-col items-center justify-center flex-[2] text-center px-2">
+              <span className="font-sans font-black text-[#edd9bf] text-[9px] sm:text-[10px] uppercase tracking-wide leading-tight">
+                {principle.title}
+              </span>
+              <div className="flex gap-1 mt-1 opacity-80">
+                {PRINCIPLES_OF_LEADERSHIP.map((item, idx) => {
+                  const isActive = idx === PRINCIPLES_OF_LEADERSHIP.indexOf(principle);
+                  return (
+                    <span 
+                      key={idx} 
+                      className={`w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-[#B32025] scale-125 shadow-[0_0_4px_#B32025]' : 'bg-[#c7a482]/40'}`}
+                      title={item.title} 
+                    />
+                  );
+                })}
+              </div>
+            </div>
+            <span className="opacity-80 flex-1 text-right">
+              <span className="hidden sm:inline">Criado por </span><span className="text-[#e2c19e] font-black">Jefferson</span>
+            </span>
+          </footer>
+        )}
+
+      </div>
+
+      {/* Global Password Modal Overlay */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[999] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-sm bg-gradient-to-br from-[#dfcbab] via-[#cbaf8c] to-[#ae926e] border-[5px] border-[#311f14] shadow-2xl rounded-3xl p-6 relative ring-4 ring-[#1c1109]/30 text-[#2D1A10]"
+          >
+            {/* Corner rivets */}
+            <div className="absolute top-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute top-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute bottom-3 left-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+            <div className="absolute bottom-3 right-3 w-3.5 h-3.5 bg-gradient-to-br from-[#dfc1a0] via-[#8c6039] to-[#3a200a] rounded-full shadow-md" />
+
+            <div className="flex flex-col items-center text-center mt-2">
+              <div className="w-14 h-14 rounded-full bg-[#311f14] flex items-center justify-center mb-4 border-2 border-[#bfa27a] text-[#fdefd1] shadow-lg">
+                <Lock size={24} className="stroke-[2.5]" />
               </div>
               
-              <h3 className="text-xl font-black uppercase tracking-tight text-white font-heading mb-1">
-                Acesso de Segurança Restrito
+              <h3 className="text-2xl font-serif font-black uppercase tracking-tight text-[#2D1A10] mb-2">
+                Acesso Restrito
               </h3>
 
-              <p className="text-xs text-stone-500 max-w-xs mb-6 leading-relaxed font-sans">
-                Insira a chave mestra de administrador para gerenciar as páginas e visibilidade operacional.
+              <p className="text-xs font-bold text-[#3c2518]/90 max-w-xs mb-4 leading-relaxed">
+                Digite a senha de administrador para gerenciar e sugerir as <strong className="text-[#800609]">Páginas Restritas e Ocultas</strong> do sistema.
               </p>
 
-              <form onSubmit={handlePasswordSubmit} className="w-full">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const clean = passwordInput.trim().toLowerCase();
+                if (clean === '#trescafe2027' || clean === '#trescafe' || clean === 'trescafe' || clean === 'admin') {
+                  setShowPasswordModal(false);
+                  setPasswordInput('');
+                  setPasswordError(false);
+                  setShowRestrictedPagesModal(true);
+                } else {
+                  setPasswordError(true);
+                }
+              }} className="w-full">
                 <input
                   type="password"
                   value={passwordInput}
@@ -452,19 +887,19 @@ export default function App() {
                     setPasswordInput(e.target.value);
                     setPasswordError(false);
                   }}
-                  placeholder="••••••••••••"
+                  placeholder="Digite a senha..."
                   className={cn(
-                    "w-full bg-[#fbf9f5] text-stone-900 placeholder-stone-300 border rounded-xl px-4 py-3 text-center font-mono tracking-widest text-lg focus:outline-none transition-all shadow-inner",
+                    "w-full bg-[#1c1109] text-[#fdefd1] placeholder-[#8c6039]/60 border-2 rounded-xl px-4 py-3 text-center font-mono tracking-widest focus:outline-none transition-colors",
                     passwordError 
-                      ? "border-red-500 text-red-600 focus:ring-2 focus:ring-red-500" 
-                      : "border-stone-200 focus:border-[#9b1526] focus:ring-1 focus:ring-[#9b1526]"
+                      ? "border-[#B32025] text-red-400" 
+                      : "border-[#8c6039] focus:border-[#B32025]"
                   )}
                   autoFocus
                 />
                 
                 {passwordError && (
-                  <p className="text-red-400 text-xs font-mono font-bold mt-2 animate-pulse">
-                    ⚠️ Chave Incorreta! Tente novamente.
+                  <p className="text-red-700 text-[10px] font-black uppercase tracking-wider mt-1.5 animate-pulse">
+                    ⚠️ Senha Incorreta! Tente novamente.
                   </p>
                 )}
 
@@ -476,15 +911,15 @@ export default function App() {
                       setPasswordInput('');
                       setPasswordError(false);
                     }}
-                    className="flex-1 py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold uppercase text-xs tracking-wider transition-colors border border-stone-200 cursor-pointer font-mono"
+                    className="flex-1 py-3 px-4 rounded-xl bg-black/10 hover:bg-black/20 text-[#2D1A10] font-black uppercase text-xs tracking-wider transition-colors border border-[#311f14]/20 cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 px-4 rounded-xl bg-[#9b1526] hover:bg-[#831220] text-white font-bold uppercase text-xs tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer font-mono"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-b from-[#ca1a20] to-[#800609] hover:brightness-110 text-white font-black uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer"
                   >
-                    Autorizar
+                    Confirmar
                   </button>
                 </div>
               </form>
